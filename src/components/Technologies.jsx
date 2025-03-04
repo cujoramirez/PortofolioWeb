@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, memo } from "react";
 import { FaGraduationCap } from "react-icons/fa";
 import {
   SiPytorch,
@@ -35,7 +35,7 @@ const titleVariants = {
   },
   hover: {
     scale: 1.05,
-    textShadow: "0px 0px 16px rgba(168, 85, 247, 0.7)", // Purple glow on hover
+    textShadow: "0px 0px 16px rgba(168, 85, 247, 0.7)",
     transition: { duration: 0.3, ease: "easeInOut" },
   },
 };
@@ -50,7 +50,6 @@ const iconContainerVariants = {
   },
   hover: {
     scale: 1.08,
-    // We'll set the container's glow inline (via style) so it can vary by tech color
     transition: {
       duration: 0.4,
       ease: "easeInOut",
@@ -62,86 +61,157 @@ const iconContainerVariants = {
 };
 
 // Baseline icon animation: slight vertical bobbing + color glow on hover
-const getIconAnimation = (color) => {
-  return {
-    animate: {
-      y: [-2, 2, -2],
-      filter: `drop-shadow(0 0 2px ${color}33)`, // Subtle baseline glow
-      transition: {
-        y: {
-          duration: 4,
-          repeat: Infinity,
-          repeatType: "reverse",
-          ease: "easeInOut",
-        },
-      },
-    },
-    hover: {
-      scale: 1.1,
-      filter: `drop-shadow(0 0 12px ${color})`, // Stronger glow in icon color on hover
-      transition: {
-        duration: 0.3,
+const getIconAnimation = (color) => ({
+  animate: {
+    y: [-2, 2, -2],
+    filter: `drop-shadow(0 0 2px ${color}33)`,
+    transition: {
+      y: {
+        duration: 4,
+        repeat: Infinity,
+        repeatType: "reverse",
         ease: "easeInOut",
-        type: "spring",
-        stiffness: 300,
-        damping: 15,
       },
     },
-  };
-};
+  },
+  hover: {
+    scale: 1.1,
+    filter: `drop-shadow(0 0 12px ${color})`,
+    transition: {
+      duration: 0.3,
+      ease: "easeInOut",
+      type: "spring",
+      stiffness: 300,
+      damping: 15,
+    },
+  },
+});
 
 // Technology icon configuration with enhanced colors and glow effects
 const technologies = [
-  {
-    name: "Education",
-    icon: FaGraduationCap,
-    color: "#FFD700",
-    borderColor: "border-yellow-500/30",
-    pulseSpeed: 3.1,
-  },
-  {
-    name: "PyTorch",
-    icon: SiPytorch,
-    color: "#EE4C2C",
-    borderColor: "border-orange-500/30",
-    pulseSpeed: 3.4,
-  },
-  {
-    name: "TensorFlow",
-    icon: SiTensorflow,
-    color: "#FF6F00",
-    borderColor: "border-orange-400/30",
-    pulseSpeed: 3.2,
-  },
-  {
-    name: "React",
-    icon: SiReact,
-    color: "#61DAFB",
-    borderColor: "border-cyan-400/30",
-    pulseSpeed: 3.7,
-  },
-  {
-    name: "Node.js",
-    icon: SiNodedotjs,
-    color: "#539E43",
-    borderColor: "border-green-500/30",
-    pulseSpeed: 3.5,
-  },
-  {
-    name: "Python",
-    icon: SiPython,
-    color: "#3776AB",
-    borderColor: "border-blue-500/30",
-    pulseSpeed: 3.3,
-  },
-  {
-    name: "Kaggle",
-    icon: SiKaggle,
-    color: "#20BEFF",
-    borderColor: "border-blue-400/30",
-    pulseSpeed: 3.6,
-  },
+  { name: "Education", icon: FaGraduationCap, color: "#FFD700", borderColor: "border-yellow-500/30", pulseSpeed: 3.1 },
+  { name: "PyTorch", icon: SiPytorch, color: "#EE4C2C", borderColor: "border-orange-500/30", pulseSpeed: 3.4 },
+  { name: "TensorFlow", icon: SiTensorflow, color: "#FF6F00", borderColor: "border-orange-400/30", pulseSpeed: 3.2 },
+  { name: "React", icon: SiReact, color: "#61DAFB", borderColor: "border-cyan-400/30", pulseSpeed: 3.7 },
+  { name: "Node.js", icon: SiNodedotjs, color: "#539E43", borderColor: "border-green-500/30", pulseSpeed: 3.5 },
+  { name: "Python", icon: SiPython, color: "#3776AB", borderColor: "border-blue-500/30", pulseSpeed: 3.3 },
+  { name: "Kaggle", icon: SiKaggle, color: "#20BEFF", borderColor: "border-blue-400/30", pulseSpeed: 3.6 },
 ];
+
+// Memoized Technology Card Component
+const TechnologyCard = memo(
+  ({ tech, index, isKaggle, hoveredTech, setHoveredTech, hoveredTechRef }) => {
+    return (
+      <motion.div
+        className={`relative rounded-xl border-2 ${tech.borderColor} p-4
+          bg-gradient-to-br from-neutral-900/80 to-neutral-900/40
+          backdrop-blur-sm shadow-lg cursor-pointer flex flex-col items-center justify-center
+          w-full max-w-[160px] sm:max-w-[170px] aspect-square ${
+            isKaggle ? "col-span-2 md:col-span-1 justify-self-center" : ""
+          }`}
+        variants={iconContainerVariants}
+        whileHover="hover"
+        whileTap="hover"
+        style={{
+          boxShadow:
+            hoveredTech === index
+              ? `0 0 20px 3px ${tech.color}55`
+              : "0 0 25px rgba(0, 0, 0, 0.4)",
+          transition: "all 0.3s ease-in-out",
+          overflow: "hidden",
+        }}
+        onHoverStart={() => {
+          setHoveredTech(index);
+          hoveredTechRef.current = index;
+        }}
+        onHoverEnd={() => {
+          setHoveredTech(null);
+          hoveredTechRef.current = null;
+        }}
+      >
+        {/* Animated border glow */}
+        <motion.div
+          className="absolute inset-0 rounded-xl z-0"
+          style={{ boxShadow: `0 0 0px ${tech.color}00` }}
+          animate={{
+            boxShadow: [
+              `0 0 5px ${tech.color}33`,
+              `0 0 15px ${tech.color}55`,
+              `0 0 5px ${tech.color}33`,
+            ],
+          }}
+          transition={{
+            duration: tech.pulseSpeed,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        {/* Icon with subtle pulsing glow */}
+        <motion.div
+          className="relative flex-1 flex items-center justify-center"
+          variants={getIconAnimation(tech.color)}
+          animate="animate"
+          whileHover="hover"
+          whileTap="hover"
+          style={{ position: "relative", zIndex: 2, padding: "10px" }}
+        >
+          {/* Pulsing background glow */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: `radial-gradient(circle, ${tech.color}33 0%, transparent 70%)`,
+              filter: "blur(10px)",
+              zIndex: 0,
+              transform: "scale(1.5)",
+            }}
+            animate={{
+              opacity: [0.3, 0.8, 0.3],
+              scale: [1.4, 1.6, 1.4],
+            }}
+            transition={{
+              duration: tech.pulseSpeed,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: `radial-gradient(circle, ${tech.color}22 0%, transparent 60%)`,
+              filter: "blur(5px)",
+              zIndex: 0,
+              transform: "scale(1.2)",
+            }}
+            animate={{
+              opacity: [0.5, 0.8, 0.5],
+              scale: [1.2, 1.3, 1.2],
+            }}
+            transition={{
+              duration: tech.pulseSpeed * 0.7,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+          <tech.icon
+            className="text-5xl sm:text-6xl md:text-7xl relative z-10"
+            style={{ color: tech.color, display: "block" }}
+          />
+        </motion.div>
+        {/* Technology name */}
+        <motion.div
+          className="text-center mt-3 font-medium text-sm md:text-base"
+          style={{
+            color: tech.color,
+            textShadow: `0 0 8px ${tech.color}66`,
+            letterSpacing: "0.5px",
+          }}
+        >
+          {tech.name}
+        </motion.div>
+      </motion.div>
+    );
+  }
+);
 
 const Technologies = () => {
   const canvasRef = useRef(null);
@@ -164,7 +234,7 @@ const Technologies = () => {
 
     resizeCanvas();
 
-    // We'll create a light for each technology
+    // Create a light for each technology
     const positions = [
       { x: 0.2, y: 0.3, radius: 220, speed: { x: 0.3, y: 0.4 }, direction: { x: 1, y: 1 } },
       { x: 0.8, y: 0.2, radius: 240, speed: { x: 0.2, y: 0.5 }, direction: { x: -1, y: 1 } },
@@ -183,7 +253,6 @@ const Technologies = () => {
         speed: { x: 0.3, y: 0.3 },
         direction: { x: 1, y: 1 },
       };
-      // Add alpha to color for the radial gradient
       return {
         x: canvas.width * pos.x,
         y: canvas.height * pos.y,
@@ -196,15 +265,12 @@ const Technologies = () => {
     });
 
     let animationFrameId;
-
     const animate = () => {
       ctx.fillStyle = "rgba(15, 5, 40, 0.05)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const currentHovered = hoveredTechRef.current;
-
       lightSources.forEach((light, index) => {
-        // Speed up hovered icon's light
         if (currentHovered !== null && index === currentHovered) {
           light.speed.x = light.baseSpeed.x * 2.5;
           light.speed.y = light.baseSpeed.y * 2.5;
@@ -230,7 +296,6 @@ const Technologies = () => {
         ctx.arc(light.x, light.y, light.radius, 0, Math.PI * 2);
         ctx.fill();
 
-        // Movement + boundary checks
         light.x += light.speed.x * light.direction.x;
         light.y += light.speed.y * light.direction.y;
 
@@ -256,23 +321,23 @@ const Technologies = () => {
             light.y = canvas.height + blendMargin - light.radius;
         }
       });
-
       animationFrameId = requestAnimationFrame(animate);
     };
-
     animate();
 
     const handleResize = () => {
-      resizeCanvas();
+      if (canvas.parentNode) {
+        const rect = canvas.parentNode.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+      }
       lightSources.forEach((light, i) => {
         const pos = positions[i] || { x: Math.random(), y: Math.random() };
         light.x = canvas.width * pos.x;
         light.y = canvas.height * pos.y;
       });
     };
-
     window.addEventListener("resize", handleResize);
-
     return () => {
       window.removeEventListener("resize", handleResize);
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -292,7 +357,6 @@ const Technologies = () => {
         clipPath: "polygon(0 0, 100% 0, 100% 92%, 0 100%)",
       }}
     >
-      {/* Subtle gradient at the top to blend with main background */}
       <div
         className="absolute top-0 left-0 w-full h-20 z-10"
         style={{
@@ -302,8 +366,6 @@ const Technologies = () => {
           opacity: 0.8,
         }}
       />
-
-      {/* Canvas for ambient lights, with negative margin so edges blend */}
       <div
         className="absolute inset-0 overflow-visible"
         style={{ margin: "-50px" }}
@@ -317,7 +379,6 @@ const Technologies = () => {
           }}
         />
       </div>
-
       <motion.div
         className="relative z-10 container mx-auto px-6 md:px-8 h-full flex flex-col"
         variants={containerVariants}
@@ -343,163 +404,29 @@ const Technologies = () => {
         >
           Skills & Tools
         </motion.h2>
-
-        {/* Grid layout: 2 columns on mobile, 3 on md, 7 on lg */}
         <motion.div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-6 md:gap-8 justify-items-center max-w-6xl mx-auto">
           {technologies.map((tech, index) => {
             const isKaggle = index === technologies.length - 1;
             return (
-              <motion.div
+              <TechnologyCard
                 key={index}
-                className={`
-                  relative rounded-xl border-2 ${tech.borderColor} p-4
-                  bg-gradient-to-br from-neutral-900/80 to-neutral-900/40
-                  backdrop-blur-sm shadow-lg
-                  cursor-pointer
-                  flex flex-col items-center justify-center
-                  w-full max-w-[160px] sm:max-w-[170px] aspect-square
-                  ${
-                    isKaggle
-                      ? "col-span-2 md:col-span-1 justify-self-center"
-                      : ""
-                  }
-                `}
-                variants={iconContainerVariants}
-                whileHover="hover"
-                whileTap="hover"
-                style={{
-                  boxShadow:
-                    hoveredTech === index
-                      ? `0 0 20px 3px ${tech.color}55`
-                      : "0 0 25px rgba(0, 0, 0, 0.4)",
-                  transition: "all 0.3s ease-in-out",
-                  overflow: "hidden",
-                }}
-                onHoverStart={() => {
-                  setHoveredTech(index);
-                  hoveredTechRef.current = index;
-                }}
-                onHoverEnd={() => {
-                  setHoveredTech(null);
-                  hoveredTechRef.current = null;
-                }}
-              >
-                {/* Animated border glow */}
-                <motion.div
-                  className="absolute inset-0 rounded-xl z-0"
-                  style={{
-                    boxShadow: `0 0 0px ${tech.color}00`,
-                  }}
-                  animate={{
-                    boxShadow: [
-                      `0 0 5px ${tech.color}33`,
-                      `0 0 15px ${tech.color}55`,
-                      `0 0 5px ${tech.color}33`,
-                    ],
-                  }}
-                  transition={{
-                    duration: tech.pulseSpeed,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-
-                {/* Icon with subtle pulsing glow */}
-                <motion.div
-                  className="relative flex-1 flex items-center justify-center"
-                  variants={getIconAnimation(tech.color)}
-                  animate="animate"
-                  whileHover="hover"
-                  whileTap="hover"
-                  style={{
-                    position: "relative",
-                    zIndex: 2,
-                    padding: "10px",
-                  }}
-                >
-                  {/* Pulsing background glow */}
-                  <motion.div
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background: `radial-gradient(circle, ${tech.color}33 0%, transparent 70%)`,
-                      filter: "blur(10px)",
-                      zIndex: 0,
-                      transform: "scale(1.5)",
-                    }}
-                    animate={{
-                      opacity: [0.3, 0.7, 0.3],
-                      scale: [1.4, 1.6, 1.4],
-                    }}
-                    transition={{
-                      duration:
-                        hoveredTech === index
-                          ? tech.pulseSpeed * 0.5
-                          : tech.pulseSpeed,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  />
-
-                  <motion.div
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background: `radial-gradient(circle, ${tech.color}22 0%, transparent 60%)`,
-                      filter: "blur(5px)",
-                      zIndex: 0,
-                      transform: "scale(1.2)",
-                    }}
-                    animate={{
-                      opacity: [0.5, 0.8, 0.5],
-                      scale: [1.2, 1.3, 1.2],
-                    }}
-                    transition={{
-                      duration:
-                        hoveredTech === index
-                          ? tech.pulseSpeed * 0.4
-                          : tech.pulseSpeed * 0.7,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  />
-
-                  {/* The icon itself */}
-                  <tech.icon
-                    className="text-5xl sm:text-6xl md:text-7xl relative z-10"
-                    style={{
-                      color: tech.color,
-                      display: "block",
-                    }}
-                  />
-                </motion.div>
-
-                {/* Technology name */}
-                <motion.div
-                  className="text-center mt-3 font-medium text-sm md:text-base"
-                  style={{
-                    color: tech.color,
-                    textShadow: `0 0 8px ${tech.color}66`,
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  {tech.name}
-                </motion.div>
-              </motion.div>
+                tech={tech}
+                index={index}
+                isKaggle={isKaggle}
+                hoveredTech={hoveredTech}
+                setHoveredTech={setHoveredTech}
+                hoveredTechRef={hoveredTechRef}
+              />
             );
           })}
         </motion.div>
-
-        {/* Divider */}
         <div className="w-full max-w-5xl mx-auto mt-20">
           <div
             className="h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-70"
-            style={{
-              boxShadow: "0 0 10px rgba(168, 85, 247, 0.3)",
-            }}
+            style={{ boxShadow: "0 0 10px rgba(168, 85, 247, 0.3)" }}
           />
         </div>
       </motion.div>
-
-      {/* Bottom decoration to blend into next section */}
       <div className="absolute bottom-0 left-0 w-full h-16 z-10 overflow-hidden">
         <div
           className="w-full h-full"
@@ -514,4 +441,4 @@ const Technologies = () => {
   );
 };
 
-export default Technologies;
+export default memo(Technologies);

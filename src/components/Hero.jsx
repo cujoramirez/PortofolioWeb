@@ -1,4 +1,4 @@
-import React, { useEffect, useState, memo } from "react";
+import React, { useEffect, useState, memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import profilePic from "../assets/GadingAdityaPerdana.jpg";
 import { HERO_CONTENT } from "../constants/index";
@@ -191,12 +191,13 @@ const ambientBlobVariants = {
   }),
 };
 
-const paragraphTokens = tokenizeParagraph(HERO_CONTENT);
-
 const Hero = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [nameAnimated, setNameAnimated] = useState(false);
   const [dotVisible, setDotVisible] = useState(true);
+
+  // Memoize tokenization for performance & consistent rendering on all devices
+  const tokens = useMemo(() => tokenizeParagraph(HERO_CONTENT), []);
 
   useEffect(() => {
     setIsVisible(true);
@@ -260,9 +261,10 @@ const Hero = () => {
             key={i}
             className="absolute rounded-full"
             style={{
-              background: i % 2 === 0
-                ? "radial-gradient(circle, rgba(236,72,153,0.15) 0%, rgba(236,72,153,0) 70%)"
-                : "radial-gradient(circle, rgba(168,85,247,0.15) 0%, rgba(168,85,247,0) 70%)",
+              background:
+                i % 2 === 0
+                  ? "radial-gradient(circle, rgba(236,72,153,0.15) 0%, rgba(236,72,153,0) 70%)"
+                  : "radial-gradient(circle, rgba(168,85,247,0.15) 0%, rgba(168,85,247,0) 70%)",
               width: `${400 + i * 100}px`,
               height: `${400 + i * 100}px`,
               top: `${i * 10}%`,
@@ -453,7 +455,7 @@ const Hero = () => {
 
           {/* Bio paragraph */}
           <motion.div
-            className="my-2 max-w-xl py-6 text-gray-300 leading-relaxed text-lg text-center lg:text-left relative"
+            className="w-full my-2 max-w-xl py-6 text-gray-300 leading-relaxed text-lg text-center lg:text-left relative break-words"
             variants={bioVariants}
             style={{ willChange: "opacity" }}
           >
@@ -464,7 +466,7 @@ const Hero = () => {
               style={{ willChange: "opacity" }}
             />
             <motion.p>
-              {tokenizeParagraph(HERO_CONTENT).map((token, index) => (
+              {tokens.map((token, index) => (
                 <motion.span
                   key={index}
                   custom={index}
@@ -480,7 +482,7 @@ const Hero = () => {
                   }`}
                   style={{ willChange: "transform, color, textShadow" }}
                 >
-                  {token.text}
+                  {token.text}{" "}
                 </motion.span>
               ))}
             </motion.p>
@@ -489,7 +491,10 @@ const Hero = () => {
 
         {/* RIGHT: Profile image */}
         <div className="w-full lg:w-1/2 flex justify-center items-center">
-          <motion.div className="relative w-full max-w-xs md:max-w-sm lg:max-w-md" style={{ willChange: "transform, opacity" }}>
+          <motion.div
+            className="relative w-full max-w-xs md:max-w-sm lg:max-w-md"
+            style={{ willChange: "transform, opacity" }}
+          >
             <motion.img
               src={profilePic}
               alt="Gading Aditya Perdana"

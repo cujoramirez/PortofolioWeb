@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import { FaLinkedin, FaEnvelope } from "react-icons/fa";
 
@@ -78,6 +78,9 @@ const iconVariants = {
 };
 
 const Contact = () => {
+  // Memoize the current year so it doesn't recalc on every render
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
+
   return (
     <motion.div
       id="contact"
@@ -234,7 +237,7 @@ const Contact = () => {
         whileHover="hover"
         whileTap="hover"
       >
-        <p>© {new Date().getFullYear()} Gading Aditya Perdana. All rights reserved.</p>
+        <p>© {currentYear} Gading Aditya Perdana. All rights reserved.</p>
       </motion.div>
 
       {/* Gradient Keyframes */}
@@ -252,4 +255,4 @@ const Contact = () => {
   );
 };
 
-export default Contact;
+export default memo(Contact);
