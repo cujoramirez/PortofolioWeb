@@ -1,5 +1,5 @@
 import React, { useEffect, useState, memo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import profilePic from "../assets/GadingAdityaPerdana.jpg";
 import { HERO_CONTENT } from "../constants/index";
 
@@ -53,7 +53,7 @@ function tokenizeParagraph(paragraph) {
   return tokens;
 }
 
-// Word-by-word animation
+// Word-by-word animation variants
 const enhancedWordVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: (i) => ({
@@ -73,13 +73,130 @@ const enhancedWordVariants = {
   },
 };
 
+const nameVariants = {
+  initial: { fontWeight: 200, textShadow: "0 0 0 rgba(255,255,255,0)" },
+  animate: {
+    fontWeight: 700,
+    textShadow: "0 0 8px rgba(255,255,255,0.3)",
+    transition: { duration: 1.2, ease: "easeOut" },
+  },
+  hover: {
+    textShadow: "0 0 12px rgba(236,72,153,0.6), 0 0 20px rgba(168,85,247,0.4)",
+    filter: "brightness(1.5)",
+    transition: { duration: 0.3, ease: "easeInOut" },
+  },
+};
+
+const dotVariants = {
+  initial: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    pathOffset: [0, 1],
+    transition: {
+      pathOffset: { repeat: 0, duration: 5, ease: "linear" },
+      opacity: { duration: 5, times: [0, 0.9, 1], values: [1, 1, 0] },
+    },
+  },
+};
+
+const outlineVariants = {
+  initial: { pathLength: 0, pathOffset: 0, strokeOpacity: 1 },
+  animate: {
+    pathLength: 1,
+    pathOffset: [0, 0.5, 1],
+    strokeOpacity: [1, 1, 0],
+    transition: {
+      pathLength: { duration: 2.5, ease: "easeInOut" },
+      pathOffset: { duration: 2.5, ease: "easeInOut", times: [0, 0.5, 1] },
+      strokeOpacity: { duration: 1, delay: 2, ease: "easeOut" },
+    },
+  },
+};
+
+const titleContainerVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut", delay: 0.5 },
+  },
+};
+
+const titleLineVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5 },
+  },
+  hover: {
+    scale: 1.03,
+    transition: { duration: 0.2 },
+  },
+};
+
+const bioVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 0.8, delay: 0.9, ease: "easeOut" },
+  },
+};
+
+const profilePicVariants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.8, delay: 0.4, ease: "easeOut" },
+  },
+  hover: {
+    scale: 1.05,
+    boxShadow: "0 20px 30px rgba(0, 0, 0, 0.2)",
+    transition: { duration: 0.5, ease: [0.43, 0.13, 0.23, 0.96] },
+  },
+};
+
+const profileAnimationVariants = {
+  initial: { filter: "brightness(1) contrast(1)", y: 0, rotate: 0 },
+  animate: {
+    filter: [
+      "brightness(1) contrast(1)",
+      "brightness(1.1) contrast(1.05)",
+      "brightness(1) contrast(1)",
+    ],
+    y: [-5, 5, -5],
+    rotate: [-0.5, 0.5, -0.5],
+    transition: {
+      y: { duration: 6, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" },
+      filter: { duration: 8, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" },
+      rotate: { duration: 9, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" },
+    },
+  },
+};
+
+const ambientBlobVariants = {
+  initial: { scale: 0.8, opacity: 0.1 },
+  animate: (i) => ({
+    scale: [0.8, 1.2, 0.9, 1.1, 0.8],
+    opacity: [0.1, 0.2, 0.15, 0.25, 0.1],
+    x: [0, 50, -30, 20, 0],
+    y: [0, -30, 50, -20, 0],
+    transition: {
+      duration: 25 + i * 5,
+      ease: "easeInOut",
+      repeat: Infinity,
+      repeatType: "mirror",
+    },
+  }),
+};
+
+const paragraphTokens = tokenizeParagraph(HERO_CONTENT);
+
 const Hero = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [nameAnimated, setNameAnimated] = useState(false);
   const [dotVisible, setDotVisible] = useState(true);
-
-  // If user prefers reduced motion, skip heavy animations
-  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     setIsVisible(true);
@@ -91,154 +208,6 @@ const Hero = () => {
     };
   }, []);
 
-  // Name text variants
-  const nameVariants = {
-    initial: { fontWeight: 200, textShadow: "0 0 0 rgba(255,255,255,0)" },
-    animate: {
-      fontWeight: 700,
-      textShadow: "0 0 8px rgba(255,255,255,0.3)",
-      transition: { duration: 1.2, ease: "easeOut" },
-    },
-    hover: {
-      textShadow: "0 0 12px rgba(236,72,153,0.6), 0 0 20px rgba(168,85,247,0.4)",
-      filter: "brightness(1.5)",
-      transition: { duration: 0.3, ease: "easeInOut" },
-    },
-  };
-
-  // Animated dot
-  const dotVariants = {
-    initial: { opacity: 0 },
-    animate: {
-      opacity: 1,
-      pathOffset: [0, 1],
-      transition: {
-        pathOffset: { repeat: 0, duration: 5, ease: "linear" },
-        opacity: { duration: 5, times: [0, 0.9, 1], values: [1, 1, 0] },
-      },
-    },
-  };
-
-  // Outline path
-  const outlineVariants = {
-    initial: { pathLength: 0, pathOffset: 0, strokeOpacity: 1 },
-    animate: {
-      pathLength: 1,
-      pathOffset: [0, 0.5, 1],
-      strokeOpacity: [1, 1, 0],
-      transition: {
-        pathLength: { duration: 2.5, ease: "easeInOut" },
-        pathOffset: { duration: 2.5, ease: "easeInOut", times: [0, 0.5, 1] },
-        strokeOpacity: { duration: 1, delay: 2, ease: "easeOut" },
-      },
-    },
-  };
-
-  // Title text container
-  const titleContainerVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut", delay: 0.5 },
-    },
-  };
-
-  const titleLineVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 },
-    },
-    hover: {
-      scale: 1.03,
-      transition: { duration: 0.2 },
-    },
-  };
-
-  // Bio paragraph container
-  const bioVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { duration: 0.8, delay: 0.9, ease: "easeOut" },
-    },
-  };
-
-  // Profile pic
-  const profilePicVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: { duration: 0.8, delay: 0.4, ease: "easeOut" },
-    },
-    hover: {
-      scale: 1.05,
-      boxShadow: "0 20px 30px rgba(0, 0, 0, 0.2)",
-      transition: { duration: 0.5, ease: [0.43, 0.13, 0.23, 0.96] },
-    },
-  };
-
-  // Subtle float + brightness for the image
-  const profileAnimationVariants = shouldReduceMotion
-    ? {}
-    : {
-        initial: { filter: "brightness(1) contrast(1)", y: 0, rotate: 0 },
-        animate: {
-          filter: [
-            "brightness(1) contrast(1)",
-            "brightness(1.1) contrast(1.05)",
-            "brightness(1) contrast(1)",
-          ],
-          y: [-5, 5, -5],
-          rotate: [-0.5, 0.5, -0.5],
-          transition: {
-            y: {
-              duration: 6,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "mirror",
-            },
-            filter: {
-              duration: 8,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "mirror",
-            },
-            rotate: {
-              duration: 9,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "mirror",
-            },
-          },
-        },
-      };
-
-  // Ambient background blobs (disable or reduce if user prefers reduced motion)
-  const ambientBlobVariants = shouldReduceMotion
-    ? {}
-    : {
-        initial: { scale: 0.8, opacity: 0.1 },
-        animate: (i) => ({
-          scale: [0.8, 1.2, 0.9, 1.1, 0.8],
-          opacity: [0.1, 0.2, 0.15, 0.25, 0.1],
-          x: [0, 50, -30, 20, 0],
-          y: [0, -30, 50, -20, 0],
-          transition: {
-            duration: 25 + i * 5,
-            ease: "easeInOut",
-            repeat: Infinity,
-            repeatType: "mirror",
-          },
-        }),
-      };
-
-  // Tokenize the hero content
-  const paragraphTokens = tokenizeParagraph(HERO_CONTENT);
-
   return (
     <motion.div
       className="
@@ -249,7 +218,6 @@ const Hero = () => {
         flex-col
         justify-center
         items-center
-        overflow-x-hidden
         py-12
         px-4
         md:py-16
@@ -258,7 +226,6 @@ const Hero = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
       style={{
-        // Force a dark background to avoid "white block" flicker
         backgroundColor: "#0f0528",
         willChange: "opacity, transform",
       }}
@@ -269,64 +236,51 @@ const Hero = () => {
           margin: 0;
           padding: 0;
           scroll-behavior: smooth;
-          background: #0f0528; /* fallback to reduce white flicker */
+          background: #0f0528;
         }
         ::-webkit-scrollbar {
           width: 0;
           background: transparent;
         }
         @keyframes gradientShift {
-          0% {
-            background-position: 0% 50%;
-          }
-          100% {
-            background-position: 100% 50%;
-          }
+          0% { background-position: 0% 50%; }
+          100% { background-position: 100% 50%; }
         }
         @keyframes pulseGlow {
-          0% {
-            filter: brightness(0.8) contrast(1.2);
-          }
-          50% {
-            filter: brightness(1.2) contrast(1);
-          }
-          100% {
-            filter: brightness(0.8) contrast(1.2);
-          }
+          0% { filter: brightness(0.8) contrast(1.2); }
+          50% { filter: brightness(1.2) contrast(1); }
+          100% { filter: brightness(0.8) contrast(1.2); }
         }
       `}</style>
 
       {/* Ambient background blobs */}
-      {!shouldReduceMotion && (
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          {[1, 2, 3, 4].map((i) => (
-            <motion.div
-              key={i}
-              className="absolute rounded-full will-change-transform"
-              style={{
-                background:
-                  i % 2 === 0
-                    ? "radial-gradient(circle, rgba(236,72,153,0.15) 0%, rgba(236,72,153,0) 70%)"
-                    : "radial-gradient(circle, rgba(168,85,247,0.15) 0%, rgba(168,85,247,0) 70%)",
-                width: `${400 + i * 100}px`,
-                height: `${400 + i * 100}px`,
-                top: `${i * 10}%`,
-                left: `${(i * 25) % 100}%`,
-                filter: "blur(60px)",
-                mixBlendMode: "normal",
-              }}
-              custom={i}
-              variants={ambientBlobVariants}
-              initial="initial"
-              animate="animate"
-            />
-          ))}
-        </div>
-      )}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {[1, 2, 3, 4].map((i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              background: i % 2 === 0
+                ? "radial-gradient(circle, rgba(236,72,153,0.15) 0%, rgba(236,72,153,0) 70%)"
+                : "radial-gradient(circle, rgba(168,85,247,0.15) 0%, rgba(168,85,247,0) 70%)",
+              width: `${400 + i * 100}px`,
+              height: `${400 + i * 100}px`,
+              top: `${i * 10}%`,
+              left: `${(i * 25) % 100}%`,
+              filter: "blur(60px)",
+              mixBlendMode: "normal",
+            }}
+            custom={i}
+            variants={ambientBlobVariants}
+            initial="initial"
+            animate="animate"
+          />
+        ))}
+      </div>
 
       {/* Subtle grid background */}
       <div
-        className="fixed inset-0 pointer-events-none will-change-transform"
+        className="fixed inset-0 pointer-events-none"
         style={{
           backgroundImage:
             "linear-gradient(rgba(168,85,247,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(168,85,247,0.03) 1px, transparent 1px)",
@@ -337,67 +291,41 @@ const Hero = () => {
       ></div>
 
       {/* Animated gradient mesh */}
-      {!shouldReduceMotion && (
-        <div className="fixed inset-0 pointer-events-none overflow-hidden will-change-transform">
-          <svg width="100%" height="100%" style={{ position: "absolute" }}>
-            <defs>
-              <linearGradient
-                id="meshGradient"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="100%"
-              >
-                <stop offset="0%" stopColor="rgba(168,85,247,0.05)" />
-                <stop offset="50%" stopColor="rgba(236,72,153,0.05)" />
-                <stop offset="100%" stopColor="rgba(124,58,237,0.05)" />
-              </linearGradient>
-            </defs>
-            <motion.rect
-              x="-50%"
-              y="-50%"
-              width="200%"
-              height="200%"
-              fill="url(#meshGradient)"
-              initial={{ rotate: 0, scale: 1 }}
-              animate={{
-                rotate: 360,
-                scale: [1, 1.1, 1],
-                filter: "blur(80px)",
-              }}
-              transition={{
-                rotate: {
-                  duration: 60,
-                  ease: "linear",
-                  repeat: Infinity,
-                },
-                scale: {
-                  duration: 20,
-                  ease: "easeInOut",
-                  repeat: Infinity,
-                  repeatType: "mirror",
-                },
-              }}
-            />
-          </svg>
-        </div>
-      )}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <svg width="100%" height="100%" style={{ position: "absolute" }}>
+          <defs>
+            <linearGradient id="meshGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(168,85,247,0.05)" />
+              <stop offset="50%" stopColor="rgba(236,72,153,0.05)" />
+              <stop offset="100%" stopColor="rgba(124,58,237,0.05)" />
+            </linearGradient>
+          </defs>
+          <motion.rect
+            x="-50%"
+            y="-50%"
+            width="200%"
+            height="200%"
+            fill="url(#meshGradient)"
+            initial={{ rotate: 0, scale: 1 }}
+            animate={{
+              rotate: 360,
+              scale: [1, 1.1, 1],
+              filter: "blur(80px)",
+            }}
+            transition={{
+              rotate: { duration: 60, ease: "linear", repeat: Infinity },
+              scale: { duration: 20, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" },
+            }}
+          />
+        </svg>
+      </div>
 
       <div className="flex flex-col-reverse lg:flex-row items-center gap-8 md:gap-12 max-w-7xl mx-auto w-full relative z-10">
         {/* Left: Text area */}
-        <motion.div
-          className="w-full lg:w-1/2 flex flex-col items-center lg:items-start"
-          initial="hidden"
-          animate={isVisible ? "visible" : "hidden"}
-          style={{ willChange: "transform, opacity" }}
-        >
+        <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start">
           {/* Name + Outline */}
           <div className="relative pb-6 mt-8 lg:mt-0">
-            <svg
-              className="absolute top-0 left-0 w-full h-full"
-              viewBox="0 0 600 100"
-              style={{ overflow: "visible" }}
-            >
+            <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 600 100" style={{ overflow: "visible" }}>
               <motion.path
                 d="M10,50 C100,10 200,90 300,50 C400,10 500,90 590,50"
                 fill="none"
@@ -427,13 +355,7 @@ const Hero = () => {
                 </motion.circle>
               )}
               <defs>
-                <linearGradient
-                  id="heroGradient"
-                  x1="0%"
-                  y1="0%"
-                  x2="100%"
-                  y2="0%"
-                >
+                <linearGradient id="heroGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#ec4899" />
                   <stop offset="50%" stopColor="#cbd5e1" />
                   <stop offset="100%" stopColor="#a855f7" />
@@ -441,18 +363,7 @@ const Hero = () => {
               </defs>
             </svg>
             <motion.h1
-              className="
-                text-4xl
-                md:text-5xl
-                xl:text-6xl
-                tracking-tight
-                text-center
-                lg:text-left
-                font-bold
-                relative
-                leading-tight
-                // [FIX] Removed whitespace-nowrap so text can wrap on small screens
-              "
+              className="text-4xl md:text-5xl xl:text-6xl tracking-tight text-center lg:text-left font-bold relative leading-normal whitespace-normal break-words"
               initial="initial"
               animate={nameAnimated ? "animate" : "initial"}
               whileHover="hover"
@@ -464,32 +375,20 @@ const Hero = () => {
               <motion.div
                 className="absolute -inset-2 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-indigo-500/20 rounded-lg blur-lg -z-10"
                 initial={{ opacity: 0 }}
-                animate={{
-                  opacity: [0.1, 0.3, 0.1],
-                  scale: [1, 1.05, 1],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  repeatType: "mirror",
-                }}
+                animate={{ opacity: [0.1, 0.3, 0.1], scale: [1, 1.05, 1] }}
+                transition={{ duration: 3, repeat: Infinity, repeatType: "mirror" }}
                 style={{ willChange: "opacity, transform" }}
               />
             </motion.h1>
           </div>
 
           {/* Titles */}
-          <motion.div
-            className="relative"
-            variants={titleContainerVariants}
-            style={{ willChange: "transform, opacity" }}
-          >
-            <motion.div className="text-xl md:text-2xl xl:text-3xl tracking-tight text-center lg:text-left relative space-y-3">
+          <div className="relative">
+            <div className="text-xl md:text-2xl xl:text-3xl tracking-tight text-center lg:text-left relative space-y-3">
               <motion.div
                 className="text-transparent bg-clip-text relative"
                 style={{
-                  background:
-                    "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7)",
+                  background: "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7)",
                   backgroundSize: "200% 200%",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
@@ -503,19 +402,14 @@ const Hero = () => {
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-purple-500/10 rounded-lg blur-md -z-10"
                   animate={{ opacity: [0.1, 0.2, 0.1] }}
-                  transition={{
-                    duration: 2.5,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                  }}
+                  transition={{ duration: 2.5, repeat: Infinity, repeatType: "mirror" }}
                   style={{ willChange: "opacity" }}
                 />
               </motion.div>
               <motion.div
                 className="text-transparent bg-clip-text relative"
                 style={{
-                  background:
-                    "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7)",
+                  background: "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7)",
                   backgroundSize: "200% 200%",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
@@ -529,20 +423,14 @@ const Hero = () => {
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg blur-md -z-10"
                   animate={{ opacity: [0.1, 0.2, 0.1] }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                    delay: 0.5,
-                  }}
+                  transition={{ duration: 3, repeat: Infinity, repeatType: "mirror", delay: 0.5 }}
                   style={{ willChange: "opacity" }}
                 />
               </motion.div>
               <motion.div
                 className="text-transparent bg-clip-text relative"
                 style={{
-                  background:
-                    "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7)",
+                  background: "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7)",
                   backgroundSize: "200% 200%",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
@@ -556,44 +444,27 @@ const Hero = () => {
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-pink-500/10 rounded-lg blur-md -z-10"
                   animate={{ opacity: [0.1, 0.2, 0.1] }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                    delay: 1,
-                  }}
+                  transition={{ duration: 2, repeat: Infinity, repeatType: "mirror", delay: 1 }}
                   style={{ willChange: "opacity" }}
                 />
               </motion.div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
           {/* Bio paragraph */}
           <motion.div
-            className="
-              my-2 max-w-xl py-6
-              text-gray-300
-              leading-relaxed
-              text-lg
-              text-center
-              lg:text-left
-              relative
-            "
+            className="my-2 max-w-xl py-6 text-gray-300 leading-relaxed text-lg text-center lg:text-left relative"
             variants={bioVariants}
             style={{ willChange: "opacity" }}
           >
             <motion.div
               className="absolute -inset-4 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-indigo-500/5 rounded-xl blur-xl -z-10"
               animate={{ opacity: [0.1, 0.2, 0.1] }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                repeatType: "mirror",
-              }}
+              transition={{ duration: 5, repeat: Infinity, repeatType: "mirror" }}
               style={{ willChange: "opacity" }}
             />
             <motion.p>
-              {paragraphTokens.map((token, index) => (
+              {tokenizeParagraph(HERO_CONTENT).map((token, index) => (
                 <motion.span
                   key={index}
                   custom={index}
@@ -614,20 +485,11 @@ const Hero = () => {
               ))}
             </motion.p>
           </motion.div>
-        </motion.div>
+        </div>
 
         {/* RIGHT: Profile image */}
-        <motion.div
-          className="w-full lg:w-1/2 flex justify-center items-center"
-          variants={profileAnimationVariants}
-          initial="initial"
-          animate="animate"
-          style={{ willChange: "transform, filter" }}
-        >
-          <motion.div
-            className="relative w-full max-w-xs md:max-w-sm lg:max-w-md"
-            style={{ willChange: "transform, opacity" }}
-          >
+        <div className="w-full lg:w-1/2 flex justify-center items-center">
+          <motion.div className="relative w-full max-w-xs md:max-w-sm lg:max-w-md" style={{ willChange: "transform, opacity" }}>
             <motion.img
               src={profilePic}
               alt="Gading Aditya Perdana"
@@ -639,94 +501,81 @@ const Hero = () => {
               whileTap="hover"
               style={{ willChange: "transform, opacity, boxShadow" }}
             />
-            {/* Simplified glow behind the image */}
-            {!shouldReduceMotion && (
-              <motion.div
-                className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-lg blur opacity-30 -z-10 will-change-transform"
-                initial={{ opacity: 0 }}
-                animate={{
-                  opacity: [0.3, 0.5, 0.3],
-                  scale: [1, 1.02, 1],
-                }}
-                transition={{
-                  opacity: {
-                    duration: 3,
+            {/* Enhanced glow effect behind the image */}
+            <motion.div
+              className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-lg blur opacity-30 -z-10"
+              initial={{ opacity: 0 }}
+              animate={{
+                opacity: [0.4, 0.8, 0.4],
+                scale: [1, 1.08, 1],
+              }}
+              transition={{
+                opacity: { duration: 3, repeat: Infinity, repeatType: "mirror" },
+                scale: { duration: 4, repeat: Infinity, repeatType: "mirror" },
+                delay: 1,
+              }}
+              style={{ mixBlendMode: "screen" }}
+            />
+            {/* Dynamic particle effect around image */}
+            <div className="absolute -inset-16 z-0 opacity-60">
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute rounded-full bg-purple-500"
+                  style={{
+                    width: 6 + Math.random() * 8,
+                    height: 6 + Math.random() * 8,
+                    top: `${20 + Math.random() * 60}%`,
+                    left: `${20 + Math.random() * 60}%`,
+                    filter: "blur(3px)",
+                    willChange: "transform, opacity",
+                  }}
+                  animate={{
+                    x: [0, Math.random() * 40 - 20, 0],
+                    y: [0, Math.random() * 40 - 20, 0],
+                    opacity: [0.3, 0.8, 0.3],
+                    scale: [1, 1.5, 1],
+                  }}
+                  transition={{
+                    duration: 3 + Math.random() * 4,
                     repeat: Infinity,
                     repeatType: "mirror",
-                  },
-                  scale: {
-                    duration: 4,
+                    delay: i * 0.5,
+                  }}
+                />
+              ))}
+              {[...Array(5)].map((_, i) => (
+                <motion.div
+                  key={i + 6}
+                  className="absolute rounded-full bg-pink-500"
+                  style={{
+                    width: 5 + Math.random() * 6,
+                    height: 5 + Math.random() * 6,
+                    top: `${20 + Math.random() * 60}%`,
+                    left: `${20 + Math.random() * 60}%`,
+                    filter: "blur(2px)",
+                    willChange: "transform, opacity",
+                  }}
+                  animate={{
+                    x: [0, Math.random() * 30 - 15, 0],
+                    y: [0, Math.random() * 30 - 15, 0],
+                    opacity: [0.3, 0.7, 0.3],
+                    scale: [1, 1.3, 1],
+                  }}
+                  transition={{
+                    duration: 4 + Math.random() * 3,
                     repeat: Infinity,
                     repeatType: "mirror",
-                  },
-                  delay: 1,
-                }}
-              />
-            )}
-
-            {/* Dynamic particle effect around image (disabled if reduced motion) */}
-            {!shouldReduceMotion && (
-              <div className="absolute -inset-16 z-0 opacity-60 will-change-transform">
-                {[...Array(6)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute rounded-full bg-purple-500"
-                    style={{
-                      width: 6 + Math.random() * 8,
-                      height: 6 + Math.random() * 8,
-                      top: `${20 + Math.random() * 60}%`,
-                      left: `${20 + Math.random() * 60}%`,
-                      filter: "blur(3px)",
-                      willChange: "transform, opacity",
-                    }}
-                    animate={{
-                      x: [0, Math.random() * 40 - 20, 0],
-                      y: [0, Math.random() * 40 - 20, 0],
-                      opacity: [0.3, 0.8, 0.3],
-                      scale: [1, 1.5, 1],
-                    }}
-                    transition={{
-                      duration: 3 + Math.random() * 4,
-                      repeat: Infinity,
-                      repeatType: "mirror",
-                      delay: i * 0.5,
-                    }}
-                  />
-                ))}
-                {[...Array(5)].map((_, i) => (
-                  <motion.div
-                    key={i + 6}
-                    className="absolute rounded-full bg-pink-500"
-                    style={{
-                      width: 5 + Math.random() * 6,
-                      height: 5 + Math.random() * 6,
-                      top: `${20 + Math.random() * 60}%`,
-                      left: `${20 + Math.random() * 60}%`,
-                      filter: "blur(2px)",
-                      willChange: "transform, opacity",
-                    }}
-                    animate={{
-                      x: [0, Math.random() * 30 - 15, 0],
-                      y: [0, Math.random() * 30 - 15, 0],
-                      opacity: [0.3, 0.7, 0.3],
-                      scale: [1, 1.3, 1],
-                    }}
-                    transition={{
-                      duration: 4 + Math.random() * 3,
-                      repeat: Infinity,
-                      repeatType: "mirror",
-                      delay: i * 0.5 + 0.2,
-                    }}
-                  />
-                ))}
-              </div>
-            )}
+                    delay: i * 0.5 + 0.2,
+                  }}
+                />
+              ))}
+            </div>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     </motion.div>
   );
 };
 
-// Optionally wrap in React.memo to reduce re-renders
 export default React.memo(Hero);
