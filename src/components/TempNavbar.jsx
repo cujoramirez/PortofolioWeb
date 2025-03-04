@@ -152,26 +152,34 @@ function Navbar() {
       const navHeight = navElement ? navElement.offsetHeight : 76;
       const startPosition = window.pageYOffset;
       
-      // Compute target position and subtract navbar height
-      let targetPosition =
-        contactSection.getBoundingClientRect().top + window.pageYOffset - navHeight;
+      // Extra offset to scroll a little further for the pulse effect
+      const extraOffset = 50;
       
-      // Clamp targetPosition to the maximum scrollable value to avoid overshooting
-      const maxScroll =
-        document.documentElement.scrollHeight - window.innerHeight;
+      // Compute target position, subtracting navbar height but adding extra offset
+      let targetPosition =
+        contactSection.getBoundingClientRect().top + window.pageYOffset - navHeight + extraOffset;
+      
+      // Clamp targetPosition to the maximum scrollable value
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       targetPosition = Math.min(targetPosition, maxScroll);
-
+      // If we're at the bottom, subtract a few pixels to avoid rubber banding
+      if (targetPosition === maxScroll) {
+        targetPosition = maxScroll - 2;
+      }
+  
       const distance = targetPosition - startPosition;
-      const duration = 1000;
+      // Dynamically adjust duration based on distance (min 800ms, max 1500ms)
+      const duration = Math.min(1500, Math.max(800, distance * 0.5));
       let startTimestamp = null;
-      const easeInOutCubic = (t) =>
-        t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
-
+      
+      // Use an easeOutQuart easing function for a smoother deceleration
+      const easeOutQuart = (t) => 1 - Math.pow(1 - t, 4);
+  
       const animateScroll = (timestamp) => {
         if (!startTimestamp) startTimestamp = timestamp;
         const elapsed = timestamp - startTimestamp;
         const progress = Math.min(elapsed / duration, 1);
-        const easing = easeInOutCubic(progress);
+        const easing = easeOutQuart(progress);
         window.scrollTo(0, startPosition + distance * easing);
         if (elapsed < duration) {
           window.requestAnimationFrame(animateScroll);
@@ -187,6 +195,8 @@ function Navbar() {
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     }
   };
+  
+  
 
   // 5) Now define socialIcons
   const socialIcons = [
