@@ -147,9 +147,12 @@ function Navbar() {
       document.querySelector("section.contact") ||
       document.querySelector("footer");
     if (contactSection) {
+      // Calculate the height of the navbar to adjust scroll position
+      const navElement = document.querySelector("nav");
+      const navHeight = navElement ? navElement.offsetHeight : 76;
       const startPosition = window.pageYOffset;
       const targetPosition =
-        contactSection.getBoundingClientRect().top + window.pageYOffset;
+        contactSection.getBoundingClientRect().top + window.pageYOffset - navHeight;
       const distance = targetPosition - startPosition;
       const duration = 1000;
       let startTimestamp = null;
