@@ -53,18 +53,18 @@ function tokenizeParagraph(paragraph) {
   return tokens;
 }
 
-// Word-by-word animation variants without stagger effect
+// Word-by-word animation variants with stagger effect restored
 const enhancedWordVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: {
+  visible: (i) => ({
     opacity: 1,
     y: 0,
     transition: {
-      delay: 1, // Removed stagger (i * 0.015) so all tokens animate together
+      delay: 1 + i * 0.015, // staggered delay
       duration: 0.3,
       ease: "easeOut",
     },
-  },
+  }),
   hover: {
     scale: 1.08,
     color: "#a855f7",
@@ -470,9 +470,12 @@ const Hero = () => {
               {tokens.map((token, index) => (
                 <motion.span
                   key={index}
+                  custom={index}
                   variants={enhancedWordVariants}
                   initial="hidden"
-                  animate="visible"
+                  whileInView="visible"
+                  // Lowered the viewport threshold so even small tokens trigger their animation
+                  viewport={{ once: false, amount: 0.1 }}
                   whileHover="hover"
                   whileTap="hover"
                   className={`inline-block mr-1 ${
