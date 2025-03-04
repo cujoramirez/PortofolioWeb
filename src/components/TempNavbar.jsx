@@ -147,19 +147,25 @@ function Navbar() {
       document.querySelector("section.contact") ||
       document.querySelector("footer");
     if (contactSection) {
-      // Calculate the height of the navbar to adjust scroll position
+      // Calculate navbar height dynamically
       const navElement = document.querySelector("nav");
       const navHeight = navElement ? navElement.offsetHeight : 76;
       const startPosition = window.pageYOffset;
-      const targetPosition =
+      
+      // Compute target position and subtract navbar height
+      let targetPosition =
         contactSection.getBoundingClientRect().top + window.pageYOffset - navHeight;
+      
+      // Clamp targetPosition to the maximum scrollable value to avoid overshooting
+      const maxScroll =
+        document.documentElement.scrollHeight - window.innerHeight;
+      targetPosition = Math.min(targetPosition, maxScroll);
+
       const distance = targetPosition - startPosition;
       const duration = 1000;
       let startTimestamp = null;
       const easeInOutCubic = (t) =>
-        t < 0.5
-          ? 4 * t * t * t
-          : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+        t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
 
       const animateScroll = (timestamp) => {
         if (!startTimestamp) startTimestamp = timestamp;
