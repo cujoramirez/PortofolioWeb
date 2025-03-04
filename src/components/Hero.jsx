@@ -578,4 +578,4 @@ const Hero = () => {
   );
 };
 
-export default React.memo(Hero);
+export default memo(Hero);
