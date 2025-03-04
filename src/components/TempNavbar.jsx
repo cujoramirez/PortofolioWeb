@@ -216,6 +216,7 @@ const Navbar = () => {
               initial="initial"
               animate="animate"
               whileHover="hover"
+              whileTap="hover"
             >
               {/* Choose between the stylized G or the image logo */}
               {/* Option 1: Stylized G with gradient */}
@@ -286,6 +287,7 @@ const Navbar = () => {
                 className="relative group"
                 variants={socialIconVariants}
                 whileHover="hover"
+                whileTap="hover"
                 custom={index}
                 aria-label={tooltip}
               >

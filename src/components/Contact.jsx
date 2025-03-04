@@ -91,10 +91,13 @@ const Contact = () => {
       <motion.div 
         className="text-center mb-16"
         variants={itemVariants}
+        whileHover="hover"
+        whileTap="hover"
       >
         <motion.h2
           className="text-4xl md:text-5xl font-bold mb-6"
           whileHover={{ scale: 1.05, textShadow: "0px 0px 16px rgba(168,85,247,0.8)" }}
+          whileTap={{ scale: 1.05, textShadow: "0px 0px 16px rgba(168,85,247,0.8)" }}
           style={{
             background: "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7)",
             backgroundSize: "200% 200%",
@@ -109,6 +112,7 @@ const Contact = () => {
           className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto"
           variants={itemVariants}
           whileHover="hover"
+          whileTap="hover"
         >
           I'm always open to discussing new projects, creative ideas or opportunities to be part of your vision.
         </motion.p>
@@ -119,6 +123,7 @@ const Contact = () => {
         className="max-w-3xl mx-auto w-full"
         variants={cardVariants}
         whileHover="hover"
+        whileTap="hover"
       >
         <div className="bg-neutral-900/70 backdrop-blur-sm border border-neutral-800 rounded-xl p-8 md:p-10 shadow-xl">
           {/* Contact Methods Container */}
@@ -127,11 +132,14 @@ const Contact = () => {
             <motion.div 
               className="flex flex-col items-center text-center"
               variants={itemVariants}
+              whileHover="hover"
+              whileTap="hover"
             >
               <motion.div 
                 className="mb-6 p-4 rounded-full bg-gradient-to-br from-purple-600/20 to-pink-600/20"
                 variants={iconVariants}
                 whileHover="hover"
+                whileTap="hover"
                 initial="initial"
                 style={{
                   backgroundSize: "200% 200%",
@@ -143,12 +151,14 @@ const Contact = () => {
               <motion.h3 
                 className="text-xl font-medium mb-2"
                 whileHover={{ scale: 1.05, color: "#a855f7" }}
+                whileTap={{ scale: 1.05, color: "#a855f7" }}
               >
                 Email
               </motion.h3>
               <motion.p 
                 className="text-neutral-400 mb-6"
                 whileHover={{ color: "#cbd5e1", scale: 1.02 }}
+                whileTap={{ color: "#cbd5e1", scale: 1.02 }}
               >
                 Feel free to send me a message anytime
               </motion.p>
@@ -170,11 +180,14 @@ const Contact = () => {
             <motion.div 
               className="flex flex-col items-center text-center"
               variants={itemVariants}
+              whileHover="hover"
+              whileTap="hover"
             >
               <motion.div 
                 className="mb-6 p-4 rounded-full bg-gradient-to-br from-purple-600/20 to-pink-600/20"
                 variants={iconVariants}
                 whileHover="hover"
+                whileTap="hover"
                 initial="initial"
                 style={{
                   backgroundSize: "200% 200%",
@@ -186,12 +199,14 @@ const Contact = () => {
               <motion.h3 
                 className="text-xl font-medium mb-2"
                 whileHover={{ scale: 1.05, color: "#a855f7" }}
+                whileTap={{ scale: 1.05, color: "#a855f7" }}
               >
                 LinkedIn
               </motion.h3>
               <motion.p 
                 className="text-neutral-400 mb-6"
                 whileHover={{ color: "#cbd5e1", scale: 1.02 }}
+                whileTap={{ color: "#cbd5e1", scale: 1.02 }}
               >
                 Let's connect professionally
               </motion.p>
@@ -216,7 +231,8 @@ const Contact = () => {
       <motion.div 
         className="text-center mt-16 text-neutral-500 text-sm"
         variants={itemVariants}
-        whileHover={{ color: "#a855f7", scale: 1.02 }}
+        whileHover="hover"
+        whileTap="hover"
       >
         <p>© {new Date().getFullYear()} Gading Aditya Perdana. All rights reserved.</p>
       </motion.div>

@@ -92,6 +92,7 @@ const Experience = () => {
         className="my-16 text-center text-4xl font-bold"
         variants={titleVariants}
         whileHover="hover"
+        whileTap="hover"
         style={gradientStyle}
       >
         Experience
@@ -104,6 +105,7 @@ const Experience = () => {
           className="mb-10 flex flex-col lg:flex-row lg:justify-center items-start p-6 rounded-lg bg-neutral-950 bg-opacity-50 backdrop-blur-sm will-change-transform"
           variants={cardVariants}
           whileHover="hover"
+          whileTap="hover"
           layout
         >
           <motion.div 
@@ -142,6 +144,7 @@ const Experience = () => {
                   className="mr-2 mt-2 rounded bg-neutral-900 px-2 py-1 text-sm font-medium text-purple-800 border border-transparent hover:border-purple-700"
                   variants={tagVariants}
                   whileHover="hover"
+                  whileTap="hover"
                 >
                   {tech}
                 </motion.span>

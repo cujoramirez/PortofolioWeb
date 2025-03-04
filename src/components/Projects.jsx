@@ -36,7 +36,7 @@ const projectContentVariants = {
   visible: { opacity: 1, transition: { duration: 0.3 } },
 };
 
-// Simplified hover effects
+// Simplified hover effects for project image
 const projectImageHover = {
   scale: 1.03,
   filter: "brightness(1.05)",
@@ -63,6 +63,7 @@ const TechTag = React.memo(({ tech, index }) => {
       className="rounded-full bg-neutral-900 px-3 py-1.5 text-sm font-medium text-purple-400 border border-purple-500/30 will-change-transform"
       variants={tagVariants}
       whileHover="hover"
+      whileTap="hover"
     >
       {tech}
     </motion.span>
@@ -147,6 +148,7 @@ const Projects = () => {
         whileInView="visible"
         viewport={{ once: true, amount: 0.1 }}
         whileHover="hover"
+        whileTap="hover"
         style={gradientStyle}
       >
         My Projects
@@ -161,6 +163,8 @@ const Projects = () => {
             variants={containerVariants}
             initial="hidden"
             animate={visibleProjects.includes(index) ? "visible" : "hidden"}
+            whileHover="hover"
+            whileTap="hover"
           >
             <div className="p-6 md:p-8 flex flex-col lg:flex-row gap-6 md:gap-8">
               {/* Project Image with optimized loading */}
@@ -171,6 +175,7 @@ const Projects = () => {
                 <motion.div 
                   className="relative w-40 h-40 md:w-48 md:h-48 rounded-lg overflow-hidden shadow-lg"
                   whileHover={projectImageHover}
+                  whileTap={projectImageHover}
                 >
                   <img
                     src={project.image}
@@ -239,7 +244,6 @@ const Projects = () => {
                   ) : (
                     project.links && project.links.length > 0 && (
                       project.links.map((link, idx) => {
-                        // Extract domain name for display
                         let displayText = "View Project";
                         try {
                           if (typeof link === 'string') {
@@ -260,7 +264,6 @@ const Projects = () => {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >
-                            {/* Simplified shine effect with better performance */}
                             <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-full transition-all duration-500 ease-out"></div>
                             
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -280,7 +283,6 @@ const Projects = () => {
         ))}
       </div>
 
-      {/* Optimized CSS with reduced motion support */}
       <style jsx>{`
         @media (prefers-reduced-motion: no-preference) {
           .bg-gradient-to-r {

@@ -188,6 +188,7 @@ const About = () => {
             variants={wordVariants}
             className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400"
             whileHover="hover"
+            whileTap="hover"
           >
             {segment}
           </motion.span>
@@ -209,6 +210,7 @@ const About = () => {
             variants={wordVariants}
             className="inline-block"
             whileHover="hover"
+            whileTap="hover"
           >
             {part}
           </motion.span>
@@ -252,6 +254,7 @@ const About = () => {
         className="my-12 text-center text-5xl font-bold"
         variants={titleVariants}
         whileHover="hover"
+        whileTap="hover"
       >
         <span className="text-white">About</span>
         <motion.span
@@ -281,6 +284,7 @@ const About = () => {
               className="relative w-4/5 max-w-md mx-auto rounded-2xl shadow-lg"
               variants={imageVariants}
               whileHover="hover"
+              whileTap="hover"
             >
               <motion.img
                 src={aboutImg}
@@ -288,6 +292,7 @@ const About = () => {
                 className="rounded-2xl shadow-lg shadow-purple-500/20 transition-all duration-300 z-10 relative w-full h-auto object-cover"
                 initial={{ filter: "brightness(0.8)" }}
                 whileHover={{ filter: "brightness(1.1)" }}
+                whileTap={{ filter: "brightness(1.1)" }}
               />
               {/* Image decorative elements */}
               <motion.div 
@@ -301,6 +306,7 @@ const About = () => {
                   scale: 1.05,
                   transition: { duration: 0.4 }
                 }}
+                whileTap="hover"
                 viewport={{ once: true }}
               />
               <motion.div 
@@ -314,6 +320,7 @@ const About = () => {
                   scale: 1.05,
                   transition: { duration: 0.4 }
                 }}
+                whileTap="hover"
                 viewport={{ once: true }}
               />
             </motion.div>

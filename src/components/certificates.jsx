@@ -75,7 +75,7 @@ const FilterButton = memo(({ issuer, isActive, onClick, index }) => {
       initial="initial"
       animate="animate"
       whileHover="hover"
-      whileTap={{ scale: 0.97 }}
+      whileTap="hover"
       custom={index}
     >
       <motion.span
@@ -115,12 +115,12 @@ const CertificationCard = memo(({ cert, index }) => {
       className="group block h-full"
       variants={certCardVariants}
       whileHover="hover"
-      whileTap={{ scale: 0.98 }}
+      whileTap="hover"
     >
       <div className="h-full overflow-hidden rounded-xl bg-neutral-800/40 backdrop-blur-sm border border-neutral-700/50 shadow-md group-hover:border-purple-500/50 transition-all duration-300">
         <div className="relative aspect-video w-full overflow-hidden">
           {/* Simplified overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-10 opacity-70 group-hover:opacity-90 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-10 opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
           
           <img
             src={cert.image}
@@ -170,7 +170,7 @@ const Certifications = () => {
       setTimeout(() => {
         setSelectedIssuer(issuer);
         setIsChanging(false);
-      }, 200); // Reduced timeout for faster transitions
+      }, 200);
     }
   }, [selectedIssuer]);
   
@@ -207,7 +207,7 @@ const Certifications = () => {
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
     >
-      {/* Title Section with simplified animations */}
+      {/* Title Section */}
       <div className="relative py-12 flex flex-col items-center">
         <motion.div 
           className="absolute w-32 h-32 rounded-full bg-purple-500 opacity-10 filter blur-3xl"
@@ -222,6 +222,7 @@ const Certifications = () => {
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
           whileHover="hover"
+          whileTap="hover"
         >
           Certifications
         </motion.h2>
@@ -234,7 +235,7 @@ const Certifications = () => {
         />
       </div>
 
-      {/* Optimized Filter Buttons */}
+      {/* Filter Buttons */}
       <div className="flex flex-wrap justify-center gap-2 mb-10">
         {issuers.map((issuer, index) => (
           <FilterButton
@@ -247,7 +248,7 @@ const Certifications = () => {
         ))}
       </div>
 
-      {/* Optimized Certificates Grid with transition */}
+      {/* Certificates Grid */}
       <AnimatePresence mode="wait">
         <motion.div
           key={selectedIssuer}
@@ -269,7 +270,7 @@ const Certifications = () => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Simplified decorative elements */}
+      {/* Decorative Element */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute top-20 right-10 w-48 h-48 rounded-full bg-purple-700/10 filter blur-3xl"
@@ -288,7 +289,6 @@ const Certifications = () => {
         />
       </div>
 
-      {/* CSS styles with performance optimizations */}
       <style jsx global>{`
         .bg-gradient-text {
           background: linear-gradient(90deg, #a855f7, #ec4899, #8b5cf6);

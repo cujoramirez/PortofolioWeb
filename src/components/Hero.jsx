@@ -456,6 +456,7 @@ const Hero = () => {
               initial="initial"
               animate={nameAnimated ? "animate" : "initial"}
               whileHover="hover"
+              whileTap="hover"
               variants={nameVariants}
             >
               Gading Aditya Perdana
@@ -490,6 +491,7 @@ const Hero = () => {
                 }}
                 variants={titleLineVariants}
                 whileHover="hover"
+                whileTap="hover"
               >
                 Computer Science Undergraduate
                 {/* NEW: Title glow */}
@@ -516,6 +518,7 @@ const Hero = () => {
                 }}
                 variants={titleLineVariants}
                 whileHover="hover"
+                whileTap="hover"
               >
                 Aspiring AI & Deep Learning Researcher
                 {/* NEW: Title glow */}
@@ -543,6 +546,7 @@ const Hero = () => {
                 }}
                 variants={titleLineVariants}
                 whileHover="hover"
+                whileTap="hover"
               >
                 (Computer Vision Focus)
                 {/* NEW: Title glow */}
@@ -596,6 +600,7 @@ const Hero = () => {
                   initial="hidden"
                   animate="visible"
                   whileHover="hover"
+                  whileTap="hover"
                   className={`inline-block mr-1 ${
                     token.isSpecial
                       ? "font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400"
@@ -625,6 +630,7 @@ const Hero = () => {
               initial="hidden"
               animate={isVisible ? "visible" : "hidden"}
               whileHover="hover"
+              whileTap="hover"
             />
             {/* Enhanced glow effect behind the image */}
             <motion.div

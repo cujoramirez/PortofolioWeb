@@ -329,6 +329,7 @@ const Technologies = () => {
           className="mb-16 md:mb-20 mt-4 text-center text-5xl md:text-6xl font-bold"
           variants={titleVariants}
           whileHover="hover"
+          whileTap="hover"
           style={{
             background:
               "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7, #ec4899)",
@@ -359,14 +360,13 @@ const Technologies = () => {
                   w-full max-w-[160px] sm:max-w-[170px] aspect-square
                   ${
                     isKaggle
-                      ? // Span both columns on small screens only
-                        "col-span-2 md:col-span-1 justify-self-center"
+                      ? "col-span-2 md:col-span-1 justify-self-center"
                       : ""
                   }
                 `}
                 variants={iconContainerVariants}
                 whileHover="hover"
-                // Add color-based glow on hover
+                whileTap="hover"
                 style={{
                   boxShadow:
                     hoveredTech === index
@@ -410,6 +410,7 @@ const Technologies = () => {
                   variants={getIconAnimation(tech.color)}
                   animate="animate"
                   whileHover="hover"
+                  whileTap="hover"
                   style={{
                     position: "relative",
                     zIndex: 2,
