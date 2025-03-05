@@ -1,18 +1,7 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { PROJECTS } from "../constants";
-
-// Custom hook to detect low‑end devices based on a simple heuristic
-function useLowEndDevice() {
-  const [isLowEnd, setIsLowEnd] = React.useState(false);
-  React.useEffect(() => {
-    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
-    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
-  }, []);
-  return isLowEnd;
-}
+import { useSystemProfile } from "../components/useSystemProfile.jsx";
 
 // Lighter-weight animation variants for better performance
 const containerVariants = {
@@ -42,13 +31,11 @@ const titleVariants = {
   },
 };
 
-// Minimal project content variants
 const projectContentVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.3 } },
 };
 
-// Simplified hover effects for project image
 const projectImageHover = {
   scale: 1.03,
   filter: "brightness(1.05)",
@@ -100,11 +87,18 @@ const Projects = () => {
     backgroundClip: "text",
   };
 
-  // Use low‑end device check to conditionally apply scroll triggers
-  const isLowEnd = useLowEndDevice();
-  const shouldUseScrollTrigger = !isLowEnd;
-  const containerProps = shouldUseScrollTrigger
-    ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
+  // Use our unified system profile hook to determine performance tier.
+  const { performanceTier } = useSystemProfile();
+
+  // Use scroll triggers only on mid/high‑tier devices.
+  const containerProps = performanceTier !== "low"
+    ? {
+        whileInView: "visible",
+        viewport: {
+          once: true,
+          amount: 0.025, // Trigger as soon as ~2.5% of the section is visible
+        },
+      }
     : { animate: "visible" };
 
   return (
@@ -112,9 +106,9 @@ const Projects = () => {
       id="projects"
       className="pb-16 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto"
     >
-      {/* Title with optimized animation */}
+      {/* Title with adjusted line height to avoid cut-off descenders */}
       <motion.h2
-        className="my-16 text-center text-4xl md:text-5xl font-bold w-full bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-slate-300 to-purple-600"
+        className="my-16 text-center text-4xl md:text-5xl font-bold w-full bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-slate-300 to-purple-600 leading-normal"
         variants={titleVariants}
         initial="hidden"
         animate="visible"

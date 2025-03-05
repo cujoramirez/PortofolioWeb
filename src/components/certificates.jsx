@@ -1,18 +1,7 @@
 import React, { useState, useCallback, useRef, memo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CERTIFICATIONS } from "../constants";
-
-// Custom hook to detect low‑end devices based on a simple heuristic.
-function useLowEndDevice() {
-  const [isLowEnd, setIsLowEnd] = useState(false);
-  useEffect(() => {
-    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
-    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
-  }, []);
-  return isLowEnd;
-}
+import { useSystemProfile } from "../components/useSystemProfile.jsx";
 
 // Animation Variants
 const pageContainerVariants = {
@@ -177,22 +166,10 @@ const Certifications = () => {
     ? CERTIFICATIONS 
     : CERTIFICATIONS.filter(cert => cert.issuer === selectedIssuer);
 
-  // Detect low‑end device for heavy decoration
-  const [isLowEndDevice, setIsLowEndDevice] = useState(false);
-  useEffect(() => {
-    const checkLowEndDevice = () => {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
-      const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
-      return isMobile && (isOlderIphone || lowMemory);
-    };
-    setIsLowEndDevice(checkLowEndDevice());
-  }, []);
-  
-  // For certificates, we want animations to trigger immediately,
-  // but on high‑end devices we can add scroll triggers for more visual flair.
-  const isLowEnd = isLowEndDevice; // You can also use useLowEndDevice() here directly.
-  const shouldUseScrollTrigger = !isLowEnd;
+  // Use the unified system profile hook to determine performance tier.
+  const { performanceTier } = useSystemProfile();
+  const isLow = performanceTier === "low";
+  const shouldUseScrollTrigger = !isLow;
   const containerProps = shouldUseScrollTrigger
     ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
     : { animate: "visible" };
@@ -217,7 +194,7 @@ const Certifications = () => {
     >
       {/* Title Section */}
       <div className="relative py-10 flex flex-col items-center">
-        { !isLowEndDevice && (
+        { !isLow && (
           <motion.div 
             className="absolute w-24 h-24 rounded-full bg-purple-500 opacity-10 filter blur-2xl"
             initial={{ scale: 0, opacity: 0 }}
@@ -278,7 +255,7 @@ const Certifications = () => {
       </motion.div>
 
       {/* Decorative Element */}
-      { !isLowEndDevice && (
+      { !isLow && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
             className="absolute top-20 right-10 w-40 h-40 rounded-full bg-purple-700/10 filter blur-2xl will-change-transform"

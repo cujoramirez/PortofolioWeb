@@ -1,18 +1,7 @@
 import React, { memo } from "react";
 import { EXPERIENCES } from "../constants";
 import { motion } from "framer-motion";
-
-// Custom hook to detect low‑end devices based on a simple heuristic
-function useLowEndDevice() {
-  const [isLowEnd, setIsLowEnd] = React.useState(false);
-  React.useEffect(() => {
-    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
-    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
-  }, []);
-  return isLowEnd;
-}
+import { useSystemProfile } from "../components/useSystemProfile.jsx";
 
 // Simplified container variant with faster animation
 const containerVariants = {
@@ -65,20 +54,22 @@ const tagVariants = {
   },
 };
 
-const Experience = () => {
-  const isLowEnd = useLowEndDevice();
-  // On high‑end devices, use scroll triggers; on low‑end, animate immediately.
-  const shouldUseScrollTrigger = !isLowEnd;
+function Experience() {
+  // Use the unified system profile hook
+  const { performanceTier } = useSystemProfile();
+  // Use scroll triggers only on mid/high‑tier devices
+  const shouldUseScrollTrigger = performanceTier !== "low";
+
+  const containerProps = shouldUseScrollTrigger
+    ? { whileInView: "visible", viewport: { once: true, amount: 0.05 } }
+    : { animate: "visible" };
 
   return (
     <motion.div
       className="pb-12 px-4 will-change-transform"
       variants={containerVariants}
       initial="hidden"
-      {...(shouldUseScrollTrigger 
-          ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
-          : { animate: "visible" }
-      )}
+      {...containerProps}
       style={{ willChange: "opacity, transform" }}
     >
       {/* Section Title */}
@@ -170,6 +161,6 @@ const Experience = () => {
       `}</style>
     </motion.div>
   );
-};
+}
 
-export default React.memo(Experience);
+export default memo(Experience);

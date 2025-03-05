@@ -11,18 +11,7 @@ import {
 } from "react-icons/si";
 import { FaAtom, FaChartBar } from "react-icons/fa";
 import { motion } from "framer-motion";
-
-// Custom hook to detect low‑end devices based on a simple heuristic
-function useLowEndDevice() {
-  const [isLowEnd, setIsLowEnd] = useState(false);
-  useEffect(() => {
-    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
-    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
-  }, []);
-  return isLowEnd;
-}
+import { useSystemProfile } from "../components/useSystemProfile.jsx";
 
 // Container variant: fade in & slide up with staggered children
 const containerVariants = {
@@ -234,11 +223,13 @@ const Technologies = () => {
   const [hoveredTech, setHoveredTech] = useState(null);
   const hoveredTechRef = useRef(null);
 
-  // Use low-end device check to conditionally apply scroll triggers
-  const isLowEnd = useLowEndDevice();
-  const shouldUseScrollTrigger = !isLowEnd;
+  // Use our unified system profile hook
+  const { performanceTier, deviceType } = useSystemProfile();
+  const shouldUseScrollTrigger = performanceTier !== "low";
 
+  // Canvas animation: only run on mid/high‑tier devices
   useEffect(() => {
+    if (performanceTier === "low") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -364,7 +355,7 @@ const Technologies = () => {
       window.removeEventListener("resize", handleResize);
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [performanceTier]);
 
   return (
     <section
@@ -406,8 +397,8 @@ const Technologies = () => {
         variants={containerVariants}
         initial="hidden"
         {...(shouldUseScrollTrigger
-            ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
-            : { animate: "visible" }
+          ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
+          : { animate: "visible" }
         )}
         style={{ willChange: "opacity, transform" }}
       >

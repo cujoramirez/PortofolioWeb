@@ -1,18 +1,7 @@
 import React, { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import { FaLinkedin, FaEnvelope } from "react-icons/fa";
-
-// Custom hook to detect low‑end devices based on a simple heuristic
-function useLowEndDevice() {
-  const [isLowEnd, setIsLowEnd] = React.useState(false);
-  React.useEffect(() => {
-    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
-    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
-  }, []);
-  return isLowEnd;
-}
+import { useSystemProfile } from "../components/useSystemProfile.jsx";
 
 // Container variant: elegant fade in and slide up
 const containerVariants = {
@@ -90,12 +79,14 @@ const iconVariants = {
 };
 
 const Contact = () => {
-  // Memoize the current year so it doesn't recalc on every render
+  // Memoize the current year
   const currentYear = useMemo(() => new Date().getFullYear(), []);
-  // Determine device performance
-  const isLowEnd = useLowEndDevice();
-  // On high-end devices, use scroll triggers; on low-end, animate immediately.
-  const containerProps = isLowEnd 
+  // Use our unified system profile hook for performance detection.
+  const { performanceTier } = useSystemProfile();
+  const isLow = performanceTier === "low";
+  
+  // On high‑end devices, use scroll triggers; on low‑end, animate immediately.
+  const containerProps = isLow 
     ? { animate: "visible" } 
     : { whileInView: "visible", viewport: { once: true, amount: 0.3 } };
 

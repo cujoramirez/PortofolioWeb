@@ -10,20 +10,14 @@ import { motion } from "framer-motion";
 import profilePic from "../assets/GadingAdityaPerdana.jpg";
 import { HERO_CONTENT } from "../constants/index";
 
-// Custom hook to detect low-end devices (using a simple heuristic)
-function useLowEndDevice() {
-  const [isLowEnd, setIsLowEnd] = useState(false);
-  useEffect(() => {
-    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
-    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
-  }, []);
-  return isLowEnd;
-}
+// Lazy-load heavy effects
+const AmbientBackground = lazy(() => import("./AmbientBackground.jsx"));
+const ParticleEffect = lazy(() => import("./ParticleEffect.jsx"));
 
-// --- Tokenization and Animation Variants ---
+// Import our custom device/performance detection
+import { useSystemProfile } from "../components/useSystemProfile.jsx";
 
+// ---------- 1) Tokenization Helpers (same as your original) ----------
 const specialWords = [
   "Python",
   "machine",
@@ -46,12 +40,12 @@ const multiWordPhrases = [
   "computer vision",
 ];
 
-const isSpecialWord = (word) => {
+function isSpecialWord(word) {
   const cleanWord = word.replace(/[^\w\s]/g, "");
   return specialWords.some(
     (special) => cleanWord.toLowerCase() === special.toLowerCase()
   );
-};
+}
 
 function tokenizeParagraph(paragraph) {
   const words = paragraph.split(" ");
@@ -79,23 +73,45 @@ function tokenizeParagraph(paragraph) {
   return tokens;
 }
 
-// Adjusted so the first token animates immediately.
-const enhancedWordVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
+// ---------- 2) Framer Motion Variants ----------
+// Full variants for high-tier, simpler ones for mid and low tiers
+
+const outlineVariantsHigh = {
+  initial: { pathLength: 0, pathOffset: 0, strokeOpacity: 1 },
+  animate: {
+    pathLength: 1,
+    pathOffset: [0, 0.5, 1],
+    strokeOpacity: [1, 1, 0],
     transition: {
-      delay: i * 0.015, // No base delay—each token staggers by its index.
-      duration: 0.3,
-      ease: "easeOut",
+      pathLength: { duration: 2.5, ease: "easeInOut" },
+      pathOffset: { duration: 2.5, ease: "easeInOut", times: [0, 0.5, 1] },
+      strokeOpacity: { duration: 1, delay: 2, ease: "easeOut" },
     },
-  }),
-  hover: {
-    scale: 1.08,
-    color: "#a855f7",
-    textShadow: "0px 0px 8px rgba(168,85,247,0.5)",
-    transition: { duration: 0.2, ease: "easeOut" },
+  },
+};
+
+const outlineVariantsMid = {
+  initial: { pathLength: 0, strokeOpacity: 1 },
+  animate: {
+    pathLength: 1,
+    strokeOpacity: [1, 1, 0],
+    transition: {
+      pathLength: { duration: 1.8, ease: "easeInOut" },
+      strokeOpacity: { duration: 1, delay: 1.5, ease: "easeOut" },
+    },
+  },
+};
+
+const outlineVariantsLow = {
+  initial: {},
+  animate: {},
+};
+
+const dotVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 0.8, ease: "easeInOut" },
   },
 };
 
@@ -114,32 +130,6 @@ const nameVariants = {
   },
 };
 
-const dotVariants = {
-  initial: { opacity: 0 },
-  animate: {
-    opacity: 1,
-    pathOffset: [0, 1],
-    transition: {
-      pathOffset: { repeat: 0, duration: 5, ease: "linear" },
-      opacity: { duration: 5, times: [0, 0.9, 1], values: [1, 1, 0] },
-    },
-  },
-};
-
-const outlineVariants = {
-  initial: { pathLength: 0, pathOffset: 0, strokeOpacity: 1 },
-  animate: {
-    pathLength: 1,
-    pathOffset: [0, 0.5, 1],
-    strokeOpacity: [1, 1, 0],
-    transition: {
-      pathLength: { duration: 2.5, ease: "easeInOut" },
-      pathOffset: { duration: 2.5, ease: "easeInOut", times: [0, 0.5, 1] },
-      strokeOpacity: { duration: 1, delay: 2, ease: "easeOut" },
-    },
-  },
-};
-
 const titleLineVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
@@ -150,6 +140,25 @@ const titleLineVariants = {
   hover: {
     scale: 1.03,
     transition: { duration: 0.2 },
+  },
+};
+
+const enhancedWordVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.015,
+      duration: 0.3,
+      ease: "easeOut",
+    },
+  }),
+  hover: {
+    scale: 1.08,
+    color: "#a855f7",
+    textShadow: "0px 0px 8px rgba(168,85,247,0.5)",
+    transition: { duration: 0.2, ease: "easeOut" },
   },
 };
 
@@ -175,67 +184,37 @@ const profilePicVariants = {
   },
 };
 
-const profileAnimationVariants = {
-  initial: { filter: "brightness(1) contrast(1)", y: 0, rotate: 0 },
-  animate: {
-    filter: [
-      "brightness(1) contrast(1)",
-      "brightness(1.1) contrast(1.05)",
-      "brightness(1) contrast(1)",
-    ],
-    y: [-5, 5, -5],
-    rotate: [-0.5, 0.5, -0.5],
-    transition: {
-      y: { duration: 6, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" },
-      filter: { duration: 8, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" },
-      rotate: { duration: 9, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" },
-    },
-  },
-};
-
-const titleContainerVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: "easeOut", delay: 0.5 },
-  },
-};
-
-// --- Lazy-loaded Heavy Components ---
-const AmbientBackground = lazy(() => import("./AmbientBackground"));
-const ParticleEffect = lazy(() => import("./ParticleEffect"));
-
-// Main Component
 const Hero = () => {
-  const [nameAnimated, setNameAnimated] = useState(false);
-  const [dotVisible, setDotVisible] = useState(true);
+  // 1) Determine performance tier & device type using the system profile hook
+  const { performanceTier, deviceType } = useSystemProfile();
 
-  // Determine device performance:
-  const isLowEnd = useLowEndDevice();
-  // If not low-end, use scroll triggers; otherwise animate immediately.
-  const shouldUseScrollTrigger = !isLowEnd;
+  // 2) Decide which animations to enable based on performanceTier
+  const showAmbient = performanceTier !== "low";       // Ambient background for mid/high devices
+  const showParticles = performanceTier === "high";     // Particle effect only on high-tier
+  const showDot = performanceTier === "high" || performanceTier === "mid"; // Dot animation for mid/high
+  const outlineVariants =
+    performanceTier === "high"
+      ? outlineVariantsHigh
+      : performanceTier === "mid"
+      ? outlineVariantsMid
+      : outlineVariantsLow;
 
-  // Memoize tokenization for performance
+  // 3) Decide whether to use scroll triggers (enabled for mid/high, immediate for low)
+  const shouldUseScrollTrigger = performanceTier !== "low";
+
+  // 4) Tokenize the HERO_CONTENT paragraph once
   const tokens = useMemo(() => tokenizeParagraph(HERO_CONTENT), []);
 
-  // For high-end devices, we can use scroll triggers.
-  // On low-end, we trigger animations immediately.
-  // (Here we remove the immediate setIsVisible effect.)
-  useEffect(() => {
-    if (isLowEnd) {
-      setNameAnimated(true);
-      setDotVisible(false);
-    }
-  }, [isLowEnd]);
+  // 5) Local state for controlling dot visibility
+  const [dotVisible, setDotVisible] = useState(true);
 
   return (
     <motion.div
       className="relative w-full min-h-screen flex flex-col justify-center items-center py-12 px-4 md:py-16"
       initial="hidden"
       {...(shouldUseScrollTrigger
-          ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
-          : { animate: "visible" }
+        ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
+        : { animate: "visible" }
       )}
       transition={{ duration: 0.8 }}
       style={{ backgroundColor: "#0f0528", willChange: "opacity, transform" }}
@@ -256,16 +235,11 @@ const Hero = () => {
           0% { background-position: 0% 50%; }
           100% { background-position: 100% 50%; }
         }
-        @keyframes pulseGlow {
-          0% { filter: brightness(0.8) contrast(1.2); }
-          50% { filter: brightness(1.2) contrast(1); }
-          100% { filter: brightness(0.8) contrast(1.2); }
-        }
       `}</style>
 
-      {/* Lazy-loaded Ambient Effects */}
+      {/* Lazy-load Ambient Background if allowed */}
       <Suspense fallback={null}>
-        <AmbientBackground />
+        {showAmbient && <AmbientBackground />}
       </Suspense>
 
       <div className="flex flex-col-reverse lg:flex-row items-center gap-8 md:gap-12 max-w-7xl mx-auto w-full relative z-10">
@@ -279,6 +253,7 @@ const Hero = () => {
               style={{ overflow: "visible" }}
             >
               <motion.path
+                id="heroPath"
                 d="M10,50 C100,10 200,90 300,50 C400,10 500,90 590,50"
                 fill="none"
                 stroke="url(#heroGradient)"
@@ -286,32 +261,34 @@ const Hero = () => {
                 strokeLinecap="butt"
                 initial="initial"
                 {...(shouldUseScrollTrigger
-                    ? { whileInView: "animate", viewport: { once: true, amount: 0.3 } }
-                    : { animate: "animate" }
+                  ? { whileInView: "animate", viewport: { once: true, amount: 0.3 } }
+                  : { animate: "animate" }
                 )}
                 variants={outlineVariants}
                 style={{ willChange: "stroke-dashoffset, strokeOpacity" }}
               />
-              {dotVisible && (
-                <motion.circle
-                  r="5"
-                  fill="#ec4899"
-                  initial="initial"
+
+              {/* The moving dot (skipped on low-tier devices) */}
+              {showDot && dotVisible && (
+                <motion.g
+                  initial="hidden"
                   {...(shouldUseScrollTrigger
-                      ? { whileInView: "animate", viewport: { once: true, amount: 0.3 } }
-                      : { animate: "animate" }
+                    ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
+                    : { animate: "visible" }
                   )}
                   variants={dotVariants}
                   onAnimationComplete={() => setDotVisible(false)}
                   style={{ willChange: "opacity" }}
                 >
-                  <motion.animateMotion
-                    path="M10,50 C100,10 200,90 300,50 C400,10 500,90 590,50"
-                    dur="5s"
-                    repeatCount="0"
-                  />
-                </motion.circle>
+                  <circle r="5" fill="#ec4899">
+                    {/* Use native <animateMotion> to follow the path */}
+                    <animateMotion dur="4s" repeatCount="1" fill="freeze">
+                      <mpath xlinkHref="#heroPath" />
+                    </animateMotion>
+                  </circle>
+                </motion.g>
               )}
+
               <defs>
                 <linearGradient id="heroGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#ec4899" />
@@ -320,12 +297,14 @@ const Hero = () => {
                 </linearGradient>
               </defs>
             </svg>
+
+            {/* Name */}
             <motion.h1
               className="text-4xl md:text-5xl xl:text-6xl tracking-tight text-center lg:text-left font-bold relative leading-normal whitespace-normal break-words"
               initial="initial"
               {...(shouldUseScrollTrigger
-                  ? { whileInView: "animate", viewport: { once: true, amount: 0.3 } }
-                  : { animate: "animate" }
+                ? { whileInView: "animate", viewport: { once: true, amount: 0.3 } }
+                : { animate: "animate" }
               )}
               whileHover="hover"
               whileTap="hover"
@@ -337,8 +316,19 @@ const Hero = () => {
                 className="absolute -inset-2 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-indigo-500/20 rounded-lg blur-lg -z-10"
                 initial={{ opacity: 0 }}
                 {...(shouldUseScrollTrigger
-                    ? { whileInView: { opacity: [0.1, 0.3, 0.1], scale: [1, 1.05, 1] } }
-                    : { animate: { opacity: [0.1, 0.3, 0.1], scale: [1, 1.05, 1] } }
+                  ? {
+                      whileInView: {
+                        opacity: [0.1, 0.3, 0.1],
+                        scale: [1, 1.05, 1],
+                      },
+                      viewport: { once: true, amount: 0.3 },
+                    }
+                  : {
+                      animate: {
+                        opacity: [0.1, 0.3, 0.1],
+                        scale: [1, 1.05, 1],
+                      },
+                    }
                 )}
                 transition={{ duration: 3, repeat: Infinity, repeatType: "mirror" }}
                 style={{ willChange: "opacity, transform" }}
@@ -370,6 +360,7 @@ const Hero = () => {
                   style={{ willChange: "opacity" }}
                 />
               </motion.div>
+
               <motion.div
                 className="text-transparent bg-clip-text relative"
                 style={{
@@ -387,10 +378,16 @@ const Hero = () => {
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg blur-md -z-10"
                   animate={{ opacity: [0.1, 0.2, 0.1] }}
-                  transition={{ duration: 3, repeat: Infinity, repeatType: "mirror", delay: 0.5 }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    repeatType: "mirror",
+                    delay: 0.5,
+                  }}
                   style={{ willChange: "opacity" }}
                 />
               </motion.div>
+
               <motion.div
                 className="text-transparent bg-clip-text relative"
                 style={{
@@ -408,21 +405,26 @@ const Hero = () => {
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-pink-500/10 rounded-lg blur-md -z-10"
                   animate={{ opacity: [0.1, 0.2, 0.1] }}
-                  transition={{ duration: 2, repeat: Infinity, repeatType: "mirror", delay: 1 }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: "mirror",
+                    delay: 1,
+                  }}
                   style={{ willChange: "opacity" }}
                 />
               </motion.div>
             </div>
           </div>
 
-          {/* Bio Paragraph with Immediate Staggered Words */}
+          {/* Bio Paragraph */}
           <motion.div
             className="w-full my-2 max-w-xl py-6 text-gray-300 leading-relaxed text-lg text-center lg:text-left relative break-words"
             variants={bioVariants}
             style={{ willChange: "opacity" }}
             {...(shouldUseScrollTrigger
-                ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
-                : { animate: "visible" }
+              ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
+              : { animate: "visible" }
             )}
           >
             <motion.div
@@ -439,8 +441,8 @@ const Hero = () => {
                   variants={enhancedWordVariants}
                   initial="hidden"
                   {...(shouldUseScrollTrigger
-                      ? { whileInView: "visible", viewport: { once: false, amount: 0.1 } }
-                      : { animate: "visible" }
+                    ? { whileInView: "visible", viewport: { once: false, amount: 0.1 } }
+                    : { animate: "visible" }
                   )}
                   whileHover="hover"
                   whileTap="hover"
@@ -458,7 +460,7 @@ const Hero = () => {
           </motion.div>
         </div>
 
-        {/* RIGHT: Profile Image with Light Animation */}
+        {/* RIGHT: Profile Image */}
         <div className="w-full lg:w-1/2 flex justify-center items-center">
           <motion.div
             className="relative w-full max-w-xs md:max-w-sm lg:max-w-md"
@@ -471,32 +473,46 @@ const Hero = () => {
               variants={profilePicVariants}
               initial="hidden"
               {...(shouldUseScrollTrigger
-                  ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
-                  : { animate: "visible" }
+                ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
+                : { animate: "visible" }
               )}
               whileHover="hover"
               whileTap="hover"
               style={{ willChange: "transform, opacity, boxShadow" }}
             />
-            {/* Enhanced Glow Effect Behind the Image */}
-            <motion.div
-              className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-lg blur opacity-30 -z-10"
-              initial={{ opacity: 0 }}
-              {...(shouldUseScrollTrigger
-                  ? { whileInView: { opacity: [0.4, 0.8, 0.4], scale: [1, 1.08, 1] }, viewport: { once: true, amount: 0.3 } }
-                  : { animate: { opacity: [0.4, 0.8, 0.4], scale: [1, 1.08, 1] } }
-              )}
-              transition={{
-                opacity: { duration: 3, repeat: Infinity, repeatType: "mirror" },
-                scale: { duration: 4, repeat: Infinity, repeatType: "mirror" },
-                delay: 1,
-              }}
-              style={{ mixBlendMode: "screen" }}
-            />
 
-            {/* Lazy-loaded Particle Effect Around Image */}
+            {/* Glow behind image (rendered only on mid/high devices) */}
+            {performanceTier !== "low" && (
+              <motion.div
+                className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-lg blur opacity-30 -z-10"
+                initial={{ opacity: 0 }}
+                {...(shouldUseScrollTrigger
+                  ? {
+                      whileInView: {
+                        opacity: [0.4, 0.8, 0.4],
+                        scale: [1, 1.08, 1],
+                      },
+                      viewport: { once: true, amount: 0.3 },
+                    }
+                  : {
+                      animate: {
+                        opacity: [0.4, 0.8, 0.4],
+                        scale: [1, 1.08, 1],
+                      },
+                    }
+                )}
+                transition={{
+                  opacity: { duration: 3, repeat: Infinity, repeatType: "mirror" },
+                  scale: { duration: 4, repeat: Infinity, repeatType: "mirror" },
+                  delay: 1,
+                }}
+                style={{ mixBlendMode: "screen" }}
+              />
+            )}
+
+            {/* Lazy-load Particle Effect only for high-tier devices */}
             <Suspense fallback={null}>
-              <ParticleEffect />
+              {showParticles && <ParticleEffect />}
             </Suspense>
           </motion.div>
         </div>

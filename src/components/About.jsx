@@ -2,18 +2,7 @@ import React, { useEffect, memo } from "react";
 import aboutImg from "../assets/GadingAdityaPerdana2.jpg";
 import { ABOUT_TEXT } from "../constants/index";
 import { motion, useAnimation } from "framer-motion";
-
-// Custom hook to detect low‑end devices
-function useLowEndDevice() {
-  const [isLowEnd, setIsLowEnd] = React.useState(false);
-  React.useEffect(() => {
-    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
-    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
-  }, []);
-  return isLowEnd;
-}
+import { useSystemProfile } from "../components/useSystemProfile.jsx";
 
 // Enhanced title variant with more impressive animations
 const titleVariants = {
@@ -137,20 +126,6 @@ const shapeVariants = {
   }),
 };
 
-// Dynamic word coloring - special words will get gradient treatment
-const specialWords = [
-  "deep learning",
-  "AI research",
-  "computer vision",
-  "machine learning",
-  "innovative",
-  "technology",
-  "collaboration",
-  "impactful",
-  "emerging tech",
-  "leadership",
-];
-
 // Section divider
 const dividerVariants = {
   hidden: { width: 0, opacity: 0 },
@@ -165,13 +140,30 @@ const dividerVariants = {
   },
 };
 
+// Dynamic word coloring - special words will get gradient treatment
+const specialWords = [
+  "deep learning",
+  "AI research",
+  "computer vision",
+  "machine learning",
+  "innovative",
+  "technology",
+  "collaboration",
+  "impactful",
+  "emerging tech",
+  "leadership",
+];
+
 function About() {
   const controls = useAnimation();
-  const isLowEnd = useLowEndDevice();
-  // On high‑end devices, use scroll triggers; on low‑end, animate immediately.
-  const shouldUseScrollTrigger = !isLowEnd;
+  const { performanceTier, deviceType } = useSystemProfile();
 
-  // For low‑end devices, trigger immediate animation.
+  // For low‑tier devices, disable scroll triggers for less overhead
+  const shouldUseScrollTrigger = performanceTier !== "low";
+  // Skip heavy background shapes on low‑tier
+  const showShapes = performanceTier !== "low";
+
+  // For low‑tier, trigger immediate animation.
   useEffect(() => {
     if (!shouldUseScrollTrigger) {
       controls.start("animate");
@@ -241,27 +233,28 @@ function About() {
       style={{ willChange: "opacity, transform" }}
     >
       {/* Background animated shapes */}
-      {[...Array(5)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full opacity-5 will-change-transform"
-          style={{
-            background: "linear-gradient(45deg, #a855f7, #ec4899)",
-            height: `${100 + i * 50}px`,
-            width: `${100 + i * 50}px`,
-            top: `${Math.random() * 80}%`,
-            left: `${Math.random() * 80}%`,
-            zIndex: -1,
-          }}
-          variants={shapeVariants}
-          custom={i}
-          initial="hidden"
-          {...(shouldUseScrollTrigger
-              ? { whileInView: "visible", viewport: { once: true } }
-              : { animate: "visible" }
-          )}
-        />
-      ))}
+      {showShapes &&
+        [...Array(5)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full opacity-5 will-change-transform"
+            style={{
+              background: "linear-gradient(45deg, #a855f7, #ec4899)",
+              height: `${100 + i * 50}px`,
+              width: `${100 + i * 50}px`,
+              top: `${Math.random() * 80}%`,
+              left: `${Math.random() * 80}%`,
+              zIndex: -1,
+            }}
+            variants={shapeVariants}
+            custom={i}
+            initial="hidden"
+            {...(shouldUseScrollTrigger
+                ? { whileInView: "visible", viewport: { once: true } }
+                : { animate: "visible" }
+            )}
+          />
+        ))}
 
       {/* Enhanced title with hover animation */}
       <motion.h2
@@ -322,7 +315,13 @@ function About() {
                 className="absolute -bottom-4 -right-4 w-full h-full rounded-2xl border-2 border-purple-500/50 z-0"
                 initial={{ opacity: 0 }}
                 {...(shouldUseScrollTrigger
-                    ? { whileInView: { opacity: 1, transition: { delay: 1.2, duration: 0.5 } }, viewport: { once: true } }
+                    ? {
+                        whileInView: {
+                          opacity: 1,
+                          transition: { delay: 1.2, duration: 0.5 },
+                        },
+                        viewport: { once: true },
+                      }
                     : { animate: { opacity: 1, transition: { delay: 1.2, duration: 0.5 } } }
                 )}
                 whileHover={{
@@ -336,7 +335,13 @@ function About() {
                 className="absolute -top-4 -left-4 w-full h-full rounded-2xl border-2 border-pink-500/50 z-0"
                 initial={{ opacity: 0 }}
                 {...(shouldUseScrollTrigger
-                    ? { whileInView: { opacity: 1, transition: { delay: 1.4, duration: 0.5 } }, viewport: { once: true } }
+                    ? {
+                        whileInView: {
+                          opacity: 1,
+                          transition: { delay: 1.4, duration: 0.5 },
+                        },
+                        viewport: { once: true },
+                      }
                     : { animate: { opacity: 1, transition: { delay: 1.4, duration: 0.5 } } }
                 )}
                 whileHover={{
