@@ -12,7 +12,19 @@ import {
 import { FaAtom, FaChartBar } from "react-icons/fa";
 import { motion } from "framer-motion";
 
-// Container variant: fade in & slide up when scrolled into view, with staggered children
+// Custom hook to detect low‑end devices based on a simple heuristic
+function useLowEndDevice() {
+  const [isLowEnd, setIsLowEnd] = useState(false);
+  useEffect(() => {
+    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
+    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
+  }, []);
+  return isLowEnd;
+}
+
+// Container variant: fade in & slide up with staggered children
 const containerVariants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
@@ -222,6 +234,10 @@ const Technologies = () => {
   const [hoveredTech, setHoveredTech] = useState(null);
   const hoveredTechRef = useRef(null);
 
+  // Use low-end device check to conditionally apply scroll triggers
+  const isLowEnd = useLowEndDevice();
+  const shouldUseScrollTrigger = !isLowEnd;
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -389,8 +405,11 @@ const Technologies = () => {
         className="relative z-10 container mx-auto px-4 sm:px-6 md:px-8 h-full flex flex-col"
         variants={containerVariants}
         initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
+        {...(shouldUseScrollTrigger
+            ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
+            : { animate: "visible" }
+        )}
+        style={{ willChange: "opacity, transform" }}
       >
         <motion.h2
           className="mb-12 sm:mb-16 md:mb-20 mt-4 text-center text-4xl sm:text-5xl md:text-6xl font-bold"
@@ -410,7 +429,7 @@ const Technologies = () => {
         >
           Skills & Tools
         </motion.h2>
-        <motion.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6 justify-items-center max-w-6xl mx-auto">
+        <motion.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6 justify-items-center max-w-7xl mx-auto">
           {technologies.map((tech, index) => (
             <TechnologyCard
               key={index}

@@ -1,8 +1,20 @@
-import React, { useState, useCallback, useRef, useEffect, memo, lazy, Suspense } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useCallback, useRef, memo, useEffect } from "react";
+import { motion } from "framer-motion";
 import { CERTIFICATIONS } from "../constants";
 
-// Simplified and optimized animation variants
+// Custom hook to detect low‑end devices based on a simple heuristic.
+function useLowEndDevice() {
+  const [isLowEnd, setIsLowEnd] = useState(false);
+  useEffect(() => {
+    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
+    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
+  }, []);
+  return isLowEnd;
+}
+
+// Animation Variants
 const pageContainerVariants = {
   hidden: { opacity: 0 },
   visible: { 
@@ -25,7 +37,6 @@ const titleVariants = {
   },
 };
 
-// Optimized card variants with reduced properties
 const certCardVariants = {
   hidden: { opacity: 0, y: 15 },
   visible: { 
@@ -50,7 +61,7 @@ const filterButtonVariants = {
   hover: { scale: 1.03, transition: { duration: 0.15 } }
 };
 
-// Memoized filter button with simplified animations
+// Memoized Filter Button
 const FilterButton = memo(({ issuer, isActive, onClick }) => {
   return (
     <motion.button
@@ -91,35 +102,39 @@ const FilterButton = memo(({ issuer, isActive, onClick }) => {
   );
 });
 
-// Using windowing to reduce DOM size
-const CertificationCard = memo(({ cert, onScreen }) => {
-  // Reduce animation complexity when not in view
-  const animationVariant = onScreen ? certCardVariants : {};
-  
+// Separate memoized component for the certificate image.
+const CertificationImage = memo(({ src, alt }) => (
+  <img
+    src={src}
+    alt={alt}
+    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-103"
+    loading="lazy"
+    decoding="async"
+    width="400"
+    height="225"
+  />
+));
+
+// Memoized Certification Card (with memoized image)
+const CertificationCard = memo(({ cert }) => {
   return (
     <motion.a
       href={cert.link}
       target="_blank"
       rel="noopener noreferrer"
       className="group block h-full transform-gpu"
-      variants={animationVariant}
+      variants={certCardVariants}
+      initial="hidden"
+      animate="visible"
       whileHover="hover"
       whileTap={{ scale: 0.98 }}
     >
       <div className="h-full overflow-hidden rounded-xl bg-neutral-800/40 backdrop-blur-sm border border-neutral-700/50 shadow-md group-hover:border-purple-500/50 transition-all duration-200">
         <div className="relative aspect-video w-full overflow-hidden">
-          {/* Optimized overlay with reduced gradient complexity */}
+          {/* Optimized overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-70 group-hover:opacity-90 transition-opacity duration-200" />
           
-          <img
-            src={cert.image}
-            alt={cert.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-103"
-            loading="lazy"
-            width="400"
-            height="225"
-            decoding="async"
-          />
+          <CertificationImage src={cert.image} alt={cert.title} />
           
           <div className="absolute bottom-0 left-0 w-full p-3 z-20">
             <div className="inline-block px-3 py-1 bg-purple-600/80 backdrop-blur-sm rounded text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
@@ -136,7 +151,6 @@ const CertificationCard = memo(({ cert, onScreen }) => {
             <div className="w-2 h-2 rounded-full bg-purple-400 mr-2"></div>
             <p className="text-neutral-400 text-sm">{cert.issuer}</p>
           </div>
-          
           <div className="mt-2 text-neutral-500 text-xs">
             {cert.date || "Certification verified"}
           </div>
@@ -148,15 +162,10 @@ const CertificationCard = memo(({ cert, onScreen }) => {
 
 const Certifications = () => {
   const [selectedIssuer, setSelectedIssuer] = useState("All");
-  const [isInView, setIsInView] = useState(false);
-  const [visibleItems, setVisibleItems] = useState([]);
-  const sectionRef = useRef(null);
-  const cardsContainerRef = useRef(null);
   
   // Extract unique issuers for filter buttons
   const issuers = ["All", ...new Set(CERTIFICATIONS.map(cert => cert.issuer))];
   
-  // Optimized handler without setTimeout for smoother transitions
   const handleIssuerChange = useCallback((issuer) => {
     if (issuer !== selectedIssuer) {
       setSelectedIssuer(issuer);
@@ -168,88 +177,51 @@ const Certifications = () => {
     ? CERTIFICATIONS 
     : CERTIFICATIONS.filter(cert => cert.issuer === selectedIssuer);
 
-  // Use IntersectionObserver for initial render and for each card
-  useEffect(() => {
-    // Main section observer
-    const sectionObserver = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setIsInView(true);
-          sectionObserver.disconnect();
-        }
-      },
-      { threshold: 0.05, rootMargin: "50px" }
-    );
-    
-    if (sectionRef.current) {
-      sectionObserver.observe(sectionRef.current);
-    }
-    
-    // Card visibility observer for windowing
-    const cardObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          const id = entry.target.dataset.certId;
-          if (entry.isIntersecting) {
-            setVisibleItems(prev => [...prev, id]);
-          } else {
-            setVisibleItems(prev => prev.filter(item => item !== id));
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: "100px" }
-    );
-    
-    // Defer this to next frame for better performance
-    let timeout;
-    if (cardsContainerRef.current) {
-      timeout = requestAnimationFrame(() => {
-        const childElements = cardsContainerRef.current.querySelectorAll('.cert-card-container');
-        childElements.forEach(element => cardObserver.observe(element));
-      });
-    }
-    
-    return () => {
-      sectionObserver.disconnect();
-      cardObserver.disconnect();
-      cancelAnimationFrame(timeout);
-    };
-  }, [selectedIssuer]); // Re-observe when filter changes
-
-  // Detect low-end device
+  // Detect low‑end device for heavy decoration
   const [isLowEndDevice, setIsLowEndDevice] = useState(false);
   useEffect(() => {
-    // Simple heuristic for detecting low-end devices
     const checkLowEndDevice = () => {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
       const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
-      
       return isMobile && (isOlderIphone || lowMemory);
     };
-    
     setIsLowEndDevice(checkLowEndDevice());
   }, []);
+  
+  // For certificates, we want animations to trigger immediately,
+  // but on high‑end devices we can add scroll triggers for more visual flair.
+  const isLowEnd = isLowEndDevice; // You can also use useLowEndDevice() here directly.
+  const shouldUseScrollTrigger = !isLowEnd;
+  const containerProps = shouldUseScrollTrigger
+    ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
+    : { animate: "visible" };
 
-  // Apply less intensive animations for low-end devices
-  const renderDecorations = !isLowEndDevice;
+  // Memoized gradient style for the title.
+  const gradientStyle = {
+    background: "linear-gradient(90deg, #a855f7, #ec4899)",
+    backgroundSize: "200% auto",
+    WebkitBackgroundClip: "text",
+    backgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    animation: "gradientShift 8s ease-in-out infinite alternate"
+  };
 
   return (
     <motion.div
       id="certifications"
-      ref={sectionRef}
       className="pb-16 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto relative will-change-opacity"
       variants={pageContainerVariants}
       initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      animate="visible"
     >
-      {/* Title Section - Simplified */}
+      {/* Title Section */}
       <div className="relative py-10 flex flex-col items-center">
-        {renderDecorations && (
+        { !isLowEndDevice && (
           <motion.div 
             className="absolute w-24 h-24 rounded-full bg-purple-500 opacity-10 filter blur-2xl"
             initial={{ scale: 0, opacity: 0 }}
-            animate={isInView ? { scale: 1, opacity: 0.1 } : { scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 0.1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           />
         )}
@@ -258,7 +230,7 @@ const Certifications = () => {
           className="text-center text-4xl md:text-5xl font-bold w-full relative z-10 bg-gradient-text"
           variants={titleVariants}
           initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
+          animate="visible"
           whileHover="hover"
         >
           Certifications
@@ -267,12 +239,12 @@ const Certifications = () => {
         <motion.div 
           className="w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 mt-4 rounded-full"
           initial={{ width: 0, opacity: 0 }}
-          animate={isInView ? { width: 96, opacity: 1 } : { width: 0, opacity: 0 }}
+          animate={{ width: 96, opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.2 }}
         />
       </div>
 
-      {/* Optimized Filter Buttons */}
+      {/* Filter Buttons */}
       <div className="flex flex-wrap justify-center gap-2 mb-8">
         {issuers.map((issuer) => (
           <FilterButton
@@ -284,48 +256,39 @@ const Certifications = () => {
         ))}
       </div>
 
-      {/* Certificates Grid with Optimized Rendering */}
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={selectedIssuer}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="relative"
-        >
-          <div 
-            ref={cardsContainerRef}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
-          >
-            {filteredCertifications.map((cert, index) => (
-              <div 
-                key={`${cert.title}-${index}`}
-                className="cert-card-container"
-                data-cert-id={`${cert.title}-${index}`}
-              >
-                <CertificationCard 
-                  cert={cert} 
-                  onScreen={visibleItems.includes(`${cert.title}-${index}`)}
-                />
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </AnimatePresence>
+      {/* Certificates Grid */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="relative"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredCertifications.map((cert, index) => (
+            <div 
+              key={`${cert.title}-${index}`}
+              className="cert-card-container"
+              data-cert-id={`${cert.title}-${index}`}
+            >
+              <CertificationCard cert={cert} />
+            </div>
+          ))}
+        </div>
+      </motion.div>
 
-      {/* Reduced Decorative Elements */}
-      {renderDecorations && (
+      {/* Decorative Element */}
+      { !isLowEndDevice && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
             className="absolute top-20 right-10 w-40 h-40 rounded-full bg-purple-700/10 filter blur-2xl will-change-transform"
             initial={{ scale: 0.5, opacity: 0 }}
-            animate={isInView ? { 
+            animate={{ 
               scale: [0.5, 0.6, 0.5],
               opacity: [0, 0.15, 0],
               x: [0, 15, 0],
               y: [0, -5, 0],
-            } : { scale: 0.5, opacity: 0 }}
+            }}
             transition={{ 
               duration: 12,
               repeat: Infinity,
@@ -336,7 +299,6 @@ const Certifications = () => {
         </div>
       )}
 
-{/* Use regular style tag instead of styled-jsx */}
       <style>{`
         .bg-gradient-text {
           background: linear-gradient(90deg, #a855f7, #ec4899);

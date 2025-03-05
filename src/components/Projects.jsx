@@ -1,6 +1,18 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import { PROJECTS } from "../constants";
+
+// Custom hook to detect low‑end devices based on a simple heuristic
+function useLowEndDevice() {
+  const [isLowEnd, setIsLowEnd] = React.useState(false);
+  React.useEffect(() => {
+    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
+    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
+  }, []);
+  return isLowEnd;
+}
 
 // Lighter-weight animation variants for better performance
 const containerVariants = {
@@ -72,59 +84,13 @@ const TechTag = React.memo(({ tech, index }) => {
 
 const Projects = () => {
   const [expandedTags, setExpandedTags] = useState({});
-  const [visibleProjects, setVisibleProjects] = useState([]);
-  const sectionRef = useRef(null);
-  const projectRefs = useRef([]);
   const initialVisibleTags = 4;
   
-  // Optimized toggle function
   const toggleTags = useCallback((projectIndex) => {
     setExpandedTags(prev => ({
       ...prev,
       [projectIndex]: !prev[projectIndex]
     }));
-  }, []);
-
-  // Enhanced intersection observer for progressive loading
-  useEffect(() => {
-    // Create observers for section and individual projects
-    const sectionObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          // Only observe individual projects once section is visible
-          projectRefs.current.forEach((ref, index) => {
-            if (ref && !visibleProjects.includes(index)) {
-              const projectObserver = new IntersectionObserver(
-                ([projectEntry]) => {
-                  if (projectEntry.isIntersecting) {
-                    setVisibleProjects(prev => [...prev, index]);
-                    projectObserver.disconnect();
-                  }
-                },
-                { 
-                  threshold: 0.1,
-                  rootMargin: "0px 0px 100px 0px" // Load slightly before scrolling into view
-                }
-              );
-              
-              projectObserver.observe(ref);
-            }
-          });
-        }
-      },
-      { threshold: 0.1 }
-    );
-    
-    if (sectionRef.current) {
-      sectionObserver.observe(sectionRef.current);
-    }
-    
-    return () => sectionObserver.disconnect();
-  }, [visibleProjects]);
-
-  // Initialize project refs
-  useEffect(() => {
-    projectRefs.current = projectRefs.current.slice(0, PROJECTS.length);
   }, []);
 
   // Memoized gradient style to prevent recalculation
@@ -134,10 +100,16 @@ const Projects = () => {
     backgroundClip: "text",
   };
 
+  // Use low‑end device check to conditionally apply scroll triggers
+  const isLowEnd = useLowEndDevice();
+  const shouldUseScrollTrigger = !isLowEnd;
+  const containerProps = shouldUseScrollTrigger
+    ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
+    : { animate: "visible" };
+
   return (
     <div
       id="projects"
-      ref={sectionRef}
       className="pb-16 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto"
     >
       {/* Title with optimized animation */}
@@ -145,8 +117,7 @@ const Projects = () => {
         className="my-16 text-center text-4xl md:text-5xl font-bold w-full bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-slate-300 to-purple-600"
         variants={titleVariants}
         initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.1 }}
+        animate="visible"
         whileHover="hover"
         whileTap="hover"
         style={gradientStyle}
@@ -154,15 +125,19 @@ const Projects = () => {
         My Projects
       </motion.h2>
 
-      <div className="grid gap-10">
+      <motion.div
+        className="grid gap-10"
+        variants={containerVariants}
+        initial="hidden"
+        {...containerProps}
+      >
         {PROJECTS.map((project, index) => (
           <motion.div
             key={index}
-            ref={el => projectRefs.current[index] = el}
             className="bg-neutral-800/40 rounded-xl overflow-hidden shadow-lg backdrop-blur-sm border border-neutral-700/50 hover:border-purple-500/50 transition-colors duration-300 will-change-transform"
             variants={containerVariants}
             initial="hidden"
-            animate={visibleProjects.includes(index) ? "visible" : "hidden"}
+            animate="visible"
             whileHover="hover"
             whileTap="hover"
           >
@@ -203,14 +178,12 @@ const Projects = () => {
                 
                 <div className="pt-1 md:pt-2">
                   <div className="flex flex-wrap gap-2">
-                    {/* Only render visible tech tags for better performance */}
                     {project.technologies
                       .slice(0, expandedTags[index] ? project.technologies.length : initialVisibleTags)
                       .map((tech, idx) => (
                         <TechTag key={tech + idx} tech={tech} index={idx} />
                       ))}
                     
-                    {/* Toggle button with optimized animation */}
                     {project.technologies.length > initialVisibleTags && (
                       <motion.button
                         onClick={() => toggleTags(index)}
@@ -231,7 +204,6 @@ const Projects = () => {
                 </div>
                 
                 <div className="flex flex-wrap gap-3 pt-3 md:pt-4">
-                  {/* Optimized buttons with reduced animation complexity */}
                   {project.title === "Ensemble Model Research for Deep Learning" ? (
                     <motion.div
                       className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-800 to-indigo-900 text-white border border-purple-500/50 font-medium shadow-md flex items-center gap-2"
@@ -281,7 +253,7 @@ const Projects = () => {
             </div>
           </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       <style>{`
         @media (prefers-reduced-motion: no-preference) {

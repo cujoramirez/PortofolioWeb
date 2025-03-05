@@ -1,8 +1,34 @@
-import React, { useState, memo } from "react";
+import React, { useState, useEffect, memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import logo from "../assets/GadingLogo.png";
 import { FaLinkedin, FaGithub, FaEnvelope, FaFileAlt } from "react-icons/fa";
-import resumePDF from "../assets/Gading Aditya Perdana-resume.pdf";
+import resumePDF from "../assets/GadingAdityaPerdana-resume.pdf";
+
+// Custom hook to detect mobile devices based on viewport width.
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return isMobile;
+}
+
+// Custom hook to detect low-end devices based on a simple heuristic.
+function useLowEndDevice() {
+  const [isLowEnd, setIsLowEnd] = useState(false);
+  useEffect(() => {
+    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
+    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
+  }, []);
+  return isLowEnd;
+}
 
 // 1) Variants declared outside
 const logoTextVariants = {
@@ -65,18 +91,26 @@ const progressVariants = {
   },
 };
 
-// 2) Memoized Logo component
-const Logo = memo(({ isHovered }) => {
+// A “no motion” placeholder for when reduced motion is enabled.
+const noMotion = {
+  initial: {},
+  animate: {},
+  exit: {},
+  hover: {},
+};
+
+// 2) Memoized Logo component accepting a reduceMotion flag.
+const Logo = memo(({ isHovered, reduceMotion }) => {
   return (
     <motion.div
       className="relative flex items-center"
-      initial="initial"
-      animate="animate"
-      whileHover="hover"
-      whileTap="hover"
+      initial={reduceMotion ? noMotion.initial : "initial"}
+      animate={reduceMotion ? noMotion.animate : "animate"}
+      whileHover={reduceMotion ? noMotion.hover : "hover"}
+      whileTap={reduceMotion ? noMotion.hover : "hover"}
     >
       <motion.div
-        variants={gLogoVariants}
+        variants={reduceMotion ? noMotion : gLogoVariants}
         className="w-12 h-12 flex items-center justify-center"
       >
         <span className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent filter drop-shadow-md">
@@ -87,10 +121,10 @@ const Logo = memo(({ isHovered }) => {
         {isHovered && (
           <motion.span
             className="ml-3 text-lg font-medium bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent font-sans tracking-wide"
-            variants={logoTextVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            variants={reduceMotion ? noMotion : logoTextVariants}
+            initial={reduceMotion ? noMotion.initial : "initial"}
+            animate={reduceMotion ? noMotion.animate : "animate"}
+            exit={reduceMotion ? noMotion.exit : "exit"}
             style={{ textShadow: "0 2px 10px rgba(168,85,247,0.3)" }}
           >
             Gading Aditya Perdana
@@ -101,9 +135,20 @@ const Logo = memo(({ isHovered }) => {
   );
 });
 
-// 3) Memoized SocialIcon component
+// 3) Memoized SocialIcon component accepting a reduceMotion flag.
 const SocialIcon = memo(
-  ({ Icon, tooltip, color, link, onClick, download, target, rel, index }) => {
+  ({
+    Icon,
+    tooltip,
+    color,
+    link,
+    onClick,
+    download,
+    target,
+    rel,
+    index,
+    reduceMotion,
+  }) => {
     return (
       <motion.a
         href={link}
@@ -112,9 +157,9 @@ const SocialIcon = memo(
         target={target}
         rel={rel}
         className="relative group"
-        variants={socialIconVariants}
-        whileHover="hover"
-        whileTap="hover"
+        variants={reduceMotion ? noMotion : socialIconVariants}
+        whileHover={reduceMotion ? noMotion.hover : "hover"}
+        whileTap={reduceMotion ? noMotion.hover : "hover"}
         custom={index}
         aria-label={tooltip}
       >
@@ -137,9 +182,15 @@ const SocialIcon = memo(
 
 function Navbar() {
   const [logoHovered, setLogoHovered] = useState(false);
+  // Determine if device is mobile
+  const isMobile = useIsMobile();
+  // Use reduced motion only on mobile devices
+  const reduceMotion = isMobile;
+  // Determine if device is low-end (could be used for scroll trigger decision)
+  const isLowEnd = useLowEndDevice();
 
-  // 4) Define scrollToContact BEFORE referencing it in socialIcons
-  const scrollToContact = (e) => {
+  // Memoize the scroll function using useCallback.
+  const scrollToContact = useCallback((e) => {
     e.preventDefault();
     const contactSection =
       document.getElementById("contact") ||
@@ -147,34 +198,25 @@ function Navbar() {
       document.querySelector("section.contact") ||
       document.querySelector("footer");
     if (contactSection) {
-      // Calculate navbar height dynamically
       const navElement = document.querySelector("nav");
       const navHeight = navElement ? navElement.offsetHeight : 76;
       const startPosition = window.pageYOffset;
-      
-      // Extra offset to scroll a little further for the pulse effect
       const extraOffset = 50;
-      
-      // Compute target position, subtracting navbar height but adding extra offset
       let targetPosition =
-        contactSection.getBoundingClientRect().top + window.pageYOffset - navHeight + extraOffset;
-      
-      // Clamp targetPosition to the maximum scrollable value
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        contactSection.getBoundingClientRect().top +
+        window.pageYOffset -
+        navHeight +
+        extraOffset;
+      const maxScroll =
+        document.documentElement.scrollHeight - window.innerHeight;
       targetPosition = Math.min(targetPosition, maxScroll);
-      // If we're at the bottom, subtract a few pixels to avoid rubber banding
       if (targetPosition === maxScroll) {
         targetPosition = maxScroll - 2;
       }
-  
       const distance = targetPosition - startPosition;
-      // Dynamically adjust duration based on distance (min 800ms, max 1500ms)
       const duration = Math.min(1500, Math.max(800, distance * 0.5));
       let startTimestamp = null;
-      
-      // Use an easeOutQuart easing function for a smoother deceleration
       const easeOutQuart = (t) => 1 - Math.pow(1 - t, 4);
-  
       const animateScroll = (timestamp) => {
         if (!startTimestamp) startTimestamp = timestamp;
         const elapsed = timestamp - startTimestamp;
@@ -194,11 +236,8 @@ function Navbar() {
     } else {
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     }
-  };
-  
-  
+  }, []);
 
-  // 5) Now define socialIcons
   const socialIcons = [
     {
       Icon: FaLinkedin,
@@ -235,8 +274,8 @@ function Navbar() {
   return (
     <>
       <motion.nav
-        initial="initial"
-        animate="animate"
+        initial={reduceMotion ? noMotion.initial : "initial"}
+        animate={reduceMotion ? noMotion.animate : "animate"}
         variants={{
           initial: { opacity: 0 },
           animate: {
@@ -244,7 +283,9 @@ function Navbar() {
             transition: { duration: 0.5, ease: "easeOut" },
           },
         }}
-        className="fixed top-0 left-0 right-0 z-50 bg-neutral-900/80 backdrop-blur-md"
+        className={`fixed top-0 left-0 right-0 z-50 bg-neutral-900/80 ${
+          reduceMotion ? "" : "backdrop-blur-md"
+        }`}
       >
         <div className="max-w-6xl mx-auto flex items-center justify-between py-4 px-6">
           <motion.div
@@ -252,16 +293,21 @@ function Navbar() {
             onHoverStart={() => setLogoHovered(true)}
             onHoverEnd={() => setLogoHovered(false)}
           >
-            <Logo isHovered={logoHovered} />
+            <Logo isHovered={logoHovered} reduceMotion={reduceMotion} />
           </motion.div>
           <motion.div
             className="flex items-center gap-5"
-            variants={iconContainerVariants}
-            initial="initial"
-            animate="animate"
+            variants={reduceMotion ? noMotion : iconContainerVariants}
+            initial={reduceMotion ? noMotion.initial : "initial"}
+            animate={reduceMotion ? noMotion.animate : "animate"}
           >
             {socialIcons.map((item, index) => (
-              <SocialIcon key={index} {...item} index={index} />
+              <SocialIcon
+                key={index}
+                {...item}
+                index={index}
+                reduceMotion={reduceMotion}
+              />
             ))}
           </motion.div>
         </div>
@@ -269,9 +315,9 @@ function Navbar() {
 
       <motion.div
         className="fixed top-[76px] left-0 right-0 z-50 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"
-        variants={progressVariants}
-        initial="initial"
-        animate="animate"
+        variants={reduceMotion ? noMotion : progressVariants}
+        initial={reduceMotion ? noMotion.initial : "initial"}
+        animate={reduceMotion ? noMotion.animate : "animate"}
       />
     </>
   );

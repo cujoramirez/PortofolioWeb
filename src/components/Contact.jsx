@@ -2,7 +2,19 @@ import React, { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import { FaLinkedin, FaEnvelope } from "react-icons/fa";
 
-// Container variant: elegant fade in and slide up when scrolled into view
+// Custom hook to detect low‑end devices based on a simple heuristic
+function useLowEndDevice() {
+  const [isLowEnd, setIsLowEnd] = React.useState(false);
+  React.useEffect(() => {
+    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
+    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
+  }, []);
+  return isLowEnd;
+}
+
+// Container variant: elegant fade in and slide up
 const containerVariants = {
   hidden: { opacity: 0, y: 50 },
   visible: { 
@@ -80,6 +92,12 @@ const iconVariants = {
 const Contact = () => {
   // Memoize the current year so it doesn't recalc on every render
   const currentYear = useMemo(() => new Date().getFullYear(), []);
+  // Determine device performance
+  const isLowEnd = useLowEndDevice();
+  // On high-end devices, use scroll triggers; on low-end, animate immediately.
+  const containerProps = isLowEnd 
+    ? { animate: "visible" } 
+    : { whileInView: "visible", viewport: { once: true, amount: 0.3 } };
 
   return (
     <motion.div
@@ -87,8 +105,7 @@ const Contact = () => {
       className="py-20 px-4 min-h-[60vh] flex flex-col justify-center"
       variants={containerVariants}
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.3 }}
+      {...containerProps}
     >
       {/* Animated Section Header */}
       <motion.div 
@@ -130,7 +147,7 @@ const Contact = () => {
       >
         <div className="bg-neutral-900/70 backdrop-blur-sm border border-neutral-800 rounded-xl p-8 md:p-10 shadow-xl">
           {/* Contact Methods Container */}
-          <div id="contact" className="contact-section grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="contact-section grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Email Contact Block */}
             <motion.div 
               className="flex flex-col items-center text-center"
@@ -230,7 +247,7 @@ const Contact = () => {
         </div>
       </motion.div>
 
-      {/* Footer - Optional copyright/branding information */}
+      {/* Footer */}
       <motion.div 
         className="text-center mt-16 text-neutral-500 text-sm"
         variants={itemVariants}
@@ -240,15 +257,10 @@ const Contact = () => {
         <p>© {currentYear} Gading Aditya Perdana. All rights reserved.</p>
       </motion.div>
 
-      {/* Gradient Keyframes */}
       <style>{`
         @keyframes gradientShift {
-          0% {
-            background-position: 0% 50%;
-          }
-          100% {
-            background-position: 100% 50%;
-          }
+          0% { background-position: 0% 50%; }
+          100% { background-position: 100% 50%; }
         }
       `}</style>
     </motion.div>

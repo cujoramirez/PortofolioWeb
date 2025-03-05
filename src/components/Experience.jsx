@@ -1,7 +1,18 @@
-import React, { useEffect } from "react";
+import React, { memo } from "react";
 import { EXPERIENCES } from "../constants";
-import { motion, useAnimation } from "framer-motion";
-import { useInView } from "react-intersection-observer";
+import { motion } from "framer-motion";
+
+// Custom hook to detect low‑end devices based on a simple heuristic
+function useLowEndDevice() {
+  const [isLowEnd, setIsLowEnd] = React.useState(false);
+  React.useEffect(() => {
+    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
+    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
+  }, []);
+  return isLowEnd;
+}
 
 // Simplified container variant with faster animation
 const containerVariants = {
@@ -17,7 +28,7 @@ const containerVariants = {
   },
 };
 
-// Optimized item variants with faster transitions
+// Optimized title variants with faster transitions
 const titleVariants = {
   hidden: { opacity: 0, y: -15 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
@@ -55,37 +66,20 @@ const tagVariants = {
 };
 
 const Experience = () => {
-  // Use more efficient intersection observer with ref callback
-  const controls = useAnimation();
-  const [ref, inView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-    rootMargin: "0px 0px 100px 0px" // Preload earlier
-  });
-
-  // Trigger animations only when in view
-  useEffect(() => {
-    if (inView) {
-      controls.start("visible");
-    }
-  }, [controls, inView]);
-
-  // Memoize the gradient style to prevent recalculation
-  const gradientStyle = {
-    background: "linear-gradient(90deg, #a855f7, #cbd5e1, #ec4899)",
-    backgroundSize: "200% 200%",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    animation: "gradientShift 4s ease-in-out infinite alternate",
-  };
+  const isLowEnd = useLowEndDevice();
+  // On high‑end devices, use scroll triggers; on low‑end, animate immediately.
+  const shouldUseScrollTrigger = !isLowEnd;
 
   return (
     <motion.div
-      ref={ref}
       className="pb-12 px-4 will-change-transform"
       variants={containerVariants}
       initial="hidden"
-      animate={controls}
+      {...(shouldUseScrollTrigger 
+          ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
+          : { animate: "visible" }
+      )}
+      style={{ willChange: "opacity, transform" }}
     >
       {/* Section Title */}
       <motion.h2
@@ -93,12 +87,19 @@ const Experience = () => {
         variants={titleVariants}
         whileHover="hover"
         whileTap="hover"
-        style={gradientStyle}
+        style={{
+          background:
+            "linear-gradient(90deg, #a855f7, #cbd5e1, #ec4899)",
+          backgroundSize: "200% 200%",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          animation: "gradientShift 4s ease-in-out infinite alternate",
+        }}
       >
         Experience
       </motion.h2>
 
-      {/* Experience Cards - Using React.memo for each card would be ideal */}
+      {/* Experience Cards */}
       {EXPERIENCES.map((experience, index) => (
         <motion.div
           key={index}
@@ -155,14 +156,12 @@ const Experience = () => {
       ))}
 
       {/* Optimized keyframes with will-change properties */}
-{/* Use regular style tag instead of styled-jsx */}
       <style>{`
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
           100% { background-position: 100% 50%; }
         }
         
-        /* Precompute the transform for better performance */
         .will-change-transform {
           will-change: transform, opacity;
           transform: translateZ(0);

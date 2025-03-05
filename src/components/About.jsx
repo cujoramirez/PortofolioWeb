@@ -3,6 +3,18 @@ import aboutImg from "../assets/GadingAdityaPerdana2.jpg";
 import { ABOUT_TEXT } from "../constants/index";
 import { motion, useAnimation } from "framer-motion";
 
+// Custom hook to detect low‑end devices
+function useLowEndDevice() {
+  const [isLowEnd, setIsLowEnd] = React.useState(false);
+  React.useEffect(() => {
+    const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
+    setIsLowEnd(isMobile && (isOlderIphone || lowMemory));
+  }, []);
+  return isLowEnd;
+}
+
 // Enhanced title variant with more impressive animations
 const titleVariants = {
   hidden: { opacity: 0, y: -30 },
@@ -88,7 +100,7 @@ const wordVariants = {
     opacity: 1,
     y: 0,
     transition: {
-      delay: 0.8 + i * 0.012, // Slightly faster to improve readability
+      delay: 0.8 + i * 0.012,
       duration: 0.3,
       ease: "easeOut",
     },
@@ -155,24 +167,26 @@ const dividerVariants = {
 
 function About() {
   const controls = useAnimation();
+  const isLowEnd = useLowEndDevice();
+  // On high‑end devices, use scroll triggers; on low‑end, animate immediately.
+  const shouldUseScrollTrigger = !isLowEnd;
 
+  // For low‑end devices, trigger immediate animation.
   useEffect(() => {
-    controls.start("animate");
-  }, [controls]);
+    if (!shouldUseScrollTrigger) {
+      controls.start("animate");
+    }
+  }, [controls, shouldUseScrollTrigger]);
 
   // Highlight specific words in the text
   const highlightSpecialWords = () => {
     if (!ABOUT_TEXT) return [];
 
-    // Create a regex pattern from the special words array
-    // This will match whole words and phrases
     const specialWordsPattern = specialWords
-      .map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) // Escape special regex chars
+      .map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
       .join("|");
 
     const regex = new RegExp(`(${specialWordsPattern})`, "gi");
-
-    // Split text by special words and preserve delimiters
     const segments = ABOUT_TEXT.split(regex);
 
     return segments.map((segment, index) => {
@@ -195,14 +209,10 @@ function About() {
         );
       }
 
-      // For non-special text, we need to preserve spacing while animating words
       return segment.split(/(\s+)/).map((part, partIndex) => {
-        // If it's whitespace, just return it directly to preserve spacing
         if (part.trim() === "") {
           return <span key={`space-${index}-${partIndex}`}>{part}</span>;
         }
-
-        // Otherwise it's a word to animate
         return (
           <motion.span
             key={`word-${index}-${partIndex}`}
@@ -221,16 +231,13 @@ function About() {
 
   return (
     <motion.div
-      className="
-        pt-8
-        pb-12
-        relative
-        // [FIX] Removed overflow-hidden so text won't be clipped
-      "
+      className="pt-8 pb-12 relative"
       variants={containerVariants}
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.2 }}
+      {...(shouldUseScrollTrigger
+          ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
+          : { animate: "visible" }
+      )}
       style={{ willChange: "opacity, transform" }}
     >
       {/* Background animated shapes */}
@@ -249,9 +256,10 @@ function About() {
           variants={shapeVariants}
           custom={i}
           initial="hidden"
-          whileInView="visible"
-          animate={controls}
-          viewport={{ once: true }}
+          {...(shouldUseScrollTrigger
+              ? { whileInView: "visible", viewport: { once: true } }
+              : { animate: "visible" }
+          )}
         />
       ))}
 
@@ -265,7 +273,7 @@ function About() {
       >
         <span className="text-white">About</span>
         <motion.span
-          className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent"
+          className="bg-gradient-to-r from-pink-500 to-pink-500 bg-clip-text text-transparent"
           style={{
             backgroundSize: "200% 200%",
             animation: "gradientShift 4s ease-in-out infinite",
@@ -313,31 +321,29 @@ function About() {
               <motion.div
                 className="absolute -bottom-4 -right-4 w-full h-full rounded-2xl border-2 border-purple-500/50 z-0"
                 initial={{ opacity: 0 }}
-                whileInView={{
-                  opacity: 1,
-                  transition: { delay: 1.2, duration: 0.5 },
-                }}
+                {...(shouldUseScrollTrigger
+                    ? { whileInView: { opacity: 1, transition: { delay: 1.2, duration: 0.5 } }, viewport: { once: true } }
+                    : { animate: { opacity: 1, transition: { delay: 1.2, duration: 0.5 } } }
+                )}
                 whileHover={{
                   scale: 1.05,
                   transition: { duration: 0.4 },
                 }}
                 whileTap="hover"
-                viewport={{ once: true }}
                 style={{ willChange: "transform, opacity" }}
               />
               <motion.div
                 className="absolute -top-4 -left-4 w-full h-full rounded-2xl border-2 border-pink-500/50 z-0"
                 initial={{ opacity: 0 }}
-                whileInView={{
-                  opacity: 1,
-                  transition: { delay: 1.4, duration: 0.5 },
-                }}
+                {...(shouldUseScrollTrigger
+                    ? { whileInView: { opacity: 1, transition: { delay: 1.4, duration: 0.5 } }, viewport: { once: true } }
+                    : { animate: { opacity: 1, transition: { delay: 1.4, duration: 0.5 } } }
+                )}
                 whileHover={{
                   scale: 1.05,
                   transition: { duration: 0.4 },
                 }}
                 whileTap="hover"
-                viewport={{ once: true }}
                 style={{ willChange: "transform, opacity" }}
               />
             </motion.div>
@@ -361,18 +367,10 @@ function About() {
         </motion.div>
       </div>
 
-      {/* Enhanced gradient keyframes */}
       <style>{`
         @keyframes gradientShift {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
+          0% { background-position: 0% 50%; }
+          100% { background-position: 100% 50%; }
         }
         
         @keyframes float {
@@ -391,5 +389,4 @@ function About() {
   );
 }
 
-// Wrap in React.memo to reduce re-renders
-export default React.memo(About);
+export default memo(About);
