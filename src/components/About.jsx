@@ -29,6 +29,7 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
+      // Stagger only applies on desktop devices (see later)
       staggerChildren: 0.3,
       delayChildren: 0.2,
       duration: 0.8,
@@ -82,13 +83,14 @@ const textVariants = {
   },
 };
 
-// Word variants with enhanced staggered reveal and hover effects
-const wordVariants = {
+// Original word variants – we'll override the delay if not desktop.
+const baseWordVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: (i) => ({
     opacity: 1,
     y: 0,
     transition: {
+      // Base delay plus an additional multiplier per token
       delay: 0.8 + i * 0.012,
       duration: 0.3,
       ease: "easeOut",
@@ -101,6 +103,27 @@ const wordVariants = {
     transition: { duration: 0.2, ease: "easeOut" },
   },
 };
+
+// Helper: Generate enhanced word variants with a configurable delay multiplier.
+// On desktop we use the base delay, on mobile/tablet we set multiplier to 0.
+const getEnhancedWordVariants = (delayMultiplier) => ({
+  hidden: { opacity: 0, y: 20 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: 0.8 + i * delayMultiplier,
+      duration: 0.3,
+      ease: "easeOut",
+    },
+  }),
+  hover: {
+    scale: 1.08,
+    color: "#a855f7",
+    textShadow: "0px 0px 8px rgba(168,85,247,0.5)",
+    transition: { duration: 0.2, ease: "easeOut" },
+  },
+});
 
 // Background shape animation variants
 const shapeVariants = {
@@ -140,8 +163,8 @@ const dividerVariants = {
   },
 };
 
-// Dynamic word coloring - special words will get gradient treatment
-const specialWords = [
+// Dynamic word coloring – special words get gradient treatment.
+const specialWordsList = [
   "deep learning",
   "AI research",
   "computer vision",
@@ -158,31 +181,34 @@ function About() {
   const controls = useAnimation();
   const { performanceTier, deviceType } = useSystemProfile();
 
-  // For low‑tier devices, disable scroll triggers for less overhead
+  // Enable scroll triggers only on mid/high-tier devices.
   const shouldUseScrollTrigger = performanceTier !== "low";
-  // Skip heavy background shapes on low‑tier
+  // Skip background shapes on low-tier devices.
   const showShapes = performanceTier !== "low";
 
-  // For low‑tier, trigger immediate animation.
+  // On low-tier, trigger immediate animation.
   useEffect(() => {
     if (!shouldUseScrollTrigger) {
       controls.start("animate");
     }
   }, [controls, shouldUseScrollTrigger]);
 
-  // Highlight specific words in the text
+  // Compute delay multiplier: Only use stagger on desktop; on mobile/tablet, set to 0.
+  const delayMultiplier = deviceType === "desktop" ? 0.012 : 0;
+  const enhancedWordVariants = getEnhancedWordVariants(delayMultiplier);
+
+  // Highlight specific words in ABOUT_TEXT using enhanced variants.
   const highlightSpecialWords = () => {
     if (!ABOUT_TEXT) return [];
 
-    const specialWordsPattern = specialWords
+    const specialPattern = specialWordsList
       .map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
       .join("|");
-
-    const regex = new RegExp(`(${specialWordsPattern})`, "gi");
+    const regex = new RegExp(`(${specialPattern})`, "gi");
     const segments = ABOUT_TEXT.split(regex);
 
     return segments.map((segment, index) => {
-      const isSpecial = specialWords.some(
+      const isSpecial = specialWordsList.some(
         (word) => segment.toLowerCase() === word.toLowerCase()
       );
 
@@ -191,7 +217,7 @@ function About() {
           <motion.span
             key={`special-${index}`}
             custom={index}
-            variants={wordVariants}
+            variants={enhancedWordVariants}
             className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400"
             whileHover="hover"
             whileTap="hover"
@@ -200,7 +226,6 @@ function About() {
           </motion.span>
         );
       }
-
       return segment.split(/(\s+)/).map((part, partIndex) => {
         if (part.trim() === "") {
           return <span key={`space-${index}-${partIndex}`}>{part}</span>;
@@ -209,7 +234,7 @@ function About() {
           <motion.span
             key={`word-${index}-${partIndex}`}
             custom={index + partIndex}
-            variants={wordVariants}
+            variants={enhancedWordVariants}
             className="inline-block"
             whileHover="hover"
             whileTap="hover"
@@ -227,8 +252,8 @@ function About() {
       variants={containerVariants}
       initial="hidden"
       {...(shouldUseScrollTrigger
-          ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
-          : { animate: "visible" }
+        ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
+        : { animate: "visible" }
       )}
       style={{ willChange: "opacity, transform" }}
     >
@@ -250,8 +275,8 @@ function About() {
             custom={i}
             initial="hidden"
             {...(shouldUseScrollTrigger
-                ? { whileInView: "visible", viewport: { once: true } }
-                : { animate: "visible" }
+              ? { whileInView: "visible", viewport: { once: true } }
+              : { animate: "visible" }
             )}
           />
         ))}
@@ -315,14 +340,16 @@ function About() {
                 className="absolute -bottom-4 -right-4 w-full h-full rounded-2xl border-2 border-purple-500/50 z-0"
                 initial={{ opacity: 0 }}
                 {...(shouldUseScrollTrigger
-                    ? {
-                        whileInView: {
-                          opacity: 1,
-                          transition: { delay: 1.2, duration: 0.5 },
-                        },
-                        viewport: { once: true },
-                      }
-                    : { animate: { opacity: 1, transition: { delay: 1.2, duration: 0.5 } } }
+                  ? {
+                      whileInView: {
+                        opacity: 1,
+                        transition: { delay: 1.2, duration: 0.5 },
+                      },
+                      viewport: { once: true },
+                    }
+                  : {
+                      animate: { opacity: 1, transition: { delay: 1.2, duration: 0.5 } },
+                    }
                 )}
                 whileHover={{
                   scale: 1.05,
@@ -335,14 +362,16 @@ function About() {
                 className="absolute -top-4 -left-4 w-full h-full rounded-2xl border-2 border-pink-500/50 z-0"
                 initial={{ opacity: 0 }}
                 {...(shouldUseScrollTrigger
-                    ? {
-                        whileInView: {
-                          opacity: 1,
-                          transition: { delay: 1.4, duration: 0.5 },
-                        },
-                        viewport: { once: true },
-                      }
-                    : { animate: { opacity: 1, transition: { delay: 1.4, duration: 0.5 } } }
+                  ? {
+                      whileInView: {
+                        opacity: 1,
+                        transition: { delay: 1.4, duration: 0.5 },
+                      },
+                      viewport: { once: true },
+                    }
+                  : {
+                      animate: { opacity: 1, transition: { delay: 1.4, duration: 0.5 } },
+                    }
                 )}
                 whileHover={{
                   scale: 1.05,

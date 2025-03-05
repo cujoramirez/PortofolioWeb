@@ -11,13 +11,13 @@ import profilePic from "../assets/GadingAdityaPerdana.jpg";
 import { HERO_CONTENT } from "../constants/index";
 
 // Lazy-load heavy effects
-const AmbientBackground = lazy(() => import("./AmbientBackground.jsx"));
-const ParticleEffect = lazy(() => import("./ParticleEffect.jsx"));
+const AmbientBackground = lazy(() => import("./AmbientBackground"));
+const ParticleEffect = lazy(() => import("./ParticleEffect"));
 
 // Import our custom device/performance detection
 import { useSystemProfile } from "../components/useSystemProfile.jsx";
 
-// ---------- 1) Tokenization Helpers (same as your original) ----------
+// ---------- 1) Tokenization Helpers ----------
 const specialWords = [
   "Python",
   "machine",
@@ -74,7 +74,6 @@ function tokenizeParagraph(paragraph) {
 }
 
 // ---------- 2) Framer Motion Variants ----------
-// Full variants for high-tier, simpler ones for mid and low tiers
 
 const outlineVariantsHigh = {
   initial: { pathLength: 0, pathOffset: 0, strokeOpacity: 1 },
@@ -143,13 +142,14 @@ const titleLineVariants = {
   },
 };
 
-const enhancedWordVariants = {
+// Helper to generate enhanced word variants with a configurable delay multiplier.
+const getEnhancedWordVariants = (delayMultiplier) => ({
   hidden: { opacity: 0, y: 20 },
   visible: (i) => ({
     opacity: 1,
     y: 0,
     transition: {
-      delay: i * 0.015,
+      delay: i * delayMultiplier,
       duration: 0.3,
       ease: "easeOut",
     },
@@ -160,7 +160,7 @@ const enhancedWordVariants = {
     textShadow: "0px 0px 8px rgba(168,85,247,0.5)",
     transition: { duration: 0.2, ease: "easeOut" },
   },
-};
+});
 
 const bioVariants = {
   hidden: { opacity: 0 },
@@ -185,13 +185,13 @@ const profilePicVariants = {
 };
 
 const Hero = () => {
-  // 1) Determine performance tier & device type using the system profile hook
+  // 1) Determine performance tier & device type using our system profile hook
   const { performanceTier, deviceType } = useSystemProfile();
 
-  // 2) Decide which animations to enable based on performanceTier
-  const showAmbient = performanceTier !== "low";       // Ambient background for mid/high devices
-  const showParticles = performanceTier === "high";     // Particle effect only on high-tier
-  const showDot = performanceTier === "high" || performanceTier === "mid"; // Dot animation for mid/high
+  // 2) Set heavy effects based on performance
+  const showAmbient = performanceTier !== "low";
+  const showParticles = performanceTier === "high";
+  const showDot = performanceTier === "high" || performanceTier === "mid";
   const outlineVariants =
     performanceTier === "high"
       ? outlineVariantsHigh
@@ -199,25 +199,40 @@ const Hero = () => {
       ? outlineVariantsMid
       : outlineVariantsLow;
 
-  // 3) Decide whether to use scroll triggers (enabled for mid/high, immediate for low)
+  // 3) Use scroll triggers only on mid/high devices
   const shouldUseScrollTrigger = performanceTier !== "low";
 
-  // 4) Tokenize the HERO_CONTENT paragraph once
+  // 4) Tokenize HERO_CONTENT once
   const tokens = useMemo(() => tokenizeParagraph(HERO_CONTENT), []);
 
   // 5) Local state for controlling dot visibility
   const [dotVisible, setDotVisible] = useState(true);
 
+  // 6) For smoother animation on non-desktop devices, disable staggering.
+  //    Desktop devices get a delay multiplier; others get 0 (no stagger).
+  const delayMultiplier = deviceType === "desktop" ? 0.015 : 0;
+  const enhancedWordVariants = getEnhancedWordVariants(delayMultiplier);
+
+  // 7) Fix viewport height issues on iOS/Safari.
+  useEffect(() => {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  }, []);
+
   return (
     <motion.div
-      className="relative w-full min-h-screen flex flex-col justify-center items-center py-12 px-4 md:py-16"
+      className="relative w-full flex flex-col justify-center items-center py-12 px-4 md:py-16"
+      style={{
+        backgroundColor: "#0f0528",
+        willChange: "opacity, transform",
+        minHeight: "calc(var(--vh, 1vh) * 100)",
+      }}
       initial="hidden"
       {...(shouldUseScrollTrigger
         ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
         : { animate: "visible" }
       )}
       transition={{ duration: 0.8 }}
-      style={{ backgroundColor: "#0f0528", willChange: "opacity, transform" }}
     >
       {/* Global Styles */}
       <style>{`
@@ -281,7 +296,6 @@ const Hero = () => {
                   style={{ willChange: "opacity" }}
                 >
                   <circle r="5" fill="#ec4899">
-                    {/* Use native <animateMotion> to follow the path */}
                     <animateMotion dur="4s" repeatCount="1" fill="freeze">
                       <mpath xlinkHref="#heroPath" />
                     </animateMotion>
@@ -510,7 +524,7 @@ const Hero = () => {
               />
             )}
 
-            {/* Lazy-load Particle Effect only for high-tier devices */}
+            {/* Lazy-load Particle Effect (only for high-tier devices) */}
             <Suspense fallback={null}>
               {showParticles && <ParticleEffect />}
             </Suspense>

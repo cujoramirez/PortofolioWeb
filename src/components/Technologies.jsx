@@ -13,8 +13,8 @@ import { FaAtom, FaChartBar } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useSystemProfile } from "../components/useSystemProfile.jsx";
 
-// Container variant: fade in & slide up with staggered children
-const containerVariants = {
+// Container variant: fade in & slide up with conditional stagger
+const optimizedContainerVariants = (staggerValue) => ({
   hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
@@ -22,11 +22,11 @@ const containerVariants = {
     transition: {
       duration: 0.8,
       ease: "easeOut",
-      staggerChildren: 0.2,
+      staggerChildren: staggerValue,
       when: "beforeChildren",
     },
   },
-};
+});
 
 // Title variant: animated gradient with purple/pink hover glow
 const titleVariants = {
@@ -63,7 +63,7 @@ const iconContainerVariants = {
   },
 };
 
-// Baseline icon animation: slight vertical bobbing + color glow on hover
+// Baseline icon animation: slight vertical bobbing with drop shadow
 const getIconAnimation = (color) => ({
   animate: {
     y: [-2, 2, -2],
@@ -227,7 +227,13 @@ const Technologies = () => {
   const { performanceTier, deviceType } = useSystemProfile();
   const shouldUseScrollTrigger = performanceTier !== "low";
 
-  // Canvas animation: only run on mid/high‑tier devices
+  // For smoother stagger on non-desktop devices, disable staggering.
+  const staggerMultiplier = deviceType === "desktop" ? 0.2 : 0;
+
+  // Get optimized container variants with conditional stagger.
+  const containerVars = optimizedContainerVariants(staggerMultiplier);
+
+  // Canvas animation: only run on mid/high‑tier devices.
   useEffect(() => {
     if (performanceTier === "low") return;
     const canvas = canvasRef.current;
@@ -244,7 +250,7 @@ const Technologies = () => {
 
     resizeCanvas();
 
-    // Create a light for each technology
+    // Create a light for each technology.
     const positions = [
       { x: 0.2, y: 0.3, radius: 220, speed: { x: 0.3, y: 0.4 }, direction: { x: 1, y: 1 } },
       { x: 0.8, y: 0.2, radius: 240, speed: { x: 0.2, y: 0.5 }, direction: { x: -1, y: 1 } },
@@ -394,7 +400,7 @@ const Technologies = () => {
       </div>
       <motion.div
         className="relative z-10 container mx-auto px-4 sm:px-6 md:px-8 h-full flex flex-col"
-        variants={containerVariants}
+        variants={containerVars}
         initial="hidden"
         {...(shouldUseScrollTrigger
           ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
