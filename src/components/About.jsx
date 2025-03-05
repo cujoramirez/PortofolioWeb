@@ -4,7 +4,7 @@ import { ABOUT_TEXT } from "../constants/index";
 import { motion, useAnimation } from "framer-motion";
 import { useSystemProfile } from "../components/useSystemProfile.jsx";
 
-// Enhanced title variant with more impressive animations
+// Enhanced title variant with lighter animations for mobile
 const titleVariants = {
   hidden: { opacity: 0, y: -30 },
   visible: {
@@ -23,14 +23,13 @@ const titleVariants = {
   },
 };
 
-// Container variant with improved stagger for overall fade-in
+// Container variant with reduced stagger for mobile
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      // Stagger only applies on desktop devices (see later)
-      staggerChildren: 0.3,
+      staggerChildren: 0.2,
       delayChildren: 0.2,
       duration: 0.8,
       ease: "easeOut",
@@ -38,15 +37,15 @@ const containerVariants = {
   },
 };
 
-// Enhanced image variants with more dramatic entrance and hover effects
+// Image variants optimized for mobile
 const imageVariants = {
-  hidden: { x: -100, opacity: 0, rotateY: 10 },
+  hidden: { x: -50, opacity: 0, rotateY: 5 },
   visible: {
     x: 0,
     opacity: 1,
     rotateY: 0,
     transition: {
-      duration: 1,
+      duration: 0.8,
       ease: [0.6, 0.05, 0.01, 0.9],
     },
   },
@@ -60,7 +59,7 @@ const imageVariants = {
   },
 };
 
-// Enhanced image container variants
+// Light image container variants
 const imageContainerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -69,9 +68,9 @@ const imageContainerVariants = {
   },
 };
 
-// Text variant: enhanced slide in from the right with better easing
+// Simplified text variant for mobile
 const textVariants = {
-  hidden: { x: 100, opacity: 0 },
+  hidden: { x: 50, opacity: 0 },
   visible: {
     x: 0,
     opacity: 1,
@@ -83,53 +82,46 @@ const textVariants = {
   },
 };
 
-// Original word variants – we'll override the delay if not desktop.
-const baseWordVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      // Base delay plus an additional multiplier per token
-      delay: 0.8 + i * 0.012,
-      duration: 0.3,
-      ease: "easeOut",
-    },
-  }),
-  hover: {
-    scale: 1.08,
-    color: "#a855f7",
-    textShadow: "0px 0px 8px rgba(168,85,247,0.5)",
-    transition: { duration: 0.2, ease: "easeOut" },
-  },
-};
-
-// Helper: Generate enhanced word variants with a configurable delay multiplier.
-// On desktop we use the base delay, on mobile/tablet we set multiplier to 0.
-const getEnhancedWordVariants = (delayMultiplier) => ({
-  hidden: { opacity: 0, y: 20 },
+// Helper: Generate device-appropriate word variants
+const getEnhancedWordVariants = (isMobile, delayMultiplier) => ({
+  hidden: { opacity: 0, y: 10 }, // Less movement on mobile
   visible: (i) => ({
     opacity: 1,
     y: 0,
     transition: {
       delay: 0.8 + i * delayMultiplier,
-      duration: 0.3,
+      duration: isMobile ? 0.2 : 0.3,
       ease: "easeOut",
     },
   }),
   hover: {
-    scale: 1.08,
+    scale: isMobile ? 1.04 : 1.08, // Smaller scale for mobile
     color: "#a855f7",
-    textShadow: "0px 0px 8px rgba(168,85,247,0.5)",
+    textShadow: isMobile ? "0px 0px 4px rgba(168,85,247,0.4)" : "0px 0px 8px rgba(168,85,247,0.5)",
     transition: { duration: 0.2, ease: "easeOut" },
   },
 });
 
-// Background shape animation variants
-const shapeVariants = {
+// Mobile-optimized divider animation
+const getDividerVariants = (isMobile, isIOSSafari) => ({
+  hidden: { width: 0, opacity: 0 },
+  visible: {
+    width: isIOSSafari ? "80%" : ["0%", "60%", "80%"], // Skip keyframes on iOS Safari
+    opacity: isIOSSafari ? 1 : [0, 0.5, 1],
+    transition: {
+      delay: 0.5,
+      duration: isMobile ? 1.0 : 1.4,
+      ease: "easeInOut",
+      times: isIOSSafari ? [0, 0, 1] : [0, 0.7, 1],
+    },
+  },
+});
+
+// Simplified shape variants for mobile
+const getShapeVariants = (isMobile) => ({
   hidden: { opacity: 0, scale: 0 },
   visible: (i) => ({
-    opacity: 0.07,
+    opacity: isMobile ? 0.05 : 0.07,
     scale: 1,
     transition: {
       delay: 0.1 + i * 0.2,
@@ -138,30 +130,16 @@ const shapeVariants = {
     },
   }),
   animate: (i) => ({
-    rotate: i % 2 === 0 ? [0, 5, 0] : [0, -5, 0],
-    scale: [1, 1.05, 1],
+    rotate: i % 2 === 0 ? [0, 2, 0] : [0, -2, 0], // Reduced rotation
+    scale: isMobile ? 1 : [1, 1.02, 1], // No scale change on mobile
     transition: {
-      duration: 6 + i,
+      duration: 12 + i,
       ease: "easeInOut",
       repeat: Infinity,
       repeatType: "reverse",
     },
   }),
-};
-
-// Section divider
-const dividerVariants = {
-  hidden: { width: 0, opacity: 0 },
-  visible: {
-    width: "80%",
-    opacity: 1,
-    transition: {
-      delay: 0.5,
-      duration: 1,
-      ease: "easeOut",
-    },
-  },
-};
+});
 
 // Dynamic word coloring – special words get gradient treatment.
 const specialWordsList = [
@@ -180,24 +158,40 @@ const specialWordsList = [
 function About() {
   const controls = useAnimation();
   const { performanceTier, deviceType } = useSystemProfile();
+  
+  // Detect iOS Safari for specific optimizations
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isIOSSafari = isIOS && isSafari;
+  
+  // Device type detection
+  const isMobile = deviceType === "mobile" || deviceType === "tablet";
+  
+  // Performance-based feature toggles
+  const shouldUseScrollTrigger = performanceTier !== "low" && !isIOSSafari;
+  const showShapes = performanceTier !== "low" && !(isIOSSafari && performanceTier !== "high");
 
-  // Enable scroll triggers only on mid/high-tier devices.
-  const shouldUseScrollTrigger = performanceTier !== "low";
-  // Skip background shapes on low-tier devices.
-  const showShapes = performanceTier !== "low";
+  // Minimal or no stagger on mobile
+  const delayMultiplier = isMobile ? 0.004 : 0.012;
+  
+  // Get device-appropriate variants
+  const enhancedWordVariants = getEnhancedWordVariants(isMobile, delayMultiplier);
+  const dividerVariants = getDividerVariants(isMobile, isIOSSafari);
+  const shapeVariants = getShapeVariants(isMobile);
+  
+  // For the background shapes, we only do the infinite rotation on desktop with good performance
+  const shouldAnimateShapes = !isMobile && performanceTier !== "low";
+  const shapeAnimateState = shouldAnimateShapes ? "animate" : "visible";
 
-  // On low-tier, trigger immediate animation.
+  // Trigger animation immediately for low-performance devices
   useEffect(() => {
     if (!shouldUseScrollTrigger) {
       controls.start("animate");
+      controls.start("visible");
     }
   }, [controls, shouldUseScrollTrigger]);
 
-  // Compute delay multiplier: Only use stagger on desktop; on mobile/tablet, set to 0.
-  const delayMultiplier = deviceType === "desktop" ? 0.012 : 0;
-  const enhancedWordVariants = getEnhancedWordVariants(delayMultiplier);
-
-  // Highlight specific words in ABOUT_TEXT using enhanced variants.
+  // Highlight specific words in ABOUT_TEXT using enhanced variants
   const highlightSpecialWords = () => {
     if (!ABOUT_TEXT) return [];
 
@@ -220,12 +214,14 @@ function About() {
             variants={enhancedWordVariants}
             className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400"
             whileHover="hover"
-            whileTap="hover"
+            {...(!isMobile && { whileTap: "hover" })}
           >
             {segment}
           </motion.span>
         );
       }
+      
+      // Process regular text without breaking it
       return segment.split(/(\s+)/).map((part, partIndex) => {
         if (part.trim() === "") {
           return <span key={`space-${index}-${partIndex}`}>{part}</span>;
@@ -237,7 +233,7 @@ function About() {
             variants={enhancedWordVariants}
             className="inline-block"
             whileHover="hover"
-            whileTap="hover"
+            {...(!isMobile && { whileTap: "hover" })}
           >
             {part}
           </motion.span>
@@ -251,33 +247,34 @@ function About() {
       className="pt-8 pb-12 relative"
       variants={containerVariants}
       initial="hidden"
+      animate={controls}
       {...(shouldUseScrollTrigger
         ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
         : { animate: "visible" }
       )}
-      style={{ willChange: "opacity, transform" }}
+      // Only use willChange on desktop
+      style={!isMobile ? { willChange: "opacity, transform" } : {}}
     >
-      {/* Background animated shapes */}
+      {/* Background animated shapes - reduced number on mobile */}
       {showShapes &&
-        [...Array(5)].map((_, i) => (
+        [...Array(isMobile ? 3 : 5)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full opacity-5 will-change-transform"
+            className="absolute rounded-full opacity-5"
             style={{
               background: "linear-gradient(45deg, #a855f7, #ec4899)",
-              height: `${100 + i * 50}px`,
-              width: `${100 + i * 50}px`,
+              height: `${100 + i * (isMobile ? 30 : 50)}px`,
+              width: `${100 + i * (isMobile ? 30 : 50)}px`,
               top: `${Math.random() * 80}%`,
               left: `${Math.random() * 80}%`,
               zIndex: -1,
+              // Hardware acceleration
+              transform: "translateZ(0)",
             }}
             variants={shapeVariants}
             custom={i}
             initial="hidden"
-            {...(shouldUseScrollTrigger
-              ? { whileInView: "visible", viewport: { once: true } }
-              : { animate: "visible" }
-            )}
+            animate={shapeAnimateState}
           />
         ))}
 
@@ -287,7 +284,7 @@ function About() {
         variants={titleVariants}
         whileHover="hover"
         whileTap="hover"
-        style={{ willChange: "transform, filter" }}
+        style={{ transform: "translateZ(0)" }} // Hardware acceleration
       >
         <span className="text-white">About</span>
         <motion.span
@@ -295,7 +292,7 @@ function About() {
           style={{
             backgroundSize: "200% 200%",
             animation: "gradientShift 4s ease-in-out infinite",
-            willChange: "background-position, filter",
+            transform: "translateZ(0)", // Hardware acceleration
           }}
         >
           {" "}
@@ -303,11 +300,14 @@ function About() {
         </motion.span>
       </motion.h2>
 
-      {/* Animated divider */}
+      {/* Animated divider with mobile optimizations */}
       <motion.div
         className="h-1 mx-auto mb-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
         variants={dividerVariants}
-        style={{ willChange: "width, opacity" }}
+        style={{ 
+          maxWidth: "400px", // Ensure consistent width
+          transform: "translateZ(0)", // Hardware acceleration
+        }}
       />
 
       {/* Content wrapper */}
@@ -316,7 +316,6 @@ function About() {
         <motion.div
           className="w-full lg:w-1/2 lg:p-8"
           variants={imageContainerVariants}
-          style={{ willChange: "opacity" }}
         >
           <div className="flex items-center justify-center h-full">
             <motion.div
@@ -324,7 +323,7 @@ function About() {
               variants={imageVariants}
               whileHover="hover"
               whileTap="hover"
-              style={{ willChange: "transform, opacity" }}
+              style={{ transform: "translateZ(0)" }} // Hardware acceleration
             >
               <motion.img
                 src={aboutImg}
@@ -333,9 +332,9 @@ function About() {
                 initial={{ filter: "brightness(0.8)" }}
                 whileHover={{ filter: "brightness(1.1)" }}
                 whileTap={{ filter: "brightness(1.1)" }}
-                style={{ willChange: "filter, transform" }}
+                style={{ transform: "translateZ(0)" }} // Hardware acceleration
               />
-              {/* Image decorative elements */}
+              {/* Optimized image border elements */}
               <motion.div
                 className="absolute -bottom-4 -right-4 w-full h-full rounded-2xl border-2 border-purple-500/50 z-0"
                 initial={{ opacity: 0 }}
@@ -343,20 +342,23 @@ function About() {
                   ? {
                       whileInView: {
                         opacity: 1,
-                        transition: { delay: 1.2, duration: 0.5 },
+                        transition: { delay: 0.8, duration: 0.5 },
                       },
                       viewport: { once: true },
                     }
                   : {
-                      animate: { opacity: 1, transition: { delay: 1.2, duration: 0.5 } },
+                      animate: { opacity: 1, transition: { delay: 0.8, duration: 0.5 } },
                     }
                 )}
                 whileHover={{
-                  scale: 1.05,
-                  transition: { duration: 0.4 },
+                  scale: 1.03,
+                  transition: { duration: 0.3 },
                 }}
-                whileTap="hover"
-                style={{ willChange: "transform, opacity" }}
+                whileTap={{
+                  scale: 1.03,
+                  transition: { duration: 0.3 },
+                }}
+                style={{ transform: "translateZ(0)" }}
               />
               <motion.div
                 className="absolute -top-4 -left-4 w-full h-full rounded-2xl border-2 border-pink-500/50 z-0"
@@ -365,20 +367,23 @@ function About() {
                   ? {
                       whileInView: {
                         opacity: 1,
-                        transition: { delay: 1.4, duration: 0.5 },
+                        transition: { delay: 1.0, duration: 0.5 },
                       },
                       viewport: { once: true },
                     }
                   : {
-                      animate: { opacity: 1, transition: { delay: 1.4, duration: 0.5 } },
+                      animate: { opacity: 1, transition: { delay: 1.0, duration: 0.5 } },
                     }
                 )}
                 whileHover={{
-                  scale: 1.05,
-                  transition: { duration: 0.4 },
+                  scale: 1.03,
+                  transition: { duration: 0.3 },
                 }}
-                whileTap="hover"
-                style={{ willChange: "transform, opacity" }}
+                whileTap={{
+                  scale: 1.03,
+                  transition: { duration: 0.3 },
+                }}
+                style={{ transform: "translateZ(0)" }}
               />
             </motion.div>
           </div>
@@ -388,12 +393,11 @@ function About() {
         <motion.div
           className="w-full lg:w-1/2 p-4 lg:p-8"
           variants={textVariants}
-          style={{ willChange: "transform, opacity" }}
+          style={{ transform: "translateZ(0)" }}
         >
           <div className="flex items-center justify-center">
             <motion.p
               className="my-2 max-w-xl py-6 text-gray-300 leading-relaxed text-lg whitespace-normal break-words"
-              style={{ willChange: "transform, opacity" }}
             >
               {highlightSpecialWords()}
             </motion.p>
@@ -401,22 +405,18 @@ function About() {
         </motion.div>
       </div>
 
+      {/* Optimized keyframe animation */}
       <style>{`
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
           100% { background-position: 100% 50%; }
         }
         
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-          100% { transform: translateY(0px); }
-        }
-        
-        @keyframes pulse {
-          0% { box-shadow: 0 0 0 0 rgba(168,85,247,0.4); }
-          70% { box-shadow: 0 0 0 10px rgba(168,85,247,0); }
-          100% { box-shadow: 0 0 0 0 rgba(168,85,247,0); }
+        /* iOS specific optimizations */
+        @supports (-webkit-touch-callout: none) {
+          .ios-fix {
+            transform: translate3d(0,0,0);
+          }
         }
       `}</style>
     </motion.div>
