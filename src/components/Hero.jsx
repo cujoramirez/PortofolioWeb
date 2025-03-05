@@ -5,12 +5,13 @@ import React, {
   useMemo,
   lazy,
   Suspense,
+  useRef
 } from "react";
 import { motion } from "framer-motion";
 import profilePic from "../assets/GadingAdityaPerdana.jpg";
 import { HERO_CONTENT } from "../constants/index";
 
-// Lazy-load heavy effects
+// Lazy-load heavy effects with error boundaries
 const AmbientBackground = lazy(() => import("./AmbientBackground"));
 const ParticleEffect = lazy(() => import("./ParticleEffect"));
 
@@ -121,6 +122,19 @@ const outlineVariantsLow = {
   },
 };
 
+// Simplest outline variant for iOS - much shorter duration
+const outlineVariantsIOS = {
+  initial: { pathLength: 0, strokeOpacity: 1 },
+  animate: {
+    pathLength: 1,
+    strokeOpacity: 0,
+    transition: {
+      pathLength: { duration: 0.8, ease: "easeInOut" },
+      strokeOpacity: { duration: 0.3, delay: 0.7 },
+    },
+  },
+};
+
 const dotVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -144,7 +158,7 @@ const nameVariants = {
   },
 };
 
-// Re-enabled hover effect for title lines
+// Title line variants with reduced animations for mobile/iOS
 const titleLineVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
@@ -158,22 +172,22 @@ const titleLineVariants = {
   },
 };
 
-// Helper to generate enhanced word variants with a configurable delay multiplier.
+// Helper to generate enhanced word variants with a configurable delay multiplier
 const getEnhancedWordVariants = (delayMultiplier, isMobile) => ({
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 10 }, // Reduced y offset for better performance
   visible: (i) => ({
     opacity: 1,
     y: 0,
     transition: {
-      delay: i * delayMultiplier,
-      duration: 0.3,
+      delay: Math.min(i * delayMultiplier, 1.5), // Cap maximum delay to 1.5s
+      duration: isMobile ? 0.2 : 0.3,
       ease: "easeOut",
     },
   }),
   hover: {
-    scale: isMobile ? 1.04 : 1.08, // Smaller scale for mobile
+    scale: isMobile ? 1.02 : 1.05, // Smaller scale for mobile
     color: "#a855f7",
-    textShadow: isMobile ? "0px 0px 4px rgba(168,85,247,0.4)" : "0px 0px 8px rgba(168,85,247,0.5)",
+    textShadow: isMobile ? "0px 0px 2px rgba(168,85,247,0.3)" : "0px 0px 8px rgba(168,85,247,0.5)",
     transition: { duration: 0.2, ease: "easeOut" },
   },
 });
@@ -182,61 +196,80 @@ const bioVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { duration: 0.8, delay: 0.9, ease: "easeOut" },
+    transition: { duration: 0.8, delay: 0.4, ease: "easeOut" },
   },
 };
 
 const profilePicVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
+  hidden: { opacity: 0, scale: 0.95 }, // Less dramatic scale for better performance
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.8, delay: 0.4, ease: "easeOut" },
+    transition: { duration: 0.8, delay: 0.2, ease: "easeOut" },
   },
   hover: {
-    scale: 1.05,
-    boxShadow: "0 20px 30px rgba(0, 0, 0, 0.2)",
-    transition: { duration: 0.5, ease: [0.43, 0.13, 0.23, 0.96] },
+    scale: 1.03, // Smaller scale for better performance
+    boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
+    transition: { duration: 0.4, ease: "easeOut" },
   },
 };
 
 const Hero = () => {
+  // State for content readiness - critical for fixing iOS scroll issues
+  const [contentReady, setContentReady] = useState(false);
+  const [animationsComplete, setAnimationsComplete] = useState(false);
+  
+  // Ref to track component mount
+  const isMountedRef = useRef(false);
+
   // 1) Determine performance tier & device type using our system profile hook
   const { performanceTier, deviceType } = useSystemProfile();
 
   // 2) Set appropriate effects based on device and performance
   const isMobile = deviceType === "mobile" || deviceType === "tablet";
   
-  // Performance adaptations
-  const showAmbient = performanceTier !== "low" && !isMobile;
-  const showParticles = performanceTier === "high" && !isMobile;
-  const showDot = performanceTier === "high" || performanceTier === "mid";
-  
   // Browser detection for iOS Safari optimization
   const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isIOSSafari = isIOS && isSafari;
   
-  // Select appropriate animation variants
-  const outlineVariants = 
-    performanceTier === "high" ? outlineVariantsHigh :
-    performanceTier === "mid" || isIOSSafari ? outlineVariantsMid : outlineVariantsLow;
+  // Performance adaptations
+  const showAmbient = performanceTier !== "low" && !isMobile && !isIOSSafari;
+  const showParticles = performanceTier === "high" && !isMobile && !isIOSSafari;
+  const showDot = (performanceTier === "high" || performanceTier === "mid") && !isIOSSafari;
+  
+  // Select appropriate animation variants based on device and browser
+  const outlineVariants = useMemo(() => {
+    if (isIOSSafari) return outlineVariantsIOS;
+    if (performanceTier === "high") return outlineVariantsHigh;
+    if (performanceTier === "mid") return outlineVariantsMid;
+    return outlineVariantsLow;
+  }, [performanceTier, isIOSSafari]);
 
   // 3) Decide if we should use scroll-triggered animations
-  const shouldUseScrollTrigger = performanceTier !== "low" && !isIOSSafari;
+  const shouldUseScrollTrigger = useMemo(() => 
+    performanceTier !== "low" && !isIOSSafari && !isMobile, 
+  [performanceTier, isIOSSafari, isMobile]);
 
   // 4) Tokenize HERO_CONTENT once with improved tokenization
   const tokens = useMemo(() => tokenizeParagraph(HERO_CONTENT), []);
 
   // Only animate tokens on desktop with adequate performance
-  const shouldAnimateTokens = deviceType === "desktop" && performanceTier !== "low";
+  const shouldAnimateTokens = deviceType === "desktop" && performanceTier !== "low" && !isIOSSafari;
 
   // 5) Local state for controlling dot visibility
   const [dotVisible, setDotVisible] = useState(true);
 
-  // 6) Delay multiplier for staggered animations
-  const delayMultiplier = shouldAnimateTokens ? 0.015 : 0;
-  const enhancedWordVariants = getEnhancedWordVariants(delayMultiplier, isMobile);
+  // 6) Delay multiplier for staggered animations - reduced for iOS
+  const delayMultiplier = useMemo(() => {
+    if (!shouldAnimateTokens) return 0;
+    if (isIOSSafari) return 0.005;
+    return 0.015;
+  }, [shouldAnimateTokens, isIOSSafari]);
+  
+  const enhancedWordVariants = useMemo(() => 
+    getEnhancedWordVariants(delayMultiplier, isMobile || isIOSSafari), 
+  [delayMultiplier, isMobile, isIOSSafari]);
 
   // 7) Fix iOS Safari viewport height issues
   useEffect(() => {
@@ -244,6 +277,14 @@ const Hero = () => {
     const updateHeight = () => {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
+      
+      // Force redraw on iOS Safari to fix scroll issues
+      if (isIOSSafari) {
+        setTimeout(() => {
+          window.scrollTo(0, window.scrollY + 1);
+          setTimeout(() => window.scrollTo(0, window.scrollY - 1), 10);
+        }, 50);
+      }
     };
     
     // Set initial height
@@ -257,11 +298,11 @@ const Hero = () => {
       window.removeEventListener('resize', updateHeight);
       window.removeEventListener('orientationchange', updateHeight);
     };
-  }, []);
+  }, [isIOSSafari]);
 
-  // 8) Improve touch scrolling performance
+  // 8) Improve touch scrolling performance and fix iOS-specific issues
   useEffect(() => {
-    if (isMobile) {
+    if (isMobile || isIOSSafari) {
       document.body.style.touchAction = 'pan-y';
       
       // Prevent rubber-banding/overscroll on iOS
@@ -269,401 +310,593 @@ const Hero = () => {
       
       // Disable text selection on mobile to improve performance
       document.body.style.userSelect = 'none';
+      
+      // iOS Safari specific fixes
+      if (isIOSSafari) {
+        // Make scrolling work immediately
+        document.body.style.overflow = 'auto';
+        document.documentElement.style.overflow = 'auto';
+        
+        // Force iOS to recalculate scroll area
+        setTimeout(() => {
+          window.scrollTo(0, 1);
+          setTimeout(() => window.scrollTo(0, 0), 10);
+        }, 50);
+      }
     }
     return () => {
       document.body.style.touchAction = '';
       document.body.style.overscrollBehaviorY = '';
       document.body.style.userSelect = '';
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
-  }, [isMobile]);
+  }, [isMobile, isIOSSafari]);
 
-  // 9) Prepare container style with optimized properties
-  const containerStyle = {
+  // 9) Make content visible after a short delay regardless of animation state
+  useEffect(() => {
+    // Mark component as mounted
+    isMountedRef.current = true;
+    
+    // Make content visible immediately on iOS Safari
+    if (isIOSSafari) {
+      setContentReady(true);
+    } else {
+      // Short delay for other browsers
+      const timer = setTimeout(() => {
+        if (isMountedRef.current) {
+          setContentReady(true);
+        }
+      }, 300);
+      
+      return () => {
+        clearTimeout(timer);
+        isMountedRef.current = false;
+      };
+    }
+    
+    // Ensure animations complete after a maximum time
+    const animationTimer = setTimeout(() => {
+      if (isMountedRef.current) {
+        setAnimationsComplete(true);
+      }
+    }, isIOSSafari ? 800 : 3000);
+    
+    return () => {
+      clearTimeout(animationTimer);
+      isMountedRef.current = false;
+    };
+  }, [isIOSSafari]);
+
+  // 10) Critical iOS Safari fix for scroll blocking
+  useEffect(() => {
+    if (isIOSSafari) {
+      // Force content to be visible and scrollable on iOS
+      document.body.style.position = 'relative';
+      document.body.style.height = 'auto';
+      document.body.style.minHeight = '100%';
+      document.body.style.overflow = 'auto';
+      document.body.style.overflowY = 'auto';
+      document.body.style.overscrollBehaviorY = 'auto';
+      document.documentElement.style.overflow = 'auto';
+      document.documentElement.style.overflowY = 'auto';
+      
+      // Scroll hack to trigger iOS redraw
+      setTimeout(() => {
+        window.scrollTo(0, 1);
+        setTimeout(() => window.scrollTo(0, 0), 50);
+      }, 100);
+    }
+    
+    return () => {
+      if (isIOSSafari) {
+        document.body.style.position = '';
+        document.body.style.height = '';
+        document.body.style.minHeight = '';
+        document.body.style.overflow = '';
+        document.body.style.overflowY = '';
+        document.body.style.overscrollBehaviorY = '';
+        document.documentElement.style.overflow = '';
+        document.documentElement.style.overflowY = '';
+      }
+    };
+  }, [isIOSSafari]);
+
+  // 11) Prepare container style with optimized properties
+  const containerStyle = useMemo(() => ({
     backgroundColor: "#0f0528",
-    willChange: deviceType === "desktop" ? "opacity, transform" : "auto",
+    willChange: deviceType === "desktop" && !isIOSSafari ? "opacity, transform" : "auto",
     height: isMobile ? 'auto' : "calc(var(--vh, 1vh) * 100)",
     minHeight: isMobile ? 'calc(var(--vh, 1vh) * 100)' : undefined,
     WebkitOverflowScrolling: 'touch', // Improve iOS scrolling
     overflowX: 'hidden', // Prevent horizontal scrolling
     padding: isMobile ? '3rem 1rem' : '4rem 1rem', // Pre-allocate space for content
+    // Critical for iOS scrolling:
+    position: 'relative',
+    display: 'block',
+    // Ensure visibility even if animations aren't complete
+    visibility: contentReady || animationsComplete ? 'visible' : 'visible',
+  }), [deviceType, isMobile, isIOSSafari, contentReady, animationsComplete]);
+
+  // 12) Pre-allocate space for elements to prevent layout shifts
+  const titleContainerHeight = isMobile ? '180px' : '200px';
+  const bioContainerHeight = isMobile ? '180px' : '180px';
+  
+  // Prepare animation props to simplify component
+  const getAnimationProps = (variants, customDelay = 0) => {
+    // iOS Safari gets simplified animations
+    if (isIOSSafari) {
+      return {
+        initial: "hidden",
+        animate: contentReady ? "visible" : "hidden",
+        variants,
+        transition: { 
+          duration: 0.3, 
+          delay: customDelay * 0.5,  // Reduce delays for iOS
+        }
+      };
+    }
+    
+    // Normal animation props with scroll trigger for desktop
+    return {
+      variants,
+      initial: "hidden",
+      ...(shouldUseScrollTrigger
+        ? { 
+            whileInView: contentReady ? "visible" : "hidden", 
+            viewport: { once: true, amount: 0.2 } 
+          }
+        : { animate: contentReady ? "visible" : "hidden" }
+      ),
+      transition: { 
+        duration: 0.5, 
+        delay: customDelay
+      }
+    };
   };
 
-  // 10) Pre-allocate space for elements to prevent layout shifts
-  const titleContainerHeight = isMobile ? '180px' : '200px';
-  const bioContainerHeight = isMobile ? 'auto' : '180px';
-
   return (
-    <motion.div
-      className="relative w-full flex flex-col justify-center items-center"
-      style={containerStyle}
-      initial="hidden"
-      {...(shouldUseScrollTrigger
-        ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
-        : { animate: "visible" }
-      )}
+    <div 
+      className="hero-container ios-fix relative w-full" 
+      style={{ 
+        overflowX: 'hidden',
+        minHeight: '100vh',
+        minHeight: 'calc(var(--vh, 1vh) * 100)',
+      }}
     >
-      {/* Global Styles */}
-      <style>{`
-        :root {
-          --vh: 1vh;
-        }
-        html, body {
-          margin: 0;
-          padding: 0;
-          overflow-x: hidden;
-          scroll-behavior: smooth;
-          background: #0f0528;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior-y: none;
-        }
-        ::-webkit-scrollbar {
-          width: 0;
-          background: transparent;
-        }
-        @keyframes gradientShift {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 100% 50%; }
-        }
-        @keyframes lightGradientShift {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 100% 50%; }
-        }
-        /* Pre-allocate space for content containers to prevent layout shifts */
-        .title-container {
-          height: ${titleContainerHeight};
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-        }
-        .bio-container {
-          min-height: ${bioContainerHeight};
-        }
-        /* Fix iOS Safari issues */
-        @supports (-webkit-touch-callout: none) {
-          .ios-fix {
-            height: -webkit-fill-available;
+      <motion.div
+        className="relative w-full flex flex-col justify-center items-center"
+        style={containerStyle}
+        {...getAnimationProps({ 
+          hidden: { opacity: 0 },
+          visible: { opacity: 1 } 
+        })}
+      >
+        {/* Global Styles */}
+        <style>{`
+          :root {
+            --vh: 1vh;
           }
-        }
-      `}</style>
+          html, body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            background: #0f0528;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: none;
+          }
+          body {
+            height: auto;
+            min-height: 100%;
+            position: relative;
+            overflow-y: auto !important;
+          }
+          ::-webkit-scrollbar {
+            width: 0;
+            background: transparent;
+          }
+          @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+          }
+          @keyframes lightGradientShift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+          }
+          /* Pre-allocate space for content containers to prevent layout shifts */
+          .title-container {
+            height: ${titleContainerHeight};
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+          }
+          .bio-container {
+            min-height: ${bioContainerHeight};
+            opacity: ${contentReady || animationsComplete ? 1 : 0};
+            transition: opacity 0.3s ease-out;
+          }
+          /* Fix iOS Safari issues */
+          @supports (-webkit-touch-callout: none) {
+            .ios-fix {
+              min-height: -webkit-fill-available;
+              height: auto !important;
+              overflow-y: auto !important;
+              -webkit-overflow-scrolling: touch;
+            }
+            body {
+              overflow-y: auto !important;
+              -webkit-overflow-scrolling: touch;
+              position: relative !important;
+              height: auto !important;
+            }
+          }
+          /* Text container optimization */
+          .text-container {
+            transform: translateZ(0);
+            backface-visibility: hidden;
+          }
+          /* Bio placeholder for layout stability */
+          .bio-placeholder {
+            min-height: ${bioContainerHeight};
+            background: linear-gradient(90deg, #ffffff05 25%, #ffffff08 50%, #ffffff05 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+          }
+          @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+          }
+        `}</style>
 
-      {/* Lazy-load Ambient Background */}
-      <Suspense fallback={null}>
-        {showAmbient && <AmbientBackground />}
-      </Suspense>
+        {/* Lazy-load Ambient Background */}
+        <Suspense fallback={null}>
+          {showAmbient && contentReady && <AmbientBackground />}
+        </Suspense>
 
-      <div className="flex flex-col-reverse lg:flex-row items-center gap-6 md:gap-10 max-w-7xl mx-auto w-full relative z-10">
-        {/* LEFT: Text Area */}
-        <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start mt-6 lg:mt-0">
-          {/* Name + Animated Outline - Fixed height to prevent layout shifts */}
-          <div className="relative pb-6 h-24 flex items-center justify-center lg:justify-start w-full">
-            <svg
-              className="absolute top-0 left-0 w-full h-full"
-              viewBox="0 0 600 100"
-              style={{ overflow: "visible", transform: "translateZ(0)" }}
-              aria-hidden="true"
-            >
-              <motion.path
-                id="heroPath"
-                d="M10,50 C100,10 200,90 300,50 C400,10 500,90 590,50"
-                fill="none"
-                stroke="url(#heroGradient)"
-                strokeWidth="4"
-                strokeLinecap="butt"
-                initial="initial"
-                {...(shouldUseScrollTrigger
-                  ? { whileInView: "animate", viewport: { once: true, amount: 0.3 } }
-                  : { animate: "animate" }
-                )}
-                variants={outlineVariants}
-              />
-
-              {/* The moving dot */}
-              {showDot && dotVisible && (
-                <motion.g
-                  initial="hidden"
-                  {...(shouldUseScrollTrigger
-                    ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
-                    : { animate: "visible" }
+        <div className="flex flex-col-reverse lg:flex-row items-center gap-6 md:gap-10 max-w-7xl mx-auto w-full relative z-10">
+          {/* LEFT: Text Area */}
+          <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start mt-6 lg:mt-0">
+            {/* Name + Animated Outline - Fixed height to prevent layout shifts */}
+            <div className="relative pb-6 h-24 flex items-center justify-center lg:justify-start w-full">
+              <svg
+                className="absolute top-0 left-0 w-full h-full"
+                viewBox="0 0 600 100"
+                style={{ 
+                  overflow: "visible", 
+                  transform: "translateZ(0)",
+                  opacity: contentReady || animationsComplete ? 1 : 0,
+                }}
+                aria-hidden="true"
+              >
+                <motion.path
+                  id="heroPath"
+                  d="M10,50 C100,10 200,90 300,50 C400,10 500,90 590,50"
+                  fill="none"
+                  stroke="url(#heroGradient)"
+                  strokeWidth="4"
+                  strokeLinecap="butt"
+                  variants={outlineVariants}
+                  initial="initial"
+                  {...(shouldUseScrollTrigger && !isIOSSafari
+                    ? { whileInView: "animate", viewport: { once: true, amount: 0.3 } }
+                    : { animate: contentReady ? "animate" : "initial" }
                   )}
-                  variants={dotVariants}
-                  onAnimationComplete={() => setDotVisible(false)}
+                />
+
+                {/* The moving dot - simplified for iOS */}
+                {showDot && dotVisible && contentReady && (
+                  <motion.g
+                    initial="hidden"
+                    {...(shouldUseScrollTrigger && !isIOSSafari
+                      ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
+                      : { animate: "visible" }
+                    )}
+                    variants={dotVariants}
+                    onAnimationComplete={() => setDotVisible(false)}
+                  >
+                    <circle r="5" fill="#ec4899">
+                      <animateMotion 
+                        dur={isIOSSafari ? "1.5s" : "3s"} 
+                        repeatCount="1" 
+                        fill="freeze"
+                        calcMode="linear"
+                      >
+                        <mpath xlinkHref="#heroPath" />
+                      </animateMotion>
+                    </circle>
+                  </motion.g>
+                )}
+
+                <defs>
+                  <linearGradient id="heroGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#ec4899" />
+                    <stop offset="50%" stopColor="#cbd5e1" />
+                    <stop offset="100%" stopColor="#a855f7" />
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              {/* Name */}
+              <motion.h1
+                className="text-4xl md:text-5xl xl:text-6xl tracking-tight text-center lg:text-left font-bold relative z-10 no-select"
+                {...getAnimationProps(nameVariants)}
+                whileHover={isIOSSafari ? undefined : "hover"}
+                whileTap={isIOSSafari ? undefined : "hover"}
+              >
+                Gading Aditya Perdana
+                <motion.div
+                  className="absolute -inset-2 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-indigo-500/20 rounded-lg blur-lg -z-10"
+                  initial={{ opacity: 0 }}
+                  animate={contentReady ? { 
+                    opacity: isIOSSafari ? 0.2 : [0.1, 0.2, 0.1],
+                    scale: isIOSSafari ? 1 : [1, 1.02, 1],
+                  } : { opacity: 0 }}
+                  transition={isIOSSafari ? { duration: 0.5 } : { 
+                    duration: 3, 
+                    repeat: Infinity, 
+                    repeatType: "mirror" 
+                  }}
+                />
+              </motion.h1>
+            </div>
+
+            {/* Titles - Fixed height container to prevent layout shifts */}
+            <div className="title-container relative w-full mb-4">
+              <div className="text-xl md:text-2xl xl:text-3xl tracking-tight text-center lg:text-left relative space-y-3 no-select">
+                {/* Title line 1 */}
+                <motion.div
+                  className="text-container text-transparent bg-clip-text relative"
+                  style={{
+                    background: "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7)",
+                    backgroundSize: "200% 200%",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    animation: isIOSSafari ? "none" : "gradientShift 2s ease-in-out infinite alternate",
+                  }}
+                  {...getAnimationProps(titleLineVariants)}
+                  whileHover={isIOSSafari ? undefined : "hover"}
+                  whileTap={isIOSSafari ? undefined : "hover"}
                 >
-                  <circle r="5" fill="#ec4899">
-                    <animateMotion 
-                      dur={isIOSSafari ? "2.5s" : "3.5s"} 
-                      repeatCount="1" 
-                      fill="freeze"
-                      calcMode="linear"
-                    >
-                      <mpath xlinkHref="#heroPath" />
-                    </animateMotion>
-                  </circle>
-                </motion.g>
-              )}
+                  Computer Science Undergraduate
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-purple-500/10 rounded-lg blur-md -z-10"
+                    initial={{ opacity: 0 }}
+                    animate={contentReady ? (
+                      isMobile || isIOSSafari 
+                      ? { opacity: 0.15 } 
+                      : { opacity: [0.1, 0.2, 0.1] }
+                    ) : { opacity: 0 }}
+                    transition={isMobile || isIOSSafari 
+                      ? { duration: 0.5 } 
+                      : { duration: 2.5, repeat: Infinity, repeatType: "mirror" }
+                    }
+                  />
+                </motion.div>
 
-              <defs>
-                <linearGradient id="heroGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#ec4899" />
-                  <stop offset="50%" stopColor="#cbd5e1" />
-                  <stop offset="100%" stopColor="#a855f7" />
-                </linearGradient>
-              </defs>
-            </svg>
+                {/* Title line 2 */}
+                <motion.div
+                  className="text-container text-transparent bg-clip-text relative"
+                  style={{
+                    background: "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7)",
+                    backgroundSize: "200% 200%",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    animation: isIOSSafari ? "none" : "gradientShift 2s ease-in-out infinite alternate",
+                  }}
+                  {...getAnimationProps(titleLineVariants, 0.15)}
+                  whileHover={isIOSSafari ? undefined : "hover"}
+                  whileTap={isIOSSafari ? undefined : "hover"}
+                >
+                  Aspiring AI & Deep Learning Researcher
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg blur-md -z-10"
+                    initial={{ opacity: 0 }}
+                    animate={contentReady ? (
+                      isMobile || isIOSSafari 
+                        ? { opacity: 0.15 } 
+                        : { opacity: [0.1, 0.2, 0.1] }
+                      ) : { opacity: 0 }
+                    }
+                    transition={isMobile || isIOSSafari 
+                      ? { duration: 0.5 } 
+                      : { 
+                          duration: 3,
+                          repeat: Infinity,
+                          repeatType: "mirror",
+                          delay: 0.5,
+                        }
+                    }
+                  />
+                </motion.div>
 
-            {/* Name */}
-            <motion.h1
-              className="text-4xl md:text-5xl xl:text-6xl tracking-tight text-center lg:text-left font-bold relative z-10 no-select"
-              initial="initial"
-              {...(shouldUseScrollTrigger
-                ? { whileInView: "animate", viewport: { once: true, amount: 0.3 } }
-                : { animate: "animate" }
-              )}
-              whileHover="hover"
-              whileTap="hover"
-              variants={nameVariants}
+                {/* Title line 3 */}
+                <motion.div
+                  className="text-container text-transparent bg-clip-text relative"
+                  style={{
+                    background: "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7)",
+                    backgroundSize: "200% 200%",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    animation: isIOSSafari ? "none" : "gradientShift 2s ease-in-out infinite alternate",
+                  }}
+                  {...getAnimationProps(titleLineVariants, 0.3)}
+                  whileHover={isIOSSafari ? undefined : "hover"}
+                  whileTap={isIOSSafari ? undefined : "hover"}
+                >
+                  (Computer Vision Focus)
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-pink-500/10 rounded-lg blur-md -z-10"
+                    initial={{ opacity: 0 }}
+                    animate={contentReady ? (
+                      isMobile || isIOSSafari 
+                        ? { opacity: 0.15 } 
+                        : { opacity: [0.1, 0.2, 0.1] }
+                      ) : { opacity: 0 }
+                    }
+                    transition={isMobile || isIOSSafari 
+                      ? { duration: 0.5 } 
+                      : {
+                          duration: 2,
+                          repeat: Infinity,
+                          repeatType: "mirror",
+                          delay: 1,
+                        }
+                    }
+                  />
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Bio Paragraph - Fixed size container with pre-render visibility for iOS */}
+            <div 
+              className="bio-container w-full my-2 max-w-xl py-6 text-gray-300 leading-relaxed text-lg text-center lg:text-left relative"
+              style={{
+                minHeight: bioContainerHeight,
+                opacity: contentReady || animationsComplete ? 1 : 0,
+                visibility: contentReady || animationsComplete ? 'visible' : 'visible',
+                transition: 'opacity 0.3s ease-out'
+              }}
             >
-              Gading Aditya Perdana
+              {/* Optimized gradient backdrop */}
               <motion.div
-                className="absolute -inset-2 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-indigo-500/20 rounded-lg blur-lg -z-10"
+                className="absolute -inset-4 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-indigo-500/5 rounded-xl blur-xl -z-10"
                 initial={{ opacity: 0 }}
-                {...(shouldUseScrollTrigger
-                  ? {
-                      whileInView: {
-                        opacity: isIOSSafari ? 0.2 : [0.1, 0.3, 0.1],
-                        scale: isIOSSafari ? 1 : [1, 1.05, 1],
-                      },
-                      viewport: { once: true, amount: 0.3 },
-                    }
-                  : {
-                      animate: {
-                        opacity: isIOSSafari ? 0.2 : [0.1, 0.3, 0.1],
-                        scale: isIOSSafari ? 1 : [1, 1.05, 1],
-                      },
-                    }
-                )}
-                transition={isIOSSafari ? { duration: 0.5 } : { duration: 3, repeat: Infinity, repeatType: "mirror" }}
+                animate={contentReady ? (
+                  isMobile || isIOSSafari 
+                    ? { opacity: 0.1 } 
+                    : { opacity: [0.05, 0.1, 0.05] }
+                  ) : { opacity: 0 }
+                }
+                transition={isMobile || isIOSSafari 
+                  ? { duration: 0.5 } 
+                  : { duration: 5, repeat: Infinity, repeatType: "mirror" }
+                }
               />
-            </motion.h1>
-          </div>
-
-          {/* Titles - Fixed height container to prevent layout shifts */}
-          <div className="title-container relative w-full mb-4">
-            <div className="text-xl md:text-2xl xl:text-3xl tracking-tight text-center lg:text-left relative space-y-3 no-select">
-              {/* Title line 1 - Re-enabled hover motion */}
-              <motion.div
-                className="text-transparent bg-clip-text relative"
-                style={{
-                  background: "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7)",
-                  backgroundSize: "200% 200%",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  animation: "gradientShift 2s ease-in-out infinite alternate",
-                }}
-                variants={titleLineVariants}
-                initial="hidden"
-                {...(shouldUseScrollTrigger
-                  ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
-                  : { animate: "visible" }
-                )}
-                whileHover="hover"
-                whileTap="hover"
+              
+              {/* Optimized text rendering with reduced animations on iOS/mobile */}
+              <motion.p 
+                className="text-container break-words"
+                initial={{ opacity: 0 }}
+                animate={contentReady ? { opacity: 1 } : { opacity: 0 }}
+                transition={{ duration: 0.5 }}
               >
-                Computer Science Undergraduate
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-purple-500/10 rounded-lg blur-md -z-10"
-                  initial={{ opacity: 0 }}
-                  animate={isMobile ? { opacity: 0.15 } : { opacity: [0.1, 0.2, 0.1] }}
-                  transition={isMobile ? { duration: 0.5 } : { duration: 2.5, repeat: Infinity, repeatType: "mirror" }}
-                />
-              </motion.div>
-
-              {/* Title line 2 - Re-enabled hover motion */}
-              <motion.div
-                className="text-transparent bg-clip-text relative"
-                style={{
-                  background: "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7)",
-                  backgroundSize: "200% 200%",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  animation: "gradientShift 2s ease-in-out infinite alternate",
-                }}
-                variants={titleLineVariants}
-                initial="hidden"
-                {...(shouldUseScrollTrigger
-                  ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
-                  : { animate: "visible" }
+                {tokens.map((token, index) =>
+                  shouldAnimateTokens ? (
+                    <motion.span
+                      key={index}
+                      custom={index}
+                      variants={enhancedWordVariants}
+                      initial="hidden"
+                      {...(shouldUseScrollTrigger && !isIOSSafari
+                        ? { 
+                            whileInView: "visible", 
+                            viewport: { once: true, amount: 0.1 } 
+                          }
+                        : { animate: contentReady ? "visible" : "hidden" }
+                      )}
+                      whileHover={isIOSSafari ? undefined : "hover"}
+                      whileTap={isIOSSafari ? undefined : "hover"}
+                      className={`inline-block mr-1 ${
+                        token.isSpecial
+                          ? "font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400"
+                          : ""
+                      }`}
+                      style={{
+                        transform: 'translateZ(0)', // Hardware acceleration
+                        willChange: 'transform, opacity' // Performance optimization
+                      }}
+                    >
+                      {token.text}{" "}
+                    </motion.span>
+                  ) : (
+                    <span
+                      key={index}
+                      className={`inline-block mr-1 ${
+                        token.isSpecial
+                          ? "font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400"
+                          : ""
+                      }`}
+                    >
+                      {token.text}{" "}
+                    </span>
+                  )
                 )}
-                transition={{ delay: 0.15 }}
-                whileHover="hover"
-                whileTap="hover"
-              >
-                Aspiring AI & Deep Learning Researcher
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg blur-md -z-10"
-                  initial={{ opacity: 0 }}
-                  animate={isMobile ? { opacity: 0.15 } : { opacity: [0.1, 0.2, 0.1] }}
-                  transition={isMobile ? { duration: 0.5 } : { 
-                    duration: 3,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                    delay: 0.5,
-                  }}
-                />
-              </motion.div>
-
-              {/* Title line 3 - Re-enabled hover motion */}
-              <motion.div
-                className="text-transparent bg-clip-text relative"
-                style={{
-                  background: "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7)",
-                  backgroundSize: "200% 200%",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  animation: "gradientShift 2s ease-in-out infinite alternate",
-                }}
-                variants={titleLineVariants}
-                initial="hidden"
-                {...(shouldUseScrollTrigger
-                  ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
-                  : { animate: "visible" }
-                )}
-                transition={{ delay: 0.3 }}
-                whileHover="hover"
-                whileTap="hover"
-              >
-                (Computer Vision Focus)
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-pink-500/10 rounded-lg blur-md -z-10"
-                  initial={{ opacity: 0 }}
-                  animate={isMobile ? { opacity: 0.15 } : { opacity: [0.1, 0.2, 0.1] }}
-                  transition={isMobile ? { duration: 0.5 } : {
-                    duration: 2,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                    delay: 1,
-                  }}
-                />
-              </motion.div>
+              </motion.p>
             </div>
           </div>
 
-          {/* Bio Paragraph - Fixed size container to prevent layout shifts */}
-          <motion.div
-            className="bio-container w-full my-2 max-w-xl py-6 text-gray-300 leading-relaxed text-lg text-center lg:text-left relative"
-            variants={bioVariants}
-            initial="hidden"
-            {...(shouldUseScrollTrigger
-              ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
-              : { animate: "visible" }
-            )}
-          >
-            <motion.div
-              className="absolute -inset-4 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-indigo-500/5 rounded-xl blur-xl -z-10"
-              initial={{ opacity: 0 }}
-              animate={isMobile ? { opacity: 0.1 } : { opacity: [0.05, 0.15, 0.05] }}
-              transition={isMobile ? { duration: 0.5 } : { duration: 5, repeat: Infinity, repeatType: "mirror" }}
-            />
-            <motion.p className="break-words">
-              {tokens.map((token, index) =>
-                shouldAnimateTokens ? (
-                  <motion.span
-                    key={index}
-                    custom={index}
-                    variants={enhancedWordVariants}
-                    initial="hidden"
-                    {...(shouldUseScrollTrigger
-                      ? { 
-                          whileInView: "visible", 
-                          viewport: { once: true, amount: 0.1 } // Changed to once:true to prevent re-animation
-                        }
-                      : { animate: "visible" }
-                    )}
-                    whileHover="hover"
-                    whileTap="hover"
-                    className={`inline mr-1 ${
-                      token.isSpecial
-                        ? "font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400"
-                        : ""
-                    }`}
-                  >
-                    {token.text}{" "}
-                  </motion.span>
-                ) : (
-                  <span
-                    key={index}
-                    className={`inline-block mr-1 ${
-                      token.isSpecial
-                        ? "font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400"
-                        : ""
-                    }`}
-                  >
-                    {token.text}{" "}
-                  </span>
-                )
-              )}
-            </motion.p>
-          </motion.div>
-        </div>
-
-        {/* RIGHT: Profile Image - Fixed dimensions to prevent layout shifts */}
-        <div className="w-full lg:w-1/2 flex justify-center items-center">
-          <div className="relative w-full max-w-xs md:max-w-sm lg:max-w-md" style={{ aspectRatio: "1/1" }}>
-            <motion.img
-              src={profilePic}
-              alt="Gading Aditya Perdana"
-              className="rounded-lg shadow-md w-full object-cover relative z-10"
-              variants={profilePicVariants}
-              initial="hidden"
-              {...(shouldUseScrollTrigger
-                ? { whileInView: "visible", viewport: { once: true, amount: 0.3 } }
-                : { animate: "visible" }
-              )}
-              whileHover="hover"
-              whileTap="hover"
-              style={{ transform: "translateZ(0)" }} // Hardware acceleration
-            />
-
-            {/* Optimized glow behind image */}
-            <motion.div
-              className={`absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-lg ${isMobile ? 'blur-sm opacity-20' : 'blur opacity-30'} -z-10`}
-              initial={{ opacity: 0 }}
-              {...(shouldUseScrollTrigger
-                ? {
-                    whileInView: isMobile 
-                      ? { opacity: 0.15 }
-                      : { opacity: [0.2, 0.4, 0.2] },
-                    viewport: { once: true, amount: 0.3 },
-                  }
-                : {
-                    animate: isMobile 
-                      ? { opacity: 0.15 }
-                      : { opacity: [0.2, 0.4, 0.2] },
-                  }
-              )}
-              transition={isMobile 
-                ? { duration: 0.5 }
-                : { 
-                    duration: 3,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                  }
-              }
+          {/* RIGHT: Profile Image - Fixed dimensions to prevent layout shifts */}
+          <div className="w-full lg:w-1/2 flex justify-center items-center">
+            <div 
+              className="relative w-full max-w-xs md:max-w-sm lg:max-w-md" 
               style={{ 
-                mixBlendMode: "screen",
-                transform: "translateZ(0)",
-                backgroundSize: "200% 200%",
-                animation: isMobile ? "lightGradientShift 3s ease-in-out infinite alternate" : "none"
+                aspectRatio: "1/1",
+                transform: 'translateZ(0)', // Hardware acceleration
+                willChange: 'transform', // Performance optimization
               }}
-            />
+            >
+              <motion.img
+                src={profilePic}
+                alt="Gading Aditya Perdana"
+                className="rounded-lg shadow-md w-full object-cover relative z-10"
+                {...getAnimationProps(profilePicVariants, isIOSSafari ? 0.1 : 0.4)}
+                whileHover={isIOSSafari || isMobile ? undefined : "hover"}
+                whileTap={isIOSSafari || isMobile ? undefined : "hover"}
+                style={{ 
+                  transform: 'translateZ(0)', // Hardware acceleration
+                  backfaceVisibility: 'hidden', // Prevent flickering
+                  // Ensure the image is visible immediately for iOS
+                  opacity: isIOSSafari ? 1 : undefined
+                }}
+                loading="eager" // Tell browser to load this image with high priority
+              />
 
-            {/* Lazy-load Particle Effect */}
-            <Suspense fallback={null}>
-              {showParticles && <ParticleEffect />}
-            </Suspense>
+              {/* Optimized glow behind image */}
+              <motion.div
+                className={`absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-lg ${isMobile || isIOSSafari ? 'blur-sm opacity-20' : 'blur opacity-30'} -z-10`}
+                initial={{ opacity: 0 }}
+                animate={contentReady ? (
+                  isMobile || isIOSSafari 
+                    ? { opacity: 0.15 } 
+                    : { opacity: [0.2, 0.3, 0.2] }
+                  ) : { opacity: 0 }
+                }
+                transition={isMobile || isIOSSafari 
+                  ? { duration: 0.5 } 
+                  : { 
+                      duration: 3,
+                      repeat: Infinity,
+                      repeatType: "mirror",
+                    }
+                }
+                style={{ 
+                  mixBlendMode: "screen",
+                  transform: "translateZ(0)",
+                  backgroundSize: "200% 200%",
+                  animation: isMobile ? "lightGradientShift 3s ease-in-out infinite alternate" : "none",
+                  willChange: 'opacity', // Performance optimization
+                }}
+              />
+
+              {/* Lazy-load Particle Effect only when ready */}
+              {contentReady && (
+                <Suspense fallback={null}>
+                  {showParticles && <ParticleEffect />}
+                </Suspense>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </motion.div>
+        
+        {/* Immediately visible content for iOS even before animations */}
+        {isIOSSafari && !contentReady && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="bio-placeholder rounded-lg w-full max-w-lg"></div>
+          </div>
+        )}
+      </motion.div>
+    </div>
   );
 };
 

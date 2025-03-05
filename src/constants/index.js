@@ -30,7 +30,7 @@ I am a passionate Computer Science undergraduate with a strong focus on deep lea
 
 export const EXPERIENCES = [{
         year: "Jul 2024 - Aug 2024",
-        role: "IT Intern",
+        role: "Application Developer Intern",
         company: "Otoritas Jasa Keuangan (OJK)",
         description: `Assisted in banking supervision app development using C# .NET, focusing on regulatory compliance, performance, and user experience. Collaborated with senior developers on QA, conducting code reviews, debugging, and testing the SIP BPR/BPRS system. Updated data tables, authored user manuals, and contributed to project planning. Completed a comprehensive internship report summarizing key outcomes.`,
         technologies: ["C#", ".NET", "SQL", "QA", "Documentation"],
