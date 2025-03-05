@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState, memo } from "react";
-import { FaGraduationCap } from "react-icons/fa";
 import {
   SiPytorch,
   SiTensorflow,
@@ -7,7 +6,10 @@ import {
   SiNodedotjs,
   SiPython,
   SiKaggle,
+  SiHtml5,
+  SiCss3,
 } from "react-icons/si";
+import { FaAtom, FaChartBar } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 // Container variant: fade in & slide up when scrolled into view, with staggered children
@@ -89,26 +91,27 @@ const getIconAnimation = (color) => ({
 
 // Technology icon configuration with enhanced colors and glow effects
 const technologies = [
-  { name: "Education", icon: FaGraduationCap, color: "#FFD700", borderColor: "border-yellow-500/30", pulseSpeed: 3.1 },
+  { name: "HTML", icon: SiHtml5, color: "#E34F26", borderColor: "border-orange-600/30", pulseSpeed: 3.1 },
+  { name: "CSS", icon: SiCss3, color: "#1572B6", borderColor: "border-blue-500/30", pulseSpeed: 3.4 },
   { name: "PyTorch", icon: SiPytorch, color: "#EE4C2C", borderColor: "border-orange-500/30", pulseSpeed: 3.4 },
   { name: "TensorFlow", icon: SiTensorflow, color: "#FF6F00", borderColor: "border-orange-400/30", pulseSpeed: 3.2 },
   { name: "React", icon: SiReact, color: "#61DAFB", borderColor: "border-cyan-400/30", pulseSpeed: 3.7 },
   { name: "Node.js", icon: SiNodedotjs, color: "#539E43", borderColor: "border-green-500/30", pulseSpeed: 3.5 },
   { name: "Python", icon: SiPython, color: "#3776AB", borderColor: "border-blue-500/30", pulseSpeed: 3.3 },
   { name: "Kaggle", icon: SiKaggle, color: "#20BEFF", borderColor: "border-blue-400/30", pulseSpeed: 3.6 },
+  { name: "Physics", icon: FaAtom, color: "#9C27B0", borderColor: "border-purple-500/30", pulseSpeed: 3.2 },
+  { name: "Statistics", icon: FaChartBar, color: "#FF9800", borderColor: "border-amber-500/30", pulseSpeed: 3.5 },
 ];
 
 // Memoized Technology Card Component
 const TechnologyCard = memo(
-  ({ tech, index, isKaggle, hoveredTech, setHoveredTech, hoveredTechRef }) => {
+  ({ tech, index, hoveredTech, setHoveredTech, hoveredTechRef }) => {
     return (
       <motion.div
         className={`relative rounded-xl border-2 ${tech.borderColor} p-4
           bg-gradient-to-br from-neutral-900/80 to-neutral-900/40
           backdrop-blur-sm shadow-lg cursor-pointer flex flex-col items-center justify-center
-          w-full max-w-[160px] sm:max-w-[170px] aspect-square ${
-            isKaggle ? "col-span-2 md:col-span-1 justify-self-center" : ""
-          }`}
+          w-full max-w-[150px] sm:max-w-[160px] aspect-square`}
         variants={iconContainerVariants}
         whileHover="hover"
         whileTap="hover"
@@ -153,7 +156,7 @@ const TechnologyCard = memo(
           animate="animate"
           whileHover="hover"
           whileTap="hover"
-          style={{ position: "relative", zIndex: 2, padding: "10px" }}
+          style={{ position: "relative", zIndex: 2, padding: "8px" }}
         >
           {/* Pulsing background glow */}
           <motion.div
@@ -193,13 +196,13 @@ const TechnologyCard = memo(
             }}
           />
           <tech.icon
-            className="text-5xl sm:text-6xl md:text-7xl relative z-10"
+            className="text-4xl sm:text-5xl md:text-6xl relative z-10"
             style={{ color: tech.color, display: "block" }}
           />
         </motion.div>
         {/* Technology name */}
         <motion.div
-          className="text-center mt-3 font-medium text-sm md:text-base"
+          className="text-center mt-2 font-medium text-xs sm:text-sm md:text-base"
           style={{
             color: tech.color,
             textShadow: `0 0 8px ${tech.color}66`,
@@ -243,6 +246,9 @@ const Technologies = () => {
       { x: 0.1, y: 0.5, radius: 250, speed: { x: 0.3, y: 0.3 }, direction: { x: 1, y: -1 } },
       { x: 0.7, y: 0.8, radius: 230, speed: { x: 0.2, y: 0.4 }, direction: { x: -1, y: -1 } },
       { x: 0.6, y: 0.4, radius: 270, speed: { x: 0.4, y: 0.5 }, direction: { x: 1, y: 1 } },
+      { x: 0.4, y: 0.3, radius: 245, speed: { x: 0.3, y: 0.4 }, direction: { x: -1, y: 1 } },
+      { x: 0.25, y: 0.75, radius: 255, speed: { x: 0.35, y: 0.45 }, direction: { x: 1, y: -1 } },
+      { x: 0.75, y: 0.35, radius: 235, speed: { x: 0.25, y: 0.35 }, direction: { x: -1, y: 1 } },
     ];
 
     const lightSources = technologies.map((tech, index) => {
@@ -380,14 +386,14 @@ const Technologies = () => {
         />
       </div>
       <motion.div
-        className="relative z-10 container mx-auto px-6 md:px-8 h-full flex flex-col"
+        className="relative z-10 container mx-auto px-4 sm:px-6 md:px-8 h-full flex flex-col"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
       >
         <motion.h2
-          className="mb-16 md:mb-20 mt-4 text-center text-5xl md:text-6xl font-bold"
+          className="mb-12 sm:mb-16 md:mb-20 mt-4 text-center text-4xl sm:text-5xl md:text-6xl font-bold"
           variants={titleVariants}
           whileHover="hover"
           whileTap="hover"
@@ -404,23 +410,19 @@ const Technologies = () => {
         >
           Skills & Tools
         </motion.h2>
-        <motion.div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-6 md:gap-8 justify-items-center max-w-6xl mx-auto">
-          {technologies.map((tech, index) => {
-            const isKaggle = index === technologies.length - 1;
-            return (
-              <TechnologyCard
-                key={index}
-                tech={tech}
-                index={index}
-                isKaggle={isKaggle}
-                hoveredTech={hoveredTech}
-                setHoveredTech={setHoveredTech}
-                hoveredTechRef={hoveredTechRef}
-              />
-            );
-          })}
+        <motion.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6 justify-items-center max-w-6xl mx-auto">
+          {technologies.map((tech, index) => (
+            <TechnologyCard
+              key={index}
+              tech={tech}
+              index={index}
+              hoveredTech={hoveredTech}
+              setHoveredTech={setHoveredTech}
+              hoveredTechRef={hoveredTechRef}
+            />
+          ))}
         </motion.div>
-        <div className="w-full max-w-5xl mx-auto mt-20">
+        <div className="w-full max-w-5xl mx-auto mt-16 sm:mt-20">
           <div
             className="h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-70"
             style={{ boxShadow: "0 0 10px rgba(168, 85, 247, 0.3)" }}

@@ -155,7 +155,8 @@ const Experience = () => {
       ))}
 
       {/* Optimized keyframes with will-change properties */}
-      <style jsx>{`
+{/* Use regular style tag instead of styled-jsx */}
+      <style>{`
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
           100% { background-position: 100% 50%; }

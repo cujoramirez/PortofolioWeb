@@ -232,28 +232,28 @@ const Hero = () => {
         willChange: "opacity, transform",
       }}
     >
-      <style jsx global>{`
-        html,
-        body {
-          margin: 0;
-          padding: 0;
-          scroll-behavior: smooth;
-          background: #0f0528;
-        }
-        ::-webkit-scrollbar {
-          width: 0;
-          background: transparent;
-        }
-        @keyframes gradientShift {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 100% 50%; }
-        }
-        @keyframes pulseGlow {
-          0% { filter: brightness(0.8) contrast(1.2); }
-          50% { filter: brightness(1.2) contrast(1); }
-          100% { filter: brightness(0.8) contrast(1.2); }
-        }
-      `}</style>
+    <style>{`
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        scroll-behavior: smooth;
+        background: #0f0528;
+      }
+      ::-webkit-scrollbar {
+        width: 0;
+        background: transparent;
+      }
+      @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 100% 50%; }
+      }
+      @keyframes pulseGlow {
+        0% { filter: brightness(0.8) contrast(1.2); }
+        50% { filter: brightness(1.2) contrast(1); }
+        100% { filter: brightness(0.8) contrast(1.2); }
+      }
+    `}</style>
 
       {/* Ambient background blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">

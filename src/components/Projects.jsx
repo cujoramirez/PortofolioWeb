@@ -283,7 +283,7 @@ const Projects = () => {
         ))}
       </div>
 
-      <style jsx>{`
+      <style>{`
         @media (prefers-reduced-motion: no-preference) {
           .bg-gradient-to-r {
             animation: gradientShift 6s ease-in-out infinite alternate;

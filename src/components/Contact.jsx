@@ -241,7 +241,7 @@ const Contact = () => {
       </motion.div>
 
       {/* Gradient Keyframes */}
-      <style jsx>{`
+      <style>{`
         @keyframes gradientShift {
           0% {
             background-position: 0% 50%;

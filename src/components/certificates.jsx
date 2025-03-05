@@ -1,103 +1,89 @@
-import React, { useState, useCallback, useRef, useEffect, memo } from "react";
+import React, { useState, useCallback, useRef, useEffect, memo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CERTIFICATIONS } from "../constants";
 
-// Simplified animation variants for better performance
+// Simplified and optimized animation variants
 const pageContainerVariants = {
   hidden: { opacity: 0 },
   visible: { 
     opacity: 1,
-    transition: { duration: 0.4, ease: "easeOut" }
+    transition: { duration: 0.3, ease: "easeOut" }
   },
 };
 
 const titleVariants = {
-  hidden: { opacity: 0, y: -30 },
+  hidden: { opacity: 0, y: -20 },
   visible: { 
     opacity: 1, 
     y: 0, 
-    transition: { 
-      duration: 0.6, 
-      ease: "easeOut",
-      delay: 0.1
-    } 
+    transition: { duration: 0.4, ease: "easeOut", delay: 0.1 } 
   },
   hover: { 
-    scale: 1.03, 
-    textShadow: "0px 0px 10px rgba(168,85,247,0.7)", 
-    transition: { duration: 0.3 } 
+    scale: 1.02, 
+    textShadow: "0px 0px 8px rgba(168,85,247,0.6)", 
+    transition: { duration: 0.2 } 
   },
 };
 
+// Optimized card variants with reduced properties
 const certCardVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 15 },
   visible: { 
     opacity: 1, 
     y: 0, 
-    transition: { duration: 0.5, ease: "easeOut" } 
+    transition: { duration: 0.3, ease: "easeOut" } 
   },
   hover: {
-    y: -8,
-    scale: 1.03,
-    boxShadow: "0 20px 40px -10px rgba(168,85,247,0.2)",
-    transition: { duration: 0.3 },
+    y: -5,
+    scale: 1.02,
+    transition: { duration: 0.2 },
   }
 };
 
 const filterButtonVariants = {
-  initial: { opacity: 0, y: 10 },
+  initial: { opacity: 0, y: 5 },
   animate: { 
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4 }
+    transition: { duration: 0.3 }
   },
-  inactive: { 
-    backgroundColor: "rgba(45, 45, 50, 0.6)",
-    color: "#a1a1aa",
-    border: "1px solid rgba(82, 82, 95, 0.4)"
-  },
-  active: { 
-    backgroundColor: "rgba(168, 85, 247, 0.25)",
-    color: "#d8b4fe",
-    border: "1px solid rgba(168, 85, 247, 0.6)",
-    boxShadow: "0 0 15px rgba(168, 85, 247, 0.3)"
-  },
-  hover: { scale: 1.05 }
+  hover: { scale: 1.03, transition: { duration: 0.15 } }
 };
 
-// Memoized filter button component
-const FilterButton = memo(({ issuer, isActive, onClick, index }) => {
+// Memoized filter button with simplified animations
+const FilterButton = memo(({ issuer, isActive, onClick }) => {
   return (
     <motion.button
       onClick={onClick}
-      className="px-4 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm transition-all duration-200 relative"
+      className="px-4 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm relative"
       variants={filterButtonVariants}
       initial="initial"
       animate="animate"
       whileHover="hover"
-      whileTap="hover"
-      custom={index}
+      whileTap={{ scale: 0.98 }}
     >
-      <motion.span
-        className="absolute inset-0 rounded-full"
-        initial={false}
-        animate={isActive ? "active" : "inactive"}
-        transition={{ duration: 0.3 }}
+      <div 
+        className={`absolute inset-0 rounded-full transition-colors duration-200 ${
+          isActive 
+            ? "bg-purple-500/25 border border-purple-500/60" 
+            : "bg-neutral-800/60 border border-neutral-700/40"
+        }`}
       />
       <span className="relative z-10">{issuer}</span>
       
       {isActive && (
         <motion.span
-          className="absolute inset-0 rounded-full bg-purple-500/20"
+          className="absolute inset-0 rounded-full bg-purple-500/15"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ 
-            scale: [0.9, 1.05, 0.9], 
-            opacity: [0, 0.4, 0] 
+            scale: [0.95, 1.03, 0.95], 
+            opacity: [0, 0.3, 0] 
           }}
           transition={{ 
-            duration: 2, 
+            duration: 2.5, 
             repeat: Infinity,
-            ease: "easeInOut" 
+            ease: "easeInOut",
+            repeatDelay: 0.5
           }}
         />
       )}
@@ -105,39 +91,45 @@ const FilterButton = memo(({ issuer, isActive, onClick, index }) => {
   );
 });
 
-// Memoized certification card component
-const CertificationCard = memo(({ cert, index }) => {
+// Using windowing to reduce DOM size
+const CertificationCard = memo(({ cert, onScreen }) => {
+  // Reduce animation complexity when not in view
+  const animationVariant = onScreen ? certCardVariants : {};
+  
   return (
     <motion.a
       href={cert.link}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block h-full"
-      variants={certCardVariants}
+      className="group block h-full transform-gpu"
+      variants={animationVariant}
       whileHover="hover"
-      whileTap="hover"
+      whileTap={{ scale: 0.98 }}
     >
-      <div className="h-full overflow-hidden rounded-xl bg-neutral-800/40 backdrop-blur-sm border border-neutral-700/50 shadow-md group-hover:border-purple-500/50 transition-all duration-300">
+      <div className="h-full overflow-hidden rounded-xl bg-neutral-800/40 backdrop-blur-sm border border-neutral-700/50 shadow-md group-hover:border-purple-500/50 transition-all duration-200">
         <div className="relative aspect-video w-full overflow-hidden">
-          {/* Simplified overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-10 opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+          {/* Optimized overlay with reduced gradient complexity */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-70 group-hover:opacity-90 transition-opacity duration-200" />
           
           <img
             src={cert.image}
             alt={cert.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-103"
             loading="lazy"
+            width="400"
+            height="225"
+            decoding="async"
           />
           
           <div className="absolute bottom-0 left-0 w-full p-3 z-20">
-            <div className="inline-block px-3 py-1 bg-purple-600/80 backdrop-blur-sm rounded text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+            <div className="inline-block px-3 py-1 bg-purple-600/80 backdrop-blur-sm rounded text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
               View Certificate
             </div>
           </div>
         </div>
         
         <div className="p-4">
-          <h3 className="font-bold text-lg text-white group-hover:text-purple-300 transition-colors duration-300 line-clamp-2">
+          <h3 className="font-bold text-lg text-white group-hover:text-purple-300 transition-colors duration-200 line-clamp-2">
             {cert.title}
           </h3>
           <div className="mt-2 flex items-center">
@@ -157,20 +149,17 @@ const CertificationCard = memo(({ cert, index }) => {
 const Certifications = () => {
   const [selectedIssuer, setSelectedIssuer] = useState("All");
   const [isInView, setIsInView] = useState(false);
-  const [isChanging, setIsChanging] = useState(false);
+  const [visibleItems, setVisibleItems] = useState([]);
   const sectionRef = useRef(null);
+  const cardsContainerRef = useRef(null);
   
   // Extract unique issuers for filter buttons
   const issuers = ["All", ...new Set(CERTIFICATIONS.map(cert => cert.issuer))];
   
-  // Handle issuer change with optimized animation
+  // Optimized handler without setTimeout for smoother transitions
   const handleIssuerChange = useCallback((issuer) => {
     if (issuer !== selectedIssuer) {
-      setIsChanging(true);
-      setTimeout(() => {
-        setSelectedIssuer(issuer);
-        setIsChanging(false);
-      }, 200);
+      setSelectedIssuer(issuer);
     }
   }, [selectedIssuer]);
   
@@ -179,42 +168,91 @@ const Certifications = () => {
     ? CERTIFICATIONS 
     : CERTIFICATIONS.filter(cert => cert.issuer === selectedIssuer);
 
-  // Optimized intersection observer
+  // Use IntersectionObserver for initial render and for each card
   useEffect(() => {
-    const observer = new IntersectionObserver(
+    // Main section observer
+    const sectionObserver = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
           setIsInView(true);
-          observer.disconnect();
+          sectionObserver.disconnect();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.05, rootMargin: "50px" }
     );
     
     if (sectionRef.current) {
-      observer.observe(sectionRef.current);
+      sectionObserver.observe(sectionRef.current);
     }
     
-    return () => observer.disconnect();
+    // Card visibility observer for windowing
+    const cardObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          const id = entry.target.dataset.certId;
+          if (entry.isIntersecting) {
+            setVisibleItems(prev => [...prev, id]);
+          } else {
+            setVisibleItems(prev => prev.filter(item => item !== id));
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "100px" }
+    );
+    
+    // Defer this to next frame for better performance
+    let timeout;
+    if (cardsContainerRef.current) {
+      timeout = requestAnimationFrame(() => {
+        const childElements = cardsContainerRef.current.querySelectorAll('.cert-card-container');
+        childElements.forEach(element => cardObserver.observe(element));
+      });
+    }
+    
+    return () => {
+      sectionObserver.disconnect();
+      cardObserver.disconnect();
+      cancelAnimationFrame(timeout);
+    };
+  }, [selectedIssuer]); // Re-observe when filter changes
+
+  // Detect low-end device
+  const [isLowEndDevice, setIsLowEndDevice] = useState(false);
+  useEffect(() => {
+    // Simple heuristic for detecting low-end devices
+    const checkLowEndDevice = () => {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isOlderIphone = /iPhone OS (7|8|9|10|11|12)_/i.test(navigator.userAgent);
+      const lowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
+      
+      return isMobile && (isOlderIphone || lowMemory);
+    };
+    
+    setIsLowEndDevice(checkLowEndDevice());
   }, []);
+
+  // Apply less intensive animations for low-end devices
+  const renderDecorations = !isLowEndDevice;
 
   return (
     <motion.div
       id="certifications"
       ref={sectionRef}
-      className="pb-16 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto relative"
+      className="pb-16 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto relative will-change-opacity"
       variants={pageContainerVariants}
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
     >
-      {/* Title Section */}
-      <div className="relative py-12 flex flex-col items-center">
-        <motion.div 
-          className="absolute w-32 h-32 rounded-full bg-purple-500 opacity-10 filter blur-3xl"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={isInView ? { scale: 1, opacity: 0.1 } : { scale: 0, opacity: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        />
+      {/* Title Section - Simplified */}
+      <div className="relative py-10 flex flex-col items-center">
+        {renderDecorations && (
+          <motion.div 
+            className="absolute w-24 h-24 rounded-full bg-purple-500 opacity-10 filter blur-2xl"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={isInView ? { scale: 1, opacity: 0.1 } : { scale: 0, opacity: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          />
+        )}
         
         <motion.h2
           className="text-center text-4xl md:text-5xl font-bold w-full relative z-10 bg-gradient-text"
@@ -222,7 +260,6 @@ const Certifications = () => {
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
           whileHover="hover"
-          whileTap="hover"
         >
           Certifications
         </motion.h2>
@@ -231,72 +268,83 @@ const Certifications = () => {
           className="w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 mt-4 rounded-full"
           initial={{ width: 0, opacity: 0 }}
           animate={isInView ? { width: 96, opacity: 1 } : { width: 0, opacity: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
         />
       </div>
 
-      {/* Filter Buttons */}
-      <div className="flex flex-wrap justify-center gap-2 mb-10">
-        {issuers.map((issuer, index) => (
+      {/* Optimized Filter Buttons */}
+      <div className="flex flex-wrap justify-center gap-2 mb-8">
+        {issuers.map((issuer) => (
           <FilterButton
             key={issuer}
             issuer={issuer}
             isActive={selectedIssuer === issuer}
             onClick={() => handleIssuerChange(issuer)}
-            index={index}
           />
         ))}
       </div>
 
-      {/* Certificates Grid */}
-      <AnimatePresence mode="wait">
+      {/* Certificates Grid with Optimized Rendering */}
+      <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={selectedIssuer}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2 }}
           className="relative"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div 
+            ref={cardsContainerRef}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+          >
             {filteredCertifications.map((cert, index) => (
-              <CertificationCard 
-                key={`${cert.title}-${index}`} 
-                cert={cert} 
-                index={index} 
-              />
+              <div 
+                key={`${cert.title}-${index}`}
+                className="cert-card-container"
+                data-cert-id={`${cert.title}-${index}`}
+              >
+                <CertificationCard 
+                  cert={cert} 
+                  onScreen={visibleItems.includes(`${cert.title}-${index}`)}
+                />
+              </div>
             ))}
           </div>
         </motion.div>
       </AnimatePresence>
 
-      {/* Decorative Element */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute top-20 right-10 w-48 h-48 rounded-full bg-purple-700/10 filter blur-3xl"
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={isInView ? { 
-            scale: [0.5, 0.7, 0.5],
-            opacity: [0, 0.2, 0],
-            x: [0, 20, 0],
-            y: [0, -10, 0],
-          } : { scale: 0.5, opacity: 0 }}
-          transition={{ 
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-      </div>
+      {/* Reduced Decorative Elements */}
+      {renderDecorations && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            className="absolute top-20 right-10 w-40 h-40 rounded-full bg-purple-700/10 filter blur-2xl will-change-transform"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={isInView ? { 
+              scale: [0.5, 0.6, 0.5],
+              opacity: [0, 0.15, 0],
+              x: [0, 15, 0],
+              y: [0, -5, 0],
+            } : { scale: 0.5, opacity: 0 }}
+            transition={{ 
+              duration: 12,
+              repeat: Infinity,
+              ease: "easeInOut",
+              repeatDelay: 1
+            }}
+          />
+        </div>
+      )}
 
-      <style jsx global>{`
+{/* Use regular style tag instead of styled-jsx */}
+      <style>{`
         .bg-gradient-text {
-          background: linear-gradient(90deg, #a855f7, #ec4899, #8b5cf6);
-          background-size: 200% 200%;
+          background: linear-gradient(90deg, #a855f7, #ec4899);
+          background-size: 200% auto;
           -webkit-background-clip: text;
           background-clip: text;
           -webkit-text-fill-color: transparent;
-          animation: gradientShift 6s ease-in-out infinite alternate;
+          animation: gradientShift 8s ease-in-out infinite alternate;
         }
         
         @media (prefers-reduced-motion: reduce) {

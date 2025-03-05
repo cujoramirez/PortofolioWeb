@@ -48,7 +48,7 @@ const App = () => {
       );
     };
 
-    const unsubscribe = scrollYProgress.onChange(updateGradient);
+    const unsubscribe = scrollYProgress.on("change", updateGradient);
     return () => unsubscribe();
   }, [scrollYProgress, gradientStart, primaryColor, accentColor]);
 
