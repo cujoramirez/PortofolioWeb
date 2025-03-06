@@ -12,11 +12,11 @@ export function useSystemProfile() {
     let deviceType = "desktop";
 
     // ----- PERFORMANCE TIER DETECTION -----
-    const deviceMemory = navigator.deviceMemory || 4;
+    const deviceMemory = navigator.deviceMemory || 6;
     // You can add more checks (e.g., CPU cores, older iOS versions, etc.)
-    if (deviceMemory <= 2) {
+    if (deviceMemory <= 4) {
       performanceTier = "low";
-    } else if (deviceMemory <= 4) {
+    } else if (deviceMemory <= 6) {
       performanceTier = "mid";
     } else {
       performanceTier = "high";

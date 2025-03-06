@@ -5,7 +5,7 @@ import { useSystemProfile } from "../components/useSystemProfile.jsx";
 import resumePDF from "../assets/GadingAdityaPerdana-resume.pdf";
 
 // Memoized Logo component with fixed G logo visibility
-const Logo = memo(({ isHovered, useReducedMotion }) => {
+const Logo = memo(({ isHovered, useReducedMotion, isIOSTouchDevice }) => {
   // No variants for G logo when using reduced motion to ensure it's always visible
   const gLogoVariants = {
     initial: { opacity: useReducedMotion ? 1 : 0, scale: useReducedMotion ? 1 : 0.9 },
@@ -14,7 +14,7 @@ const Logo = memo(({ isHovered, useReducedMotion }) => {
       scale: 1,
       transition: { duration: useReducedMotion ? 0 : 0.5, ease: "easeOut" },
     },
-    hover: useReducedMotion ? {} : {
+    hover: (useReducedMotion || isIOSTouchDevice) ? {} : {
       scale: 1.05,
       filter: "drop-shadow(0 0 8px rgba(168,85,247,0.7))",
       transition: { duration: 0.4, ease: "easeInOut" },
@@ -34,6 +34,24 @@ const Logo = memo(({ isHovered, useReducedMotion }) => {
       transition: { duration: 0.2, ease: "easeIn" },
     },
   };
+
+  // For iOS Safari, just render the logo without motion effects
+  if (isIOSTouchDevice) {
+    return (
+      <div className="relative flex items-center">
+        <div className="w-12 h-12 flex items-center justify-center">
+          <span className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+            G
+          </span>
+        </div>
+        {isHovered && (
+          <span className="ml-3 text-lg font-medium bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent font-sans tracking-wide">
+            Gading Aditya Perdana
+          </span>
+        )}
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -80,8 +98,26 @@ const SocialIcon = memo(({
   target,
   rel,
   index,
-  useReducedMotion
+  useReducedMotion,
+  isIOSTouchDevice
 }) => {
+  // For iOS Safari, use static elements without animations
+  if (isIOSTouchDevice) {
+    return (
+      <a
+        href={link}
+        onClick={onClick}
+        download={download}
+        target={target}
+        rel={rel}
+        className="relative"
+        aria-label={tooltip}
+      >
+        <Icon className="text-2xl text-gray-300" />
+      </a>
+    );
+  }
+
   const socialIconVariants = {
     initial: { y: useReducedMotion ? 0 : -20, opacity: useReducedMotion ? 1 : 0 },
     animate: (custom) => ({
@@ -138,27 +174,47 @@ const SocialIcon = memo(({
 
 function Navbar() {
   const [logoHovered, setLogoHovered] = useState(false);
-  const [isSafariMobile, setIsSafariMobile] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isSafari, setIsSafari] = useState(false);
+  const [isIOSSafari, setIsIOSSafari] = useState(false);
+  const [isIOSTouchDevice, setIsIOSTouchDevice] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   
   // Device capability detection using our unified system profile hook
-  const { performanceTier } = useSystemProfile();
+  const { performanceTier, deviceType } = useSystemProfile();
   
+  // Track if we're on a mobile or tablet device
+  const isMobileOrTablet = deviceType === 'mobile' || deviceType === 'tablet';
+  
+  // More comprehensive device detection
   useEffect(() => {
-    // Set loaded state after initial render
     setIsLoaded(true);
     
-    // Detect iOS Safari specifically
     const ua = window.navigator.userAgent;
-    const isIOS = /iPhone|iPad|iPod/.test(ua);
-    const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua);
-    setIsSafariMobile(isIOS && isSafari);
+    const iOS = /iPad|iPhone|iPod/.test(ua);
+    const safari = /Safari/.test(ua) && !/Chrome/.test(ua);
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    setIsIOS(iOS);
+    setIsSafari(safari);
+    setIsIOSSafari(iOS && safari);
+    // Consider any iOS device a touch device, or any touch-enabled Safari
+    setIsIOSTouchDevice(iOS || (isTouch && safari));
+    
+    // Add a class to the document body for iOS Safari
+    if (iOS && safari) {
+      document.body.classList.add('ios-safari');
+    }
+    
+    return () => {
+      document.body.classList.remove('ios-safari');
+    };
   }, []);
   
   // Determine animation settings based on device capabilities
-  const useReducedMotion = performanceTier === "low" || isSafariMobile;
+  const useReducedMotion = performanceTier === "low" || isIOSSafari || isIOSTouchDevice;
 
-  // Memoize the scroll function using useCallback
+  // Simplified scroll function that uses native scrolling for iOS
   const scrollToContact = useCallback((e) => {
     e.preventDefault();
     const contactSection =
@@ -168,48 +224,38 @@ function Navbar() {
       document.querySelector("footer");
       
     if (contactSection) {
-      // For low-end devices or Safari mobile, use simpler scrolling
-      if (useReducedMotion) {
-        contactSection.scrollIntoView({ behavior: "auto", block: "start" });
+      // Always use native scrolling on iOS devices or touch Safari
+      if (isIOSTouchDevice || useReducedMotion) {
+        // Use immediate scrolling without smooth behavior for iOS Safari
+        contactSection.scrollIntoView({ 
+          behavior: isIOSSafari ? "auto" : "smooth", 
+          block: "start" 
+        });
         return;
       }
       
-      // Enhanced scrolling for capable devices
+      // Enhanced scrolling for capable devices only
       const navElement = document.querySelector("nav");
       const navHeight = navElement ? navElement.offsetHeight : 76;
-      const startPosition = window.pageYOffset;
-      const extraOffset = 50;
-      let targetPosition =
+      const targetPosition =
         contactSection.getBoundingClientRect().top +
         window.pageYOffset -
         navHeight +
-        extraOffset;
-      const maxScroll =
-        document.documentElement.scrollHeight - window.innerHeight;
-      targetPosition = Math.min(targetPosition, maxScroll);
-      if (targetPosition === maxScroll) {
-        targetPosition = maxScroll - 2;
-      }
-      const distance = targetPosition - startPosition;
-      const duration = Math.min(1500, Math.max(800, distance * 0.5));
-      let startTimestamp = null;
-      const easeOutQuart = (t) => 1 - Math.pow(1 - t, 4);
-      const animateScroll = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const elapsed = timestamp - startTimestamp;
-        const progress = Math.min(elapsed / duration, 1);
-        const easing = easeOutQuart(progress);
-        window.scrollTo(0, startPosition + distance * easing);
-        if (elapsed < duration) {
-          window.requestAnimationFrame(animateScroll);
-        } else {
-          contactSection.classList.add("highlight-section");
-          setTimeout(() => {
-            contactSection.classList.remove("highlight-section");
-          }, 1000);
-        }
-      };
-      window.requestAnimationFrame(animateScroll);
+        50;
+        
+      // Use browser's smooth scrolling for modern browsers
+      window.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth'
+      });
+      
+      // Add highlight after scrolling
+      setTimeout(() => {
+        contactSection.classList.add("highlight-section");
+        setTimeout(() => {
+          contactSection.classList.remove("highlight-section");
+        }, 1000);
+      }, 1000);
     } else {
       // Fallback scrolling
       window.scrollTo({ 
@@ -217,7 +263,7 @@ function Navbar() {
         behavior: useReducedMotion ? "auto" : "smooth" 
       });
     }
-  }, [useReducedMotion]);
+  }, [useReducedMotion, isIOSTouchDevice, isIOSSafari]);
 
   const socialIcons = [
     {
@@ -252,7 +298,7 @@ function Navbar() {
     },
   ];
 
-  // Define animation variants with conditional complexity
+  // Simplified variants for iOS
   const navContainerVariants = {
     initial: { opacity: useReducedMotion ? 1 : 0 },
     animate: {
@@ -271,18 +317,56 @@ function Navbar() {
     },
   };
   
+  // Simplified progress variants for iOS
   const progressVariants = {
-    initial: { scaleX: useReducedMotion ? 1 : 0, transformOrigin: "left" },
+    initial: { 
+      scaleX: useReducedMotion ? 1 : 0, 
+      transformOrigin: "left",
+      opacity: useReducedMotion ? 1 : isMobileOrTablet ? 0.6 : 0
+    },
     animate: {
       scaleX: 1,
-      transition: { duration: useReducedMotion ? 0 : 0.8, ease: "easeOut" },
+      opacity: 1,
+      transition: { 
+        duration: useReducedMotion ? 0 : isMobileOrTablet ? 0.5 : 0.8, 
+        ease: isMobileOrTablet ? "easeInOut" : "easeOut",
+      },
     },
   };
 
+  // For iOS Safari, render a simplified navbar without motion effects
+  if (isIOSSafari) {
+    return (
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-neutral-900">
+        <div className="max-w-6xl mx-auto flex items-center justify-between py-4 px-6">
+          <div className="flex items-center">
+            <div className="w-12 h-12 flex items-center justify-center">
+              <span className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+                G
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-5">
+            {socialIcons.map((item, index) => (
+              <SocialIcon
+                key={index}
+                {...item}
+                index={index}
+                useReducedMotion={true}
+                isIOSTouchDevice={true}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+      </nav>
+    );
+  }
+
   return (
     <>
-      {/* Ensure content is immediately visible on Safari */}
-      {isSafariMobile && !isLoaded && (
+      {/* Ensure content is immediately visible while loading */}
+      {!isLoaded && (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-neutral-900">
           <div className="max-w-6xl mx-auto flex items-center justify-between py-4 px-6">
             <div className="flex items-center">
@@ -300,57 +384,120 @@ function Navbar() {
         initial="initial"
         animate="animate"
         variants={navContainerVariants}
-        className={`fixed top-0 left-0 right-0 z-50 transform-gpu ${
-          useReducedMotion 
+        className={`fixed top-0 left-0 right-0 z-50 ${
+          useReducedMotion || isIOSTouchDevice
             ? "bg-neutral-900" 
-            : "bg-neutral-900/80 backdrop-blur-md"
+            : "bg-neutral-900/80 backdrop-blur-md transform-gpu"
         }`}
-        style={{
-          transform: "translateZ(0)",
-          willChange: "transform"
-        }}
+        style={
+          isIOSTouchDevice
+            ? { position: 'fixed' } // Simplified styles for iOS touch devices
+            : {
+                transform: "translateZ(0)",
+                willChange: "transform"
+              }
+        }
       >
         <div className="max-w-6xl mx-auto flex items-center justify-between py-4 px-6">
-          <motion.div
+          <div
             className="flex items-center"
-            onHoverStart={() => !useReducedMotion && setLogoHovered(true)}
-            onHoverEnd={() => !useReducedMotion && setLogoHovered(false)}
+            onMouseEnter={() => !isIOSTouchDevice && !useReducedMotion && setLogoHovered(true)}
+            onMouseLeave={() => !isIOSTouchDevice && !useReducedMotion && setLogoHovered(false)}
+            onTouchStart={() => isIOSTouchDevice && setLogoHovered(true)}
           >
-            <Logo isHovered={logoHovered} useReducedMotion={useReducedMotion} />
-          </motion.div>
+            <Logo 
+              isHovered={logoHovered} 
+              useReducedMotion={useReducedMotion}
+              isIOSTouchDevice={isIOSTouchDevice} 
+            />
+          </div>
+          
+          {/* Social icons with conditional motion wrapping */}
+          {isIOSTouchDevice ? (
+            <div className="flex items-center gap-5">
+              {socialIcons.map((item, index) => (
+                <SocialIcon
+                  key={index}
+                  {...item}
+                  index={index}
+                  useReducedMotion={true}
+                  isIOSTouchDevice={true}
+                />
+              ))}
+            </div>
+          ) : (
+            <motion.div
+              className="flex items-center gap-5"
+              variants={iconContainerVariants}
+              initial="initial"
+              animate="animate"
+            >
+              {socialIcons.map((item, index) => (
+                <SocialIcon
+                  key={index}
+                  {...item}
+                  index={index}
+                  useReducedMotion={useReducedMotion}
+                  isIOSTouchDevice={isIOSTouchDevice}
+                />
+              ))}
+            </motion.div>
+          )}
+        </div>
+        
+        {/* Progress bar - static for iOS touch devices */}
+        {isIOSTouchDevice ? (
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+        ) : (
           <motion.div
-            className="flex items-center gap-5"
-            variants={iconContainerVariants}
+            className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"
+            variants={progressVariants}
             initial="initial"
             animate="animate"
-          >
-            {socialIcons.map((item, index) => (
-              <SocialIcon
-                key={index}
-                {...item}
-                index={index}
-                useReducedMotion={useReducedMotion}
-              />
-            ))}
-          </motion.div>
-        </div>
+            style={
+              useReducedMotion 
+                ? {} 
+                : {
+                    translateZ: 0,
+                    backfaceVisibility: "hidden",
+                    willChange: "transform, opacity"
+                  }
+            }
+          />
+        )}
       </motion.nav>
 
-      <motion.div
-        className="fixed top-[76px] left-0 right-0 z-50 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"
-        variants={progressVariants}
-        initial="initial"
-        animate="animate"
-      />
-
       <style jsx global>{`
-        /* Ensure Safari correctly renders fixed position elements */
+        /* iOS Safari specific fixes */
         @supports (-webkit-touch-callout: none) {
+          html, body {
+            height: 100%;
+            -webkit-overflow-scrolling: touch;
+            overflow-y: auto !important;
+            touch-action: manipulation;
+            overscroll-behavior-y: auto;
+          }
+          
+          /* Ensure nav doesn't create scrolling issues */
           nav {
-            -webkit-transform: translateZ(0);
-            transform: translateZ(0);
-            backface-visibility: hidden;
-            will-change: transform;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            transform: none !important;
+            -webkit-transform: none !important;
+            will-change: auto !important;
+            background-color: #171717; /* neutral-900 */
+          }
+          
+          /* Remove performance-impacting styles on iOS */
+          .ios-safari * {
+            transform: none !important;
+            transition: none !important;
+            animation: none !important;
+            will-change: auto !important;
+            backdrop-filter: none !important;
           }
           
           /* Fix Safari gradient text */
