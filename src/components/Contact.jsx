@@ -233,43 +233,60 @@ const Contact = () => {
                   Feel free to send me a message anytime
                 </motion.p>
                 <motion.a
-                href={isMobile || isTablet 
-                  ? "googlegmail:///co?to=gadingadityaperdana@gmail.com"
-                  : "mailto:gadingadityaperdana@gmail.com?subject=Website%20Inquiry&body=Hi%20Gading%2C%0A%0AI%20found%20your%20website%20and%20would%20like%20to%20connect%20about%3A%0A%0A"}
-                target="_blank"
-                rel="noopener noreferrer"             
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full font-medium text-white flex items-center gap-2 hover:from-purple-700 hover:to-pink-700"
-                variants={buttonVariants}
-                whileHover={useReducedMotion ? undefined : "hover"}
-                whileTap={useReducedMotion ? undefined : "tap"}
-                onClick={(e) => {
-                  if (isMobile || isTablet) {
+                  href="https://mail.google.com/mail/?view=cm&fs=1&to=gadingadityaperdana@gmail.com&su=Website%20Inquiry&body=Hi%20Gading,%0A%0AI%20found%20your%20website%20and%20would%20like%20to%20connect%20about:%0A%0A"
+                  target="_blank"
+                  rel="noopener noreferrer"             
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full font-medium text-white flex items-center gap-2 hover:from-purple-700 hover:to-pink-700"
+                  variants={buttonVariants}
+                  whileHover={useReducedMotion ? undefined : "hover"}
+                  whileTap={useReducedMotion ? undefined : "tap"}
+                  onClick={(e) => {
+                    // Desktop behavior - open Gmail web compose directly
+                    if (!isMobile && !isTablet) {
+                      // Let the default href handle it (Gmail web compose)
+                      return;
+                    }
+                    
+                    // Mobile/Tablet behavior - try to open app
                     e.preventDefault();
                     
-                    // Try to open Gmail app on mobile
-                    const gmailAppUrl = "googlegmail:///co?to=gadingadityaperdana@gmail.com";
-                    const mailtoUrl = "mailto:gadingadityaperdana@gmail.com";
-                    const gmailWebUrl = "https://mail.google.com/mail/?view=cm&fs=1&to=gadingadityaperdana@gmail.com";
+                    // Detect OS
+                    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+                    const isAndroid = /android/i.test(userAgent);
+                    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
                     
-                    // Try opening Gmail app first
-                    window.location.href = gmailAppUrl;
+                    let appOpened = false;
                     
-                    // Set a timeout to check if app opened and fall back if needed
-                    setTimeout(() => {
-                      // If still on the page, try mailto: protocol
-                      window.location.href = mailtoUrl;
-                      
-                      // If that doesn't work either, redirect to Gmail web as final fallback
+                    // Use appropriate URI scheme
+                    if (isAndroid) {
+                      // Try to open Gmail app on Android
+                      window.location.href = "intent://compose?to=gadingadityaperdana@gmail.com#Intent;scheme=mailto;package=com.google.android.gm;end";
+                      appOpened = true;
+                    } else if (isIOS) {
+                      // Try to open Gmail app on iOS
+                      window.location.href = "googlegmail:///co?to=gadingadityaperdana@gmail.com";
+                      appOpened = true;
+                    }
+                    
+                    // Fallback to default mail app after a short delay if we attempted to open an app
+                    if (appOpened) {
                       setTimeout(() => {
-                        window.open(gmailWebUrl, "_blank");
+                        window.location.href = "mailto:gadingadityaperdana@gmail.com";
+                        
+                        // Final fallback to Gmail web as last resort
+                        setTimeout(() => {
+                          window.open("https://mail.google.com/mail/?view=cm&fs=1&to=gadingadityaperdana@gmail.com", "_blank");
+                        }, 500);
                       }, 300);
-                    }, 300);
-                  }
-                }}
-              >
-                <FaEnvelope className="text-sm" />
-                Email Me
-              </motion.a>
+                    } else {
+                      // Direct fallback to Gmail web if we couldn't detect the platform
+                      window.open("https://mail.google.com/mail/?view=cm&fs=1&to=gadingadityaperdana@gmail.com", "_blank");
+                    }
+                  }}
+                >
+                  <FaEnvelope className="text-sm" />
+                  Email Me
+                </motion.a>
               </motion.div>
 
               {/* LinkedIn Contact Block */}
