@@ -1,133 +1,135 @@
 // LightEffects.jsx
-import React, { useEffect, useRef } from "react";
-import { useSystemProfile } from "../components/useSystemProfile.jsx";
-import { technologies } from "./Technologies.jsx";
+import React, { useRef, useEffect, memo } from 'react';
 
-const LightEffects = ({ simplified }) => {
+const LightEffects = memo(({ simplified = false }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
 
-    // Optionally reduce resolution for simplified mode
-    const resizeCanvas = () => {
-      if (canvas.parentNode) {
-        const rect = canvas.parentNode.getBoundingClientRect();
-        // For simplified mode, we scale down the canvas resolution
-        const scaleFactor = simplified ? 0.5 : 1;
-        canvas.width = rect.width * scaleFactor;
-        canvas.height = rect.height * scaleFactor;
-      }
-    };
-
-    resizeCanvas();
-
-    // Define positions for light sources.
-    const positions = [
-      { x: 0.2, y: 0.3, radius: 220, speed: { x: 0.3, y: 0.4 }, direction: { x: 1, y: 1 } },
-      { x: 0.8, y: 0.2, radius: 240, speed: { x: 0.2, y: 0.5 }, direction: { x: -1, y: 1 } },
-      { x: 0.5, y: 0.7, radius: 260, speed: { x: 0.4, y: 0.3 }, direction: { x: 1, y: -1 } },
-      { x: 0.3, y: 0.6, radius: 280, speed: { x: 0.5, y: 0.2 }, direction: { x: -1, y: -1 } },
-      { x: 0.1, y: 0.5, radius: 250, speed: { x: 0.3, y: 0.3 }, direction: { x: 1, y: -1 } },
-      { x: 0.7, y: 0.8, radius: 230, speed: { x: 0.2, y: 0.4 }, direction: { x: -1, y: -1 } },
-      { x: 0.6, y: 0.4, radius: 270, speed: { x: 0.4, y: 0.5 }, direction: { x: 1, y: 1 } },
-      { x: 0.4, y: 0.3, radius: 245, speed: { x: 0.3, y: 0.4 }, direction: { x: -1, y: 1 } },
-      { x: 0.25, y: 0.75, radius: 255, speed: { x: 0.35, y: 0.45 }, direction: { x: 1, y: -1 } },
-      { x: 0.75, y: 0.35, radius: 235, speed: { x: 0.25, y: 0.35 }, direction: { x: -1, y: 1 } },
-    ];
-
-    // In simplified mode, use fewer light sources.
-    const effectivePositions = simplified
-      ? positions.slice(0, Math.ceil(positions.length / 2))
-      : positions;
-
-    const lightSources = effectivePositions.map((pos, index) => ({
-      x: canvas.width * pos.x,
-      y: canvas.height * pos.y,
-      radius: pos.radius,
-      color: technologies[index]?.color + "18" || "#ffffff18",
-      speed: { ...pos.speed },
-      direction: { ...pos.direction },
-      baseSpeed: { ...pos.speed },
-    }));
-
+    const ctx = canvas.getContext('2d');
+    const particles = [];
     let animationFrameId;
-    const animate = () => {
-      ctx.fillStyle = "rgba(15, 5, 40, 0.05)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      lightSources.forEach((light) => {
-        // Create a radial gradient for each light.
-        const gradient = ctx.createRadialGradient(
-          light.x,
-          light.y,
-          0,
-          light.x,
-          light.y,
-          light.radius
-        );
-        gradient.addColorStop(0, light.color);
-        gradient.addColorStop(0.6, light.color.replace("18", "08"));
-        gradient.addColorStop(1, "rgba(15, 5, 40, 0)");
-
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(light.x, light.y, light.radius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Update light position.
-        light.x += light.speed.x * light.direction.x;
-        light.y += light.speed.y * light.direction.y;
-
-        const blendMargin = 50;
-        if (light.x - light.radius < -blendMargin || light.x + light.radius > canvas.width + blendMargin) {
-          light.direction.x *= -1;
-          if (light.x - light.radius < -blendMargin)
-            light.x = -blendMargin + light.radius;
-          if (light.x + light.radius > canvas.width + blendMargin)
-            light.x = canvas.width + blendMargin - light.radius;
-        }
-        if (light.y - light.radius < -blendMargin || light.y + light.radius > canvas.height + blendMargin) {
-          light.direction.y *= -1;
-          if (light.y - light.radius < -blendMargin)
-            light.y = -blendMargin + light.radius;
-          if (light.y + light.radius > canvas.height + blendMargin)
-            light.y = canvas.height + blendMargin - light.radius;
-        }
-      });
-      animationFrameId = requestAnimationFrame(animate);
+    
+    // Set canvas dimensions to match container
+    const setCanvasDimensions = () => {
+      const container = canvas.parentElement;
+      canvas.width = container.offsetWidth;
+      canvas.height = container.offsetHeight;
     };
-    animate();
 
-    const handleResize = () => {
-      if (canvas.parentNode) {
-        const rect = canvas.parentNode.getBoundingClientRect();
-        const scaleFactor = simplified ? 0.5 : 1;
-        canvas.width = rect.width * scaleFactor;
-        canvas.height = rect.height * scaleFactor;
+    // Initialize the particles with optimized parameters
+    const initializeParticles = () => {
+      const particleCount = simplified ? 20 : 35; // Reduced for simplified version
+      particles.length = 0;
+
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          radius: simplified ? 
+            Math.random() * 1 + 0.5 :
+            Math.random() * 1.5 + 0.5,
+          color: `rgba(${
+            Math.floor(Math.random() * 100) + 155
+          }, ${
+            Math.floor(Math.random() * 100) + 155
+          }, ${
+            Math.floor(Math.random() * 155) + 100
+          }, ${
+            simplified ? 0.3 : 0.5
+          })`,
+          vx: (Math.random() - 0.5) * (simplified ? 0.3 : 0.5),
+          vy: (Math.random() - 0.5) * (simplified ? 0.3 : 0.5),
+          sinOffset: Math.random() * Math.PI * 2,
+          sinAmplitude: simplified ? 0.3 : 0.5,
+          sinFrequency: 0.02 + Math.random() * 0.01,
+          connectionDistance: simplified ? 100 : 150,
+        });
       }
-      lightSources.forEach((light, i) => {
-        const pos = effectivePositions[i] || { x: Math.random(), y: Math.random() };
-        light.x = canvas.width * pos.x;
-        light.y = canvas.height * pos.y;
+    };
+
+    // Draw the particles and connections
+    const drawParticles = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw particles
+      particles.forEach((p) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        
+        // Update particle position with sinusoidal motion
+        p.x += p.vx + Math.sin(p.sinOffset + Date.now() * p.sinFrequency) * p.sinAmplitude;
+        p.y += p.vy;
+        
+        // Boundary check - wrap around
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+      });
+      
+      // Draw connections only in non-simplified mode
+      if (!simplified) {
+        drawConnections();
+      }
+      
+      animationFrameId = requestAnimationFrame(drawParticles);
+    };
+    
+    // Draw connections between particles
+    const drawConnections = () => {
+      particles.forEach((p1, i) => {
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dx = p1.x - p2.x;
+          const dy = p1.y - p2.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < p1.connectionDistance) {
+            const opacity = 1 - distance / p1.connectionDistance;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(180, 180, 255, ${opacity * 0.15})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
       });
     };
-    window.addEventListener("resize", handleResize);
+
+    // Handle window resize
+    const handleResize = () => {
+      setCanvasDimensions();
+      initializeParticles();
+    };
+
+    // Setup
+    setCanvasDimensions();
+    initializeParticles();
+    drawParticles();
+
+    // Listen for window resize
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
     return () => {
-      window.removeEventListener("resize", handleResize);
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
     };
   }, [simplified]);
 
   return (
     <canvas
       ref={canvasRef}
-      className="w-full h-full pointer-events-none opacity-60"
-      style={{ mixBlendMode: "lighten", margin: "50px" }}
+      className="absolute inset-0 w-full h-full"
+      style={{ opacity: 0.5 }}
     />
   );
-};
+});
 
 export default LightEffects;

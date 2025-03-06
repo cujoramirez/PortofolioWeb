@@ -1,317 +1,12 @@
 import React, { useState, useRef, memo, lazy, Suspense, useEffect, useMemo } from "react";
-import {
-  SiPytorch,
-  SiTensorflow,
-  SiReact,
-  SiNodedotjs,
-  SiPython,
-  SiKaggle,
-  SiHtml5,
-  SiCss3,
-} from "react-icons/si";
-import { FaAtom, FaChartBar } from "react-icons/fa";
 import { motion, useReducedMotion } from "framer-motion";
-import { useSystemProfile } from "../components/useSystemProfile.jsx";
+import TechnologyCard from "./TechnologyCard";
+import { technologies } from "./techData";
+import useDeviceDetection from "./useDeviceDetection";
+import { useSuppressReducedMotionWarning } from './useSupressReducedMotionWarning';
 
 // Lazy-load heavy canvas effects only when needed
 const LightEffects = lazy(() => import("./LightEffects"));
-
-// Optimized container variants with conditional stagger and device detection
-const optimizedContainerVariants = (staggerValue, isIOSSafari, isMobile) => ({
-  hidden: { opacity: 0, y: isIOSSafari ? 0 : isMobile ? 10 : 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: isIOSSafari ? 0.3 : isMobile ? 0.5 : 0.7,
-      ease: "easeOut",
-      staggerChildren: isIOSSafari ? 0.03 : staggerValue,
-      when: "beforeChildren",
-    },
-  },
-});
-
-// Title variant: simplified for mobile and iOS
-const titleVariants = {
-  hidden: { opacity: 0, y: -15 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: "easeOut" },
-  },
-  hover: {
-    scale: 1.02,
-    textShadow: "0px 0px 12px rgba(168, 85, 247, 0.7)",
-    transition: { duration: 0.3 },
-  },
-};
-
-// Icon container variants with device optimizations
-const getIconContainerVariants = (isMobile, isIOSSafari) => ({
-  hidden: { opacity: 0, y: isIOSSafari ? 5 : isMobile ? 8 : 15 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { 
-      duration: isIOSSafari ? 0.3 : isMobile ? 0.4 : 0.6, 
-      ease: "easeOut" 
-    },
-  },
-  hover: isIOSSafari ? {} : {
-    scale: isMobile ? 1.03 : 1.05,
-    transition: {
-      duration: 0.3,
-      ease: "easeOut",
-      type: "tween",
-    },
-  },
-});
-
-// Optimized icon animation based on device type
-const getIconAnimation = (color, isMobile, isTablet, isIOSSafari, reducedMotion) => {
-  // Disabled animations for iOS Safari and reduced motion
-  if (isIOSSafari || reducedMotion) {
-    return {
-      animate: {
-        filter: `drop-shadow(0 0 2px ${color}33)`,
-      },
-      hover: isIOSSafari ? {} : {
-        scale: 1.03,
-        filter: `drop-shadow(0 0 6px ${color})`,
-        transition: { duration: 0.2 },
-      },
-    };
-  }
-  
-  // Tablet-specific animations (lighter than desktop)
-  if (isTablet) {
-    return {
-      animate: {
-        y: [-1, 1, -1],
-        filter: `drop-shadow(0 0 1px ${color}33)`,
-        transition: {
-          y: {
-            duration: 3.5,
-            repeat: Infinity,
-            repeatType: "reverse",
-            ease: "easeInOut",
-          },
-        },
-      },
-      hover: {
-        scale: 1.04,
-        filter: `drop-shadow(0 0 8px ${color})`,
-        transition: {
-          duration: 0.3,
-          ease: "easeOut",
-        },
-      },
-    };
-  }
-  
-  // Desktop animations (kept intact as requested)
-  return {
-    animate: {
-      y: [-2, 2, -2],
-      filter: `drop-shadow(0 0 2px ${color}33)`,
-      transition: {
-        y: {
-          duration: 4,
-          repeat: Infinity,
-          repeatType: "reverse",
-          ease: "easeInOut",
-        },
-      },
-    },
-    hover: {
-      scale: 1.1,
-      filter: `drop-shadow(0 0 12px ${color})`,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut",
-      },
-    },
-  };
-};
-
-// Technology configuration with optimized glow effects
-export const technologies = [
-  { name: "HTML", icon: SiHtml5, color: "#E34F26", borderColor: "border-orange-600/30", pulseSpeed: 3.1 },
-  { name: "CSS", icon: SiCss3, color: "#1572B6", borderColor: "border-blue-500/30", pulseSpeed: 3.4 },
-  { name: "PyTorch", icon: SiPytorch, color: "#EE4C2C", borderColor: "border-orange-500/30", pulseSpeed: 3.4 },
-  { name: "TensorFlow", icon: SiTensorflow, color: "#FF6F00", borderColor: "border-orange-400/30", pulseSpeed: 3.2 },
-  { name: "React", icon: SiReact, color: "#61DAFB", borderColor: "border-cyan-400/30", pulseSpeed: 3.7 },
-  { name: "Node.js", icon: SiNodedotjs, color: "#539E43", borderColor: "border-green-500/30", pulseSpeed: 3.5 },
-  { name: "Python", icon: SiPython, color: "#3776AB", borderColor: "border-blue-500/30", pulseSpeed: 3.3 },
-  { name: "Kaggle", icon: SiKaggle, color: "#20BEFF", borderColor: "border-blue-400/30", pulseSpeed: 3.6 },
-  { name: "Physics", icon: FaAtom, color: "#9C27B0", borderColor: "border-purple-500/30", pulseSpeed: 3.2 },
-  { name: "Statistics", icon: FaChartBar, color: "#FF9800", borderColor: "border-amber-500/30", pulseSpeed: 3.5 },
-];
-
-// Optimized Technology Card Component
-const TechnologyCard = memo(
-  ({ 
-    tech, 
-    index, 
-    hoveredTech, 
-    setHoveredTech, 
-    hoveredTechRef, 
-    isMobile, 
-    isTablet, 
-    isIOSSafari, 
-    reducedMotion, 
-    contentReady 
-  }) => {
-    // Adjust animation speeds based on device
-    const pulseSpeed = tech.pulseSpeed * (isIOSSafari ? 1.5 : isMobile ? 1.2 : 1);
-    
-    // Size adjustments for different devices
-    const cardSize = isTablet ? "130px" : isMobile ? "110px" : "150px";
-    const iconSize = isTablet ? "text-4xl" : isMobile ? "text-3xl" : "text-5xl";
-    const paddingSize = isTablet ? "p-3" : isMobile ? "p-2" : "p-4";
-    
-    return (
-      <motion.div
-        className={`relative rounded-xl border-2 ${tech.borderColor} ${paddingSize}
-          bg-gradient-to-br from-neutral-900/80 to-neutral-900/40
-          backdrop-blur-sm shadow-lg cursor-pointer flex flex-col items-center justify-center`}
-        variants={getIconContainerVariants(isMobile, isIOSSafari)}
-        whileHover={isIOSSafari ? undefined : "hover"}
-        // Removed whileTap for mobile/tablet as requested
-        {...(!isMobile && !isTablet ? { whileTap: isIOSSafari ? undefined : "hover" } : {})}
-        style={{
-          width: '100%',
-          maxWidth: cardSize,
-          aspectRatio: '1/1',
-          boxShadow:
-            hoveredTech === index
-              ? `0 0 ${isMobile ? "16px 2px" : "20px 3px"} ${tech.color}${isMobile ? "44" : "55"}`
-              : `0 0 ${isMobile ? "15px" : "25px"} rgba(0, 0, 0, ${isMobile ? "0.3" : "0.4"})`,
-          transition: "all 0.3s ease-in-out",
-          overflow: "visible",
-          transformOrigin: "center",
-          opacity: contentReady ? 1 : 0,
-          transform: "translateZ(0)", // Hardware acceleration
-        }}
-        onHoverStart={() => {
-          if (isIOSSafari) return;
-          setHoveredTech(index);
-          hoveredTechRef.current = index;
-        }}
-        onHoverEnd={() => {
-          if (isIOSSafari) return;
-          setHoveredTech(null);
-          hoveredTechRef.current = null;
-        }}
-      >
-        {/* Conditionally render animated border glow based on performance */}
-        {!reducedMotion && !isIOSSafari && (
-          <motion.div
-            className="absolute inset-0 rounded-xl z-0"
-            style={{ boxShadow: `0 0 0px ${tech.color}00` }}
-            animate={{
-              boxShadow: isMobile 
-                ? [`0 0 3px ${tech.color}22`, `0 0 5px ${tech.color}33`, `0 0 3px ${tech.color}22`]
-                : [`0 0 5px ${tech.color}33`, `0 0 12px ${tech.color}44`, `0 0 5px ${tech.color}33`],
-            }}
-            transition={{
-              duration: pulseSpeed,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        )}
-
-        {/* Icon with optimized animations */}
-        <motion.div
-          className="relative flex-1 flex items-center justify-center"
-          variants={getIconAnimation(tech.color, isMobile, isTablet, isIOSSafari, reducedMotion)}
-          animate={contentReady ? "animate" : ""}
-          whileHover={isIOSSafari ? undefined : "hover"}
-          // Removed whileTap for mobile/tablet as requested
-          {...(!isMobile && !isTablet ? { whileTap: isIOSSafari ? undefined : "hover" } : {})}
-          style={{ 
-            position: "relative", 
-            zIndex: 2, 
-            padding: isMobile ? "6px" : "8px",
-          }}
-        >
-          {/* Desktop pulsing background glow - only for desktop with good performance */}
-          {!reducedMotion && !isMobile && !isTablet && !isIOSSafari && (
-            <motion.div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: `radial-gradient(circle, ${tech.color}33 0%, transparent 70%)`,
-                filter: "blur(10px)",
-                zIndex: 0,
-                transform: "scale(1.5)",
-              }}
-              animate={{
-                opacity: [0.3, 0.7, 0.3],
-                scale: [1.4, 1.6, 1.4],
-              }}
-              transition={{
-                duration: pulseSpeed,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-          )}
-          
-          {/* Simplified background glow for tablet */}
-          {!reducedMotion && isTablet && !isIOSSafari && (
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: `radial-gradient(circle, ${tech.color}22 0%, transparent 70%)`,
-                filter: "blur(5px)",
-                zIndex: 0,
-                transform: "scale(1.2)",
-                opacity: 0.4,
-              }}
-            />
-          )}
-
-          {/* FIXED: Ensuring icon is visible by adding display block and explicit size */}
-          <tech.icon
-            className={`${iconSize} relative z-10`}
-            style={{ 
-              color: tech.color, 
-              display: "block",
-              fontSize: isTablet ? "2rem" : isMobile ? "1.5rem" : "2.5rem"
-            }}
-          />
-        </motion.div>
-        
-        {/* Technology name with optimized text effects */}
-        <div
-          className={`text-center mt-1 sm:mt-2 font-medium ${
-            isMobile ? "text-xs" : isTablet ? "text-sm" : "text-base"
-          }`}
-          style={{
-            color: tech.color,
-            textShadow: `0 0 ${isMobile ? "4px" : "6px"} ${tech.color}${isMobile ? "33" : "44"}`,
-            letterSpacing: "0.5px",
-          }}
-        >
-          {tech.name}
-        </div>
-      </motion.div>
-    );
-  },
-  // Advanced memo comparison to prevent unnecessary re-renders
-  (prevProps, nextProps) => {
-    return (
-      prevProps.index === nextProps.index &&
-      prevProps.hoveredTech === nextProps.hoveredTech &&
-      prevProps.isMobile === nextProps.isMobile &&
-      prevProps.isTablet === nextProps.isTablet &&
-      prevProps.isIOSSafari === nextProps.isIOSSafari &&
-      prevProps.reducedMotion === nextProps.reducedMotion &&
-      prevProps.contentReady === nextProps.contentReady
-    );
-  }
-);
 
 const Technologies = () => {
   // Content readiness states - critical for iOS scroll fix
@@ -321,53 +16,23 @@ const Technologies = () => {
   
   const [hoveredTech, setHoveredTech] = useState(null);
   const hoveredTechRef = useRef(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
-  const [isSafari, setIsSafari] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
   const preferredReducedMotion = useReducedMotion();
 
-  // Use our unified system profile hook
-  const { performanceTier, deviceType } = useSystemProfile();
-  
-  // Detect iOS Safari for specific optimizations
-  const isIOSSafari = useMemo(() => isIOS && isSafari, [isIOS, isSafari]);
+  useSuppressReducedMotionWarning();
+
+  // Use our device detection hook
+  const { 
+    isMobile, 
+    isTablet, 
+    isIOSSafari, 
+    performanceTier, 
+    deviceType 
+  } = useDeviceDetection();
   
   // Determine if we should use scroll trigger based on device and performance
   const shouldUseScrollTrigger = useMemo(() => 
     performanceTier !== "low" && !isIOSSafari && !isMobile,
   [performanceTier, isIOSSafari, isMobile]);
-  
-  // Detect device types
-  useEffect(() => {
-    // Check if it's a mobile device or tablet
-    const checkDeviceType = () => {
-      const width = window.innerWidth;
-      // Mobile: less than 640px
-      const mobileCheck = width < 640;
-      // Tablet: between 640px and 1024px
-      const tabletCheck = width >= 640 && width < 1024;
-      
-      setIsMobile(mobileCheck);
-      setIsTablet(tabletCheck);
-    };
-    
-    // Check if it's Safari and/or iOS
-    const checkBrowser = () => {
-      const isSafariCheck = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      const isIOSCheck = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-      
-      setIsSafari(isSafariCheck);
-      setIsIOS(isIOSCheck);
-    };
-    
-    checkDeviceType();
-    checkBrowser();
-    
-    // Add resize listener for responsive behavior
-    window.addEventListener('resize', checkDeviceType);
-    return () => window.removeEventListener('resize', checkDeviceType);
-  }, []);
   
   // Make content visible after a short delay
   useEffect(() => {
@@ -428,6 +93,36 @@ const Technologies = () => {
     };
   }, [isIOSSafari]);
 
+  // Optimized container variants with conditional stagger and device detection
+  const getOptimizedContainerVariants = (staggerValue, isIOSSafari, isMobile) => ({
+    hidden: { opacity: 0, y: isIOSSafari ? 0 : isMobile ? 10 : 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: isIOSSafari ? 0.3 : isMobile ? 0.5 : 0.7,
+        ease: "easeOut",
+        staggerChildren: isIOSSafari ? 0.03 : staggerValue,
+        when: "beforeChildren",
+      },
+    },
+  });
+
+  // Title variant: simplified for mobile and iOS
+  const getTitleVariants = () => ({
+    hidden: { opacity: 0, y: -15 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
+    hover: {
+      scale: 1.02,
+      textShadow: "0px 0px 12px rgba(168, 85, 247, 0.7)",
+      transition: { duration: 0.3 },
+    },
+  });
+
   // Reduce stagger animation on mobile/tablet for smoother rendering
   const staggerMultiplier = useMemo(() => {
     if (isTablet) return 0.08;
@@ -436,8 +131,9 @@ const Technologies = () => {
   }, [isTablet, isMobile]);
   
   const containerVars = useMemo(() => 
-    optimizedContainerVariants(staggerMultiplier, isIOSSafari, isMobile),
+    getOptimizedContainerVariants(staggerMultiplier, isIOSSafari, isMobile),
   [staggerMultiplier, isIOSSafari, isMobile]);
+  
   
   // Determine if we should reduce animations
   const reducedMotion = useMemo(() => 
@@ -515,7 +211,7 @@ const Technologies = () => {
       >
         <motion.h2
           className="mb-6 sm:mb-10 md:mb-14 mt-4 text-center text-3xl sm:text-4xl md:text-5xl font-bold"
-          variants={titleVariants}
+          variants={getTitleVariants()}
           whileHover={isIOSSafari ? undefined : "hover"}
           style={{
             background:
@@ -553,6 +249,7 @@ const Technologies = () => {
               isIOSSafari={isIOSSafari}
               reducedMotion={reducedMotion}
               contentReady={contentReady || animationsComplete}
+              performanceTier={performanceTier}
             />
           ))}
         </motion.div>
@@ -577,76 +274,80 @@ const Technologies = () => {
         />
       </div>
       
-      {/* Optimized animations and iOS fixes */}
-      <style>{`
-        @keyframes gradientShift {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        
-        /* iOS specific optimizations */
-        @supports (-webkit-touch-callout: none) {
-          .ios-fix {
-            transform: translate3d(0,0,0);
-            -webkit-overflow-scrolling: touch;
-            overflow-y: auto !important;
-          }
-          
-          body {
-            overflow-y: auto !important;
-            -webkit-overflow-scrolling: touch;
-          }
-        }
-        
-        /* FIXED: Special grid layout for tablets to center last two items */
-        .tablet-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-        
-        /* Center the last two items specifically for 10 items in 3-column grid */
-        @media (min-width: 640px) and (max-width: 1023px) {
-          .tablet-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-          }
-          
-          .tablet-grid > *:nth-last-child(2),
-          .tablet-grid > *:last-child {
-            grid-column: span 1;
-          }
-          
-          .tablet-grid > *:nth-last-child(2) {
-            transform: translateX(50%);
-          }
-          
-          .tablet-grid::after {
-            content: "";
-            width: 0;
-            grid-column: span 3;
-          }
-        }
-        
-        /* For larger tablets */
-        @media (min-width: 768px) and (max-width: 1023px) {
-          .tablet-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-          }
-          
-          .tablet-grid > *:nth-last-child(2),
-          .tablet-grid > *:last-child {
-            grid-column: span 2;
-            justify-self: center;
-            max-width: 130px;
-          }
-          
-          .tablet-grid > *:nth-last-child(2) {
-            transform: translateX(0);
-          }
-        }
-      `}</style>
+      <ResponsiveStyles />
     </section>
   );
 };
+
+// Encapsulated responsive styles component
+const ResponsiveStyles = () => (
+  <style>{`
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    /* iOS specific optimizations */
+    @supports (-webkit-touch-callout: none) {
+      .ios-fix {
+        transform: translate3d(0,0,0);
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto !important;
+      }
+      
+      body {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+    
+    /* FIXED: Special grid layout for tablets to center last two items */
+    .tablet-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    
+    /* Center the last two items specifically for 10 items in 3-column grid */
+    @media (min-width: 640px) and (max-width: 1023px) {
+      .tablet-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      
+      .tablet-grid > *:nth-last-child(2),
+      .tablet-grid > *:last-child {
+        grid-column: span 1;
+      }
+      
+      .tablet-grid > *:nth-last-child(2) {
+        transform: translateX(50%);
+      }
+      
+      .tablet-grid::after {
+        content: "";
+        width: 0;
+        grid-column: span 3;
+      }
+    }
+    
+    /* For larger tablets */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .tablet-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      
+      .tablet-grid > *:nth-last-child(2),
+      .tablet-grid > *:last-child {
+        grid-column: span 2;
+        justify-self: center;
+        max-width: 130px;
+      }
+      
+      .tablet-grid > *:nth-last-child(2) {
+        transform: translateX(0);
+      }
+    }
+  `}</style>
+);
 
 export default memo(Technologies);

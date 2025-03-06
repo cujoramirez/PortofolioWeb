@@ -11,6 +11,8 @@ const Contact = () => {
   const { performanceTier } = useSystemProfile();
   const [isSafariMobile, setIsSafariMobile] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
   
   useEffect(() => {
     // Set loaded state after initial render to help with scrolling
@@ -21,6 +23,16 @@ const Contact = () => {
     const isIOS = /iPhone|iPad|iPod/.test(ua);
     const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua);
     setIsSafariMobile(isIOS && isSafari);
+    
+    // Detect device type for email button behavior
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+      setIsTablet(window.innerWidth >= 640 && window.innerWidth < 1024);
+    };
+    
+    handleResize(); // Initial check
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
   
   // Determine animation settings based on device capabilities
@@ -221,8 +233,10 @@ const Contact = () => {
                   Feel free to send me a message anytime
                 </motion.p>
                 <motion.a
-                  href="https://mail.google.com/mail/?view=cm&fs=1&to=gadingadityaperdana@gmail.com"
-                  target="_blank"
+                  href={isMobile || isTablet 
+                    ? "https://mail.google.com/mail/?view=cm&fs=1&to=gadingadityaperdana@gmail.com" 
+                    : "mailto:gadingadityaperdana@gmail.com?subject=Website%20Inquiry&body=Hi%20Gading%2C%0A%0AI%20found%20your%20website%20and%20would%20like%20to%20connect%20about%3A%0A%0A"}
+                  target={isMobile || isTablet ? "_blank" : undefined}
                   rel="noopener noreferrer"             
                   className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full font-medium text-white flex items-center gap-2 hover:from-purple-700 hover:to-pink-700"
                   variants={buttonVariants}
