@@ -257,7 +257,6 @@ const Contact = () => {
                     
                     let appOpened = false;
                     
-                    // Use appropriate URI scheme
                     if (isAndroid) {
                       // Try to open Gmail app on Android
                       window.location.href = "intent://compose?to=gadingadityaperdana@gmail.com#Intent;scheme=mailto;package=com.google.android.gm;end";

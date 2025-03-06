@@ -1,12 +1,15 @@
 import React, { useState, useRef, memo, lazy, Suspense, useEffect, useMemo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion"; // Removed useReducedMotion import
 import TechnologyCard from "./TechnologyCard";
 import { technologies } from "./techData";
 import useDeviceDetection from "./useDeviceDetection";
 import { useSuppressReducedMotionWarning } from './useSupressReducedMotionWarning';
 
-// Lazy-load heavy canvas effects only when needed
+// Lazy-load enhanced light effects only for desktop
 const LightEffects = lazy(() => import("./LightEffects"));
+
+// Create a mock for useReducedMotion that always returns false
+const mockReducedMotion = false;
 
 const Technologies = () => {
   // Content readiness states - critical for iOS scroll fix
@@ -16,8 +19,11 @@ const Technologies = () => {
   
   const [hoveredTech, setHoveredTech] = useState(null);
   const hoveredTechRef = useRef(null);
-  const preferredReducedMotion = useReducedMotion();
+  
+  // Force reduced motion to false rather than detecting it
+  const preferredReducedMotion = mockReducedMotion;
 
+  // Still use the suppression hook to handle any internal warnings
   useSuppressReducedMotionWarning();
 
   // Use our device detection hook
@@ -29,55 +35,53 @@ const Technologies = () => {
     deviceType 
   } = useDeviceDetection();
   
+  // Flag to identify mobile/tablet devices for optimizations
+  const isHandheld = useMemo(() => isMobile || isTablet, [isMobile, isTablet]);
+  
   // Determine if we should use scroll trigger based on device and performance
   const shouldUseScrollTrigger = useMemo(() => 
-    performanceTier !== "low" && !isIOSSafari && !isMobile,
-  [performanceTier, isIOSSafari, isMobile]);
+    performanceTier !== "low" && !isIOSSafari && !isHandheld,
+  [performanceTier, isIOSSafari, isHandheld]);
   
-  // Make content visible after a short delay
+  // Make mobile/tablet content visible instantly, only delay desktop
   useEffect(() => {
     // Mark component as mounted
     isMountedRef.current = true;
     
-    // Make content visible immediately on iOS Safari
-    if (isIOSSafari) {
+    // Make content visible immediately on mobile/tablet or iOS Safari
+    if (isHandheld || isIOSSafari) {
       setContentReady(true);
+      setAnimationsComplete(true); // Skip animation waiting period entirely
     } else {
-      // Short delay for other browsers
+      // Short delay for desktop only
       const timer = setTimeout(() => {
         if (isMountedRef.current) {
           setContentReady(true);
         }
       }, 200);
       
+      // Ensure animations complete after a maximum time (desktop only)
+      const animationTimer = setTimeout(() => {
+        if (isMountedRef.current) {
+          setAnimationsComplete(true);
+        }
+      }, 2000);
+      
       return () => {
         clearTimeout(timer);
+        clearTimeout(animationTimer);
         isMountedRef.current = false;
       };
     }
-    
-    // Ensure animations complete after a maximum time
-    const animationTimer = setTimeout(() => {
-      if (isMountedRef.current) {
-        setAnimationsComplete(true);
-      }
-    }, isIOSSafari ? 800 : 2000);
-    
-    return () => {
-      clearTimeout(animationTimer);
-      isMountedRef.current = false;
-    };
-  }, [isIOSSafari]);
+  }, [isHandheld, isIOSSafari]);
   
-  // iOS Safari scroll fix
+  // iOS Safari scroll fix (unchanged)
   useEffect(() => {
     if (isIOSSafari) {
-      // Force content to be visible and scrollable
       document.body.style.overflow = 'auto';
       document.body.style.overflowY = 'auto';
       document.documentElement.style.overflowY = 'auto';
       
-      // Scroll hack to trigger iOS redraw
       setTimeout(() => {
         window.scrollTo(0, window.scrollY + 1);
         setTimeout(() => window.scrollTo(0, window.scrollY - 1), 50);
@@ -93,70 +97,79 @@ const Technologies = () => {
     };
   }, [isIOSSafari]);
 
-  // Optimized container variants with conditional stagger and device detection
-  const getOptimizedContainerVariants = (staggerValue, isIOSSafari, isMobile) => ({
-    hidden: { opacity: 0, y: isIOSSafari ? 0 : isMobile ? 10 : 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: isIOSSafari ? 0.3 : isMobile ? 0.5 : 0.7,
-        ease: "easeOut",
-        staggerChildren: isIOSSafari ? 0.03 : staggerValue,
-        when: "beforeChildren",
+  // Container variants - desktop only, no variants for mobile/tablet
+  const getOptimizedContainerVariants = (staggerValue, isIOSSafari) => {
+    // Skip animations for mobile/tablet
+    if (isHandheld) {
+      return {};
+    }
+    
+    return {
+      hidden: { opacity: 0, y: isIOSSafari ? 0 : 20 },
+      visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+          duration: isIOSSafari ? 0.3 : 0.7,
+          ease: "easeOut",
+          staggerChildren: isIOSSafari ? 0.03 : staggerValue,
+          when: "beforeChildren",
+        },
       },
-    },
-  });
+    };
+  };
 
-  // Title variant: simplified for mobile and iOS
-  const getTitleVariants = () => ({
-    hidden: { opacity: 0, y: -15 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
-    },
-    hover: {
-      scale: 1.02,
-      textShadow: "0px 0px 12px rgba(168, 85, 247, 0.7)",
-      transition: { duration: 0.3 },
-    },
-  });
+  // Title variant - only for desktop
+  const getTitleVariants = () => {
+    // Skip animations for mobile/tablet
+    if (isHandheld) {
+      return {};
+    }
+    
+    return {
+      hidden: { opacity: 0, y: -15 },
+      visible: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.5, ease: "easeOut" },
+      },
+      hover: {
+        scale: 1.02,
+        textShadow: "0px 0px 12px rgba(168, 85, 247, 0.7)",
+        transition: { duration: 0.3 },
+      },
+    };
+  };
 
-  // Reduce stagger animation on mobile/tablet for smoother rendering
+  // Stagger multiplier (desktop only)
   const staggerMultiplier = useMemo(() => {
-    if (isTablet) return 0.08;
-    if (isMobile) return 0.06;
+    if (isHandheld) return 0;
     return 0.15;
-  }, [isTablet, isMobile]);
+  }, [isHandheld]);
   
   const containerVars = useMemo(() => 
-    getOptimizedContainerVariants(staggerMultiplier, isIOSSafari, isMobile),
-  [staggerMultiplier, isIOSSafari, isMobile]);
+    getOptimizedContainerVariants(staggerMultiplier, isIOSSafari),
+  [staggerMultiplier, isIOSSafari, isHandheld]);
   
-  
-  // Determine if we should reduce animations
-  const reducedMotion = useMemo(() => 
-    preferredReducedMotion || 
-    (isMobile && performanceTier === "low") || 
-    isIOSSafari,
-  [preferredReducedMotion, isMobile, performanceTier, isIOSSafari]);
+  // Special flag for mobile/tablet to completely disable animations
+  // Removed preferredReducedMotion from dependencies since it's now always false
+  const disableAnimations = useMemo(() => 
+    isHandheld || (isMobile && performanceTier === "low") || isIOSSafari,
+  [isHandheld, isMobile, performanceTier, isIOSSafari]);
 
-  // FIXED: Improve grid layout for tablets to center last two items
+  // Keep existing grid layout logic
   const getGridColumns = useMemo(() => {
     if (isMobile) return "grid-cols-2";
-    if (isTablet) return "grid-cols-3 tablet-grid"; // Custom class for tablet
+    if (isTablet) return "grid-cols-3 tablet-grid";
     return "grid-cols-5";
   }, [isMobile, isTablet]);
   
-  // Determine grid gap based on device type
   const getGridGap = useMemo(() => {
     if (isMobile) return "gap-2";
     if (isTablet) return "gap-3 sm:gap-4";
     return "gap-4 md:gap-5";
   }, [isMobile, isTablet]);
   
-  // Set appropriate padding based on device
   const sectionPadding = useMemo(() => {
     if (isMobile) return "py-8";
     if (isTablet) return "py-12";
@@ -172,7 +185,7 @@ const Technologies = () => {
         minHeight: isMobile ? "auto" : isTablet ? "65vh" : "80vh",
         position: "relative",
         clipPath: "polygon(0 0, 100% 0, 100% 95%, 0 100%)",
-        visibility: contentReady || animationsComplete ? "visible" : "visible",
+        visibility: contentReady || animationsComplete ? "visible" : "hidden",
       }}
     >
       {/* Top overlay gradient - simplified for mobile */}
@@ -182,85 +195,149 @@ const Technologies = () => {
           background:
             "linear-gradient(to bottom, rgba(15, 5, 40, 0) 0%, rgba(15, 5, 40, 0.8) 100%)",
           transform: "translateY(-100%)",
-          opacity: isMobile || isTablet ? 0.5 : 0.7,
+          opacity: isHandheld ? 0.5 : 0.7,
         }}
       />
       
-      {/* Light effects only for desktop with good performance */}
-      {performanceTier !== "low" && !isMobile && !isTablet && !isIOSSafari && contentReady && (
+      {/* Enhanced Light effects - DESKTOP ONLY with hover responsiveness */}
+      {!isHandheld && performanceTier !== "low" && !isIOSSafari && contentReady && (
         <div className="absolute inset-0 overflow-hidden">
           <Suspense fallback={null}>
-            <LightEffects simplified={deviceType !== "desktop"} />
+            <LightEffects 
+              hoveredTech={hoveredTech}
+              hoveredTechRef={hoveredTechRef}
+            />
           </Suspense>
         </div>
       )}
 
-      <motion.div
-        className="relative z-10 container mx-auto px-4 sm:px-6 md:px-8 h-full flex flex-col"
-        variants={containerVars}
-        initial="hidden"
-        {...(shouldUseScrollTrigger
-          ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
-          : { animate: contentReady ? "visible" : "hidden" }
-        )}
-        style={{ 
-          transform: "translateZ(0)", // Hardware acceleration
-          opacity: contentReady || animationsComplete ? 1 : 0,
-          transition: "opacity 0.3s ease-out",
-        }}
-      >
-        <motion.h2
-          className="mb-6 sm:mb-10 md:mb-14 mt-4 text-center text-3xl sm:text-4xl md:text-5xl font-bold"
-          variants={getTitleVariants()}
-          whileHover={isIOSSafari ? undefined : "hover"}
-          style={{
-            background:
-              "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7, #ec4899)",
-            backgroundSize: "300% 100%",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            animation: reducedMotion ? "none" : "gradientShift 6s ease-in-out infinite",
-            textShadow: isMobile ? "0 2px 15px rgba(236, 72, 153, 0.25)" : "0 2px 25px rgba(236, 72, 153, 0.3)",
-            paddingBottom: "10px",
-          }}
-        >
-          Skills & Tools
-        </motion.h2>
-
-        {/* FIXED: Grid layout for properly centering last two items on tablet */}
-        <motion.div 
-          className={`grid ${getGridColumns} ${getGridGap} justify-items-center mx-auto`}
+      {/* For mobile/tablet: use a simpler div instead of motion.div */}
+      {isHandheld ? (
+        <div
+          className="relative z-10 container mx-auto px-4 sm:px-6 md:px-8 h-full flex flex-col"
           style={{ 
-            minHeight: isMobile ? "300px" : isTablet ? "400px" : "500px",
-            visibility: contentReady || animationsComplete ? "visible" : "visible",
-            maxWidth: isMobile ? "500px" : isTablet ? "800px" : "1200px",
+            opacity: contentReady || animationsComplete ? 1 : 0,
+            transition: "opacity 0.3s ease-out",
           }}
         >
-          {technologies.map((tech, index) => (
-            <TechnologyCard
-              key={index}
-              tech={tech}
-              index={index}
-              hoveredTech={hoveredTech}
-              setHoveredTech={setHoveredTech}
-              hoveredTechRef={hoveredTechRef}
-              isMobile={isMobile}
-              isTablet={isTablet}
-              isIOSSafari={isIOSSafari}
-              reducedMotion={reducedMotion}
-              contentReady={contentReady || animationsComplete}
-              performanceTier={performanceTier}
-            />
-          ))}
-        </motion.div>
+          {/* Static title for mobile/tablet */}
+          <h2
+            className="mb-6 sm:mb-10 md:mb-14 mt-4 text-center text-3xl sm:text-4xl md:text-5xl font-bold"
+            style={{
+              background: "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7, #ec4899)",
+              backgroundSize: "300% 100%",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              textShadow: isMobile ? "0 2px 15px rgba(236, 72, 153, 0.25)" : "0 2px 25px rgba(236, 72, 153, 0.3)",
+              paddingBottom: "10px",
+            }}
+          >
+            Skills & Tools
+          </h2>
 
-        <div className="w-full max-w-5xl mx-auto mt-8 sm:mt-12 md:mt-16">
-          <div
-            className="h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-70"
-            style={{ boxShadow: "0 0 8px rgba(168, 85, 247, 0.25)" }}
-          />
+          {/* Static grid for mobile/tablet */}
+          <div 
+            className={`grid ${getGridColumns} ${getGridGap} justify-items-center mx-auto`}
+            style={{ 
+              minHeight: isMobile ? "300px" : "400px",
+              maxWidth: isMobile ? "500px" : "800px",
+            }}
+          >
+            {technologies.map((tech, index) => (
+              <TechnologyCard
+                key={index}
+                tech={tech}
+                index={index}
+                hoveredTech={hoveredTech}
+                setHoveredTech={setHoveredTech}
+                hoveredTechRef={hoveredTechRef}
+                isMobile={isMobile}
+                isTablet={isTablet}
+                isIOSSafari={isIOSSafari}
+                reducedMotion={true} // Force reduced motion for mobile/tablet
+                contentReady={contentReady || animationsComplete}
+                performanceTier={performanceTier}
+                useStaticStyles={true} // New prop to enable static shiny style
+              />
+            ))}
+          </div>
+
+          <div className="w-full max-w-5xl mx-auto mt-8 sm:mt-12">
+            <div
+              className="h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-70"
+              style={{ boxShadow: "0 0 8px rgba(168, 85, 247, 0.25)" }}
+            />
+          </div>
         </div>
-      </motion.div>
+      ) : (
+        /* Original motion.div for desktop - unchanged */
+        <motion.div
+          className="relative z-10 container mx-auto px-4 sm:px-6 md:px-8 h-full flex flex-col"
+          variants={containerVars}
+          initial="hidden"
+          {...(shouldUseScrollTrigger
+            ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
+            : { animate: contentReady ? "visible" : "hidden" }
+          )}
+          style={{ 
+            transform: "translateZ(0)", // Hardware acceleration
+            opacity: contentReady || animationsComplete ? 1 : 0,
+            transition: "opacity 0.3s ease-out",
+          }}
+        >
+          <motion.h2
+            className="mb-6 sm:mb-10 md:mb-14 mt-4 text-center text-3xl sm:text-4xl md:text-5xl font-bold"
+            variants={getTitleVariants()}
+            whileHover={isIOSSafari ? undefined : "hover"}
+            style={{
+              background:
+                "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7, #ec4899)",
+              backgroundSize: "300% 100%",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              animation: disableAnimations ? "none" : "gradientShift 6s ease-in-out infinite",
+              textShadow: "0 2px 25px rgba(236, 72, 153, 0.3)",
+              paddingBottom: "10px",
+            }}
+          >
+            Skills & Tools
+          </motion.h2>
+
+          <motion.div 
+            className={`grid ${getGridColumns} ${getGridGap} justify-items-center mx-auto`}
+            style={{ 
+              minHeight: "500px",
+              visibility: contentReady || animationsComplete ? "visible" : "visible",
+              maxWidth: "1200px",
+            }}
+          >
+            {technologies.map((tech, index) => (
+              <TechnologyCard
+                key={index}
+                tech={tech}
+                index={index}
+                hoveredTech={hoveredTech}
+                setHoveredTech={setHoveredTech}
+                hoveredTechRef={hoveredTechRef}
+                isMobile={isMobile}
+                isTablet={isTablet}
+                isIOSSafari={isIOSSafari}
+                reducedMotion={disableAnimations}
+                contentReady={contentReady || animationsComplete}
+                performanceTier={performanceTier}
+                useStaticStyles={false} // Desktop uses animated styles
+              />
+            ))}
+          </motion.div>
+
+          <div className="w-full max-w-5xl mx-auto mt-8 sm:mt-12 md:mt-16">
+            <div
+              className="h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-70"
+              style={{ boxShadow: "0 0 8px rgba(168, 85, 247, 0.25)" }}
+            />
+          </div>
+        </motion.div>
+      )}
 
       {/* Bottom gradient - simplified for mobile */}
       <div className="absolute bottom-0 left-0 w-full h-12 sm:h-16 z-10 overflow-hidden">
