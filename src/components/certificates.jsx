@@ -313,7 +313,7 @@ const Certifications = () => {
         )}
       </motion.div>
 
-      <style jsx global>{`
+      <style>{`
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
           100% { background-position: 100% 50%; }

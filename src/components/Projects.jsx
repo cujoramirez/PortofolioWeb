@@ -456,7 +456,7 @@ const Projects = () => {
         ))}
       </motion.div>
 
-      <style jsx global>{`
+      <style>{`
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
           ${isDesktop

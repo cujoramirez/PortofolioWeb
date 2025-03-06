@@ -373,46 +373,7 @@ const Hero = () => {
             shouldUseScrollTrigger={shouldUseScrollTrigger && !isIOSSafari}
           />
         </div>
-
-        {/* Scroll indicator - not shown on iOS to prevent issues */}
-        {!isIOSSafari && (
-          <motion.div 
-            className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 0], y: [0, 10, 0] }}
-            transition={{ 
-              repeat: Infinity, 
-              duration: 2,
-              delay: 1
-            }}
-          >
-            <span className="text-xs text-gray-400 mb-2">Scroll Down</span>
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="24" 
-              height="24" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              className="text-gray-400"
-            >
-              <path d="M7 13l5 5 5-5"></path>
-              <path d="M7 6l5 5 5-5"></path>
-            </svg>
-          </motion.div>
-        )}
       </div>
-      
-      {/* iOS Safari fallback content - static version */}
-      {isIOSSafari && (
-        <div className="mt-6 text-center">
-          <span className="text-xs text-gray-400">Scroll down to continue</span>
-          <div className="mt-2 mb-6 w-full h-4"></div>
-        </div>
-      )}
     </section>
   );
 };

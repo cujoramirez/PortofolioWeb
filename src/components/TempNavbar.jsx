@@ -467,7 +467,7 @@ function Navbar() {
         )}
       </motion.nav>
 
-      <style jsx global>{`
+      <style>{`
         /* iOS Safari specific fixes */
         @supports (-webkit-touch-callout: none) {
           html, body {
