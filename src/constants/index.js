@@ -21,11 +21,11 @@ import certificate14 from "../assets/certificates/certificate14.png";
 import certificate15 from "../assets/certificates/certificate15.png";
 
 export const HERO_CONTENT = `
-I'm a passionate Computer Science undergraduate specializing in deep learning and AI research with a focus on computer vision. I build innovative projects. from a Diabetic Retinopathy Detector to facial recognition systems, that drive transparency and efficiency. I thrive in collaborative environments and am driven to create impactful AI solutions.
+I'm a passionate Computer Science undergraduate specializing in deep learning and AI research with a focus on computer vision. I love building innovative projects. from a Diabetic Retinopathy Detection application to facial recognition systems. I thrive in collaborative environments and !'m driven to create impactful AI solutions.
 `;
 
 export const ABOUT_TEXT = `
-I am a passionate Computer Science undergraduate with a strong focus on deep learning and AI research, particularly in computer vision. My journey in technology started from a genuine curiosity to understand how things work, leading me to develop innovative projects like a Diabetic Retinopathy Detector, a Facial Recognition system for airport security, and a customizable T-shirt design website. My internship at OJK provided valuable insights into regulatory frameworks, while my volunteer work at Bagi Dunia enhanced my leadership and organizational skills. I thrive in collaborative environments, continuously seeking new challenges to sharpen my technical expertise and deliver impactful solutions. Outside of coding, I enjoy exploring emerging tech trends and contributing to community initiatives.
+I have a strong focus on deep learning and AI research, particularly in computer vision. My journey in technology started from a genuine curiosity to understand how things work, leading me to develop innovative projects like a Diabetic Retinopathy Detector, a Facial Recognition system for airport security, and a customizable T-shirt design website. My internship at OJK provided valuable insights into regulatory frameworks, while my volunteer work at Bagi Dunia enhanced my leadership and organizational skills. I thrive in collaborative environments, continuously seeking new challenges to sharpen my technical expertise and deliver impactful solutions. Outside of coding, I enjoy exploring emerging tech trends and contributing to community initiatives.
 `;
 
 export const EXPERIENCES = [{
