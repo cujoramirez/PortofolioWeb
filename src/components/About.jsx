@@ -34,6 +34,10 @@ function About() {
   const numShapes = isMobile ? 2 : isIOSSafari ? 0 : 5;
   const showShapes = performanceTier !== "low" && !isIOSSafari;
 
+  // Animation flags
+  const shouldAnimate = !reducedMotion;
+  const shouldUseScrollTrigger = !isMobile && !isIOSSafari && performanceTier === "high";
+
   // iOS Safari fixes
   useIOSSafariFixes(isIOSSafari, setContentReady, setFallbackActive);
 
@@ -144,9 +148,12 @@ function About() {
             <AboutText
               ABOUT_TEXT={ABOUT_TEXT}
               contentReady={true} // Always ready
-              fallbackActive={true} // Always active
+              fallbackActive={fallbackActive}
               isMobile={isMobile}
               simpleMode={simpleMode}
+              isIOSSafari={isIOSSafari}
+              shouldAnimate={shouldAnimate}
+              shouldUseScrollTrigger={shouldUseScrollTrigger}
             />
           </div>
         </motion.div>
