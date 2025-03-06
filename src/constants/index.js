@@ -21,7 +21,7 @@ import certificate14 from "../assets/certificates/certificate14.png";
 import certificate15 from "../assets/certificates/certificate15.png";
 
 export const HERO_CONTENT = `
-I'm a passionate Computer Science undergraduate specializing in deep learning and AI research with a focus on computer vision. I love building innovative projects. from a Diabetic Retinopathy Detection application to facial recognition systems. I thrive in collaborative environments and !'m driven to create impactful AI solutions.
+I'm a passionate Computer Science undergraduate specializing in deep learning and AI research with a focus on computer vision. I love building innovative projects. from a Diabetic Retinopathy Detection application to facial recognition systems. I thrive in collaborative environments and I'm driven to create impactful AI solutions.
 `;
 
 export const ABOUT_TEXT = `
