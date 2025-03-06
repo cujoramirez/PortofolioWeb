@@ -233,19 +233,43 @@ const Contact = () => {
                   Feel free to send me a message anytime
                 </motion.p>
                 <motion.a
-                  href={isMobile || isTablet 
-                    ? "https://mail.google.com/mail/?view=cm&fs=1&to=gadingadityaperdana@gmail.com" 
-                    : "mailto:gadingadityaperdana@gmail.com?subject=Website%20Inquiry&body=Hi%20Gading%2C%0A%0AI%20found%20your%20website%20and%20would%20like%20to%20connect%20about%3A%0A%0A"}
-                  target={isMobile || isTablet ? "_blank" : undefined}
-                  rel="noopener noreferrer"             
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full font-medium text-white flex items-center gap-2 hover:from-purple-700 hover:to-pink-700"
-                  variants={buttonVariants}
-                  whileHover={useReducedMotion ? undefined : "hover"}
-                  whileTap={useReducedMotion ? undefined : "tap"}
-                >
-                  <FaEnvelope className="text-sm" />
-                  Email Me
-                </motion.a>
+                href={isMobile || isTablet 
+                  ? "googlegmail:///co?to=gadingadityaperdana@gmail.com"
+                  : "mailto:gadingadityaperdana@gmail.com?subject=Website%20Inquiry&body=Hi%20Gading%2C%0A%0AI%20found%20your%20website%20and%20would%20like%20to%20connect%20about%3A%0A%0A"}
+                target="_blank"
+                rel="noopener noreferrer"             
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full font-medium text-white flex items-center gap-2 hover:from-purple-700 hover:to-pink-700"
+                variants={buttonVariants}
+                whileHover={useReducedMotion ? undefined : "hover"}
+                whileTap={useReducedMotion ? undefined : "tap"}
+                onClick={(e) => {
+                  if (isMobile || isTablet) {
+                    e.preventDefault();
+                    
+                    // Try to open Gmail app on mobile
+                    const gmailAppUrl = "googlegmail:///co?to=gadingadityaperdana@gmail.com";
+                    const mailtoUrl = "mailto:gadingadityaperdana@gmail.com";
+                    const gmailWebUrl = "https://mail.google.com/mail/?view=cm&fs=1&to=gadingadityaperdana@gmail.com";
+                    
+                    // Try opening Gmail app first
+                    window.location.href = gmailAppUrl;
+                    
+                    // Set a timeout to check if app opened and fall back if needed
+                    setTimeout(() => {
+                      // If still on the page, try mailto: protocol
+                      window.location.href = mailtoUrl;
+                      
+                      // If that doesn't work either, redirect to Gmail web as final fallback
+                      setTimeout(() => {
+                        window.open(gmailWebUrl, "_blank");
+                      }, 300);
+                    }, 300);
+                  }
+                }}
+              >
+                <FaEnvelope className="text-sm" />
+                Email Me
+              </motion.a>
               </motion.div>
 
               {/* LinkedIn Contact Block */}
