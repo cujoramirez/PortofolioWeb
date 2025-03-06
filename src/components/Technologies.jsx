@@ -83,7 +83,7 @@ const getIconAnimation = (color, isMobile, isTablet, isIOSSafari, reducedMotion)
     };
   }
   
-  // Tablet-specific animations (less intensive than desktop)
+  // Tablet-specific animations (lighter than desktop)
   if (isTablet) {
     return {
       animate: {
@@ -109,14 +109,14 @@ const getIconAnimation = (color, isMobile, isTablet, isIOSSafari, reducedMotion)
     };
   }
   
-  // Mobile or desktop animations
+  // Desktop animations (kept intact as requested)
   return {
     animate: {
-      y: isMobile ? [-1, 1, -1] : [-2, 2, -2],
-      filter: `drop-shadow(0 0 ${isMobile ? 1 : 2}px ${color}${isMobile ? "22" : "33"})`,
+      y: [-2, 2, -2],
+      filter: `drop-shadow(0 0 2px ${color}33)`,
       transition: {
         y: {
-          duration: isMobile ? 3 : 4,
+          duration: 4,
           repeat: Infinity,
           repeatType: "reverse",
           ease: "easeInOut",
@@ -124,8 +124,8 @@ const getIconAnimation = (color, isMobile, isTablet, isIOSSafari, reducedMotion)
       },
     },
     hover: {
-      scale: isMobile ? 1.05 : 1.1,
-      filter: `drop-shadow(0 0 ${isMobile ? 8 : 12}px ${color})`,
+      scale: 1.1,
+      filter: `drop-shadow(0 0 12px ${color})`,
       transition: {
         duration: 0.3,
         ease: "easeOut",
@@ -177,7 +177,8 @@ const TechnologyCard = memo(
           backdrop-blur-sm shadow-lg cursor-pointer flex flex-col items-center justify-center`}
         variants={getIconContainerVariants(isMobile, isIOSSafari)}
         whileHover={isIOSSafari ? undefined : "hover"}
-        whileTap={isIOSSafari ? undefined : "hover"}
+        // Removed whileTap for mobile/tablet as requested
+        {...(!isMobile && !isTablet ? { whileTap: isIOSSafari ? undefined : "hover" } : {})}
         style={{
           width: '100%',
           maxWidth: cardSize,
@@ -227,7 +228,8 @@ const TechnologyCard = memo(
           variants={getIconAnimation(tech.color, isMobile, isTablet, isIOSSafari, reducedMotion)}
           animate={contentReady ? "animate" : ""}
           whileHover={isIOSSafari ? undefined : "hover"}
-          whileTap={isIOSSafari ? undefined : "hover"}
+          // Removed whileTap for mobile/tablet as requested
+          {...(!isMobile && !isTablet ? { whileTap: isIOSSafari ? undefined : "hover" } : {})}
           style={{ 
             position: "relative", 
             zIndex: 2, 
@@ -235,27 +237,25 @@ const TechnologyCard = memo(
           }}
         >
           {/* Desktop pulsing background glow - only for desktop with good performance */}
-          {!reducedMotion && !isMobile && !isIOSSafari && (
-            <>
-              <motion.div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: `radial-gradient(circle, ${tech.color}33 0%, transparent 70%)`,
-                  filter: "blur(10px)",
-                  zIndex: 0,
-                  transform: "scale(1.5)",
-                }}
-                animate={{
-                  opacity: [0.3, 0.7, 0.3],
-                  scale: [1.4, 1.6, 1.4],
-                }}
-                transition={{
-                  duration: pulseSpeed,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-            </>
+          {!reducedMotion && !isMobile && !isTablet && !isIOSSafari && (
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: `radial-gradient(circle, ${tech.color}33 0%, transparent 70%)`,
+                filter: "blur(10px)",
+                zIndex: 0,
+                transform: "scale(1.5)",
+              }}
+              animate={{
+                opacity: [0.3, 0.7, 0.3],
+                scale: [1.4, 1.6, 1.4],
+              }}
+              transition={{
+                duration: pulseSpeed,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
           )}
           
           {/* Simplified background glow for tablet */}
@@ -272,17 +272,19 @@ const TechnologyCard = memo(
             />
           )}
 
+          {/* FIXED: Ensuring icon is visible by adding display block and explicit size */}
           <tech.icon
             className={`${iconSize} relative z-10`}
             style={{ 
               color: tech.color, 
               display: "block",
+              fontSize: isTablet ? "2rem" : isMobile ? "1.5rem" : "2.5rem"
             }}
           />
         </motion.div>
         
         {/* Technology name with optimized text effects */}
-        <motion.div
+        <div
           className={`text-center mt-1 sm:mt-2 font-medium ${
             isMobile ? "text-xs" : isTablet ? "text-sm" : "text-base"
           }`}
@@ -293,7 +295,7 @@ const TechnologyCard = memo(
           }}
         >
           {tech.name}
-        </motion.div>
+        </div>
       </motion.div>
     );
   },
@@ -444,11 +446,11 @@ const Technologies = () => {
     isIOSSafari,
   [preferredReducedMotion, isMobile, performanceTier, isIOSSafari]);
 
-  // Determine number of columns based on device type
+  // FIXED: Improve grid layout for tablets to center last two items
   const getGridColumns = useMemo(() => {
     if (isMobile) return "grid-cols-2";
-    if (isTablet) return "grid-cols-3 md:grid-cols-4";
-    return "grid-cols-3 md:grid-cols-5";
+    if (isTablet) return "grid-cols-3 tablet-grid"; // Custom class for tablet
+    return "grid-cols-5";
   }, [isMobile, isTablet]);
   
   // Determine grid gap based on device type
@@ -529,12 +531,13 @@ const Technologies = () => {
           Skills & Tools
         </motion.h2>
 
-        {/* GRID LAYOUT FIXED FOR TABLETS */}
+        {/* FIXED: Grid layout for properly centering last two items on tablet */}
         <motion.div 
-          className={`grid ${getGridColumns} ${getGridGap} justify-items-center justify-center max-w-7xl mx-auto`}
+          className={`grid ${getGridColumns} ${getGridGap} justify-items-center mx-auto`}
           style={{ 
             minHeight: isMobile ? "300px" : isTablet ? "400px" : "500px",
             visibility: contentReady || animationsComplete ? "visible" : "visible",
+            maxWidth: isMobile ? "500px" : isTablet ? "800px" : "1200px",
           }}
         >
           {technologies.map((tech, index) => (
@@ -578,7 +581,8 @@ const Technologies = () => {
       <style>{`
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
-          100% { background-position: 100% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
         
         /* iOS specific optimizations */
@@ -587,28 +591,57 @@ const Technologies = () => {
             transform: translate3d(0,0,0);
             -webkit-overflow-scrolling: touch;
             overflow-y: auto !important;
-            min-height: -webkit-fill-available;
-            height: auto !important;
           }
           
           body {
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch;
-            position: relative !important;
-            height: auto !important;
           }
         }
         
-        /* Grid layout specific fixes for tablet */
+        /* FIXED: Special grid layout for tablets to center last two items */
+        .tablet-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        
+        /* Center the last two items specifically for 10 items in 3-column grid */
         @media (min-width: 640px) and (max-width: 1023px) {
-          .grid-cols-3.md\\:grid-cols-4 {
+          .tablet-grid {
             grid-template-columns: repeat(3, minmax(0, 1fr));
           }
           
-          @media (min-width: 768px) {
-            .grid-cols-3.md\\:grid-cols-4 {
-              grid-template-columns: repeat(4, minmax(0, 1fr));
-            }
+          .tablet-grid > *:nth-last-child(2),
+          .tablet-grid > *:last-child {
+            grid-column: span 1;
+          }
+          
+          .tablet-grid > *:nth-last-child(2) {
+            transform: translateX(50%);
+          }
+          
+          .tablet-grid::after {
+            content: "";
+            width: 0;
+            grid-column: span 3;
+          }
+        }
+        
+        /* For larger tablets */
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .tablet-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+          }
+          
+          .tablet-grid > *:nth-last-child(2),
+          .tablet-grid > *:last-child {
+            grid-column: span 2;
+            justify-self: center;
+            max-width: 130px;
+          }
+          
+          .tablet-grid > *:nth-last-child(2) {
+            transform: translateX(0);
           }
         }
       `}</style>

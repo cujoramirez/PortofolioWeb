@@ -299,7 +299,7 @@ function About() {
             variants={isIOSSafari ? iosTextVariants : enhancedWordVariants}
             className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400"
             whileHover={isIOSSafari ? undefined : "hover"}
-            whileTap={isIOSSafari ? undefined : "hover"}
+            whileTap={isIOSSafari || isMobile ? undefined : "hover"}
           >
             {segment}
           </motion.span>
@@ -318,7 +318,7 @@ function About() {
             variants={isIOSSafari ? iosTextVariants : enhancedWordVariants}
             className="inline-block"
             whileHover={isIOSSafari ? undefined : "hover"}
-            whileTap={isIOSSafari ? undefined : "hover"}
+            whileTap={isIOSSafari || isMobile ? undefined : "hover"}
             style={isIOSSafari ? {} : { willChange: 'transform, opacity' }}
           >
             {part}
@@ -326,7 +326,7 @@ function About() {
         );
       });
     });
-  }, [enhancedWordVariants, isIOSSafari]);
+  }, [enhancedWordVariants, isIOSSafari, isMobile]);
 
   // Calculate animation props based on device to reduce code duplication
   const getAnimationProps = (variants, customDelay = 0) => {
@@ -407,12 +407,12 @@ function About() {
             />
           ))}
 
-        {/* Enhanced title with hover animation */}
+        {/* Enhanced title with hover animation - KEEP whileTap for all devices */}
         <motion.h2
           className="my-12 text-center text-5xl font-bold leading-normal whitespace-normal break-words"
           {...getAnimationProps(titleVariants)}
           whileHover={isIOSSafari ? undefined : "hover"}
-          whileTap={isIOSSafari ? undefined : "hover"}
+          whileTap={isIOSSafari ? undefined : "hover"} // Keep whileTap for all devices
           style={{ 
             transform: "translateZ(0)", // Hardware acceleration
             opacity: contentReady || animationsComplete ? 1 : 0,
@@ -446,7 +446,7 @@ function About() {
 
         {/* Content wrapper */}
         <div className="flex flex-wrap">
-          {/* Left: Enhanced Image with floating animation */}
+          {/* Left: Enhanced Image with floating animation - KEEP whileTap for all devices */}
           <motion.div
             className="w-full lg:w-1/2 lg:p-8"
             {...getAnimationProps(imageContainerVariants)}
@@ -459,8 +459,8 @@ function About() {
               <motion.div
                 className="relative w-4/5 max-w-md mx-auto rounded-2xl shadow-lg"
                 {...getAnimationProps(imageVariants)}
-                whileHover={isIOSSafari || isMobile ? undefined : "hover"}
-                whileTap={isIOSSafari || isMobile ? undefined : "hover"}
+                whileHover={isIOSSafari ? undefined : "hover"}
+                whileTap={isIOSSafari ? undefined : "hover"} // Keep whileTap for all devices
                 style={{ 
                   transform: "translateZ(0)", // Hardware acceleration
                   aspectRatio: "1/1.2", // Pre-allocate space for image

@@ -84,77 +84,275 @@ function tokenizeParagraph(paragraph) {
 }
 
 // ---------- 2) Framer Motion Variants ----------
+// Enhanced name animation variants with improved thin-to-bold transition
+const nameVariants = {
+  initial: { 
+    fontWeight: 100, 
+    letterSpacing: "0.05em",
+    textShadow: "0 0 0 rgba(255,255,255,0)",
+    WebkitTextStroke: "0.2px rgba(255,255,255,0.2)",
+    filter: "brightness(0.9)",
+    opacity: 0.9,
+    y: 3
+  },
+  animate: {
+    fontWeight: [100, 300, 500, 700],
+    letterSpacing: ["0.05em", "0.03em", "0.01em", "0em"],
+    textShadow: [
+      "0 0 0 rgba(255,255,255,0)", 
+      "0 0 3px rgba(255,255,255,0.1)", 
+      "0 0 5px rgba(255,255,255,0.2)", 
+      "0 0 8px rgba(255,255,255,0.3)"
+    ],
+    WebkitTextStroke: [
+      "0.2px rgba(255,255,255,0.2)",
+      "0.15px rgba(255,255,255,0.3)",
+      "0.1px rgba(255,255,255,0.2)",
+      "0px rgba(255,255,255,0)"
+    ],
+    filter: ["brightness(0.9)", "brightness(1)", "brightness(1.2)", "brightness(1)"],
+    opacity: [0.9, 0.95, 1, 1],
+    y: [3, 2, 1, 0],
+    transition: { 
+      duration: 2,
+      times: [0, 0.3, 0.7, 1],
+      ease: [0.4, 0, 0.2, 1] // Custom cubic bezier for natural motion
+    },
+  },
+  hover: {
+    textShadow:
+      "0 0 12px rgba(236,72,153,0.6), 0 0 20px rgba(168,85,247,0.4)",
+    filter: "brightness(1.2)",
+    scale: 1.01,
+    transition: { duration: 0.3, ease: "easeInOut" },
+  },
+};
+
+// Simplified variant for mobile/tablet
+const nameVariantsMobile = {
+  initial: { 
+    fontWeight: 200, 
+    opacity: 0.9,
+    textShadow: "0 0 0 rgba(255,255,255,0)",
+  },
+  animate: {
+    fontWeight: 700,
+    opacity: 1,
+    textShadow: "0 0 5px rgba(255,255,255,0.2)",
+    transition: { 
+      duration: 1, 
+      ease: "easeOut"
+    },
+  },
+  hover: {
+    textShadow: "0 0 8px rgba(236,72,153,0.5)",
+    filter: "brightness(1.1)",
+    transition: { duration: 0.2, ease: "easeOut" },
+  },
+};
+
+// Optimized line animation variants for smoother motion
 const outlineVariantsHigh = {
-  initial: { pathLength: 0, pathOffset: 0, strokeOpacity: 1 },
+  initial: { 
+    pathLength: 0, 
+    pathOffset: 0, 
+    strokeOpacity: 1,
+    strokeWidth: 4,
+  },
   animate: {
     pathLength: 1,
-    pathOffset: [0, 0.5, 1],
-    strokeOpacity: [1, 1, 0],
+    pathOffset: [0, 0.25, 0.5, 0.75, 1], // More keyframes for smoother motion
+    strokeOpacity: [1, 1, 1, 0.8, 0],
+    strokeWidth: [4, 4, 3.5, 3, 2.5],
     transition: {
-      pathLength: { duration: 2.5, ease: "easeInOut" },
-      pathOffset: { duration: 2.5, ease: "easeInOut", times: [0, 0.5, 1] },
-      strokeOpacity: { duration: 1, delay: 2, ease: "easeOut" },
+      pathLength: { 
+        duration: 2, 
+        ease: [0.33, 1, 0.68, 1] // Custom cubic bezier for smoother motion
+      },
+      pathOffset: { 
+        duration: 2, 
+        times: [0, 0.25, 0.5, 0.75, 1],
+        ease: [0.33, 1, 0.68, 1]
+      },
+      strokeOpacity: { 
+        duration: 2,
+        times: [0, 0.5, 0.8, 0.9, 1], 
+        ease: "easeInOut" 
+      },
+      strokeWidth: {
+        duration: 2,
+        times: [0, 0.5, 0.75, 0.9, 1],
+        ease: "easeInOut"
+      }
     },
   },
 };
 
 const outlineVariantsMid = {
-  initial: { pathLength: 0, strokeOpacity: 1 },
+  initial: { 
+    pathLength: 0, 
+    strokeOpacity: 1,
+    strokeWidth: 3.5
+  },
   animate: {
     pathLength: 1,
-    strokeOpacity: [1, 1, 0],
+    strokeOpacity: [1, 1, 0.6, 0],
+    strokeWidth: [3.5, 3.5, 3, 2.5],
     transition: {
-      pathLength: { duration: 1.8, ease: "easeInOut" },
-      strokeOpacity: { duration: 1, delay: 1.5, ease: "easeOut" },
+      pathLength: { 
+        duration: 1.8, 
+        ease: [0.33, 1, 0.68, 1] 
+      },
+      strokeOpacity: { 
+        duration: 1.8, 
+        times: [0, 0.6, 0.8, 1],
+        ease: "easeInOut" 
+      },
+      strokeWidth: {
+        duration: 1.8,
+        times: [0, 0.6, 0.8, 1],
+        ease: "easeInOut"
+      }
     },
   },
 };
 
 const outlineVariantsLow = {
-  initial: { pathLength: 0, strokeOpacity: 1 },
+  initial: { 
+    pathLength: 0, 
+    strokeOpacity: 1,
+    strokeWidth: 3
+  },
+  animate: {
+    pathLength: 1,
+    strokeOpacity: [1, 0.8, 0],
+    strokeWidth: [3, 2.8, 2.5],
+    transition: {
+      pathLength: { 
+        duration: 1.5, 
+        ease: "easeOut" 
+      },
+      strokeOpacity: { 
+        duration: 1.5, 
+        times: [0, 0.7, 1],
+        ease: "easeInOut" 
+      },
+      strokeWidth: {
+        duration: 1.5,
+        times: [0, 0.7, 1],
+        ease: "easeInOut"
+      }
+    },
+  },
+};
+
+// Simplified outline variant for iOS - much shorter duration and smoother
+const outlineVariantsIOS = {
+  initial: { 
+    pathLength: 0, 
+    strokeOpacity: 1,
+    strokeWidth: 3
+  },
   animate: {
     pathLength: 1,
     strokeOpacity: [1, 1, 0],
+    strokeWidth: [3, 3, 2.5],
     transition: {
-      pathLength: { duration: 1.5, ease: "easeInOut" },
-      strokeOpacity: { duration: 0.8, delay: 1.2, ease: "easeOut" },
+      pathLength: { 
+        duration: 1.2, 
+        ease: [0.33, 1, 0.68, 1]  // Custom cubic bezier for smoother motion
+      },
+      strokeOpacity: { 
+        duration: 1.2, 
+        times: [0, 0.7, 1],
+        ease: "easeOut" 
+      },
+      strokeWidth: {
+        duration: 1.2,
+        times: [0, 0.7, 1],
+        ease: "easeOut"
+      }
     },
   },
 };
 
-// Simplest outline variant for iOS - much shorter duration
-const outlineVariantsIOS = {
-  initial: { pathLength: 0, strokeOpacity: 1 },
-  animate: {
-    pathLength: 1,
-    strokeOpacity: 0,
-    transition: {
-      pathLength: { duration: 0.8, ease: "easeInOut" },
-      strokeOpacity: { duration: 0.3, delay: 0.7 },
-    },
+// Enhanced dot variants to sync with name animation
+const dotVariantsHigh = {
+  hidden: { 
+    opacity: 0,
+    scale: 0.8
   },
-};
-
-const dotVariants = {
-  hidden: { opacity: 0 },
   visible: {
-    opacity: 1,
-    transition: { duration: 0.8, ease: "easeInOut" },
+    opacity: [0, 0.7, 1, 0.8, 0.6, 0.4, 0],
+    scale: [0.8, 1.2, 1, 0.9, 0.8, 0.7, 0.6],
+    filter: [
+      "brightness(0.8) blur(0px)", 
+      "brightness(1.5) blur(0px)", 
+      "brightness(1.2) blur(0px)",
+      "brightness(1) blur(0px)",
+      "brightness(0.9) blur(1px)",
+      "brightness(0.8) blur(2px)",
+      "brightness(0.7) blur(3px)"
+    ],
+    transition: { 
+      duration: 2.2,
+      times: [0, 0.2, 0.4, 0.6, 0.75, 0.9, 1],
+      ease: [0.33, 1, 0.68, 1], // Matching cubic bezier for consistency
+    },
   },
 };
 
-const nameVariants = {
-  initial: { fontWeight: 200, textShadow: "0 0 0 rgba(255,255,255,0)" },
-  animate: {
-    fontWeight: 700,
-    textShadow: "0 0 8px rgba(255,255,255,0.3)",
-    transition: { duration: 1.2, ease: "easeOut" },
+// Simpler dot variants for mid-range devices
+const dotVariantsMid = {
+  hidden: { 
+    opacity: 0,
+    scale: 0.8
   },
-  hover: {
-    textShadow:
-      "0 0 12px rgba(236,72,153,0.6), 0 0 20px rgba(168,85,247,0.4)",
-    filter: "brightness(1.5)",
-    transition: { duration: 0.3, ease: "easeInOut" },
+  visible: {
+    opacity: [0, 0.7, 1, 0.6, 0],
+    scale: [0.8, 1.1, 1, 0.9, 0.8],
+    filter: [
+      "brightness(0.8)", 
+      "brightness(1.3)", 
+      "brightness(1.2)",
+      "brightness(1)",
+      "brightness(0.8)"
+    ],
+    transition: { 
+      duration: 1.8,
+      times: [0, 0.2, 0.5, 0.8, 1],
+      ease: "easeInOut",
+    },
+  },
+};
+
+// Minimal dot variants for low-end devices
+const dotVariantsLow = {
+  hidden: { 
+    opacity: 0 
+  },
+  visible: {
+    opacity: [0, 0.7, 1, 0],
+    transition: { 
+      duration: 1.5,
+      times: [0, 0.3, 0.6, 1],
+      ease: "easeInOut",
+    },
+  },
+};
+
+// Minimal dot variants for iOS
+const dotVariantsIOS = {
+  hidden: { 
+    opacity: 0 
+  },
+  visible: {
+    opacity: [0, 0.8, 0],
+    transition: { 
+      duration: 1.2,
+      times: [0, 0.5, 1],
+      ease: "easeInOut",
+    },
   },
 };
 
@@ -221,6 +419,9 @@ const Hero = () => {
   
   // Ref to track component mount
   const isMountedRef = useRef(false);
+  
+  // Add state to track animation progress for syncing animations
+  const [animationProgress, setAnimationProgress] = useState(0);
 
   // 1) Determine performance tier & device type using our system profile hook
   const { performanceTier, deviceType } = useSystemProfile();
@@ -244,6 +445,19 @@ const Hero = () => {
     if (performanceTier === "high") return outlineVariantsHigh;
     if (performanceTier === "mid") return outlineVariantsMid;
     return outlineVariantsLow;
+  }, [performanceTier, isIOSSafari]);
+  
+  // Choose appropriate name variant based on device
+  const currentNameVariants = useMemo(() => {
+    return (isMobile || isIOSSafari) ? nameVariantsMobile : nameVariants;
+  }, [isMobile, isIOSSafari]);
+  
+  // Select appropriate dot variants based on device and performance
+  const dotVariants = useMemo(() => {
+    if (isIOSSafari) return dotVariantsIOS;
+    if (performanceTier === "high") return dotVariantsHigh;
+    if (performanceTier === "mid") return dotVariantsMid;
+    return dotVariantsLow;
   }, [performanceTier, isIOSSafari]);
 
   // 3) Decide if we should use scroll-triggered animations
@@ -476,6 +690,8 @@ const Hero = () => {
         <style>{`
           :root {
             --vh: 1vh;
+            --animation-progress: 0;
+            --dot-opacity: 0;
           }
           html, body {
             margin: 0;
@@ -547,6 +763,34 @@ const Hero = () => {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
           }
+          
+          /* Add CSS variables for animation coordination */
+          @keyframes nameGradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          
+          /* Add smoother animation for dot motion */
+          @keyframes dotMovement {
+            0% { offset-distance: 0%; }
+            100% { offset-distance: 100%; }
+          }
+          
+          /* Add smoother animation for SVG paths */
+          @keyframes dashOffset {
+            to {
+              stroke-dashoffset: 0;
+            }
+          }
+          
+          /* Add smooth font weight rendering */
+          @supports (font-variation-settings: normal) {
+            .font-transition {
+              font-variation-settings: "wght" var(--font-weight, 700);
+              transition: font-variation-settings 0.3s ease;
+            }
+          }
         `}</style>
 
         {/* Lazy-load Ambient Background */}
@@ -566,6 +810,7 @@ const Hero = () => {
                   overflow: "visible", 
                   transform: "translateZ(0)",
                   opacity: contentReady || animationsComplete ? 1 : 0,
+                  willChange: "opacity",
                 }}
                 aria-hidden="true"
               >
@@ -574,17 +819,26 @@ const Hero = () => {
                   d="M10,50 C100,10 200,90 300,50 C400,10 500,90 590,50"
                   fill="none"
                   stroke="url(#heroGradient)"
-                  strokeWidth="4"
-                  strokeLinecap="butt"
+                  strokeLinecap="round" // Changed to round for smoother appearance
+                  strokeLinejoin="round" // Added for smoother curves
                   variants={outlineVariants}
                   initial="initial"
                   {...(shouldUseScrollTrigger && !isIOSSafari
                     ? { whileInView: "animate", viewport: { once: true, amount: 0.3 } }
                     : { animate: contentReady ? "animate" : "initial" }
                   )}
+                  onAnimationUpdate={progress => {
+                    setAnimationProgress(progress);
+                    // Update CSS variable to coordinate animations
+                    document.documentElement.style.setProperty('--animation-progress', progress);
+                  }}
+                  style={{ 
+                    willChange: "stroke-dasharray, stroke-dashoffset, stroke-width, stroke-opacity",
+                    transform: "translateZ(0)",
+                  }}
                 />
 
-                {/* The moving dot - simplified for iOS */}
+                {/* Enhanced dot animation synced with path */}
                 {showDot && dotVisible && contentReady && (
                   <motion.g
                     initial="hidden"
@@ -593,18 +847,50 @@ const Hero = () => {
                       : { animate: "visible" }
                     )}
                     variants={dotVariants}
+                    onAnimationUpdate={progress => {
+                      // Update CSS variable to coordinate animations
+                      document.documentElement.style.setProperty('--dot-opacity', progress);
+                    }}
                     onAnimationComplete={() => setDotVisible(false)}
+                    style={{ 
+                      willChange: "opacity, transform",
+                      transform: "translateZ(0)",
+                    }}
                   >
-                    <circle r="5" fill="#ec4899">
-                      <animateMotion 
-                        dur={isIOSSafari ? "1.5s" : "3s"} 
-                        repeatCount="1" 
-                        fill="freeze"
-                        calcMode="linear"
-                      >
-                        <mpath xlinkHref="#heroPath" />
-                      </animateMotion>
-                    </circle>
+                    {/* For high-performance devices, use better animation technique */}
+                    {(performanceTier === "high" && !isMobile && !isIOSSafari) ? (
+                      <motion.circle
+                        r="5"
+                        fill="#ec4899"
+                        style={{
+                          offsetPath: `path("M10,50 C100,10 200,90 300,50 C400,10 500,90 590,50")`,
+                          offsetRotate: "0deg",
+                          offsetDistance: 0,
+                          willChange: "offset-distance, opacity, transform",
+                        }}
+                        animate={{
+                          offsetDistance: "100%",
+                        }}
+                        transition={{
+                          duration: 2,
+                          ease: [0.33, 1, 0.68, 1],
+                        }}
+                      />
+                    ) : (
+                      // For other devices, use the simpler animateMotion
+                      <circle r={isMobile ? "3.5" : "5"} fill="#ec4899">
+                        <animateMotion 
+                          dur={isIOSSafari ? "1.2s" : (performanceTier === "high" ? "2s" : "1.8s")} 
+                          repeatCount="1" 
+                          fill="freeze"
+                          calcMode="spline"
+                          keySplines="0.33 1 0.68 1" // Cubic bezier for smoother motion
+                          keyPoints="0;1" // Ensures even movement
+                        >
+                          <mpath xlinkHref="#heroPath" />
+                        </animateMotion>
+                      </circle>
+                    )}
                   </motion.g>
                 )}
 
@@ -617,25 +903,41 @@ const Hero = () => {
                 </defs>
               </svg>
 
-              {/* Name */}
+              {/* Enhanced Name with progressive font weight reveal */}
               <motion.h1
-                className="text-4xl md:text-5xl xl:text-6xl tracking-tight text-center lg:text-left font-bold relative z-10 no-select"
-                {...getAnimationProps(nameVariants)}
+                className="text-4xl md:text-5xl xl:text-6xl tracking-tight text-center lg:text-left font-bold relative z-10 no-select font-transition"
+                {...getAnimationProps(currentNameVariants)}
                 whileHover={isIOSSafari ? undefined : "hover"}
                 whileTap={isIOSSafari ? undefined : "hover"}
+                style={{ 
+                  background: contentReady && !isMobile && !isIOSSafari ? 
+                    "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(236,72,153,0.8) 50%, rgba(255,255,255,1) 100%)" : 
+                    "transparent",
+                  backgroundSize: "200% auto",
+                  WebkitBackgroundClip: contentReady && !isMobile && !isIOSSafari ? "text" : "border-box",
+                  WebkitTextFillColor: contentReady && !isMobile && !isIOSSafari ? "transparent" : "white",
+                  animation: contentReady && !isMobile && !isIOSSafari ? "nameGradientShift 3s ease-in-out forwards" : "none",
+                  transform: "translateZ(0)",
+                  willChange: "font-weight, letter-spacing, opacity, transform",
+                  backfaceVisibility: "hidden",
+                }}
               >
                 Gading Aditya Perdana
                 <motion.div
                   className="absolute -inset-2 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-indigo-500/20 rounded-lg blur-lg -z-10"
-                  initial={{ opacity: 0 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={contentReady ? { 
-                    opacity: isIOSSafari ? 0.2 : [0.1, 0.2, 0.1],
-                    scale: isIOSSafari ? 1 : [1, 1.02, 1],
+                    opacity: isIOSSafari ? 0.2 : [0.1, 0.25, 0.15],
+                    scale: isIOSSafari ? 1 : [0.98, 1.02, 1],
                   } : { opacity: 0 }}
                   transition={isIOSSafari ? { duration: 0.5 } : { 
-                    duration: 3, 
-                    repeat: Infinity, 
-                    repeatType: "mirror" 
+                    duration: 2.5, 
+                    times: [0, 0.7, 1],
+                    ease: "easeOut"
+                  }}
+                  style={{
+                    willChange: "opacity, transform",
+                    transform: "translateZ(0)",
                   }}
                 />
               </motion.h1>
