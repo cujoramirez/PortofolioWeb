@@ -196,7 +196,5 @@ export const CERTIFICATIONS = [{
 ];
 
 export const CONTACT = {
-    address: "Jakarta, Indonesia, 10230 ",
-    phoneNo: "+62 4555 666 00 ",
     email: "gadingadityaperdana@gmail.com",
 };

@@ -142,7 +142,7 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
       const b = Math.min(255, Math.round(baseColor.b * desaturationFactor + (isIonized ? 50 : 0) + 255 * (1 - desaturationFactor)));
       
       return `rgba(${r}, ${g}, ${b}, ${adjustedOpacity})`;
-    };
+    };  
     
     // Create molecular structures (DNA, crystal lattices, etc.)
     const createMolecularStructures = () => {
