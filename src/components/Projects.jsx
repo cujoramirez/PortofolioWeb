@@ -402,7 +402,7 @@ const Projects = () => {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-3 pt-3 md:pt-4">
-                  {project.title === "Deep Learning research on Ensemble Learning & Mutual Learning" ? (
+                  {project.title === "Deep Learning research on Computer Vision" ? (
                     <motion.div
                       className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-800 to-indigo-900 text-white border border-purple-500/50 font-medium shadow-md flex items-center gap-2"
                       whileHover={reducedMotion || isIOSSafari || isMobile ? undefined : { scale: 1.02 }}

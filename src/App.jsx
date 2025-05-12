@@ -5,6 +5,7 @@ import Hero from "./components/Hero";
 import About from "./components/About";
 import Technologies from "./components/Technologies";
 import Experience from "./components/Experience";
+import Research from "./components/Research"; // Import the new Research component
 import Projects from "./components/Projects";
 import Certifications from "./components/certificates";
 import Contact from "./components/Contact";
@@ -150,6 +151,7 @@ const App = () => {
         <About />
         <Technologies />
         <Experience />
+        <Research />
         <Projects />
         <Certifications />
         <Contact />

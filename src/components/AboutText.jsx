@@ -111,28 +111,33 @@ const AboutText = ({ ABOUT_TEXT, contentReady, fallbackActive, isMobile, simpleM
           ) : (
             // Enhanced rendering with word-by-word animation for desktop
             <div>
-              {tokens.map((token, index) => (
-                <motion.span
-                  key={index}
-                  custom={index}
-                  variants={enhancedWordVariants}
-                  initial="hidden"
-                  animate={contentReady ? "visible" : "hidden"}
-                  whileHover="hover"
-                  whileTap="hover"
-                  className={`inline ${
-                    token.isSpecial
-                      ? "font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400"
-                      : ""
-                  }`}
-                  style={{
-                    transform: "translateZ(0)",
-                    willChange: "transform, opacity",
-                  }}
-                >
-                  {token.text}
-                </motion.span>
-              ))}
+              {tokens.map((token, index) => {
+                // Prevent hover effects on space-only tokens
+                const isSpaceToken = token.text.trim() === "";
+                return (
+                  <motion.span
+                    key={index}
+                    custom={index}
+                    variants={enhancedWordVariants}
+                    initial="hidden"
+                    animate={contentReady ? "visible" : "hidden"}
+                    whileHover={!isSpaceToken && contentReady ? "hover" : undefined}
+                    whileTap={!isSpaceToken && contentReady ? "hover" : undefined}
+                    className={`inline ${
+                      token.isSpecial
+                        ? "font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400"
+                        : ""
+                    }`}
+                    style={{
+                      transform: "translateZ(0)",
+                      willChange: "transform, opacity, color, background-image, text-shadow", // Added properties that change on hover
+                      cursor: !isSpaceToken ? "pointer" : "default", // Add pointer cursor for non-space tokens
+                    }}
+                  >
+                    {token.text}
+                  </motion.span>
+                );
+              })}
             </div>
           )}
         </motion.div>

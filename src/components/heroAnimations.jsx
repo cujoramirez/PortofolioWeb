@@ -255,16 +255,30 @@ export const nameVariants = {
   }
   
   export const profilePicVariants = {
-    hidden: { opacity: 0, scale: 0.95 },
+    hidden: { opacity: 0, scale: 0.9, y: 20 },
     visible: {
       opacity: 1,
       scale: 1,
-      transition: { duration: 0.8, delay: 0.2, ease: "easeOut" },
+      y: 0,
+      transition: {
+        duration: 0.8,
+        delay: 0.2,
+        ease: "easeOut",
+        when: "beforeChildren", // Ensure parent animates before children
+      },
     },
     hover: {
-      scale: 1.03,
-      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
-      transition: { duration: 0.4, ease: "easeOut" },
+      scale: 1.05,
+      y: -5, // Add a slight lift
+      boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)", // More pronounced shadow
+      transition: { duration: 0.3, ease: "easeOut" },
+    },
+    float: { // New floating animation state
+      y: [0, -3, 0, 3, 0], // Subtle up and down movement
+      transition: {
+        duration: 5, // Slower, more subtle
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
     },
   };
-  

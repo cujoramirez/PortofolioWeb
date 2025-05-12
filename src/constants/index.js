@@ -29,6 +29,12 @@ I have a strong focus on deep learning and AI research, particularly in computer
 `;
 
 export const EXPERIENCES = [{
+        year: "Jan 2025 – Present",
+        role: "Undergraduate Research Assistant",
+        company: "Binus University - Binus Research Center",
+        description: `Under the Penelitian Pemula Binus (PPB) program, I collaborated and with Maulin Nasari, S.T., M.Kom. and Supervised under her leadership to develop an automated bone‐fracture diagnosis system using deep learning. I curated and validated a high‐quality X-ray dataset, conducted thorough cleaning and exploratory analyses to uncover and address class imbalances, and advised on dataset augmentation strategies. I then devised and executed comparative experiments on Vision Transformer and CNN architectures. Both standalone and within bagging, boosting, stacking, and majority‐voting ensembles, and distilled the findings into a concise report to guide subsequent model optimization.`,
+        technologies: ["Python", "PyTorch", "TensorFlow", "NumPy", "Pandas"],
+    }, {
         year: "Jul 2024 - Aug 2024",
         role: "Application Developer Intern",
         company: "Otoritas Jasa Keuangan (OJK)",
@@ -95,9 +101,9 @@ export const PROJECTS = [{
         links: ["https://www.youtube.com/@CujohRamirez"]
     },
     {
-        title: "Deep Learning research on Ensemble Learning & Mutual Learning",
+        title: "Deep Learning research on Computer Vision",
         image: project5,
-        description: "Currently researching an ensemble and mutual learning approach integrating six models (InceptionV3, ViT_B16, DenseNet121, ResNet50, EfficientNetB0, MobileNetV3) to compare ensemble distillation versus mutual learning strategies then unifying both.",
+        description: "Conducting research on ensemble distillation and mutual learning for computer vision models. The goal is to enhance model accuracy and calibration through innovative training techniques.",
         technologies: ["Python", "TensorFlow", "Keras", "PyTorch", "Deep Learning", "Ensemble Learning", "Mutual Learning", "Computer Vision", "Research", "AI"],
         links: []
     }
@@ -194,6 +200,16 @@ export const CERTIFICATIONS = [{
         image: certificate15,
     },
 ];
+
+export const RESEARCH_PAPERS = [{
+    year: "2024",
+    title: "CALM: Calibrated Adaptive Learning via Mutual-Ensemble Fusion",
+    authors: "Gading Aditya Perdana (Researcher), Muhammad Alif Ghazali (Assistant Writer)",
+    conference: "Pre-print / Submitted to 2025 ICCSCI Conference",
+    description: "This research introduces CALM (Calibrated Adaptive Learning via Mutual-Ensemble Fusion), a novel multi-stage framework designed to create vision models that are both highly accurate and reliably calibrated, meaning their confidence scores genuinely reflect their predictive correctness. CALM uniquely integrates ensemble distillation and mutual learning, employing an Adaptive Curriculum Protocol (ACP) to dynamically balance diverse training objectives. A key innovation, Heterogeneous Feature Integration (HFI), facilitates effective knowledge transfer from varied teacher architectures. The framework culminates in a 'meta-student' model that demonstrates strong performance, significantly improved calibration, and robust generalization to new datasets, offering a systematic approach to developing more trustworthy and uncertainty-aware AI systems.",
+    keywords: ["Uncertainty Calibration", "Mutual-Ensemble Fusion", "Adaptive Curriculum Protocol (ACP)", "Heterogeneous Feature Integration (HFI)", "Deep Learning"],
+    // pdfLink: "./assets/CALM.pdf",
+}, ];
 
 export const CONTACT = {
     email: "gadingadityaperdana@gmail.com",

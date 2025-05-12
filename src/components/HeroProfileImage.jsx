@@ -16,6 +16,8 @@ const HeroProfileImage = ({
   getAnimationProps,
   profilePicVariants,
 }) => {
+  const shouldEnableHover = !isIOSSafari && !isMobile;
+
   return (
     <div className="w-full max-w-xs md:max-w-sm lg:max-w-md flex justify-center items-center mb-4">
       {/* Profile Image */}
@@ -31,9 +33,11 @@ const HeroProfileImage = ({
           src={profilePic}
           alt="Gading Aditya Perdana"
           className="rounded-lg shadow-md w-full object-cover relative z-10"
-          {...getAnimationProps(profilePicVariants, isIOSSafari ? 0.1 : 0.4)}
-          whileHover={isIOSSafari || isMobile ? undefined : "hover"}
-          whileTap={isIOSSafari || isMobile ? undefined : "hover"}
+          variants={profilePicVariants} // Directly use variants
+          initial="hidden"
+          animate={contentReady ? ["visible", "float"] : "hidden"} // Add float to animate
+          whileHover={shouldEnableHover ? "hover" : undefined}
+          whileTap={shouldEnableHover ? "hover" : undefined}
           style={{
             transform: "translateZ(0)",
             backfaceVisibility: "hidden",
@@ -44,20 +48,20 @@ const HeroProfileImage = ({
         {/* Animated glow behind the image */}
         <motion.div
           className={`absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-lg ${
-            isMobile || isIOSSafari ? "blur-sm opacity-20" : "blur opacity-30"
+            isMobile || isIOSSafari ? "blur-sm opacity-20" : "blur-md opacity-40" // Enhanced blur and opacity
           } -z-10`}
           initial={{ opacity: 0 }}
           animate={
             contentReady
               ? isMobile || isIOSSafari
-                ? { opacity: 0.15 }
-                : { opacity: [0.2, 0.3, 0.2] }
+                ? { opacity: 0.25 } // Slightly more visible on mobile/iOS
+                : { opacity: [0.3, 0.5, 0.3] } // Enhanced opacity cycle
               : { opacity: 0 }
           }
           transition={
             isMobile || isIOSSafari
-              ? { duration: 0.5 }
-              : { duration: 3, repeat: Infinity, repeatType: "mirror" }
+              ? { duration: 0.8 } // Slightly longer duration
+              : { duration: 4, repeat: Infinity, repeatType: "mirror" } // Slower, more noticeable pulse
           }
           style={{
             mixBlendMode: "screen",
