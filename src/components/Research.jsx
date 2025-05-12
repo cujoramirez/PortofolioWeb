@@ -28,7 +28,7 @@ const Research = () => {
   );
   
   // Determine if we should use reduced animations
-  const shouldReduceMotion = performanceTier === "low" || isIOSSafari;
+  const shouldReduceMotion = performanceTier === "low" || isIOSSafari || isMobile || isTablet;
   
   // Animation variants
   const containerVariants = shouldReduceMotion
@@ -124,7 +124,7 @@ const Research = () => {
   return (
     <div className="relative border-b border-neutral-800 pb-32" ref={sectionRef}>
       {/* Scientific research logos */}
-      {!isIOSSafari && (
+      {!isIOSSafari && !isMobile && !isTablet && (
         <>
           <motion.div 
             className="absolute left-0 top-16 -z-1 hidden lg:block"
@@ -153,26 +153,36 @@ const Research = () => {
       )}
       
       {/* Title with animated gradient */}
-      <motion.h1
-        className="text-5xl md:text-6xl lg:text-7xl font-bold mb-12 md:mb-16 text-center relative z-10 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 hover:from-purple-300 hover:via-pink-300 hover:to-purple-300 transition-all duration-300 ease-in-out cursor-default"
-        variants={titleVariants}
-        initial="hidden"
-        whileInView="visible" // Changed from animate to whileInView
-        viewport={{ once: true, amount: 0.2 }} // Added to trigger once when in view
-        whileHover="hover" // Added to enable hover effect
-        style={{ textShadow: '0 0 5px rgba(255,255,255,0.3), 0 0 10px rgba(168, 85, 247,0.3)' }}
-      >
-        {"Research & Publications".split("").map((char, index) => (
-          <motion.span 
-            key={index} 
-            variants={letterVariants} // Uses 'hidden' and 'visible' states
-            className="inline-block"
-            style={{willChange: 'transform, color'}} // Optimization for animations
-          >
-            {char === " " ? "\u00A0" : char} {/* Replace space with non-breaking space for layout consistency */}
-          </motion.span>
-        ))}
-      </motion.h1>
+      {isMobile || isTablet ? (
+        <div className="mb-10 md:mb-14 text-center">
+          <h1 className="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 mb-2" style={{textShadow: '0 0 8px rgba(168,85,247,0.18)'}}>Research</h1>
+          <div className="flex justify-center items-center mb-2">
+            <span className="text-3xl font-bold text-purple-300">&amp;</span>
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-cyan-300" style={{textShadow: '0 0 8px rgba(34,211,238,0.18)'}}>Publications</h2>
+        </div>
+      ) : (
+        <motion.h1
+          className="text-5xl md:text-6xl lg:text-7xl font-bold mb-12 md:mb-16 text-center relative z-10 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 hover:from-purple-300 hover:via-pink-300 hover:to-purple-300 transition-all duration-300 ease-in-out cursor-default"
+          variants={titleVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          whileHover="hover"
+          style={{ textShadow: '0 0 5px rgba(255,255,255,0.3), 0 0 10px rgba(168, 85, 247,0.3)' }}
+        >
+          {"Research & Publications".split("").map((char, index) => (
+            <motion.span 
+              key={index} 
+              variants={letterVariants}
+              className="inline-block"
+              style={{willChange: 'transform, color'}}
+            >
+              {char === " " ? "\u00A0" : char}
+            </motion.span>
+          ))}
+        </motion.h1>
+      )}
       
       {/* Research papers container */}
       <motion.div
