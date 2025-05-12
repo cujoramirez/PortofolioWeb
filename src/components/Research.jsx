@@ -185,152 +185,229 @@ const Research = () => {
       )}
       
       {/* Research papers container */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        className="relative mx-auto max-w-5xl px-4"
-      >
-        {RESEARCH_PAPERS.map((paper, index) => (
-          <motion.div
-            key={index}
-            variants={itemVariants}
-            className="mb-16 overflow-hidden rounded-xl border border-purple-900/30 bg-neutral-900/20 p-8 backdrop-blur-sm"
-            whileHover={shouldReduceMotion ? {} : "hover"}
-            onHoverStart={() => setIsHovered(index)}
-            onHoverEnd={() => setIsHovered(null)}
-          >
-            <div className="relative flex flex-col lg:flex-row lg:items-start">
-              {/* Year and conference (left column on desktop) */}
-              <motion.div
-                className="mb-6 lg:mb-0 lg:w-1/4 lg:pr-6"
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.5 }}
-                transition={{ duration: 0.8 }}
-              >
-                <div className="flex flex-row items-center lg:flex-col lg:items-start">
-                  <span className="inline-block rounded bg-purple-900/30 px-3 py-1 text-sm font-semibold text-purple-300">
-                    {paper.year}
-                  </span>
-                  {paper.conference && (
-                    <p className="ml-4 text-sm italic text-neutral-400 lg:mt-2 lg:ml-0">
-                      {paper.conference}
-                    </p>
-                  )}
-                </div>
-              </motion.div>
-              
-              {/* Paper details (right column on desktop) */}
-              <motion.div
-                className="flex-1"
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.5 }}
-                transition={{ duration: 0.8 }}
-              >
-                {/* Paper title */}
-                {(() => {
-                  const isCalmPaper = paper.title === "CALM: Calibrated Adaptive Learning via Mutual-Ensemble Fusion";
-                  const isCurrentlyHovered = isHovered === index && !shouldReduceMotion;
-
-                  return (
-                    <motion.h3
-                      className={`mb-3 text-2xl font-bold text-transparent bg-clip-text ${
-                        isCalmPaper && isCurrentlyHovered
-                          ? 'bg-gradient-to-r from-pink-400 via-purple-600 to-indigo-600' // Hover gradient for CALM
-                          : 'bg-gradient-to-r from-purple-300 to-cyan-300' // Default gradient
-                      }`}
-                      animate={{
-                        scale: isCurrentlyHovered
-                          ? (isCalmPaper ? 1.06 : 1.03) // Enhanced scale for CALM on hover
-                          : 1,
-                        filter: isCalmPaper && isCurrentlyHovered
-                          ? 'drop-shadow(0 0 7px rgba(224, 176, 255, 0.7)) drop-shadow(0 0 14px rgba(192, 132, 252, 0.5))' // Glow for CALM
-                          : 'none',
-                      }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                    >
-                      {paper.title}
-                    </motion.h3>
-                  );
-                })()}
-                
-                {/* Authors */}
-                {paper.authors && (
-                  <p className="mb-4 text-sm font-semibold text-neutral-200 tracking-wide hover:text-purple-300 transition-colors duration-300">
-                    {paper.authors}
-                  </p>
-                )}
-                
-                {/* Description with quote icons */}
-                <motion.div 
-                  className="relative mb-6 rounded-lg bg-neutral-900/40 p-6 border border-transparent"
-                  variants={descriptionBoxVariants}
-                  animate={isHovered === index && !shouldReduceMotion ? "hover" : "initial"}
-                >
-                  <motion.span variants={quoteIconVariants} animate={isHovered === index && !shouldReduceMotion ? "hover" : "initial"} className="absolute left-3 top-3">
-                    <FaQuoteLeft className="h-4 w-4 text-purple-500/50" />
-                  </motion.span>
-                  <p className="text-neutral-300 text-justify leading-relaxed">
-                    {paper.description}
-                  </p>
-                  <motion.span variants={quoteIconVariants} animate={isHovered === index && !shouldReduceMotion ? "hover" : "initial"} className="absolute right-3 bottom-3">
-                    <FaQuoteRight className="h-4 w-4 text-purple-500/50" />
-                  </motion.span>
-                </motion.div>
-                
-                {/* Keywords */}
-                <div className="mb-6">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
-                    Keywords
-                  </p>
-                  <div>
-                    {paper.keywords.map((keyword, i) => (
-                      <motion.span
-                        key={i}
-                        className="mr-2 mb-2 inline-block rounded-md border border-purple-900/30 bg-neutral-800/50 px-3 py-1 text-xs font-medium text-purple-300"
-                        animate={{ y: isHovered === index && !shouldReduceMotion ? -2 : 0 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 10, duration: 0.2 }}
-                        whileHover={{
-                          backgroundColor: "rgba(168, 85, 247, 0.3)",
-                          color: "#f3e8ff",
-                          transition: { duration: 0.2 }
-                        }}
-                      >
-                        {keyword}
-                      </motion.span>
-                    ))}
+      {isMobile || isTablet ? (
+        <div className="relative mx-auto max-w-5xl px-4">
+          {RESEARCH_PAPERS.map((paper, index) => (
+            <div
+              key={index}
+              className="mb-16 overflow-hidden rounded-xl border border-purple-900/30 bg-neutral-900/20 p-8 backdrop-blur-sm"
+            >
+              <div className="relative flex flex-col lg:flex-row lg:items-start">
+                {/* Year and conference (left column on desktop) */}
+                <div className="mb-6 lg:mb-0 lg:w-1/4 lg:pr-6">
+                  <div className="flex flex-row items-center lg:flex-col lg:items-start">
+                    <span className="inline-block rounded bg-purple-900/30 px-3 py-1 text-sm font-semibold text-purple-300">
+                      {paper.year}
+                    </span>
+                    {paper.conference && (
+                      <p className="ml-4 text-sm italic text-neutral-400 lg:mt-2 lg:ml-0">
+                        {paper.conference}
+                      </p>
+                    )}
                   </div>
                 </div>
-                
-                {/* PDF link */}
-                {paper.pdfLink && (
-                  <motion.a
-                    href={paper.pdfLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center rounded-md bg-purple-800/20 px-4 py-2 text-sm font-medium text-purple-300 transition-colors"
-                    whileHover={{ 
-                      backgroundColor: "rgba(126, 34, 206, 0.3)",
-                      color: "#f3e8ff"
-                    }}
+                {/* Paper details (right column on desktop) */}
+                <div className="flex-1">
+                  <h3
+                    className={`mb-3 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-cyan-300`}
                   >
-                    <motion.span 
-                      animate={{ x: isHovered === index && !shouldReduceMotion ? 3 : 0 }} 
-                      transition={{ duration: 0.3, ease: "easeOut" }}
+                    {paper.title}
+                  </h3>
+                  {paper.authors && (
+                    <p className="mb-4 text-sm font-semibold text-neutral-200 tracking-wide">
+                      {paper.authors}
+                    </p>
+                  )}
+                  <div className="relative mb-6 rounded-lg bg-neutral-900/40 p-6 border border-transparent">
+                    <span className="absolute left-3 top-3">
+                      <FaQuoteLeft className="h-4 w-4 text-purple-500/50" />
+                    </span>
+                    <p className="text-neutral-300 text-justify leading-relaxed">
+                      {paper.description}
+                    </p>
+                    <span className="absolute right-3 bottom-3">
+                      <FaQuoteRight className="h-4 w-4 text-purple-500/50" />
+                    </span>
+                  </div>
+                  <div className="mb-6">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                      Keywords
+                    </p>
+                    <div>
+                      {paper.keywords.map((keyword, i) => (
+                        <span
+                          key={i}
+                          className="mr-2 mb-2 inline-block rounded-md border border-purple-900/30 bg-neutral-800/50 px-3 py-1 text-xs font-medium text-purple-300"
+                        >
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {paper.pdfLink && (
+                    <a
+                      href={paper.pdfLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center rounded-md bg-purple-800/20 px-4 py-2 text-sm font-medium text-purple-300 transition-colors"
                     >
                       <FaFilePdf className="mr-2 h-4 w-4" />
-                    </motion.span>
-                    View Publication
-                  </motion.a>
-                )}
-              </motion.div>
+                      View Publication
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
-          </motion.div>
-        ))}
-      </motion.div>
+          ))}
+        </div>
+      ) : (
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          className="relative mx-auto max-w-5xl px-4"
+        >
+          {RESEARCH_PAPERS.map((paper, index) => (
+            <motion.div
+              key={index}
+              variants={itemVariants}
+              className="mb-16 overflow-hidden rounded-xl border border-purple-900/30 bg-neutral-900/20 p-8 backdrop-blur-sm"
+              whileHover={shouldReduceMotion ? {} : "hover"}
+              onHoverStart={() => setIsHovered(index)}
+              onHoverEnd={() => setIsHovered(null)}
+            >
+              <div className="relative flex flex-col lg:flex-row lg:items-start">
+                {/* Year and conference (left column on desktop) */}
+                <motion.div
+                  className="mb-6 lg:mb-0 lg:w-1/4 lg:pr-6"
+                  initial={{ opacity: 0, x: -50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.5 }}
+                  transition={{ duration: 0.8 }}
+                >
+                  <div className="flex flex-row items-center lg:flex-col lg:items-start">
+                    <span className="inline-block rounded bg-purple-900/30 px-3 py-1 text-sm font-semibold text-purple-300">
+                      {paper.year}
+                    </span>
+                    {paper.conference && (
+                      <p className="ml-4 text-sm italic text-neutral-400 lg:mt-2 lg:ml-0">
+                        {paper.conference}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+                
+                {/* Paper details (right column on desktop) */}
+                <motion.div
+                  className="flex-1"
+                  initial={{ opacity: 0, x: 50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.5 }}
+                  transition={{ duration: 0.8 }}
+                >
+                  {/* Paper title */}
+                  {(() => {
+                    const isCalmPaper = paper.title === "CALM: Calibrated Adaptive Learning via Mutual-Ensemble Fusion";
+                    const isCurrentlyHovered = isHovered === index && !shouldReduceMotion;
+
+                    return (
+                      <motion.h3
+                        className={`mb-3 text-2xl font-bold text-transparent bg-clip-text ${
+                          isCalmPaper && isCurrentlyHovered
+                            ? 'bg-gradient-to-r from-pink-400 via-purple-600 to-indigo-600' // Hover gradient for CALM
+                            : 'bg-gradient-to-r from-purple-300 to-cyan-300' // Default gradient
+                        }`}
+                        animate={{
+                          scale: isCurrentlyHovered
+                            ? (isCalmPaper ? 1.06 : 1.03) // Enhanced scale for CALM on hover
+                            : 1,
+                          filter: isCalmPaper && isCurrentlyHovered
+                            ? 'drop-shadow(0 0 7px rgba(224, 176, 255, 0.7)) drop-shadow(0 0 14px rgba(192, 132, 252, 0.5))' // Glow for CALM
+                            : 'none',
+                        }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                      >
+                        {paper.title}
+                      </motion.h3>
+                    );
+                  })()}
+                  
+                  {/* Authors */}
+                  {paper.authors && (
+                    <p className="mb-4 text-sm font-semibold text-neutral-200 tracking-wide hover:text-purple-300 transition-colors duration-300">
+                      {paper.authors}
+                    </p>
+                  )}
+                  
+                  {/* Description with quote icons */}
+                  <motion.div 
+                    className="relative mb-6 rounded-lg bg-neutral-900/40 p-6 border border-transparent"
+                    variants={descriptionBoxVariants}
+                    animate={isHovered === index && !shouldReduceMotion ? "hover" : "initial"}
+                  >
+                    <motion.span variants={quoteIconVariants} animate={isHovered === index && !shouldReduceMotion ? "hover" : "initial"} className="absolute left-3 top-3">
+                      <FaQuoteLeft className="h-4 w-4 text-purple-500/50" />
+                    </motion.span>
+                    <p className="text-neutral-300 text-justify leading-relaxed">
+                      {paper.description}
+                    </p>
+                    <motion.span variants={quoteIconVariants} animate={isHovered === index && !shouldReduceMotion ? "hover" : "initial"} className="absolute right-3 bottom-3">
+                      <FaQuoteRight className="h-4 w-4 text-purple-500/50" />
+                    </motion.span>
+                  </motion.div>
+                  
+                  {/* Keywords */}
+                  <div className="mb-6">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                      Keywords
+                    </p>
+                    <div>
+                      {paper.keywords.map((keyword, i) => (
+                        <motion.span
+                          key={i}
+                          className="mr-2 mb-2 inline-block rounded-md border border-purple-900/30 bg-neutral-800/50 px-3 py-1 text-xs font-medium text-purple-300"
+                          animate={{ y: isHovered === index && !shouldReduceMotion ? -2 : 0 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 10, duration: 0.2 }}
+                          whileHover={{
+                            backgroundColor: "rgba(168, 85, 247, 0.3)",
+                            color: "#f3e8ff",
+                            transition: { duration: 0.2 }
+                          }}
+                        >
+                          {keyword}
+                        </motion.span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* PDF link */}
+                  {paper.pdfLink && (
+                    <motion.a
+                      href={paper.pdfLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center rounded-md bg-purple-800/20 px-4 py-2 text-sm font-medium text-purple-300 transition-colors"
+                      whileHover={{ 
+                        backgroundColor: "rgba(126, 34, 206, 0.3)",
+                        color: "#f3e8ff"
+                      }}
+                    >
+                      <motion.span 
+                        animate={{ x: isHovered === index && !shouldReduceMotion ? 3 : 0 }} 
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                      >
+                        <FaFilePdf className="mr-2 h-4 w-4" />
+                      </motion.span>
+                      View Publication
+                    </motion.a>
+                  )}
+                </motion.div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
     </div>
   );
 };

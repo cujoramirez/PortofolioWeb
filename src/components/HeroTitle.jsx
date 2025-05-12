@@ -79,11 +79,11 @@ const HeroTitle = ({
         whileHover={isIOSSafari ? undefined : "hover"}
         whileTap={isIOSSafari ? undefined : "hover"}
         style={{
-          background:
+          backgroundImage:
             contentReady && !isMobile && !isIOSSafari
               ? "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(236,72,153,0.8) 50%, rgba(255,255,255,1) 100%)"
-              : "transparent",
-          backgroundSize: "200% auto",
+              : undefined,
+          backgroundSize: contentReady && !isMobile && !isIOSSafari ? "200% auto" : undefined,
           WebkitBackgroundClip:
             contentReady && !isMobile && !isIOSSafari ? "text" : "border-box",
           WebkitTextFillColor:
