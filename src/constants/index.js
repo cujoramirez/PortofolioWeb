@@ -202,7 +202,7 @@ export const CERTIFICATIONS = [{
 ];
 
 export const RESEARCH_PAPERS = [{
-    year: "2024",
+    year: "2025",
     title: "CALM: Calibrated Adaptive Learning via Mutual-Ensemble Fusion",
     authors: "Gading Aditya Perdana (Researcher), Muhammad Alif Ghazali (Assistant Writer)",
     conference: "Pre-print / Submitted to 2025 ICCSCI Conference",
