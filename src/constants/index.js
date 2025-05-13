@@ -205,7 +205,7 @@ export const RESEARCH_PAPERS = [{
     year: "2025",
     title: "CALM: Calibrated Adaptive Learning via Mutual-Ensemble Fusion",
     authors: "Gading Aditya Perdana (Researcher), Muhammad Alif Ghazali (Assistant Writer)",
-    conference: "Pre-print / Submitted to 2025 ICCSCI Conference",
+    conference: "Pre-print / Submitted to 2025 ICCSCI Conference Scopus Indexed and Q2 SINTA Indexed",
     description: "This research introduces CALM (Calibrated Adaptive Learning via Mutual-Ensemble Fusion), a novel multi-stage framework designed to create vision models that are both highly accurate and reliably calibrated, meaning their confidence scores genuinely reflect their predictive correctness. CALM uniquely integrates ensemble distillation and mutual learning, employing an Adaptive Curriculum Protocol (ACP) to dynamically balance diverse training objectives. A key innovation, Heterogeneous Feature Integration (HFI), facilitates effective knowledge transfer from varied teacher architectures. The framework culminates in a 'meta-student' model that demonstrates strong performance, significantly improved calibration, and robust generalization to new datasets, offering a systematic approach to developing more trustworthy and uncertainty-aware AI systems.",
     keywords: ["Uncertainty Calibration", "Mutual-Ensemble Fusion", "Adaptive Curriculum Protocol (ACP)", "Heterogeneous Feature Integration (HFI)", "Deep Learning"],
     // pdfLink: "./assets/CALM.pdf",
