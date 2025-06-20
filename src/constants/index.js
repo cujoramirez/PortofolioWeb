@@ -110,7 +110,6 @@ export const PROJECTS = [{
 
         title: "Aria Music Player with Vocal/Instrumental Separation",
 
-        image: ariaProject, // You'll need to import this image
 
         description: "Developed a full-stack music streaming platform featuring real-time vocal and instrumental track separation. Implemented user authentication, music library management, and an interactive audio player with synchronized playback controls.",
 
@@ -124,13 +123,13 @@ export const PROJECTS = [{
 
         title: "CS Learning Platform",
 
-        image: csLearningPlatform,
+
 
         description: "Developed an interactive education platform with quiz creation functionality, secure authentication, and role-based access control for administrators, lecturers, and students.",
 
         technologies: ["PHP", "Laravel", "JavaScript", "MySQL", "Bootstrap", "Git", "RESTful API", "Blade Templates"],
 
-        links: ["https://github.com/yourusername/cs-learning-platform"]
+
 
     },
 
@@ -138,13 +137,12 @@ export const PROJECTS = [{
 
         title: "EchoVision - Smart Waste Classification System",
 
-        image: project5, // You'll need to import this image
+
 
         description: "Developed an AI-powered waste classification system with real-time webcam analysis and GradCAM visualization to help users properly sort 12 categories of recyclable materials.",
 
         technologies: ["Python", "TensorFlow", "PyTorch", "MobileNetV3", "OpenCV", "GradCAM", "Computer Vision", "Transfer Learning"],
 
-        links: ["https://github.com/yourusername/EchoVision-WasteClassification"] // Replace with your actual repository link
 
     },
 
@@ -152,13 +150,13 @@ export const PROJECTS = [{
 
         title: "Factory Bearing Monitoring System",
 
-        image: projectX, // Replace with your project image variable
+
 
         description: "Built a professional industrial IoT dashboard for real-time bearing fault monitoring, featuring animated factory visualization, predictive maintenance, and interactive model analysis reporting.",
 
         technologies: ["Python", "Tkinter", "Pandas", "NumPy", "Pillow", "Machine Learning", "EDA", "Threading"],
 
-        links: ["https://github.com/yourusername/factory-bearing-monitor"] // Replace with your actual link
+
 
     },
 
@@ -166,13 +164,11 @@ export const PROJECTS = [{
 
         title: "Lord Card Shop – Modern ASP.NET E-Commerce Platform",
 
-        image: projectX, // Replace with your project image variable
 
         description: "Built a full-featured collectible card e-commerce web application with modern UI/UX, secure authentication, transaction management, and responsive design. Enhanced all pages for a consistent, professional look and seamless user experience.",
 
         technologies: ["C#", "ASP.NET MVC", "Entity Framework", "Razor", "Bootstrap", "SQL", "HTML", "CSS", "JavaScript"],
 
-        links: ["https://github.com/yourusername/lord-card-shop"] // Replace with your actual link
 
     }
 ];
