@@ -106,6 +106,74 @@ export const PROJECTS = [{
         description: "Conducting research on ensemble distillation and mutual learning for computer vision models. The goal is to enhance model accuracy and calibration through innovative training techniques.",
         technologies: ["Python", "TensorFlow", "Keras", "PyTorch", "Deep Learning", "Ensemble Learning", "Mutual Learning", "Computer Vision", "Research", "AI"],
         links: []
+    }, {
+
+        title: "Aria Music Player with Vocal/Instrumental Separation",
+
+        image: ariaProject, // You'll need to import this image
+
+        description: "Developed a full-stack music streaming platform featuring real-time vocal and instrumental track separation. Implemented user authentication, music library management, and an interactive audio player with synchronized playback controls.",
+
+        technologies: ["React", "Node.js", "Express", "SQLite", "JavaScript", "CSS", "HTML5 Audio API", "RESTful API"],
+
+        links: ["https://github.com/cujoramirez/Aria"]
+
+    },
+
+    {
+
+        title: "CS Learning Platform",
+
+        image: csLearningPlatform,
+
+        description: "Developed an interactive education platform with quiz creation functionality, secure authentication, and role-based access control for administrators, lecturers, and students.",
+
+        technologies: ["PHP", "Laravel", "JavaScript", "MySQL", "Bootstrap", "Git", "RESTful API", "Blade Templates"],
+
+        links: ["https://github.com/yourusername/cs-learning-platform"]
+
+    },
+
+    {
+
+        title: "EchoVision - Smart Waste Classification System",
+
+        image: project5, // You'll need to import this image
+
+        description: "Developed an AI-powered waste classification system with real-time webcam analysis and GradCAM visualization to help users properly sort 12 categories of recyclable materials.",
+
+        technologies: ["Python", "TensorFlow", "PyTorch", "MobileNetV3", "OpenCV", "GradCAM", "Computer Vision", "Transfer Learning"],
+
+        links: ["https://github.com/yourusername/EchoVision-WasteClassification"] // Replace with your actual repository link
+
+    },
+
+    {
+
+        title: "Factory Bearing Monitoring System",
+
+        image: projectX, // Replace with your project image variable
+
+        description: "Built a professional industrial IoT dashboard for real-time bearing fault monitoring, featuring animated factory visualization, predictive maintenance, and interactive model analysis reporting.",
+
+        technologies: ["Python", "Tkinter", "Pandas", "NumPy", "Pillow", "Machine Learning", "EDA", "Threading"],
+
+        links: ["https://github.com/yourusername/factory-bearing-monitor"] // Replace with your actual link
+
+    },
+
+    {
+
+        title: "Lord Card Shop – Modern ASP.NET E-Commerce Platform",
+
+        image: projectX, // Replace with your project image variable
+
+        description: "Built a full-featured collectible card e-commerce web application with modern UI/UX, secure authentication, transaction management, and responsive design. Enhanced all pages for a consistent, professional look and seamless user experience.",
+
+        technologies: ["C#", "ASP.NET MVC", "Entity Framework", "Razor", "Bootstrap", "SQL", "HTML", "CSS", "JavaScript"],
+
+        links: ["https://github.com/yourusername/lord-card-shop"] // Replace with your actual link
+
     }
 ];
 
@@ -202,14 +270,42 @@ export const CERTIFICATIONS = [{
 ];
 
 export const RESEARCH_PAPERS = [{
-    year: "2025",
-    title: "CALM: Calibrated Adaptive Learning via Mutual-Ensemble Fusion",
-    authors: "Gading Aditya Perdana (Researcher), Muhammad Alif Ghazali (Assistant Writer)",
-    conference: "Pre-print / Submitted to 2025 ICCSCI Conference Scopus Indexed and Q2 SINTA Indexed",
-    description: "This research introduces CALM (Calibrated Adaptive Learning via Mutual-Ensemble Fusion), a novel multi-stage framework designed to create vision models that are both highly accurate and reliably calibrated, meaning their confidence scores genuinely reflect their predictive correctness. CALM uniquely integrates ensemble distillation and mutual learning, employing an Adaptive Curriculum Protocol (ACP) to dynamically balance diverse training objectives. A key innovation, Heterogeneous Feature Integration (HFI), facilitates effective knowledge transfer from varied teacher architectures. The framework culminates in a 'meta-student' model that demonstrates strong performance, significantly improved calibration, and robust generalization to new datasets, offering a systematic approach to developing more trustworthy and uncertainty-aware AI systems.",
-    keywords: ["Uncertainty Calibration", "Mutual-Ensemble Fusion", "Adaptive Curriculum Protocol (ACP)", "Heterogeneous Feature Integration (HFI)", "Deep Learning"],
-    // pdfLink: "./assets/CALM.pdf",
-}, ];
+        year: "2025",
+        title: "CALM: Calibrated Adaptive Learning via Mutual-Ensemble Fusion",
+        authors: "Gading Aditya Perdana (First Author), Muhammad Alif Ghazali (Co-author)",
+        conference: "Procedia Computer Science, ICCSCI 2025 (Accepted)",
+        description: "This research introduces CALM (Calibrated Adaptive Learning via Mutual-Ensemble Fusion), a novel multi-stage framework designed to create vision models that are both highly accurate and reliably calibrated, meaning their confidence scores genuinely reflect their predictive correctness. CALM uniquely integrates ensemble distillation and mutual learning, employing an Adaptive Curriculum Protocol (ACP) to dynamically balance diverse training objectives. A key innovation, Heterogeneous Feature Integration (HFI), facilitates effective knowledge transfer from varied teacher architectures. The framework culminates in a 'meta-student' model that demonstrates strong performance, significantly improved calibration, and robust generalization to new datasets, offering a systematic approach to developing more trustworthy and uncertainty-aware AI systems.",
+        keywords: ["Uncertainty Calibration", "Mutual-Ensemble Fusion", "Adaptive Curriculum Protocol (ACP)", "Heterogeneous Feature Integration (HFI)", "Deep Learning"],
+        // pdfLink: "./assets/CALM.pdf",
+    },
+    {
+        year: "2025",
+        title: "Analytical Analysis of Cryptocurrency Regulation and Adoption: A Machine Learning-Driven Ablation Study",
+        authors: "M.I.A. Kisdi (First Author), Gading Aditya Perdana (Co-author)",
+        conference: "Procedia Computer Science, ICCSCI 2025 (Accepted)",
+        description: "A novel machine learning framework to quantify the effects of regulatory policies on GDP normalized Bitcoin trading volume in the United States, Russia, and Indonesia. Using XGBoost regression and SHAP analysis on panel data integrating Bitcoin price series, adoption rates, and policy variables, this study conducts policy ablation simulations. Results reveal jurisdiction-specific sensitivities: removing AML enforcement increases US volume by +71.45%, while eliminating taxation reduces Indonesian volume by -46.90%, providing quantitative insights for cryptocurrency regulation design.",
+        keywords: ["Cryptocurrency Regulation", "Machine Learning", "XGBoost", "SHAP Analysis", "Policy Ablation", "Economic Analysis"],
+        // pdfLink: "./assets/crypto-regulation.pdf",
+    },
+    {
+        year: "2025",
+        title: "Tiny vs. Tinier: Baseline ViT-Tiny vs. Ensemble-Distilled Student on Imbalanced Fracture Detection",
+        authors: "Nathen, A. (First Author), Gading Aditya Perdana (Co-author)",
+        conference: "Procedia Computer Science, ICCSCI 2025 (Accepted)",
+        description: "This study compares baseline Vision Transformer (ViT-Tiny) performance against an ensemble-distilled student model for bone fracture X-ray classification on highly imbalanced datasets (1:5 fracture:non-fracture ratio). Incorporating Stratified k-fold cross-validation with inline SMOTE, class-weighted losses, extensive data augmentation, and advanced training techniques, the distilled student achieved superior performance with 0.7033 F1-score and 0.6433 MCC, surpassing both CNN teachers and baseline while maintaining ViT-Tiny's compact footprint.",
+        keywords: ["Vision Transformer", "Medical Imaging", "Imbalanced Learning", "Knowledge Distillation", "Fracture Detection", "SMOTE"],
+        // pdfLink: "./assets/vit-fracture.pdf",
+    },
+    {
+        year: "2025",
+        title: "Ablation Study: Calibrated Adaptive Learning Ensemble Methodology",
+        authors: "Gading Aditya Perdana (First Author), Research Team (Co-authors)",
+        conference: "Procedia Computer Science, ICCSCI 2025 (Accepted)",
+        description: "A systematic ablation study of the CALM framework examining how teacher ensemble size influences student accuracy, calibration, and computational cost. Using ensembles of 2-5 teachers from diverse convolutional architectures on CIFAR-10, this study evaluates four CALM configurations. Results demonstrate that calibration-aware training yields lowest expected calibration error, while adaptive curriculum pacing delivers exceptional calibration in small ensembles, with diminishing returns beyond three teachers.",
+        keywords: ["Ablation Study", "Ensemble Learning", "Model Calibration", "Computational Efficiency", "CIFAR-10", "Teacher-Student Networks"],
+        // pdfLink: "./assets/calm-ablation.pdf",
+    }
+];
 
 export const CONTACT = {
     email: "gadingadityaperdana@gmail.com",
