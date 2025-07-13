@@ -1,0 +1,589 @@
+import React, { useRef, useState, useEffect, Suspense } from 'react';
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Grid2 as Grid,
+  Paper,
+  LinearProgress,
+  Chip,
+  Card,
+  CardContent,
+  Avatar,
+  Stack,
+  Divider,
+  useTheme,
+  alpha
+} from '@mui/material';
+import { motion, useInView } from 'framer-motion';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Float, Text3D, Center, OrbitControls } from '@react-three/drei';
+import aboutImg from '../assets/GadingAdityaPerdana2.jpg';
+
+// Three.js animated background
+const FloatingGeometry = () => {
+  const meshRef = useRef();
+  
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.3) * 0.2;
+      meshRef.current.rotation.y = state.clock.elapsedTime * 0.2;
+      meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.5;
+    }
+  });
+
+  return (
+    <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
+      <mesh ref={meshRef} position={[2, 0, -2]}>
+        <dodecahedronGeometry args={[1]} />
+        <meshStandardMaterial 
+          color="#6366f1" 
+          transparent 
+          opacity={0.6}
+          wireframe 
+        />
+      </mesh>
+    </Float>
+  );
+};
+
+const ParticleField = () => {
+  const points = useRef();
+  const particlesCount = 100;
+  
+  const particles = new Float32Array(particlesCount * 3);
+  for (let i = 0; i < particlesCount * 3; i++) {
+    particles[i] = (Math.random() - 0.5) * 10;
+  }
+
+  useFrame((state) => {
+    if (points.current) {
+      points.current.rotation.y = state.clock.elapsedTime * 0.05;
+    }
+  });
+
+  return (
+    <points ref={points}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={particlesCount}
+          array={particles}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial size={0.02} color="#8b5cf6" transparent opacity={0.6} />
+    </points>
+  );
+};
+
+// Animated counter component
+const AnimatedCounter = ({ value, duration = 2, suffix = '' }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  useEffect(() => {
+    if (isInView) {
+      let start = 0;
+      const end = parseInt(value);
+      const increment = end / (duration * 60);
+      const timer = setInterval(() => {
+        start += increment;
+        if (start >= end) {
+          setCount(end);
+          clearInterval(timer);
+        } else {
+          setCount(Math.floor(start));
+        }
+      }, 1000 / 60);
+      return () => clearInterval(timer);
+    }
+  }, [isInView, value, duration]);
+
+  return <span ref={ref}>{count}{suffix}</span>;
+};
+
+// Skill progress bar with enhanced animation
+const EnterpriseSkillBar = ({ skill, index }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  const theme = useTheme();
+  
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, x: -50 }}
+      animate={isInView ? { opacity: 1, x: 0 } : {}}
+      transition={{ duration: 0.6, delay: index * 0.1 }}
+    >
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+          <Typography 
+            variant="subtitle2" 
+            sx={{ 
+              fontWeight: 600,
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: '0.9rem'
+            }}
+          >
+            {skill.name}
+          </Typography>
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              color: theme.palette.primary.main,
+              fontWeight: 700,
+              fontSize: '0.85rem'
+            }}
+          >
+            {skill.level}%
+          </Typography>
+        </Box>
+        <Box sx={{ position: 'relative' }}>
+          <LinearProgress 
+            variant="determinate" 
+            value={isInView ? skill.level : 0}
+            sx={{
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: alpha(theme.palette.common.white, 0.1),
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 4,
+                background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                transition: 'transform 1.5s ease-in-out',
+              }
+            }}
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
+              borderRadius: 4,
+              animation: isInView ? 'shimmer 2s ease-in-out infinite' : 'none',
+              '@keyframes shimmer': {
+                '0%': { transform: 'translateX(-100%)' },
+                '100%': { transform: 'translateX(100%)' }
+              }
+            }}
+          />
+        </Box>
+      </Box>
+    </motion.div>
+  );
+};
+
+const EnterpriseAbout = () => {
+  const theme = useTheme();
+  
+  const skills = [
+    { name: 'Machine Learning & AI', level: 95 },
+    { name: 'Computer Vision', level: 92 },
+    { name: 'Deep Learning (TensorFlow/PyTorch)', level: 88 },
+    { name: 'Python & Data Science', level: 94 },
+    { name: 'Cloud Architecture (AWS/Azure)', level: 85 },
+    { name: 'Full-Stack Development', level: 82 }
+  ];
+
+  const achievements = [
+    { 
+      label: 'Enterprise Projects', 
+      value: '25', 
+      icon: '🏢',
+      description: 'Large-scale implementations'
+    },
+    { 
+      label: 'AI Models Deployed', 
+      value: '40', 
+      icon: '🤖',
+      description: 'Production-ready solutions'
+    },
+    { 
+      label: 'Research Publications', 
+      value: '8', 
+      icon: '📊',
+      description: 'Peer-reviewed papers'
+    },
+    { 
+      label: 'Years of Innovation', 
+      value: '6', 
+      icon: '⚡',
+      description: 'Continuous learning'
+    }
+  ];
+
+  const certifications = [
+    'AWS Certified Solutions Architect',
+    'Google Cloud Professional ML Engineer',
+    'Microsoft Azure AI Engineer',
+    'TensorFlow Developer Certificate'
+  ];
+
+  return (
+    <Box
+      id="about"
+      sx={{
+        minHeight: '100vh',
+        position: 'relative',
+        background: 'linear-gradient(135deg, #0a0e27 0%, #1a1b3e 30%, #2d1b69 70%, #0f172a 100%)',
+        overflow: 'hidden',
+        py: { xs: 6, md: 10 },
+        display: 'flex',
+        alignItems: 'center'
+      }}
+    >
+      {/* Three.js Background */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1,
+          opacity: 0.4
+        }}
+      >
+        <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
+          <Suspense fallback={null}>
+            <ambientLight intensity={0.5} />
+            <pointLight position={[10, 10, 10]} intensity={0.8} />
+            <pointLight position={[-10, -10, -10]} intensity={0.3} color="#8b5cf6" />
+            <FloatingGeometry />
+            <ParticleField />
+          </Suspense>
+        </Canvas>
+      </Box>
+
+      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+        >
+          <Box sx={{ textAlign: 'center', mb: 8 }}>
+            <Chip 
+              label="About Me" 
+              sx={{ 
+                background: 'linear-gradient(45deg, #6366f1, #8b5cf6)',
+                color: 'white',
+                fontWeight: 700,
+                fontSize: '1rem',
+                px: 3,
+                py: 0.5,
+                mb: 4,
+                borderRadius: '25px',
+                boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)'
+              }} 
+            />
+            <Typography
+              variant="h1"
+              sx={{
+                fontWeight: 900,
+                background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #34d399 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                color: 'transparent',
+                mb: 3,
+                fontSize: { xs: '2.5rem', md: '4rem', lg: '4.5rem' },
+                lineHeight: 1.1,
+                letterSpacing: '-0.02em'
+              }}
+            >
+              AI Innovation Leader
+            </Typography>
+            <Typography
+              variant="h5"
+              sx={{
+                color: alpha(theme.palette.common.white, 0.7),
+                fontWeight: 400,
+                mb: 4,
+                maxWidth: '600px',
+                mx: 'auto',
+                lineHeight: 1.6
+              }}
+            >
+              Transforming industries through cutting-edge artificial intelligence and machine learning solutions
+            </Typography>
+            <Box
+              sx={{
+                width: 120,
+                height: 4,
+                background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #06b6d4)',
+                mx: 'auto',
+                borderRadius: 2,
+                boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4)'
+              }}
+            />
+          </Box>
+        </motion.div>
+
+        {/* Main Content - GUARANTEED Side by Side Layout */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { 
+              xs: '1fr', 
+              md: '420px 1fr' 
+            },
+            gap: { xs: 6, md: 8 },
+            alignItems: 'start',
+            maxWidth: '1400px',
+            mx: 'auto'
+          }}
+        >
+          {/* LEFT COLUMN - PROFILE SECTION */}
+          <Box sx={{ position: 'sticky', top: 100 }}>
+            <motion.div
+              initial={{ opacity: 0, x: -100 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              <Card
+                sx={{
+                  background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '24px',
+                  overflow: 'hidden',
+                  boxShadow: '0 25px 50px rgba(0, 0, 0, 0.3)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-8px)',
+                    boxShadow: '0 35px 70px rgba(99, 102, 241, 0.3)'
+                  }
+                }}
+              >
+                <Box sx={{ position: 'relative' }}>
+                  <Box
+                    component="img"
+                    src={aboutImg}
+                    alt="Gading Aditya Perdana"
+                    sx={{
+                      width: '100%',
+                      height: '380px',
+                      objectFit: 'cover',
+                      filter: 'brightness(1.1) contrast(1.05) saturate(1.1)',
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
+                      p: 3,
+                      color: 'white'
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                      Gading Aditya Perdana
+                    </Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                      Senior AI Research Engineer
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <CardContent sx={{ p: 4 }}>
+                  {/* Achievement Stats */}
+                  <Grid container spacing={2} sx={{ mb: 4 }}>
+                    {achievements.map((achievement, index) => (
+                      <Grid xs={6} key={index}>
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.5, delay: 0.1 + index * 0.1 }}
+                        >
+                          <Box sx={{ textAlign: 'center', p: 2 }}>
+                            <Typography variant="h3" sx={{ fontSize: '1.5rem', mb: 0.5 }}>
+                              {achievement.icon}
+                            </Typography>
+                            <Typography
+                              variant="h4"
+                              sx={{
+                                fontWeight: 800,
+                                background: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
+                                backgroundClip: 'text',
+                                WebkitBackgroundClip: 'text',
+                                color: 'transparent',
+                                fontSize: '1.8rem',
+                                mb: 0.5
+                              }}
+                            >
+                              <AnimatedCounter value={achievement.value} />+
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: alpha(theme.palette.common.white, 0.7),
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                                display: 'block',
+                                lineHeight: 1.2
+                              }}
+                            >
+                              {achievement.label}
+                            </Typography>
+                          </Box>
+                        </motion.div>
+                      </Grid>
+                    ))}
+                  </Grid>
+
+                  {/* Certifications */}
+                  <Box>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 700,
+                        mb: 2,
+                        color: 'white',
+                        fontSize: '1.1rem'
+                      }}
+                    >
+                      🏆 Key Certifications
+                    </Typography>
+                    <Stack spacing={1}>
+                      {certifications.map((cert, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}
+                        >
+                          <Chip
+                            label={cert}
+                            size="small"
+                            sx={{
+                              background: alpha(theme.palette.primary.main, 0.2),
+                              color: theme.palette.primary.light,
+                              border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+                              '&:hover': {
+                                background: alpha(theme.palette.primary.main, 0.3)
+                              }
+                            }}
+                          />
+                        </motion.div>
+                      ))}
+                    </Stack>
+                  </Box>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Box>
+
+          {/* RIGHT COLUMN - CONTENT SECTION */}
+          <Box>
+            <motion.div
+              initial={{ opacity: 0, x: 100 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              {/* About Text */}
+              <Card
+                sx={{
+                  background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '20px',
+                  p: 4,
+                  mb: 4,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06))',
+                  }
+                }}
+              >
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontSize: { xs: '1.1rem', md: '1.3rem' },
+                    lineHeight: 1.8,
+                    color: alpha(theme.palette.common.white, 0.9),
+                    textAlign: 'justify',
+                    fontWeight: 400,
+                    letterSpacing: '0.02em'
+                  }}
+                >
+                  As a <strong>Senior AI Research Engineer</strong> with over 6 years of experience, I specialize in developing 
+                  enterprise-grade artificial intelligence solutions that drive digital transformation. My expertise spans 
+                  <strong> computer vision, deep learning, and cloud-native AI architectures</strong>, with a proven track record 
+                  of delivering scalable solutions for Fortune 500 companies.
+                </Typography>
+                
+                <Divider sx={{ my: 3, background: alpha(theme.palette.primary.main, 0.3) }} />
+                
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontSize: { xs: '1.1rem', md: '1.3rem' },
+                    lineHeight: 1.8,
+                    color: alpha(theme.palette.common.white, 0.85),
+                    textAlign: 'justify',
+                    fontWeight: 400,
+                    letterSpacing: '0.02em'
+                  }}
+                >
+                  My portfolio includes breakthrough projects like a <strong>Diabetic Retinopathy Detection System</strong> deployed 
+                  in healthcare facilities, an <strong>AI-powered Facial Recognition platform</strong> for airport security, and 
+                  innovative e-commerce solutions. I thrive in collaborative environments where cutting-edge technology meets 
+                  real-world impact, consistently delivering solutions that exceed performance benchmarks while maintaining 
+                  the highest standards of ethics and reliability.
+                </Typography>
+              </Card>
+
+              {/* Technical Skills */}
+              <Card
+                sx={{
+                  background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '20px',
+                  p: 4
+                }}
+              >
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontWeight: 800,
+                    mb: 4,
+                    color: 'white',
+                    fontSize: { xs: '1.5rem', md: '1.8rem' },
+                    background: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    color: 'transparent'
+                  }}
+                >
+                  🚀 Technical Expertise
+                </Typography>
+                
+                <Grid container spacing={3}>
+                  {skills.map((skill, index) => (
+                    <Grid xs={12} md={6} key={index}>
+                      <EnterpriseSkillBar skill={skill} index={index} />
+                    </Grid>
+                  ))}
+                </Grid>
+              </Card>
+            </motion.div>
+          </Box>
+        </Box>
+      </Container>
+    </Box>
+  );
+};
+
+export default EnterpriseAbout;

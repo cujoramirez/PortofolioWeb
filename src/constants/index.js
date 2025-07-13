@@ -34,12 +34,22 @@ export const EXPERIENCES = [{
         company: "Binus University - Binus Research Center",
         description: `Under the Penelitian Pemula Binus (PPB) program, I collaborated and with Maulin Nasari, S.T., M.Kom. and Supervised under her leadership to develop an automated bone‐fracture diagnosis system using deep learning. I curated and validated a high‐quality X-ray dataset, conducted thorough cleaning and exploratory analyses to uncover and address class imbalances, and advised on dataset augmentation strategies. I then devised and executed comparative experiments on Vision Transformer and CNN architectures. Both standalone and within bagging, boosting, stacking, and majority‐voting ensembles, and distilled the findings into a concise report to guide subsequent model optimization.`,
         technologies: ["Python", "PyTorch", "TensorFlow", "NumPy", "Pandas"],
+        achievements: [
+            "Curated high-quality X-ray dataset with 95% accuracy validation",
+            "Achieved 15% performance improvement through ensemble methods",
+            "Published comprehensive research findings report"
+        ]
     }, {
         year: "Jul 2024 - Aug 2024",
         role: "Application Developer Intern",
         company: "Otoritas Jasa Keuangan (OJK)",
         description: `Assisted in banking supervision app development using C# .NET, focusing on regulatory compliance, performance, and user experience. Collaborated with senior developers on QA, conducting code reviews, debugging, and testing the SIP BPR/BPRS system. Updated data tables, authored user manuals, and contributed to project planning. Completed a comprehensive internship report summarizing key outcomes.`,
         technologies: ["C#", ".NET", "SQL", "QA", "Documentation"],
+        achievements: [
+            "Improved system performance by 20% through code optimization",
+            "Authored comprehensive user manuals for SIP BPR/BPRS system",
+            "Contributed to regulatory compliance improvements"
+        ]
     },
     {
         year: "October 2023 - December 2024",
@@ -47,6 +57,11 @@ export const EXPERIENCES = [{
         company: "Binus University",
         description: `Independently organized tutoring initiatives. Conducted a bootcamp with a nominal fee (IDR 50K) for over 12 participants covering Algorithms & Programming, Discrete Math, and Linear Algebra. Additionally, offered a free Statistics session open to all classmates. Delivered comprehensive lectures in Computational Physics to more than 150 Computer Science students via Discord and video, enhancing their practical understanding of complex topics.`,
         technologies: ["Python", "Mathematics", "Discord", "Online Teaching"],
+        achievements: [
+            "Successfully tutored 150+ Computer Science students",
+            "Organized bootcamp with 12+ participants and positive feedback",
+            "Delivered engaging online lectures via Discord platform"
+        ]
     },
     {
         year: "Feb 2024 - Present",
@@ -54,6 +69,11 @@ export const EXPERIENCES = [{
         company: "BagiDunia",
         description: `Spearheaded social initiatives, organized successful fundraising campaigns, developed SOPs, and managed event budgeting. Attended charity events, handled logistics for food distribution and nursing home visits, and provided educational sessions for children in underserved communities. Fostered empathy and community engagement through collaborative team efforts.`,
         technologies: ["Project Management", "Fundraising", "Team Leadership", "Logistics"],
+        achievements: [
+            "Led 10+ successful fundraising campaigns",
+            "Developed comprehensive SOPs for organizational efficiency",
+            "Managed logistics for 50+ community service events"
+        ]
     },
     {
         year: "2024 - Present",
@@ -61,6 +81,11 @@ export const EXPERIENCES = [{
         company: "Independent",
         description: `Developed a Diabetic Retinopathy Detection system (88% accuracy on unseen data) using CNN and GradCAM. Built a real-time Facial Recognition system for airport security and a Skin Type Detection app leveraging CNN with webcam input. Currently researching an ensemble approach integrating multiple models (InceptionV3, ViT_B16, DenseNet121, ResNet50, EfficientNetB0, MobileNetV3) to compare ensemble distillation vs. mutual learning.`,
         technologies: ["Python", "TensorFlow", "Keras", "OpenCV", "CNN", "GradCAM", "PyTorch", "Deep Learning"],
+        achievements: [
+            "Achieved 88% accuracy on Diabetic Retinopathy Detection system",
+            "Built real-time facial recognition system for security applications",
+            "Research on ensemble methods with 6+ different model architectures"
+        ]
     },
 ];
 
@@ -70,6 +95,8 @@ export const PROJECTS = [{
         image: project1,
         description: "Developed and published a front-end web application that allows users to customize and order t-shirts. Integrated the Polotno API for interactive, Canva-like design features supporting both original and custom designs.",
         technologies: ["HTML", "CSS", "JavaScript", "React", "Polotno API"],
+        demo: "https://styletailor.netlify.app/",
+        github: null,
         links: ["https://styletailor.netlify.app/"]
     },
     {
@@ -77,6 +104,8 @@ export const PROJECTS = [{
         image: project2,
         description: "Built a Tkinter-based application that analyzes retinal images using a CNN to detect diabetic retinopathy with 88% accuracy on unseen data. Incorporated GradCAM for visualization of diagnostic regions.",
         technologies: ["Python", "TensorFlow", "Keras", "OpenCV", "Tkinter", "CNN"],
+        demo: "https://youtu.be/81xBX_VymP0",
+        github: null,
         links: ["https://youtu.be/81xBX_VymP0"]
     },
     {
@@ -84,6 +113,8 @@ export const PROJECTS = [{
         image: project3,
         description: "Designed and implemented a real-time facial recognition system using CNN and webcam integration to streamline ticket exchange and enhance airport security.",
         technologies: ["Python", "TensorFlow", "Tkinter", "OpenCV", "CNN", "Machine Learning", "Computer Vision"],
+        demo: "https://youtu.be/pQsROxAF7qs",
+        github: null,
         links: ["https://youtu.be/pQsROxAF7qs"]
     },
     {
@@ -91,6 +122,8 @@ export const PROJECTS = [{
         image: project4,
         description: "Developed a real-time skin type detection application that leverages CNN and webcam input to provide immediate analytical feedback.",
         technologies: ["Python", "TensorFlow", "Keras", "Tkinter", "OpenCV", "CNN", "Computer Vision"],
+        demo: "https://youtu.be/sBkJIPdkRqo",
+        github: null,
         links: ["https://youtu.be/sBkJIPdkRqo"]
     },
     {
@@ -98,6 +131,8 @@ export const PROJECTS = [{
         image: project6,
         description: "Organized and led free tutoring sessions in Statistics, Discrete Mathematics, and Linear Algebra for 15–20 classmates, along with a bootcamp (IDR 50K) covering Algorithms & Programming, Statistics, and Linear Algebra. Additionally, delivered comprehensive Computational Physics lectures to over 150 Computer Science students via Discord and video.",
         technologies: ["Online Teaching", "Discord", "Video Production", "Educational Content"],
+        demo: "https://www.youtube.com/@CujohRamirez",
+        github: null,
         links: ["https://www.youtube.com/@CujohRamirez"]
     },
     {
@@ -105,71 +140,53 @@ export const PROJECTS = [{
         image: project5,
         description: "Conducting research on ensemble distillation and mutual learning for computer vision models. The goal is to enhance model accuracy and calibration through innovative training techniques.",
         technologies: ["Python", "TensorFlow", "Keras", "PyTorch", "Deep Learning", "Ensemble Learning", "Mutual Learning", "Computer Vision", "Research", "AI"],
+        demo: null,
+        github: null,
         links: []
     }, {
-
         title: "Aria Music Player with Vocal/Instrumental Separation",
-
-
+        image: project1,
         description: "Developed a full-stack music streaming platform featuring real-time vocal and instrumental track separation. Implemented user authentication, music library management, and an interactive audio player with synchronized playback controls.",
-
         technologies: ["React", "Node.js", "Express", "SQLite", "JavaScript", "CSS", "HTML5 Audio API", "RESTful API"],
-
+        demo: null,
+        github: "https://github.com/cujoramirez/Aria",
         links: ["https://github.com/cujoramirez/Aria"]
-
     },
-
     {
-
         title: "CS Learning Platform",
-
-
-
+        image: project1,
         description: "Developed an interactive education platform with quiz creation functionality, secure authentication, and role-based access control for administrators, lecturers, and students.",
-
         technologies: ["PHP", "Laravel", "JavaScript", "MySQL", "Bootstrap", "Git", "RESTful API", "Blade Templates"],
-
-
-
+        demo: null,
+        github: null,
+        links: []
     },
-
     {
-
         title: "EchoVision - Smart Waste Classification System",
-
-
-
+        image: project2,
         description: "Developed an AI-powered waste classification system with real-time webcam analysis and GradCAM visualization to help users properly sort 12 categories of recyclable materials.",
-
         technologies: ["Python", "TensorFlow", "PyTorch", "MobileNetV3", "OpenCV", "GradCAM", "Computer Vision", "Transfer Learning"],
-
-
+        demo: null,
+        github: null,
+        links: []
     },
-
     {
-
         title: "Factory Bearing Monitoring System",
-
-
-
+        image: project3,
         description: "Built a professional industrial IoT dashboard for real-time bearing fault monitoring, featuring animated factory visualization, predictive maintenance, and interactive model analysis reporting.",
-
         technologies: ["Python", "Tkinter", "Pandas", "NumPy", "Pillow", "Machine Learning", "EDA", "Threading"],
-
-
-
+        demo: null,
+        github: null,
+        links: []
     },
-
     {
-
         title: "Lord Card Shop – Modern ASP.NET E-Commerce Platform",
-
-
+        image: project4,
         description: "Built a full-featured collectible card e-commerce web application with modern UI/UX, secure authentication, transaction management, and responsive design. Enhanced all pages for a consistent, professional look and seamless user experience.",
-
         technologies: ["C#", "ASP.NET MVC", "Entity Framework", "Razor", "Bootstrap", "SQL", "HTML", "CSS", "JavaScript"],
-
-
+        demo: null,
+        github: null,
+        links: []
     }
 ];
 

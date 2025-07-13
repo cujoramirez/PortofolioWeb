@@ -1,14 +1,18 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import Navbar from "./components/TempNavbar";
+import EnterpriseNavbar from "./components/EnterpriseNavbar";
 import Hero from "./components/Hero";
-import About from "./components/About";
+import BulletproofAbout from "./components/BulletproofAbout";
 import Technologies from "./components/Technologies";
 import Experience from "./components/Experience";
-import Research from "./components/Research"; // Import the new Research component
-import Projects from "./components/Projects";
+import Research from "./components/Research";
+import ModernProjects from "./components/ModernProjects";
 import Certifications from "./components/certificates";
-import Contact from "./components/Contact";
+import ModernContact from "./components/ModernContact";
+import FloatingNavBubble from "./components/FloatingNavBubble";
+import EnterpriseBackground from "./components/EnterpriseBackground";
+import EnhancedScrollToTop from "./components/EnhancedScrollToTop";
+import ScrollProgressIndicator from "./components/ScrollProgressIndicator";
 
 const App = () => {
   // Always call all hooks at the top level - no conditions!
@@ -100,10 +104,29 @@ const App = () => {
     accentColorTransform, 
     isIOSSafari
   ]);
-
   return (
     <div className="overflow-x-hidden text-neutral-300 
-      antialiased selection:bg-cyan-300 selection:text-cyan-900">
+      antialiased selection:bg-cyan-300 selection:text-cyan-900"
+      style={{
+        // Fix for iPhone scrolling issues
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehaviorY: 'none',
+        touchAction: 'pan-y',
+        position: 'relative',
+        minHeight: '100vh'
+      }}
+    >
+      {/* Scroll Progress Indicator */}
+      <ScrollProgressIndicator />
+      
+      {/* Enterprise Background Layer */}
+      <EnterpriseBackground 
+        particleCount={60}
+        showGeometry={true}
+        showNeuralNetwork={true}
+        intensity="high"
+      />
+      
       {/* Background gradient */}
       {isIOSSafari ? (
         <div 
@@ -113,7 +136,7 @@ const App = () => {
           }}
         />
       ) : (
-        <motion.div 
+        <motion.div
           className="fixed inset-0 -z-10 h-full w-full"
           style={{
             background: "radial-gradient(var(--gradient-position), var(--primary-color), var(--accent-color))",
@@ -144,18 +167,157 @@ const App = () => {
         </div>
       )}
       
-      {/* Content container */}
-      <div className="container mx-auto px-8 relative z-10">
-        <Navbar />
-        <Hero />
-        <About />
-        <Technologies />
-        <Experience />
-        <Research />
-        <Projects />
-        <Certifications />
-        <Contact />
-      </div>
+      {/* Content container with enterprise animations */}
+      <motion.div 
+        className="container mx-auto px-8 relative z-20"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
+      >
+        <EnterpriseNavbar />
+        
+        {/* Hero Section with Parallax */}
+        <motion.div
+          style={{
+            y: isIOSSafari ? 0 : useTransform(scrollYProgress, [0, 0.2], [0, -50])
+          }}
+        >
+          <Hero />
+        </motion.div>
+        
+        {/* Section Transition */}
+        <motion.div
+          className="h-20 bg-gradient-to-b from-transparent via-purple-500/5 to-transparent"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1 }}
+        />
+        
+        {/* About Section with Enhanced Animations */}
+        <BulletproofAbout />
+        
+        {/* Section Transition */}
+        <motion.div
+          className="h-20 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, delay: 0.2 }}
+        />
+        
+        {/* Technologies Section with Stagger Animation */}
+        <motion.div
+          initial={{ opacity: 0, y: 100 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+        >
+          <Technologies />
+        </motion.div>
+        
+        {/* Section Transition */}
+        <motion.div
+          className="h-20 bg-gradient-to-b from-transparent via-green-500/5 to-transparent"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, delay: 0.1 }}
+        />
+        
+        {/* Experience Section */}
+        <motion.div
+          initial={{ opacity: 0, x: -100 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <Experience />
+        </motion.div>
+        
+        {/* Section Transition */}
+        <motion.div
+          className="h-20 bg-gradient-to-b from-transparent via-indigo-500/5 to-transparent"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, delay: 0.3 }}
+        />
+        
+        {/* Research Section */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <Research />
+        </motion.div>
+        
+        {/* Section Transition */}
+        <motion.div
+          className="h-20 bg-gradient-to-b from-transparent via-pink-500/5 to-transparent"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, delay: 0.1 }}
+        />
+        
+        {/* Projects Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 100 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+        >
+          <ModernProjects />
+        </motion.div>
+        
+        {/* Section Transition */}
+        <motion.div
+          className="h-20 bg-gradient-to-b from-transparent via-yellow-500/5 to-transparent"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, delay: 0.2 }}
+        />
+        
+        {/* Certifications Section */}
+        <motion.div
+          initial={{ opacity: 0, x: 100 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          style={{ 
+            position: 'relative',
+            zIndex: 150
+          }}
+        >
+          <Certifications />
+        </motion.div>
+        
+        {/* Section Transition */}
+        <motion.div
+          className="h-20 bg-gradient-to-b from-transparent via-teal-500/5 to-transparent"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, delay: 0.4 }}
+        />
+        
+        {/* Contact Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.5 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <ModernContact />
+        </motion.div>
+      </motion.div>
+      
+      {/* Floating Navigation Bubble */}
+      <FloatingNavBubble />
       
       {/* Scroll progress indicator */}
       {isIOSSafari ? (
@@ -169,6 +331,9 @@ const App = () => {
           style={{ scaleX: scrollYProgress }}
         />
       )}
+
+      {/* Floating Scroll to Top Button */}
+      <EnhancedScrollToTop />
       
       {/* iOS Safari specific styles */}
       <style>

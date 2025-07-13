@@ -1,39 +1,41 @@
 import React, { useState, useRef, memo, lazy, Suspense, useEffect, useMemo } from "react";
-import { motion } from "framer-motion"; // Removed useReducedMotion import
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { Box, Container, Typography, Grid, Paper, Chip } from "@mui/material";
+import { Code, Psychology, Science, Architecture, Speed, Memory } from "@mui/icons-material";
+import { Canvas } from "@react-three/fiber";
 import TechnologyCard from "./TechnologyCard";
 import { technologies } from "./techData";
 import useDeviceDetection from "./useDeviceDetection";
-import { useSuppressReducedMotionWarning } from './useSupressReducedMotionWarning';
+import { useSystemProfile } from './useSystemProfile';
+import { SceneManager } from "./three/SceneManager.jsx";
+import { TechConstellation } from "./three/InteractiveTechSphere.jsx";
+import { EnterpriseMotion } from "./EnterpriseMotion.jsx";
 
 // Lazy-load enhanced light effects only for desktop
 const LightEffects = lazy(() => import("./LightEffects"));
 
-// Create a mock for useReducedMotion that always returns false
-const mockReducedMotion = false;
-
 const Technologies = () => {
+  const { performanceTier, deviceType } = useSystemProfile();
+  const { isMobile, isTablet, isIOSSafari } = useDeviceDetection();
+  
   // Content readiness states - critical for iOS scroll fix
   const [contentReady, setContentReady] = useState(false);
   const [animationsComplete, setAnimationsComplete] = useState(false);
-  const isMountedRef = useRef(false);
-  
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [hoveredTech, setHoveredTech] = useState(null);
   const hoveredTechRef = useRef(null);
-  
-  // Force reduced motion to false rather than detecting it
-  const preferredReducedMotion = mockReducedMotion;
+  const containerRef = useRef(null);
+  const isMountedRef = useRef(false);
 
-  // Still use the suppression hook to handle any internal warnings
-  useSuppressReducedMotionWarning();
+  // Advanced scroll-based animations
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  });
 
-  // Use our device detection hook
-  const { 
-    isMobile, 
-    isTablet, 
-    isIOSSafari, 
-    performanceTier, 
-    deviceType 
-  } = useDeviceDetection();
+  const backgroundY = useTransform(scrollYProgress, [0, 1], [0, -50]);
+  const titleY = useTransform(scrollYProgress, [0, 0.5], [20, 0]);
+  const titleOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 1]); // Always visible
   
   // Flag to identify mobile/tablet devices for optimizations
   const isHandheld = useMemo(() => isMobile || isTablet, [isMobile, isTablet]);
@@ -74,8 +76,22 @@ const Technologies = () => {
       };
     }
   }, [isHandheld, isIOSSafari]);
+
+  // Categories with enhanced icons and colors (DevOps removed)
+  const categories = [
+    { name: 'All', icon: Architecture, color: '#ffffff' },
+    { name: 'AI/ML', icon: Psychology, color: '#6366f1' },
+    { name: 'Frontend', icon: Code, color: '#22d3ee' },
+    { name: 'Backend', icon: Memory, color: '#10b981' },
+    { name: 'Other', icon: Science, color: '#8b5cf6' }
+  ];
+
+  // Filter technologies based on selected category
+  const filteredTechnologies = selectedCategory === 'All' 
+    ? technologies 
+    : technologies.filter(tech => tech.category === selectedCategory);
   
-  // iOS Safari scroll fix (unchanged)
+  // iOS Safari scroll fix
   useEffect(() => {
     if (isIOSSafari) {
       document.body.style.overflow = 'auto';
@@ -97,334 +113,566 @@ const Technologies = () => {
     };
   }, [isIOSSafari]);
 
-  // Container variants - desktop only, no variants for mobile/tablet
-  const getOptimizedContainerVariants = (staggerValue, isIOSSafari) => {
-    // Skip animations for mobile/tablet
-    if (isHandheld) {
-      return {};
-    }
-    
-    return {
-      hidden: { opacity: 0, y: isIOSSafari ? 0 : 20 },
-      visible: {
-        opacity: 1,
-        y: 0,
-        transition: {
-          duration: isIOSSafari ? 0.3 : 0.7,
-          ease: "easeOut",
-          staggerChildren: isIOSSafari ? 0.03 : staggerValue,
-          when: "beforeChildren",
-        },
-      },
-    };
-  };
-
-  // Title variant - only for desktop
-  const getTitleVariants = () => {
-    // Skip animations for mobile/tablet
-    if (isHandheld) {
-      return {};
-    }
-    
-    return {
-      hidden: { opacity: 0, y: -15 },
-      visible: {
-        opacity: 1,
-        y: 0,
-        transition: { duration: 0.5, ease: "easeOut" },
-      },
-      hover: {
-        scale: 1.02,
-        textShadow: "0px 0px 12px rgba(168, 85, 247, 0.7)",
-        transition: { duration: 0.3 },
-      },
-    };
-  };
-
-  // Stagger multiplier (desktop only)
-  const staggerMultiplier = useMemo(() => {
-    if (isHandheld) return 0;
-    return 0.15;
-  }, [isHandheld]);
-  
-  const containerVars = useMemo(() => 
-    getOptimizedContainerVariants(staggerMultiplier, isIOSSafari),
-  [staggerMultiplier, isIOSSafari, isHandheld]);
-  
-  // Special flag for mobile/tablet to completely disable animations
-  // Removed preferredReducedMotion from dependencies since it's now always false
-  const disableAnimations = useMemo(() => 
-    isHandheld || (isMobile && performanceTier === "low") || isIOSSafari,
-  [isHandheld, isMobile, performanceTier, isIOSSafari]);
-
-  // Keep existing grid layout logic
-  const getGridColumns = useMemo(() => {
-    if (isMobile) return "grid-cols-2";
-    if (isTablet) return "grid-cols-3 tablet-grid";
-    return "grid-cols-5";
-  }, [isMobile, isTablet]);
-  
-  const getGridGap = useMemo(() => {
-    if (isMobile) return "gap-2";
-    if (isTablet) return "gap-3 sm:gap-4";
-    return "gap-4 md:gap-5";
-  }, [isMobile, isTablet]);
-  
-  const sectionPadding = useMemo(() => {
-    if (isMobile) return "py-8";
-    if (isTablet) return "py-12";
-    return "py-16";
-  }, [isMobile, isTablet]);
-
   return (
-    <section
+    <Box
+      ref={containerRef}
+      component="section"
       id="technologies"
-      className={`relative overflow-hidden ${sectionPadding}`}
-      style={{
-        background: "linear-gradient(to bottom, #0f0528, #130a35, #1a0d40)",
-        minHeight: isMobile ? "auto" : isTablet ? "65vh" : "80vh",
-        position: "relative",
-        clipPath: "polygon(0 0, 100% 0, 100% 95%, 0 100%)",
-        visibility: contentReady || animationsComplete ? "visible" : "hidden",
+      sx={{
+        py: { xs: 8, md: 12 },
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'radial-gradient(125% 125% at 50% 10%, #000 40%, #1e293b 70%, #334155 100%)',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          background: 'url("data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%2322d3ee" fill-opacity="0.03"%3E%3Ccircle cx="20" cy="20" r="1"/%3E%3C/g%3E%3C/svg%3E")',
+          opacity: 0.5
+        },
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.15), transparent 50%), radial-gradient(circle at 70% 80%, rgba(34, 211, 238, 0.15), transparent 50%)',
+          animation: performanceTier !== 'low' ? 'backgroundPulse 8s ease-in-out infinite alternate' : 'none'
+        }
       }}
     >
-      {/* Top overlay gradient - simplified for mobile */}
-      <div
-        className="absolute top-0 left-0 w-full h-16 sm:h-20 z-10"
-        style={{
-          background:
-            "linear-gradient(to bottom, rgba(15, 5, 40, 0) 0%, rgba(15, 5, 40, 0.8) 100%)",
-          transform: "translateY(-100%)",
-          opacity: isHandheld ? 0.5 : 0.7,
-        }}
-      />
-      
-      {/* Enhanced Light effects - DESKTOP ONLY with hover responsiveness */}
-      {!isHandheld && performanceTier !== "low" && !isIOSSafari && contentReady && (
-        <div className="absolute inset-0 overflow-hidden">
-          <Suspense fallback={null}>
-            <LightEffects 
-              hoveredTech={hoveredTech}
-              hoveredTechRef={hoveredTechRef}
-            />
-          </Suspense>
-        </div>
+      {/* Enterprise 3D Technology Constellation */}
+      {!isHandheld && performanceTier !== "low" && (
+        <SceneManager>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              opacity: 0.3,
+              zIndex: 2,
+              pointerEvents: 'auto'
+            }}
+          >
+            <Suspense fallback={
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  fontSize: '0.8rem'
+                }}
+              >
+                Loading 3D Scene...
+              </Box>
+            }>
+              <Canvas 
+                camera={{ position: [0, 0, 15], fov: 60 }}
+                onCreated={({ gl }) => {
+                  gl.setClearColor(0x000000, 0);
+                }}
+                gl={{ 
+                  antialias: performanceTier !== 'low',
+                  alpha: true,
+                  preserveDrawingBuffer: false
+                }}
+                onError={(error) => {
+                  console.warn('3D Canvas error:', error);
+                }}
+              >
+                <Suspense fallback={null}>
+                  <ambientLight intensity={0.2} />
+                  <pointLight position={[10, 10, 10]} intensity={0.5} />
+                  <pointLight position={[-10, -10, -10]} intensity={0.3} color="#8b5cf6" />
+                  
+                  {/* Interactive technology constellation */}
+                  {filteredTechnologies && filteredTechnologies.length > 0 && (
+                    <TechConstellation 
+                      technologies={filteredTechnologies.slice(0, 12)}
+                      hoveredTech={hoveredTech}
+                      setHoveredTech={setHoveredTech}
+                    />
+                  )}
+                </Suspense>
+              </Canvas>
+            </Suspense>
+          </Box>
+        </SceneManager>
       )}
 
-      {/* For mobile/tablet: use a simpler div instead of motion.div */}
-      {isHandheld ? (
-        <div
-          className="relative z-10 container mx-auto px-4 sm:px-6 md:px-8 h-full flex flex-col"
-          style={{ 
-            opacity: contentReady || animationsComplete ? 1 : 0,
-            transition: "opacity 0.3s ease-out",
-          }}
-        >
-          {/* Static title for mobile/tablet */}
-          <h2
-            className="mb-6 sm:mb-10 md:mb-14 mt-4 text-center text-3xl sm:text-4xl md:text-5xl font-bold"
+      {/* Enhanced background effects with floating particles */}
+      {!isHandheld && performanceTier !== "low" && (
+        <>
+          <motion.div
             style={{
-              background: "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7, #ec4899)",
-              backgroundSize: "300% 100%",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              textShadow: isMobile ? "0 2px 15px rgba(236, 72, 153, 0.25)" : "0 2px 25px rgba(236, 72, 153, 0.3)",
-              paddingBottom: "10px",
+              position: 'absolute',
+              inset: 0,
+              zIndex: 1,
+              y: backgroundY
             }}
           >
-            Skills & Tools
-          </h2>
-
-          {/* Static grid for mobile/tablet */}
-          <div 
-            className={`grid ${getGridColumns} ${getGridGap} justify-items-center mx-auto`}
-            style={{ 
-              minHeight: isMobile ? "300px" : "400px",
-              maxWidth: isMobile ? "500px" : "800px",
-            }}
-          >
-            {technologies.map((tech, index) => (
-              <TechnologyCard
-                key={index}
-                tech={tech}
-                index={index}
+            <Suspense fallback={null}>
+              <LightEffects 
                 hoveredTech={hoveredTech}
-                setHoveredTech={setHoveredTech}
                 hoveredTechRef={hoveredTechRef}
-                isMobile={isMobile}
-                isTablet={isTablet}
-                isIOSSafari={isIOSSafari}
-                reducedMotion={true} // Force reduced motion for mobile/tablet
-                contentReady={contentReady || animationsComplete}
-                performanceTier={performanceTier}
-                useStaticStyles={true} // New prop to enable static shiny style
               />
-            ))}
-          </div>
-
-          <div className="w-full max-w-5xl mx-auto mt-8 sm:mt-12">
-            <div
-              className="h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-70"
-              style={{ boxShadow: "0 0 8px rgba(168, 85, 247, 0.25)" }}
-            />
-          </div>
-        </div>
-      ) : (
-        /* Original motion.div for desktop - unchanged */
-        <motion.div
-          className="relative z-10 container mx-auto px-4 sm:px-6 md:px-8 h-full flex flex-col"
-          variants={containerVars}
-          initial="hidden"
-          {...(shouldUseScrollTrigger
-            ? { whileInView: "visible", viewport: { once: true, amount: 0.2 } }
-            : { animate: contentReady ? "visible" : "hidden" }
-          )}
-          style={{ 
-            transform: "translateZ(0)", // Hardware acceleration
-            opacity: contentReady || animationsComplete ? 1 : 0,
-            transition: "opacity 0.3s ease-out",
-          }}
-        >
-          <motion.h2
-            className="mb-6 sm:mb-10 md:mb-14 mt-4 text-center text-3xl sm:text-4xl md:text-5xl font-bold"
-            variants={getTitleVariants()}
-            whileHover={isIOSSafari ? undefined : "hover"}
-            style={{
-              background:
-                "linear-gradient(90deg, #ec4899, #cbd5e1, #a855f7, #ec4899)",
-              backgroundSize: "300% 100%",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              animation: disableAnimations ? "none" : "gradientShift 6s ease-in-out infinite",
-              textShadow: "0 2px 25px rgba(236, 72, 153, 0.3)",
-              paddingBottom: "10px",
-            }}
-          >
-            Skills & Tools
-          </motion.h2>
-
-          <motion.div 
-            className={`grid ${getGridColumns} ${getGridGap} justify-items-center mx-auto`}
-            style={{ 
-              minHeight: "500px",
-              visibility: contentReady || animationsComplete ? "visible" : "visible",
-              maxWidth: "1200px",
-            }}
-          >
-            {technologies.map((tech, index) => (
-              <TechnologyCard
-                key={index}
-                tech={tech}
-                index={index}
-                hoveredTech={hoveredTech}
-                setHoveredTech={setHoveredTech}
-                hoveredTechRef={hoveredTechRef}
-                isMobile={isMobile}
-                isTablet={isTablet}
-                isIOSSafari={isIOSSafari}
-                reducedMotion={disableAnimations}
-                contentReady={contentReady || animationsComplete}
-                performanceTier={performanceTier}
-                useStaticStyles={false} // Desktop uses animated styles
-              />
-            ))}
+            </Suspense>
           </motion.div>
-
-          <div className="w-full max-w-5xl mx-auto mt-8 sm:mt-12 md:mt-16">
-            <div
-              className="h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-70"
-              style={{ boxShadow: "0 0 8px rgba(168, 85, 247, 0.25)" }}
-            />
-          </div>
-        </motion.div>
+          
+          {/* Floating Particles */}
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              overflow: 'hidden',
+              zIndex: 1,
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                width: '200%',
+                height: '200%',
+                background: `
+                  radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(34, 211, 238, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.08) 0%, transparent 50%)
+                `,
+                animation: 'floatSlow 20s ease-in-out infinite'
+              },
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                width: '150%',
+                height: '150%',
+                background: `
+                  radial-gradient(circle at 60% 70%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+                  radial-gradient(circle at 30% 30%, rgba(245, 101, 101, 0.06) 0%, transparent 30%)
+                `,
+                animation: 'floatReverse 15s ease-in-out infinite'
+              }
+            }}
+          />
+          
+          {/* Animated Code Symbols */}
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 1,
+              '& .floating-symbol': {
+                position: 'absolute',
+                color: 'rgba(99, 102, 241, 0.1)',
+                fontSize: '2rem',
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                animation: 'symbolFloat 8s ease-in-out infinite',
+                pointerEvents: 'none'
+              }
+            }}
+          >
+            <Typography className="floating-symbol" sx={{ top: '10%', left: '5%', animationDelay: '0s' }}>{'<>'}</Typography>
+            <Typography className="floating-symbol" sx={{ top: '20%', right: '8%', animationDelay: '1s' }}>{'{ }'}</Typography>
+            <Typography className="floating-symbol" sx={{ top: '60%', left: '3%', animationDelay: '2s' }}>{'</>'}</Typography>
+            <Typography className="floating-symbol" sx={{ bottom: '20%', right: '5%', animationDelay: '3s' }}>{'[ ]'}</Typography>
+            <Typography className="floating-symbol" sx={{ bottom: '40%', left: '7%', animationDelay: '4s' }}>{'( )'}</Typography>
+            <Typography className="floating-symbol" sx={{ top: '40%', right: '3%', animationDelay: '5s' }}>{'*'}</Typography>
+          </Box>
+        </>
       )}
 
-      {/* Bottom gradient - simplified for mobile */}
-      <div className="absolute bottom-0 left-0 w-full h-12 sm:h-16 z-10 overflow-hidden">
-        <div
-          className="w-full h-full"
+      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 10 }}>
+        {/* Enhanced Title with Gradient and Light Effects */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
           style={{
-            background:
-              "linear-gradient(to top, rgba(26, 13, 64, 0.8) 0%, rgba(26, 13, 64, 0) 100%)",
-            transform: "translateY(50%)",
+            textAlign: 'center',
+            marginBottom: 48,
+            paddingTop: 32,
+            paddingBottom: 32,
+            y: shouldUseScrollTrigger ? titleY : 0,
+            opacity: 1 // Always visible
           }}
-        />
-      </div>
-      
-      <ResponsiveStyles />
-    </section>
+        >
+          <Box sx={{ position: 'relative', display: 'inline-block' }}>
+            {/* Main Title with Gradient */}
+            <Typography
+              variant="h1"
+              sx={{
+                fontSize: { xs: '3.5rem', md: '5rem', lg: '6rem' },
+                fontWeight: 800,
+                mb: 3,
+                textAlign: 'center',
+                lineHeight: 1.1,
+                letterSpacing: '-0.02em',
+                position: 'relative',
+                zIndex: 2,
+                // Always ensure white text is visible first
+                color: '#ffffff !important',
+                // Progressive enhancement: add gradient if supported
+                ...(typeof window !== 'undefined' && CSS.supports && CSS.supports('-webkit-background-clip', 'text') ? {
+                  background: 'linear-gradient(135deg, #ffffff 0%, #e2e8f0 25%, #6366f1 50%, #22d3ee 75%, #ffffff 100%)',
+                  backgroundSize: '400% 100%',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  animation: performanceTier !== 'low' && !isHandheld ? 'gradientFlow 8s ease-in-out infinite' : 'none'
+                } : {}),
+                // Enhanced fallbacks
+                '@supports not (-webkit-background-clip: text)': {
+                  background: 'none !important',
+                  WebkitBackgroundClip: 'initial !important',
+                  WebkitTextFillColor: 'initial !important',
+                  color: '#ffffff !important'
+                }
+              }}
+            >
+              Skills & Technologies
+            </Typography>
+
+            {/* Animated Background Glow - Removed to fix white glowing bar */}
+            {/* Background glow effects removed to prevent white glowing bar issue */}
+          </Box>
+          
+          {/* Simple Elegant Divider */}
+          <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center', mt: 2 }}>
+            <Box
+              sx={{
+                width: 200,
+                height: 4,
+                background: 'linear-gradient(90deg, transparent 0%, #6366f1 20%, #22d3ee 50%, #8b5cf6 80%, transparent 100%)',
+                borderRadius: 2,
+                opacity: 0.8
+              }}
+            />
+          </Box>
+        </motion.div>
+
+        {/* Enhanced Category Navigation */}
+        {categories && (
+          <Box sx={{ mb: 6 }}>
+            <Box 
+              sx={{ 
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                gap: { xs: 1.5, sm: 2 },
+                px: { xs: 2, sm: 0 },
+                maxWidth: '600px',
+                margin: '0 auto'
+              }}
+            >
+              {categories.map((category, index) => {
+                const IconComponent = category.icon;
+                const isSelected = selectedCategory === category.name;
+                return (
+                  <motion.div
+                    key={category.name}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{
+                      flex: { xs: '1 1 calc(50% - 6px)', sm: '0 1 auto' },
+                      minWidth: { xs: 'calc(50% - 6px)', sm: '100px' },
+                      maxWidth: { xs: 'calc(50% - 6px)', sm: '140px' }
+                    }}
+                  >
+                    <Paper
+                      onClick={() => setSelectedCategory(category.name)}
+                      elevation={isSelected ? 12 : 4}
+                      sx={{
+                        p: { xs: 1.5, sm: 2 },
+                        borderRadius: 3,
+                        background: isSelected 
+                          ? `linear-gradient(135deg, ${category.color}40, ${category.color}20)`
+                          : 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
+                        backdropFilter: 'blur(10px)',
+                        border: isSelected ? `2px solid ${category.color}` : '1px solid rgba(255, 255, 255, 0.1)',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                        width: '100%',
+                        minHeight: { xs: '70px', sm: '80px' },
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        '&::before': isSelected && performanceTier !== 'low' && !isHandheld ? {
+                          content: '""',
+                          position: 'absolute',
+                          inset: 0,
+                            background: `linear-gradient(45deg, transparent 30%, ${category.color}20 50%, transparent 70%)`,
+                            animation: 'categoryShimmer 2s ease-in-out infinite',
+                            zIndex: 0
+                          } : {},
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            background: `linear-gradient(135deg, ${category.color}30, ${category.color}15)`,
+                            boxShadow: `0 8px 32px ${category.color}30`
+                          }
+                        }}
+                      >
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          gap: { xs: 1, sm: 2 },
+                          flexDirection: { xs: 'column', sm: 'row' },
+                          position: 'relative',
+                          zIndex: 1
+                        }}>
+                          <IconComponent 
+                            sx={{ 
+                              color: isSelected ? category.color : 'rgba(255, 255, 255, 0.7)',
+                              fontSize: { xs: 24, sm: 28 },
+                              transition: 'all 0.3s ease',
+                              filter: isSelected ? `drop-shadow(0 0 8px ${category.color}50)` : 'none'
+                            }} 
+                          />
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              color: isSelected ? 'white' : 'rgba(255, 255, 255, 0.8)',
+                              fontWeight: isSelected ? 700 : 500,
+                              fontSize: { xs: '0.8rem', sm: '1.25rem' },
+                              transition: 'all 0.3s ease',
+                              textAlign: 'center',
+                              textShadow: isSelected ? `0 0 8px ${category.color}50` : 'none'
+                            }}
+                          >
+                            {category.name}
+                          </Typography>
+                        </Box>
+                      </Paper>
+                    </motion.div>
+                );
+              })}
+            </Box>
+          </Box>
+        )}
+
+        {/* Technologies Grid */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={selectedCategory}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            layout
+          >
+            <Grid container spacing={3} justifyContent="center">
+              {filteredTechnologies.map((tech, index) => (
+                <Grid 
+                  size={{ xs: 6, sm: 4, md: 3, lg: 2.4, xl: 2 }} 
+                  key={tech.name}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  <TechnologyCard
+                    tech={tech}
+                    index={index}
+                    hoveredTech={hoveredTech}
+                    setHoveredTech={setHoveredTech}
+                    hoveredTechRef={hoveredTechRef}
+                    isMobile={isMobile}
+                    isTablet={isTablet}
+                    isIOSSafari={isIOSSafari}
+                    reducedMotion={isHandheld}
+                    contentReady={contentReady || animationsComplete}
+                    performanceTier={performanceTier}
+                    useStaticStyles={isHandheld}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          </motion.div>
+        </AnimatePresence>
+      </Container>
+
+      {/* Advanced CSS Animations */}
+      <style>{`
+        @keyframes gradientShift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+
+        @keyframes backgroundPulse {
+          0% { opacity: 0.5; transform: scale(1); }
+          100% { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        @keyframes gradientFlow {
+          0% { background-position: 0% 0%; }
+          25% { background-position: 100% 0%; }
+          50% { background-position: 100% 100%; }
+          75% { background-position: 0% 100%; }
+          100% { background-position: 0% 0%; }
+        }
+
+        @keyframes titleGlow {
+          0% { 
+            opacity: 0.8;
+            transform: scale(1);
+            filter: blur(3px);
+          }
+          50% { 
+            opacity: 1;
+            transform: scale(1.02);
+            filter: blur(5px);
+          }
+          100% { 
+            opacity: 0.8;
+            transform: scale(1);
+            filter: blur(3px);
+          }
+        }
+
+        @keyframes titlePulse {
+          0% { 
+            opacity: 0.3;
+            transform: translate(-50%, -50%) scale(1);
+          }
+          50% { 
+            opacity: 0.6;
+            transform: translate(-50%, -50%) scale(1.05);
+          }
+          100% { 
+            opacity: 0.3;
+            transform: translate(-50%, -50%) scale(1);
+          }
+        }
+
+        @keyframes dividerGlow {
+          0% { 
+            opacity: 0.6;
+            filter: blur(8px);
+          }
+          100% { 
+            opacity: 1;
+            filter: blur(12px);
+          }
+        }
+
+        @keyframes dividerPulse {
+          0% { 
+            opacity: 0.1;
+            transform: translate(-50%, -50%) scale(1);
+          }
+          50% { 
+            opacity: 0.3;
+            transform: translate(-50%, -50%) scale(1.1);
+          }
+          100% { 
+            opacity: 0.1;
+            transform: translate(-50%, -50%) scale(1);
+          }
+        }
+
+        @keyframes floatSlow {
+          0% { 
+            transform: translate(0%, 0%) rotate(0deg);
+            opacity: 0.3;
+          }
+          33% { 
+            transform: translate(2%, -2%) rotate(120deg);
+            opacity: 0.5;
+          }
+          66% { 
+            transform: translate(-1%, 1%) rotate(240deg);
+            opacity: 0.3;
+          }
+          100% { 
+            transform: translate(0%, 0%) rotate(360deg);
+            opacity: 0.3;
+          }
+        }
+
+        @keyframes floatReverse {
+          0% { 
+            transform: translate(0%, 0%) rotate(0deg);
+            opacity: 0.2;
+          }
+          50% { 
+            transform: translate(-3%, 2%) rotate(-180deg);
+            opacity: 0.4;
+          }
+          100% { 
+            transform: translate(0%, 0%) rotate(-360deg);
+            opacity: 0.2;
+          }
+        }
+
+        @keyframes symbolFloat {
+          0% { 
+            transform: translateY(0px) rotate(0deg);
+            opacity: 0.1;
+          }
+          25% { 
+            transform: translateY(-10px) rotate(90deg);
+            opacity: 0.3;
+          }
+          50% { 
+            transform: translateY(-20px) rotate(180deg);
+            opacity: 0.2;
+          }
+          75% { 
+            transform: translateY(-10px) rotate(270deg);
+            opacity: 0.3;
+          }
+          100% { 
+            transform: translateY(0px) rotate(360deg);
+            opacity: 0.1;
+          }
+        }
+
+        @keyframes categoryShimmer {
+          0% { 
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          50% { 
+            transform: translateX(0%);
+            opacity: 1;
+          }
+          100% { 
+            transform: translateX(100%);
+            opacity: 0;
+          }
+        }
+
+        /* Enhanced 3D perspective for better depth */
+        .tech-grid {
+          perspective: 1000px;
+          transform-style: preserve-3d;
+        }
+
+        /* Hardware acceleration */
+        .floating-card {
+          transform: translate3d(0, 0, 0);
+          will-change: transform;
+        }
+
+        /* Reduced motion fallbacks */
+        @media (prefers-reduced-motion: reduce) {
+          .floating-symbol,
+          [style*="animation"] {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+          }
+        }
+      `}</style>
+    </Box>
   );
 };
-
-// Encapsulated responsive styles component
-const ResponsiveStyles = () => (
-  <style>{`
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    
-    /* iOS specific optimizations */
-    @supports (-webkit-touch-callout: none) {
-      .ios-fix {
-        transform: translate3d(0,0,0);
-        -webkit-overflow-scrolling: touch;
-        overflow-y: auto !important;
-      }
-      
-      body {
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
-      }
-    }
-    
-    /* FIXED: Special grid layout for tablets to center last two items */
-    .tablet-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-    
-    /* Center the last two items specifically for 10 items in 3-column grid */
-    @media (min-width: 640px) and (max-width: 1023px) {
-      .tablet-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-      
-      .tablet-grid > *:nth-last-child(2),
-      .tablet-grid > *:last-child {
-        grid-column: span 1;
-      }
-      
-      .tablet-grid > *:nth-last-child(2) {
-        transform: translateX(50%);
-      }
-      
-      .tablet-grid::after {
-        content: "";
-        width: 0;
-        grid-column: span 3;
-      }
-    }
-    
-    /* For larger tablets */
-    @media (min-width: 768px) and (max-width: 1023px) {
-      .tablet-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-      
-      .tablet-grid > *:nth-last-child(2),
-      .tablet-grid > *:last-child {
-        grid-column: span 2;
-        justify-self: center;
-        max-width: 130px;
-      }
-      
-      .tablet-grid > *:nth-last-child(2) {
-        transform: translateX(0);
-      }
-    }
-  `}</style>
-);
 
 export default memo(Technologies);

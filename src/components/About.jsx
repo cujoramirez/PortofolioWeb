@@ -1,225 +1,211 @@
-import React, { useEffect, useState, useRef, memo } from "react";
-import { motion, useAnimation } from "framer-motion";
+import React from "react";
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Grid,
+  Card,
+  CardContent,
+  Divider
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { ABOUT_TEXT } from "../constants/index";
-import { useSystemProfile } from "../components/useSystemProfile.jsx";
 import aboutImg from "../assets/GadingAdityaPerdana2.jpg";
 
-import { containerVariants } from "./aboutAnimations";
-import AboutShapes from "./AboutShapes";
-import AboutTitleDivider from "./AboutTitleDivider";
-import AboutImage from "./AboutImage";
-import AboutText from "./AboutText";
-import { highlightAboutText } from "./highlightAboutText";
-import { useIOSSafariFixes } from "./useIOSSafariFixes";
+// Styled Components using MUI
+const StyledSection = styled(Box)(() => ({
+  position: 'relative',
+  width: '100%',
+  minHeight: '100vh',
+  background: 'linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)',
+  paddingTop: '80px',
+  paddingBottom: '80px',
+  overflow: 'visible',
+}));
+
+const GradientTitle = styled(Typography)(() => ({
+  background: 'linear-gradient(45deg, #e91e63 30%, #9c27b0 90%)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+  fontWeight: 'bold',
+  textAlign: 'center',
+  fontSize: '5rem',
+  marginBottom: '64px',
+  '@media (max-width: 768px)': {
+    fontSize: '3rem',
+    marginBottom: '32px',
+  },
+}));
+
+const ImageContainer = styled(Box)(() => ({
+  position: 'relative',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  '& img': {
+    borderRadius: '16px',
+    objectFit: 'cover',
+    zIndex: 10,
+    position: 'relative',
+    boxShadow: '0 20px 40px rgba(156, 39, 176, 0.3)',
+    width: '320px',
+    height: '400px',
+    '@media (max-width: 768px)': {
+      width: '240px',
+      height: '300px',
+    },
+  },
+}));
+
+const BorderDecoration = styled(Box)(({ color, position }) => ({
+  position: 'absolute',
+  width: '100%',
+  height: '100%',
+  borderRadius: '16px',
+  border: `2px solid ${color}`,
+  zIndex: 0,
+  ...(position === 'bottom-right' && {
+    bottom: '-16px',
+    right: '-16px',
+  }),
+  ...(position === 'top-left' && {
+    top: '-16px',
+    left: '-16px',
+  }),
+}));
+
+const AchievementCard = styled(Card)(({ theme, gradientcolor }) => ({
+  background: `linear-gradient(135deg, ${gradientcolor}20 0%, transparent 100%)`,
+  border: `1px solid ${gradientcolor}40`,
+  borderRadius: '12px',
+  textAlign: 'center',
+  padding: '24px',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-8px) scale(1.02)',
+    boxShadow: `0 20px 40px ${gradientcolor}30`,
+  },
+}));
 
 function About() {
-  const [contentReady, setContentReady] = useState(true); // Always start ready
-  const [fallbackActive, setFallbackActive] = useState(true); // Always start active
-  const contentRef = useRef(null);
-  const controls = useAnimation();
+  console.log("🚀 SIMPLE MUI About component is loading!");
 
-  const { performanceTier, deviceType } = useSystemProfile();
-
-  // Device checks
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isIOSSafari = isIOS && isSafari;
-  const isMobile = deviceType === "mobile" || deviceType === "tablet";
-
-  // Reduced / simple mode
-  const reducedMotion = isMobile || isIOSSafari || performanceTier === "low";
-  const simpleMode = isIOSSafari || performanceTier === "low";
-
-  // For background shapes
-  const numShapes = isMobile ? 2 : isIOSSafari ? 0 : 5;
-  const showShapes = performanceTier !== "low" && !isIOSSafari;
-
-  // Animation flags
-  const shouldAnimate = !reducedMotion;
-  const shouldUseScrollTrigger = !isMobile && !isIOSSafari && performanceTier === "high";
-
-  // iOS Safari fixes
-  useIOSSafariFixes(isIOSSafari, setContentReady, setFallbackActive);
-
-  useEffect(() => {
-    if (!isIOSSafari) {
-      controls.start("animate");
-      controls.start("visible");
-      
-      // Reduce delays to almost instant to avoid scroll trapping
-      const timer = setTimeout(() => setContentReady(true), 50);
-      const fallbackTimer = setTimeout(() => setFallbackActive(true), 100);
-
-      return () => {
-        clearTimeout(timer);
-        clearTimeout(fallbackTimer);
-      };
-    }
-  }, [controls, isIOSSafari, isMobile]);
+  const achievements = [
+    { number: "3+", label: "Years of Experience", color: "#2196f3", gradientColor: "#2196f3" },
+    { number: "15+", label: "Projects Completed", color: "#00bcd4", gradientColor: "#00bcd4" },
+    { number: "2+", label: "Research Papers", color: "#9c27b0", gradientColor: "#9c27b0" },
+    { number: "15+", label: "Certifications", color: "#4caf50", gradientColor: "#4caf50" }
+  ];
 
   return (
-    <section
-      id="about"
-      className="about-section relative w-full overflow-visible"
-      style={{
-        // Remove overscrollBehavior to allow normal scrolling
-        overscrollBehavior: "auto",
-        overflowX: "visible",
-        overflowY: "visible",
-        // Always visible to avoid scroll trapping
-        visibility: "visible",
-        paddingTop: "2rem",
-        paddingBottom: "2rem",
-      }}
-      ref={contentRef}
-    >
-      {isIOSSafari ? (
-        // ----- 1) Static fallback for iOS Safari -----
-        <div className="pt-8 pb-12 relative about-content-wrapper">
-          <h2 className="my-12 text-center text-5xl font-bold leading-normal">
-            <span className="text-white">About</span>
-            <span className="bg-gradient-to-r from-pink-500 to-pink-500 bg-clip-text text-transparent">
-              {" "}me
-            </span>
-          </h2>
-          <div
-            className="h-1 mx-auto mb-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
-            style={{ maxWidth: "400px" }}
-          />
-          <div className="flex flex-wrap">
-            {/* Image for iOS fallback: same design as AboutImage but static */}
-            <div className="w-full lg:w-1/2 lg:p-8">
-              <div className="flex items-center justify-center h-full">
-                <div
-                  className="relative w-4/5 max-w-md mx-auto rounded-2xl shadow-lg"
-                  style={{ aspectRatio: "1/1.2" }}
-                >
-                  <img
-                    src={aboutImg}
-                    alt="about"
-                    className="rounded-2xl shadow-lg shadow-purple-500/20 w-full h-auto object-cover z-10 relative"
-                    loading="eager"
-                  />
-                  <div
-                    className="absolute -bottom-4 -right-4 w-full h-full rounded-2xl border-2 border-purple-500/50 z-0"
-                  />
-                  <div
-                    className="absolute -top-4 -left-4 w-full h-full rounded-2xl border-2 border-pink-500/50 z-0"
-                  />
-                </div>
-              </div>
-            </div>
-            {/* Text content */}
-            <div className="w-full lg:w-1/2 p-4 lg:p-8">
-              <div className="flex items-center justify-center h-full">
-                <p className="my-2 max-w-xl py-6 text-gray-300 leading-relaxed text-lg">
-                  {highlightAboutText(ABOUT_TEXT, true, isMobile)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        // ----- 2) Animated version for other browsers -----
-        <motion.div
-          className="pt-8 pb-12 relative about-content-wrapper motion-safe"
-          variants={containerVariants}
-          initial="visible" // Start visible instead of hidden
-          animate="visible" // Always visible
-          style={{ 
-            willChange: !isMobile ? "opacity, transform" : "auto",
-            visibility: "visible", // Always visible
-          }}
-        >
-          <AboutShapes
-            showShapes={showShapes}
-            numShapes={numShapes}
-            contentReady={true} // Always ready
-            isMobile={isMobile}
-          />
+    <StyledSection id="about">
+      <Container maxWidth="xl">
+        {/* TITLE */}
+        <GradientTitle variant="h1" component="h2">
+          <Box component="span" sx={{ color: 'white' }}>About</Box> me
+        </GradientTitle>
+        
+        {/* DIVIDER */}
+        <Divider 
+          sx={{ 
+            background: 'linear-gradient(90deg, #9c27b0, #e91e63)',
+            height: '4px',
+            borderRadius: '2px',
+            maxWidth: '400px',
+            mx: 'auto',
+            mb: 8
+          }} 
+        />
 
-          <AboutTitleDivider
-            contentReady={true} // Always ready
-            isMobile={isMobile}
-          />
+        {/* MAIN CONTENT */}
+        <Grid container spacing={6} alignItems="center">
+          {/* IMAGE SECTION */}
+          <Grid size={{ xs: 12, lg: 5 }}>
+            <ImageContainer>
+              <img
+                src={aboutImg}
+                alt="Gading Aditya Perdana"
+                loading="eager"
+              />
+              <BorderDecoration color="rgba(156, 39, 176, 0.5)" position="bottom-right" />
+              <BorderDecoration color="rgba(233, 30, 99, 0.5)" position="top-left" />
+            </ImageContainer>
+          </Grid>
+          
+          {/* TEXT CONTENT */}
+          <Grid size={{ xs: 12, lg: 7 }}>
+            <Box sx={{ 
+              display: 'flex',
+              alignItems: 'center',
+              height: '100%',
+              padding: '32px'
+            }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: 'grey.300', 
+                  lineHeight: 1.8, 
+                  fontSize: '1.25rem',
+                  maxWidth: '600px'
+                }}
+              >
+                {ABOUT_TEXT}
+              </Typography>
+            </Box>
+          </Grid>
+        </Grid>
 
-          <div className="flex flex-col lg:flex-row">
-            <AboutImage contentReady={true} isMobile={isMobile} />
-            <AboutText
-              ABOUT_TEXT={ABOUT_TEXT}
-              contentReady={true} // Always ready
-              fallbackActive={fallbackActive}
-              isMobile={isMobile}
-              simpleMode={simpleMode}
-              isIOSSafari={isIOSSafari}
-              shouldAnimate={shouldAnimate}
-              shouldUseScrollTrigger={shouldUseScrollTrigger}
-            />
-          </div>
-        </motion.div>
-      )}
-
-      {/* Inline styles for global / iOS Safari fixes */}
-      <style>{`
-        @keyframes gradientShift {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 100% 50%; }
-        }
-        
-        /* Fix for all devices */
-        .about-section, .hero-container {
-          transform: translateZ(0);
-          -webkit-overflow-scrolling: touch;
-          overflow-y: visible !important;
-          overflow-x: visible !important;
-          scroll-behavior: auto;
-          overscroll-behavior: auto;
-        }
-        
-        body {
-          overflow-y: auto !important;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: auto;
-        }
-
-        /* iOS specific fixes */
-        .ios-safari {
-          height: auto !important;
-          overflow: auto !important;
-        }
-        
-        .ios-safari body {
-          position: static !important;
-          height: auto !important;
-          overflow: auto !important;
-          overflow-y: auto !important;
-          -webkit-overflow-scrolling: touch !important;
-          touch-action: pan-y !important;
-        }
-        
-        .ios-safari .about-section {
-          min-height: auto;
-          height: auto !important;
-          overflow: visible !important;
-          position: relative !important;
-          visibility: visible !important;
-        }
-        
-        .ios-safari .about-content-wrapper {
-          opacity: 1 !important;
-          visibility: visible !important;
-        }
-        
-        /* Remove delay animations */
-        @media (max-width: 768px) {
-          .about-section *, .hero-container * {
-            transition-delay: 0ms !important;
-            animation-delay: 0ms !important;
-          }
-        }
-      `}</style>
-    </section>
+        {/* PROFESSIONAL ACHIEVEMENTS */}
+        <Box sx={{ mt: 12 }}>
+          <Typography 
+            variant="h3" 
+            component="h3"
+            sx={{ 
+              textAlign: 'center', 
+              color: '#9c27b0', 
+              fontWeight: 'bold',
+              mb: 6,
+              fontSize: '3rem'
+            }}
+          >
+            Professional Achievements
+          </Typography>
+          <Grid container spacing={3}>
+            {achievements.map((achievement, index) => (
+              <Grid size={{ xs: 6, lg: 3 }} key={index}>
+                <AchievementCard gradientcolor={achievement.gradientColor}>
+                  <CardContent>
+                    <Typography 
+                      sx={{
+                        fontSize: '3rem',
+                        fontWeight: 'bold',
+                        color: achievement.color,
+                        marginBottom: '8px'
+                      }}
+                    >
+                      {achievement.number}
+                    </Typography>
+                    <Typography 
+                      sx={{
+                        fontSize: '0.875rem',
+                        color: 'grey.400',
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px',
+                        fontWeight: 500
+                      }}
+                    >
+                      {achievement.label}
+                    </Typography>
+                  </CardContent>
+                </AchievementCard>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      </Container>
+    </StyledSection>
   );
 }
 
-export default memo(About);
+export default About;

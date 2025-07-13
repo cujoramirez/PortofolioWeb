@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useRef, memo, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence, useInView } from "framer-motion";
+import { Box, Container, Typography, Grid, Paper, Chip } from "@mui/material";
+import { EmojiEvents, Verified, School, Psychology, Science } from "@mui/icons-material";
 import { CERTIFICATIONS } from "../constants";
 import { useSystemProfile } from "../components/useSystemProfile.jsx";
 
@@ -54,18 +56,50 @@ const FilterButton = memo(({ issuer, isActive, onClick, useReducedMotion }) => {
   );
 });
 
-// Separate memoized component for the certificate image
-const CertificationImage = memo(({ src, alt }) => (
-  <img
-    src={src}
-    alt={alt}
-    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-103"
-    loading="lazy"
-    decoding="async"
-    width="400"
-    height="225"
-  />
-));
+// Enhanced lazy-loaded certification image component
+const CertificationImage = memo(({ src, alt }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const imageRef = useRef(null);
+  const isInView = useInView(imageRef, { once: true, margin: "100px" });
+
+  return (
+    <div ref={imageRef} className="relative w-full h-full">
+      {isInView && !imageError && (
+        <img
+          src={src}
+          alt={alt}
+          className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-103 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          loading="lazy"
+          decoding="async"
+          width="400"
+          height="225"
+          onLoad={() => setImageLoaded(true)}
+          onError={() => {
+            console.log('Image failed to load:', src);
+            setImageError(true);
+          }}
+        />
+      )}
+      
+      {/* Loading placeholder */}
+      {(!isInView || !imageLoaded) && !imageError && (
+        <div className="absolute inset-0 bg-gray-700 animate-pulse flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+      
+      {/* Error fallback */}
+      {imageError && (
+        <div className="absolute inset-0 bg-gray-700 flex items-center justify-center text-white text-sm">
+          Certificate Image
+        </div>
+      )}
+    </div>
+  );
+});
 
 // Memoized Certification Card with conditional animations
 const CertificationCard = memo(({ cert, useReducedMotion }) => {
@@ -88,36 +122,43 @@ const CertificationCard = memo(({ cert, useReducedMotion }) => {
       href={cert.link}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block h-full transform-gpu"
+      className="group block h-full"
       variants={certCardVariants}
       initial="hidden"
       animate="visible"
       whileHover={useReducedMotion ? undefined : "hover"}
       whileTap={useReducedMotion ? undefined : { scale: 0.98 }}
+      style={{ display: 'block', opacity: 1, visibility: 'visible' }}
     >
-      <div className="h-full overflow-hidden rounded-xl bg-neutral-800/40 backdrop-blur-sm border border-neutral-700/50 shadow-md group-hover:border-purple-500/50 transition-all duration-200">
-        <div className="relative aspect-video w-full overflow-hidden">
-          {/* Optimized overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-70 group-hover:opacity-90 transition-opacity duration-200" />
+      <div 
+        className="h-full overflow-hidden rounded-xl bg-neutral-800/80 backdrop-blur-sm border border-neutral-700/50 shadow-xl group-hover:border-purple-500/50 transition-all duration-200"
+        style={{ minHeight: '240px', backgroundColor: 'rgba(30, 41, 59, 0.8)' }}
+      >
+        <div className="relative aspect-video w-full overflow-hidden" style={{ backgroundColor: '#1e293b' }}>
+          {/* Simplified overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-200" />
           
-          <CertificationImage src={cert.image} alt={cert.title} />
+          <CertificationImage 
+            src={cert.image}
+            alt={cert.title}
+          />
           
-          <div className="absolute bottom-0 left-0 w-full p-3 z-20">
-            <div className={`inline-block px-3 py-1 bg-purple-600/80 backdrop-blur-sm rounded text-xs font-medium text-white ${useReducedMotion ? '' : 'opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0'}`}>
+          <div className="absolute bottom-0 left-0 w-full p-3">
+            <div className="inline-block px-3 py-1 bg-purple-600/90 backdrop-blur-sm rounded text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
               View Certificate
             </div>
           </div>
         </div>
         
-        <div className="p-4">
-          <h3 className="font-bold text-lg text-white group-hover:text-purple-300 transition-colors duration-200 line-clamp-2">
+        <div className="p-3" style={{ color: 'white' }}>
+          <h3 className="font-bold text-base text-white group-hover:text-purple-300 transition-colors duration-200" style={{ color: 'white' }}>
             {cert.title}
           </h3>
-          <div className="mt-2 flex items-center">
-            <div className="w-2 h-2 rounded-full bg-purple-400 mr-2"></div>
-            <p className="text-neutral-400 text-sm">{cert.issuer}</p>
+          <div className="mt-1.5 flex items-center">
+            <div className="w-1.5 h-1.5 rounded-full bg-purple-400 mr-1.5"></div>
+            <p className="text-neutral-300 text-xs" style={{ color: '#d1d5db' }}>{cert.issuer}</p>
           </div>
-          <div className="mt-2 text-neutral-500 text-xs">
+          <div className="mt-1.5 text-neutral-400 text-xs" style={{ color: '#9ca3af' }}>
             {cert.date || "Certification verified"}
           </div>
         </div>
@@ -130,9 +171,20 @@ const Certifications = () => {
   const [selectedIssuer, setSelectedIssuer] = useState("All");
   const [isSafariMobile, setIsSafariMobile] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const containerRef = useRef(null);
   
   // Device capability detection
   const { performanceTier } = useSystemProfile();
+  
+  // Advanced scroll-based animations
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  });
+
+  const backgroundY = useTransform(scrollYProgress, [0, 1], [0, -50]);
+  const titleY = useTransform(scrollYProgress, [0, 0.5], [100, 0]);
+  const titleOpacity = useTransform(scrollYProgress, [0, 0.3], [0, 1]);
   
   useEffect(() => {
     // Set loaded state after initial render to help with scrolling
@@ -198,154 +250,106 @@ const Certifications = () => {
       };
 
   return (
-    <>
-      {/* Ensure content is immediately visible on Safari */}
-      {isSafariMobile && !isLoaded && (
-        <div className="pb-16 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
-          <h2 className="text-center text-4xl md:text-5xl font-bold text-purple-500 py-10">
-            Certifications
-          </h2>
-        </div>
-      )}
-    
-      <motion.div
-        id="certifications"
-        className="pb-16 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto relative will-change-opacity"
-        variants={pageContainerVariants}
-        initial="hidden"
-        {...containerProps}
-      >
-        {/* Title Section */}
-        <div className="relative py-10 flex flex-col items-center">
-          {!useReducedMotion && (
-            <motion.div 
-              className="absolute w-24 h-24 rounded-full bg-purple-500 opacity-10 filter blur-2xl"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 0.1 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
+    <Box
+      ref={containerRef}
+      component="section"
+      id="certifications"
+      sx={{
+        py: { xs: 8, md: 12 },
+        position: 'relative',
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+        color: 'white',
+        overflow: 'visible'
+      }}
+    >
+      <Container maxWidth="xl" sx={{ position: 'relative' }}>
+        <div style={{ opacity: 1, visibility: 'visible' }}>
+          {/* Enhanced Title Section */}
+          <Box sx={{ textAlign: 'center', mb: 8 }}>
+            <Chip
+              icon={<EmojiEvents />}
+              label="Professional Certifications"
+              sx={{
+                mb: 4,
+                background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(168, 85, 247, 0.2))',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(236, 72, 153, 0.3)',
+                color: '#ec4899',
+                fontWeight: 600,
+                fontSize: '1rem',
+                py: 1,
+                px: 2
+              }}
             />
-          )}
-          
-          <motion.h2
-            className="text-center text-4xl md:text-5xl font-bold w-full relative z-10"
-            variants={titleVariants}
-            whileHover={useReducedMotion ? undefined : "hover"}
-            whileTap={useReducedMotion ? undefined : "hover"}
-            style={{
-              background: "linear-gradient(90deg, #a855f7, #ec4899)",
-              backgroundSize: "200% auto",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              animation: useReducedMotion ? "none" : "gradientShift 8s ease-in-out infinite alternate"
+            
+            <Typography
+              variant="h2"
+              sx={{
+                fontSize: { xs: '2.5rem', md: '4rem' },
+                fontWeight: 800,
+                mb: 4,
+                color: 'white',
+                lineHeight: 1.1
+              }}
+            >
+              Certifications
+            </Typography>
+
+            <div
+              style={{
+                height: 4,
+                width: 120,
+                background: 'linear-gradient(90deg, #ec4899, #a855f7)',
+                borderRadius: 2,
+                margin: '0 auto'
+              }}
+            />
+          </Box>
+
+          {/* Filter Buttons */}
+          <Box sx={{ mb: 6 }}>
+            <Grid container spacing={2} justifyContent="center">
+              {issuers.map((issuer, index) => (
+                <Grid size={{ xs: 6, sm: 4, md: 3, lg: 2 }} key={issuer}>
+                  <FilterButton
+                    issuer={issuer}
+                    isActive={selectedIssuer === issuer}
+                    onClick={() => handleIssuerChange(issuer)}
+                    useReducedMotion={useReducedMotion}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+
+          {/* Certificates Grid */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'repeat(2, 1fr)',
+                sm: 'repeat(3, 1fr)', 
+                md: 'repeat(4, 1fr)',
+                lg: 'repeat(5, 1fr)'
+              },
+              gap: 3,
+              width: '100%'
             }}
           >
-            Certifications
-          </motion.h2>
-          
-          {!useReducedMotion && (
-            <motion.div 
-              className="w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 mt-4 rounded-full"
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 96, opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-            />
-          )}
-        </div>
-
-        {/* Filter Buttons */}
-        <div className="flex flex-wrap justify-center gap-2 mb-8">
-          {issuers.map((issuer) => (
-            <FilterButton
-              key={issuer}
-              issuer={issuer}
-              isActive={selectedIssuer === issuer}
-              onClick={() => handleIssuerChange(issuer)}
-              useReducedMotion={useReducedMotion}
-            />
-          ))}
-        </div>
-
-        {/* Certificates Grid */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="relative"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredCertifications.map((cert, index) => (
-              <div 
-                key={`${cert.title}-${index}`}
-                className="cert-card-container"
-                data-cert-id={`${cert.title}-${index}`}
-              >
+              <Box key={`${cert.title}-${index}`}>
                 <CertificationCard 
                   cert={cert} 
                   useReducedMotion={useReducedMotion} 
                 />
-              </div>
+              </Box>
             ))}
-          </div>
-        </motion.div>
+          </Box>
+        </div>
+      </Container>
 
-        {/* Decorative Element - only shown on higher performance devices */}
-        {!useReducedMotion && (
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <motion.div
-              className="absolute top-20 right-10 w-40 h-40 rounded-full bg-purple-700/10 filter blur-2xl will-change-transform"
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ 
-                scale: [0.5, 0.6, 0.5],
-                opacity: [0, 0.15, 0],
-                x: [0, 15, 0],
-                y: [0, -5, 0],
-              }}
-              transition={{ 
-                duration: 12,
-                repeat: Infinity,
-                ease: "easeInOut",
-                repeatDelay: 1
-              }}
-            />
-          </div>
-        )}
-      </motion.div>
-
-      <style>{`
-        @keyframes gradientShift {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 100% 50%; }
-        }
-        
-        /* Fix iOS Safari rendering issues */
-        @supports (-webkit-touch-callout: none) {
-          .cert-card-container {
-            transform: translateZ(0);
-            backface-visibility: hidden;
-          }
-        }
-        
-        /* Ensure content is painted quickly on all browsers */
-        html {
-          content-visibility: auto;
-          contain-intrinsic-size: 1px 5000px;
-        }
-        
-        /* Improve scrolling on iOS */
-        body {
-          -webkit-overflow-scrolling: touch;
-        }
-
-        /* Fix for Safari image rendering */
-        @supports (-webkit-touch-callout: none) {
-          img {
-            image-rendering: -webkit-optimize-contrast;
-          }
-        }
-      `}</style>
-    </>
+    </Box>
   );
 };
 
