@@ -76,25 +76,25 @@ const ModernResearch = memo(() => {
   const cardVariants = {
     hidden: { 
       opacity: 0, 
-      y: useReducedMotion ? 0 : 40,
-      scale: useReducedMotion ? 1 : 0.98
+      y: 60,
+      scale: 0.95
     },
     visible: { 
       opacity: 1, 
       y: 0,
       scale: 1,
       transition: { 
-        duration: useReducedMotion ? 0.3 : 0.5,
+        duration: 0.7,
         ease: "easeOut"
       }
     }
   };
 
-  const cardHoverVariants = useReducedMotion ? {} : {
+  const cardHoverVariants = {
     hover: {
-      y: -8,
-      scale: 1.01,
-      transition: { duration: 0.2 }
+      y: -12,
+      scale: 1.02,
+      transition: { duration: 0.3 }
     }
   };
 

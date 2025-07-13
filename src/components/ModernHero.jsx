@@ -28,6 +28,7 @@ import EnterpriseSceneManager, { useSceneManager } from "./three/EnterpriseScene
 import HeroScene3D from "./three/HeroScene3D.jsx";
 import { EnterpriseMotion, heroVariants } from "./EnterpriseMotion.jsx";
 import heroImg from "../assets/GadingAdityaPerdana.jpg";
+import resumePDF from "../assets/Gading_Resume.pdf";
 
 // Roles array defined outside component to prevent recreation
 const TYPING_ROLES = [
@@ -486,14 +487,54 @@ const ModernHero = () => {
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}
                     onClick={() => {
-                      const link = document.createElement('a');
-                      link.href = './src/assets/GadingAdityaPerdana-resume.pdf';
-                      link.download = 'GadingAdityaPerdana-Resume.pdf';
-                      link.click();
+                      // Open resume in new tab for viewing
+                      const newWindow = window.open(resumePDF, '_blank');
+                      
+                      // Add download functionality to the new window
+                      if (newWindow) {
+                        newWindow.addEventListener('load', () => {
+                          // Create download button in the new window if desired
+                          const style = newWindow.document.createElement('style');
+                          style.textContent = `
+                            .resume-download-btn {
+                              position: fixed;
+                              top: 20px;
+                              right: 20px;
+                              z-index: 9999;
+                              background: #6366f1;
+                              color: white;
+                              border: none;
+                              padding: 12px 24px;
+                              border-radius: 8px;
+                              cursor: pointer;
+                              font-weight: 600;
+                              box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+                              transition: all 0.3s ease;
+                            }
+                            .resume-download-btn:hover {
+                              background: #4f46e5;
+                              transform: translateY(-2px);
+                              box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+                            }
+                          `;
+                          newWindow.document.head.appendChild(style);
+                          
+                          const downloadBtn = newWindow.document.createElement('button');
+                          downloadBtn.textContent = '📥 Download Resume';
+                          downloadBtn.className = 'resume-download-btn';
+                          downloadBtn.onclick = () => {
+                            const link = newWindow.document.createElement('a');
+                            link.href = resumePDF;
+                            link.download = 'Gading_Aditya_Perdana_Resume.pdf';
+                            link.click();
+                          };
+                          newWindow.document.body.appendChild(downloadBtn);
+                        });
+                      }
                     }}
                   >
                     <Download sx={{ fontSize: 18 }} />
-                    Download Resume
+                    View Resume
                   </motion.button>
 
                   {/* Social Links */}

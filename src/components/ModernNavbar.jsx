@@ -28,7 +28,7 @@ import {
   ContactMail
 } from "@mui/icons-material";
 import { useSystemProfile } from "../components/useSystemProfile.jsx";
-import resumePDF from "../assets/GadingAdityaPerdana-resume.pdf";
+import resumePDF from "../assets/Gading_Resume.pdf";
 
 // Modern glassmorphism navbar with enterprise design
 const ModernNavbar = memo(() => {
@@ -91,11 +91,11 @@ const ModernNavbar = memo(() => {
     },
     {
       icon: Description,
-      tooltip: "Download Resume",
+      tooltip: "View Resume",
       href: resumePDF,
       color: "#22c55e",
       label: "Resume",
-      download: true
+      viewResume: true
     },
   ];
 

@@ -24,9 +24,9 @@ import ModernExperience from "./components/ModernExperience.jsx";
 import ModernContact from "./components/ModernContact.jsx";
 import ModernProjects from "./components/ModernProjects.jsx";
 import Certifications from "./components/certificates.jsx";
-import ModernResearch from "./components/ModernResearch.jsx";
 
-// Removed lazy loading for Research to improve performance
+// Only lazy load Research (least accessed)
+const ModernResearch = React.lazy(() => import("./components/ModernResearch.jsx"));
 
 // Enhanced Loading component with G logo animation
 const LoadingScreen = ({ isLoading }) => (
@@ -491,7 +491,13 @@ function ModernApp() {
               
               {/* Research Section */}
               <SectionWrapper id="research">
-                <ModernResearch />
+                <Suspense fallback={
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                    <CircularProgress />
+                  </Box>
+                }>
+                  <ModernResearch />
+                </Suspense>
               </SectionWrapper>
               
               {/* Section Transition - Research to Projects */}

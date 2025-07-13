@@ -2,7 +2,7 @@ import React, { useState, useEffect, memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaLinkedin, FaGithub, FaEnvelope, FaFileAlt } from "react-icons/fa";
 import { useSystemProfile } from "../components/useSystemProfile.jsx";
-import resumePDF from "../assets/GadingAdityaPerdana-resume.pdf";
+import resumePDF from "../assets/Gading_Resume.pdf";
 
 // Memoized Logo component with fixed G logo visibility
 const Logo = memo(({ isHovered, useReducedMotion, isIOSTouchDevice }) => {

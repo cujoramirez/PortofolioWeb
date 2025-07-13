@@ -36,7 +36,7 @@ import {
   KeyboardArrowUp as UpIcon
 } from "@mui/icons-material";
 import { useSystemProfile } from "./useSystemProfile";
-import resumePDF from "../assets/GadingAdityaPerdana-resume.pdf";
+import resumePDF from "../assets/Gading_Resume.pdf";
 
 const navigationItems = [
   { id: 'home', label: 'Home', icon: HomeIcon, href: '#home' },

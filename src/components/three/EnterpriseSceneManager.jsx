@@ -83,8 +83,8 @@ const EnterpriseSceneManager = ({
       
       const timer = setTimeout(() => {
         setActiveScene(currentSection);
-        setTimeout(() => setIsTransitioning(false), 200);
-      }, 400);
+        setTimeout(() => setIsTransitioning(false), 500);
+      }, 1000);
 
       return () => clearTimeout(timer);
     }
@@ -104,16 +104,15 @@ const EnterpriseSceneManager = ({
         }}
       >
         <Canvas
-          frameloop="demand"
-          dpr={[1, 1.2]}
+          dpr={[1, 1.5]}
           gl={{ 
             antialias: false, 
             alpha: true,
-            powerPreference: "high-performance",
+            powerPreference: "default",
             preserveDrawingBuffer: false,
             stencil: false,
             depth: true,
-            failIfMajorPerformanceCaveat: true
+            failIfMajorPerformanceCaveat: false
           }}
           shadows={false}
           camera={{
@@ -123,9 +122,8 @@ const EnterpriseSceneManager = ({
             far: 100
           }}
           onCreated={(state) => {
-            // Optimize rendering performance
+            // Disable auto-clear to prevent flashing
             state.gl.autoClear = true;
-            state.gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             
             // Handle WebGL context loss properly
             const canvas = state.gl.domElement;
@@ -173,10 +171,10 @@ const EnterpriseSceneManager = ({
               {!isTransitioning && (
                 <motion.group
                   key={activeScene}
-                  initial={{ opacity: 0, scale: 0.95 }}
+                  initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.05 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  exit={{ opacity: 0, scale: 1.1 }}
+                  transition={{ duration: 0.8, ease: "easeInOut" }}
                 >
                   <CurrentSceneComponent
                     mousePosition={mousePosition}
@@ -230,7 +228,6 @@ export const useSceneManager = () => {
   const [transitionProgress, setTransitionProgress] = useState(0);
 
   const handleScroll = useCallback(() => {
-    // Throttle scroll updates for better performance
     const scrollY = window.scrollY;
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
@@ -239,12 +236,29 @@ export const useSceneManager = () => {
     setScrollProgress(progress);
 
     const sections = ['hero', 'about', 'projects', 'research', 'certificates', 'contact'];
-    const sectionIndex = Math.floor(progress * sections.length);
-    const newSection = sections[Math.min(sectionIndex, sections.length - 1)];
+    
+    // Improved section detection with better thresholds
+    let sectionIndex;
+    if (progress >= 0.95) {
+      // Ensure contact section is reached when near bottom
+      sectionIndex = sections.length - 1;
+    } else if (progress >= 0.85) {
+      sectionIndex = 4; // certificates
+    } else if (progress >= 0.68) {
+      sectionIndex = 3; // research
+    } else if (progress >= 0.50) {
+      sectionIndex = 2; // projects
+    } else if (progress >= 0.25) {
+      sectionIndex = 1; // about
+    } else {
+      sectionIndex = 0; // hero
+    }
+    
+    const newSection = sections[sectionIndex];
     
     if (newSection !== currentSection) {
       setCurrentSection(newSection);
-      setTransitionProgress(0.6); // Faster transitions
+      setTransitionProgress(1); // Set to complete immediately to avoid animation loop
     }
   }, [currentSection]);
 
@@ -255,34 +269,12 @@ export const useSceneManager = () => {
   }, []);
 
   useEffect(() => {
-    let ticking = false;
-    
-    const throttledHandleScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    const throttledHandleMouseMove = (event) => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          handleMouseMove(event);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', throttledHandleScroll, { passive: true });
-    window.addEventListener('mousemove', throttledHandleMouseMove, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
     
     return () => {
-      window.removeEventListener('scroll', throttledHandleScroll);
-      window.removeEventListener('mousemove', throttledHandleMouseMove);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('mousemove', handleMouseMove);
     };
   }, [handleScroll, handleMouseMove]);
 
