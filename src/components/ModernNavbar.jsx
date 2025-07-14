@@ -49,10 +49,27 @@ const ModernNavbar = memo(() => {
   const logoScale = useTransform(scrollY, [0, 100], [1, 0.9]);
   const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
-  // Device detection
+  // Device detection with CSS fallback
   const isMobile = deviceType === "mobile";
   const isTablet = deviceType === "tablet";
   const shouldReduceMotion = performanceTier === "low" || isMobile;
+
+  // Additional CSS-based mobile detection as fallback
+  const [isMobileCSS, setIsMobileCSS] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileCSS(window.innerWidth <= 768 || window.matchMedia('(pointer: coarse)').matches);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Use either JavaScript or CSS detection for mobile
+  const isMobileDevice = isMobile || isMobileCSS;
+  const isTabletDevice = isTablet || (window.innerWidth > 768 && window.innerWidth < 1024 && (isMobile || isMobileCSS));
 
   // Navigation items with modern icons - Updated to include Certificates
   const navItems = [
@@ -262,7 +279,7 @@ const ModernNavbar = memo(() => {
             </motion.div>
 
             {/* Desktop Navigation */}
-            {!isMobile && !isTablet && (
+            {!isMobileDevice && !isTabletDevice && (
               <motion.div variants={containerVariants} initial="hidden" animate="visible">
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   {navItems.map((item, index) => (
@@ -300,7 +317,7 @@ const ModernNavbar = memo(() => {
             )}
 
             {/* Mobile Menu Button */}
-            {(isMobile || isTablet) && (
+            {(isMobileDevice || isTabletDevice) && (
               <IconButton
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 sx={{
@@ -340,7 +357,7 @@ const ModernNavbar = memo(() => {
 
       {/* Mobile/Tablet Menu */}
       <AnimatePresence>
-        {isMenuOpen && (isMobile || isTablet) && (
+        {isMenuOpen && (isMobileDevice || isTabletDevice) && (
           <>
             <Backdrop
               open={isMenuOpen}
@@ -356,8 +373,10 @@ const ModernNavbar = memo(() => {
                 position: 'fixed',
                 top: '80px',
                 right: '16px',
+                left: isMobileDevice ? '16px' : 'auto',
                 zIndex: 1300,
-                width: isMobile ? '280px' : '320px',
+                width: isMobileDevice ? 'auto' : '320px',
+                maxWidth: isMobileDevice ? 'calc(100vw - 32px)' : '320px',
                 maxHeight: '80vh',
                 overflowY: 'auto',
               }}
@@ -411,6 +430,83 @@ const ModernNavbar = memo(() => {
                     </motion.div>
                   ))}
                 </Box>
+
+                {/* Resume Download Button for Mobile */}
+                <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                  <motion.div variants={mobileMenuItemVariants}>
+                    <Chip
+                      icon={<Description />}
+                      label="View Resume"
+                      onClick={() => {
+                        // Open resume in new tab for viewing
+                        const newWindow = window.open(resumePDF, '_blank');
+                        
+                        // Add download functionality to the new window
+                        if (newWindow) {
+                          newWindow.addEventListener('load', () => {
+                            const style = newWindow.document.createElement('style');
+                            style.textContent = `
+                              .resume-download-btn {
+                                position: fixed;
+                                top: 20px;
+                                right: 20px;
+                                z-index: 9999;
+                                background: #6366f1;
+                                color: white;
+                                border: none;
+                                padding: 12px 24px;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-weight: 600;
+                                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+                                transition: all 0.3s ease;
+                              }
+                              .resume-download-btn:hover {
+                                background: #4f46e5;
+                                transform: translateY(-2px);
+                                box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+                              }
+                            `;
+                            newWindow.document.head.appendChild(style);
+                            
+                            const downloadBtn = newWindow.document.createElement('button');
+                            downloadBtn.textContent = '📥 Download Resume';
+                            downloadBtn.className = 'resume-download-btn';
+                            downloadBtn.onclick = () => {
+                              const link = newWindow.document.createElement('a');
+                              link.href = resumePDF;
+                              link.download = 'Gading_Aditya_Perdana_Resume.pdf';
+                              link.click();
+                            };
+                            newWindow.document.body.appendChild(downloadBtn);
+                          });
+                        }
+                        setIsMenuOpen(false);
+                      }}
+                      sx={{
+                        width: '100%',
+                        justifyContent: 'flex-start',
+                        py: 1.5,
+                        cursor: 'pointer',
+                        color: '#ffffff',
+                        borderColor: '#22c55e',
+                        backgroundColor: 'transparent',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        '&:hover': {
+                          transform: 'translateX(8px)',
+                          boxShadow: '0 4px 20px rgba(34, 197, 94, 0.4)',
+                          backgroundColor: '#22c55e',
+                        },
+                        '& .MuiChip-icon': { 
+                          color: '#22c55e'
+                        },
+                        '&:hover .MuiChip-icon': { 
+                          color: '#ffffff'
+                        }
+                      }}
+                    />
+                  </motion.div>
+                </Box>
               </Box>
             </motion.div>
           </>
@@ -449,3 +545,4 @@ const ModernNavbar = memo(() => {
 ModernNavbar.displayName = "ModernNavbar";
 
 export default ModernNavbar;
+

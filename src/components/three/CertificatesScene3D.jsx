@@ -394,3 +394,4 @@ export const CertificatesScene3D = ({
 };
 
 export default CertificatesScene3D;
+

@@ -304,7 +304,7 @@ const FloatingShapes = React.memo(() => {
 });
 
 // Enhanced ModernAbout component with stability improvements
-const ModernAbout = () => {
+const ModernAbout = ({ landingComplete = true }) => {
   const { performanceTier, deviceType } = useSystemProfile();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -314,75 +314,131 @@ const ModernAbout = () => {
   const [isComponentMounted, setIsComponentMounted] = useState(false);
   const [hasAnimated, setHasAnimated] = useState(false);
   const [forceVisible, setForceVisible] = useState(false);
+  const [isImageHovered, setIsImageHovered] = useState(false);
   
-  // Optimized intersection observer - only animate once to prevent re-rendering
+  // Enhanced intersection observer with mobile-optimized triggering - MOVED EARLY
   const isInView = useInView(containerRef, { 
-    once: true, // Only trigger once to prevent re-animations
-    amount: isMobile ? 0.05 : 0.1,
-    margin: "-50px 0px -50px 0px"
+    once: false, // Allow multiple triggers to handle premature activation
+    amount: isMobile ? 0.01 : 0.1, // Much lower threshold for mobile devices
+    margin: isMobile ? "0px 0px -50px 0px" : "0px 0px -20px 0px" // More generous margins for mobile
   });
   
-  // Track if animations have completed to prevent re-rendering
+  // Debug logging for mobile
   useEffect(() => {
-    if (isInView && !hasAnimated) {
-      setHasAnimated(true);
+    console.log('ModernAbout: Component state', {
+      isMobile,
+      landingComplete,
+      isComponentMounted,
+      forceVisible,
+      hasAnimated,
+      isInView
+    });
+  }, [isMobile, landingComplete, isComponentMounted, forceVisible, hasAnimated, isInView]);
+  
+  // Immediate mobile visibility trigger (emergency fallback)
+  useEffect(() => {
+    if (isMobile && isComponentMounted) {
+      // Give mobile devices immediate visibility after a short delay
+      const immediateTimer = setTimeout(() => {
+        setForceVisible(true);
+        console.log('ModernAbout: Emergency mobile visibility triggered');
+      }, 100);
+      
+      return () => clearTimeout(immediateTimer);
     }
-  }, [isInView, hasAnimated]);
+  }, [isMobile, isComponentMounted]);
+  
+  
+  // Track if animations have completed to prevent re-rendering - but allow re-triggering for robustness
+  useEffect(() => {
+    if (isInView) {
+      // Trigger animation regardless of landing state if in view (mobile fallback)
+      setHasAnimated(true);
+      console.log('ModernAbout: Animation triggered via intersection observer', { isInView, landingComplete }); // Debug log
+    }
+  }, [isInView, landingComplete]);
+  
+  // Mobile-specific scroll-based fallback trigger (aggressive)
+  useEffect(() => {
+    if (!isMobile) return;
+    
+    const handleScroll = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        
+        // Very aggressive triggering on mobile - trigger when section is visible at all
+        if (rect.top < windowHeight && rect.bottom > 0) {
+          setForceVisible(true);
+          console.log('ModernAbout: Mobile scroll fallback triggered (aggressive)', { 
+            rectTop: rect.top, 
+            windowHeight, 
+            landingComplete 
+          }); // Debug log
+        }
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Check immediately
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isMobile]);
   
   // Component mounting effect for stability + fallback visibility
   useEffect(() => {
     setIsComponentMounted(true);
     
-    // For mobile devices, show content immediately to prevent visibility issues
-    if (isMobile) {
-      const mobileTimer = setTimeout(() => {
+    // Mobile-specific very fast fallback - don't wait for landing complete on mobile
+    const visibilityTimer = setTimeout(() => {
+      if (isMobile) {
+        // Force visible on mobile regardless of landing state
         setForceVisible(true);
-        setHasAnimated(true);
-      }, 100); // Changed from 500ms to 100ms
-      
-      return () => {
-        clearTimeout(mobileTimer);
-        setIsComponentMounted(false);
-      };
-    }
-    
-    // Fallback: ensure content is visible after 500ms regardless of intersection
-    const fallbackTimer = setTimeout(() => {
-      if (!hasAnimated && !isInView) {
+        console.log('ModernAbout: Mobile force visible fallback triggered (no landing dependency)'); // Debug log
+      } else if (landingComplete) {
         setForceVisible(true);
-        setHasAnimated(true);
+        console.log('ModernAbout: Desktop force visible fallback triggered'); // Debug log
       }
-    }, 250); // Changed from 2000ms to 500ms
+    }, isMobile ? 500 : 3000); // Very fast fallback on mobile
     
     return () => {
       setIsComponentMounted(false);
-      clearTimeout(fallbackTimer);
+      clearTimeout(visibilityTimer);
     };
-  }, [hasAnimated, isInView, isMobile]);
+  }, [landingComplete, isMobile]);
   
-  // Simplified scroll progress without target ref to prevent hydration issues
-  const { scrollYProgress } = useScroll({
-    layoutEffect: false // Prevent layout effects that can cause disappearing
-  });
+  // Enhanced scroll progress with container targeting for better animation - Fixed hydration warning
+  const { scrollYProgress } = useScroll(
+    isComponentMounted && containerRef.current ? {
+      target: containerRef,
+      offset: ["start end", "end start"],
+      layoutEffect: false // Prevent layout effects that can cause disappearing
+    } : {
+      layoutEffect: false
+    }
+  );
   
-  // Safer transforms with fallbacks
-  const y = useTransform(scrollYProgress, [0, 1], shouldReduceMotion ? [0, 0] : [50, -50]);
-  const opacity = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [0.8, 1, 1, 0.8]);
+  // Enhanced transforms with better scroll responsiveness - Fixed visibility issues
+  const y = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], shouldReduceMotion ? [0, 0, 0, 0] : [0, 0, 0, 0]); // Disabled y movement to prevent disappearing
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.8, 1, 1, 1]); // Keep high minimum opacity
+  const scale = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], shouldReduceMotion ? [1, 1, 1, 1] : [0.98, 1, 1, 1]); // Minimal scaling to prevent issues
 
-  // Memoized animation variants with guaranteed visibility
+  // Enhanced animation variants with better scroll responsiveness
   const containerVariants = useMemo(() => ({
     hidden: { 
-      opacity: shouldReduceMotion ? 1 : 0.3, // Never fully hide, especially on mobile
-      scale: shouldReduceMotion ? 1 : 0.98
+      opacity: shouldReduceMotion ? 1 : 0, 
+      scale: shouldReduceMotion ? 1 : 0.9,
+      y: shouldReduceMotion ? 0 : 50
     },
     visible: {
       opacity: 1,
       scale: 1,
+      y: 0,
       transition: {
-        duration: shouldReduceMotion ? 0.1 : 0.8,
+        duration: shouldReduceMotion ? 0.1 : 1.2,
         ease: "easeOut",
-        staggerChildren: shouldReduceMotion ? 0 : 0.15,
-        delayChildren: shouldReduceMotion ? 0 : 0.1,
+        staggerChildren: shouldReduceMotion ? 0 : 0.1,
+        delayChildren: shouldReduceMotion ? 0 : 0.2,
       }
     }
   }), [shouldReduceMotion]);
@@ -390,18 +446,19 @@ const ModernAbout = () => {
   const itemVariants = useMemo(() => ({
     hidden: { 
       opacity: 0, 
-      y: 20,
-      scale: 0.95
+      y: shouldReduceMotion ? 0 : 60,
+      scale: shouldReduceMotion ? 1 : 0.9
     },
     visible: {
       opacity: 1,
       y: 0,
+      scale: 1,
       transition: {
-        duration: 0.8,
+        duration: shouldReduceMotion ? 0.1 : 0.8,
         ease: "easeOut"
       }
     }
-  }), []);
+  }), [shouldReduceMotion]);
 
   const cardVariants = useMemo(() => ({
     hidden: { opacity: 0, scale: 0.8 },
@@ -454,10 +511,11 @@ const ModernAbout = () => {
         // Ensure content is always visible as fallback
         '& .motion-div': {
           minHeight: '50vh',
-          opacity: forceVisible ? '1 !important' : 'inherit'
+          visibility: 'visible !important', // Force visibility
+          transform: 'translateZ(0)', // Hardware acceleration
         },
         contain: 'layout style paint', // Improve performance and prevent reflows
-        zIndex: 1, // Ensure proper layering
+        zIndex: isMobile ? 100 : 1, // Higher z-index on mobile to ensure visibility
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -470,17 +528,19 @@ const ModernAbout = () => {
       {/* Floating shapes background */}
       {!shouldReduceMotion && isComponentMounted && <FloatingShapes />}
       
-      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
+      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: isMobile ? 101 : 10 }}> {/* Higher z-index on mobile */}
         <motion.div
           className="motion-div"
           variants={containerVariants}
           initial="hidden"
-          animate={hasAnimated || isInView || forceVisible ? "visible" : "hidden"}
+          animate={isMobile ? (isInView || forceVisible ? "visible" : "hidden") : ((isInView && landingComplete) || forceVisible ? "visible" : "hidden")} // Mobile: ignore landing complete, Desktop: respect landing complete
           style={{
             y: shouldReduceMotion ? 0 : y,
             opacity: shouldReduceMotion ? 1 : opacity,
+            scale: shouldReduceMotion ? 1 : scale,
             position: 'relative',
-            zIndex: 2,
+            zIndex: isMobile ? 102 : 10, // Higher z-index on mobile to ensure visibility
+            transform: 'translateZ(0)', // Force hardware acceleration
           }}
         >
           {/* Section Header - BIGGER TITLE */}
@@ -543,9 +603,11 @@ const ModernAbout = () => {
                     }}
                   >
                     <Box
+                      onMouseEnter={() => setIsImageHovered(true)}
+                      onMouseLeave={() => setIsImageHovered(false)}
                       sx={{
-                        width: { xs: '280px', md: '320px' },
-                        height: { xs: '350px', md: '400px' },
+                        width: { xs: '380px', md: '450px' },
+                        height: { xs: '450px', md: '550px' },
                         borderRadius: '24px',
                         overflow: 'hidden',
                         background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))',
@@ -596,36 +658,70 @@ const ModernAbout = () => {
                         }}
                       />
                       
-                      {/* Interactive Overlay */}
-                      <Box
-                        className="image-overlay"
-                        sx={{
+                      {/* Interactive Overlay - Only visible on hover */}
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ 
+                          opacity: isImageHovered ? 1 : 0,
+                        }}
+                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                        style={{
                           position: 'absolute',
                           inset: 0,
-                          background: 'linear-gradient(45deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3))',
-                          opacity: 0,
-                          transition: 'opacity 0.4s ease',
+                          background: isImageHovered 
+                            ? 'linear-gradient(45deg, rgba(99, 102, 241, 0.88), rgba(139, 92, 246, 0.88))' 
+                            : 'transparent',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexDirection: 'column',
                           zIndex: 3,
+                          visibility: isImageHovered ? 'visible' : 'hidden',
                         }}
                       >
                         <motion.div
-                          initial={{ y: 20, opacity: 0 }}
-                          whileHover={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.1, duration: 0.3 }}
+                          initial={{ y: 30, opacity: 0, scale: 0.8 }}
+                          animate={isImageHovered ? { 
+                            y: 0, 
+                            opacity: 1, 
+                            scale: 1.05 
+                          } : { 
+                            y: 30, 
+                            opacity: 0, 
+                            scale: 0.8 
+                          }}
+                          transition={{ duration: 0.3, ease: "easeOut" }}
                           style={{ textAlign: 'center', color: 'white' }}
                         >
-                          <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+                          <Typography 
+                            variant="h6" 
+                            sx={{ 
+                              fontWeight: 700, 
+                              mb: 1, 
+                              textShadow: '0 4px 12px rgba(0,0,0,0.8)',
+                              background: 'linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%)',
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent',
+                              fontSize: '1.4rem',
+                              letterSpacing: '0.5px'
+                            }}
+                          >
                             AI/ML Engineer
                           </Typography>
-                          <Typography variant="body2" sx={{ opacity: 0.95, textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              opacity: 0.95, 
+                              textShadow: '0 2px 8px rgba(0,0,0,0.6)',
+                              color: 'rgba(255, 255, 255, 0.95)',
+                              fontWeight: 600,
+                              fontSize: '0.9rem'
+                            }}
+                          >
                             Passionate about Innovation
                           </Typography>
                         </motion.div>
-                      </Box>
+                      </motion.div>
                       
                       {/* Floating Interactive Icons */}
                       <Box
@@ -752,10 +848,11 @@ const ModernAbout = () => {
                   pl: { lg: 4 }
                 }}
               >
-                <motion.div variants={itemVariants} style={{ width: '100%' }}>
+                <motion.div variants={itemVariants} style={{ width: '100%', display: 'flex', justifyContent: { xs: 'center', lg: 'flex-start' } }}>
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    style={{ width: 'fit-content', maxWidth: '100%' }}
                   >
                     <Paper
                       elevation={0}
@@ -768,6 +865,9 @@ const ModernAbout = () => {
                         position: 'relative',
                         overflow: 'hidden',
                         cursor: 'pointer',
+                        width: 'fit-content', // Fix: Make width fit content
+                        maxWidth: '100%', // Prevent overflow
+                        mx: { xs: 'auto', lg: 0 }, // Center on mobile, left on desktop
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         '&:hover': {
                           background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04))',
@@ -850,7 +950,8 @@ const ModernAbout = () => {
                           lineHeight: 1.8,
                           color: 'rgba(255, 255, 255, 0.9)',
                           textAlign: { xs: 'center', lg: 'left' },
-                          maxWidth: '600px',
+                          maxWidth: { xs: '90vw', sm: '80vw', md: '70vw', lg: '55vw' }, // Responsive max width
+                          width: 'fit-content', // Fix: Make width fit content
                           mx: { xs: 'auto', lg: 0 },
                           position: 'relative',
                           zIndex: 2,

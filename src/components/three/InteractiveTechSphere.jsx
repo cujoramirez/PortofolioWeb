@@ -165,3 +165,4 @@ export const TechConstellation = ({ technologies, hoveredTech, setHoveredTech })
 };
 
 export default InteractiveTechSphere;
+

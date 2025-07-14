@@ -32,3 +32,4 @@ const AboutTitleDivider = ({ contentReady, isMobile }) => {
 };
 
 export default AboutTitleDivider;
+

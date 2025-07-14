@@ -44,3 +44,4 @@ const ResearchLogoLeft = () => (
 );
 
 export default React.memo(ResearchLogoLeft);
+

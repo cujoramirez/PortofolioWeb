@@ -264,3 +264,4 @@ export const AboutScene3D = ({ scrollProgress = 0 }) => {
 };
 
 export default AboutScene3D;
+

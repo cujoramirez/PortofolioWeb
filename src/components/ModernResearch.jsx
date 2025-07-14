@@ -1,5 +1,6 @@
 import React, { memo, useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import EnterpriseMotion from './animations/EnterpriseMotion';
 import { 
   Box, 
   Card, 
@@ -178,13 +179,9 @@ const ModernResearch = memo(() => {
       </motion.div>
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, px: { xs: 2, sm: 3 } }}>
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate={isVisible ? "visible" : "hidden"}
-        >
+        <EnterpriseMotion.ResearchContainer>
           {/* Section Header */}
-          <motion.div variants={cardVariants}>
+          <EnterpriseMotion.ResearchTitle>
             <Box textAlign="center" mb={{ xs: 6, md: 8 }} sx={{ px: { xs: 1, sm: 0 } }}>
               <Box display="flex" justifyContent="center" alignItems="center" mb={2} sx={{ flexWrap: 'wrap', gap: { xs: 1, sm: 2 } }}>
                 <ScienceIcon 
@@ -222,18 +219,14 @@ const ModernResearch = memo(() => {
                 Advancing the frontiers of AI and Computer Vision through rigorous research and innovation
               </Typography>
             </Box>
-          </motion.div>
+          </EnterpriseMotion.ResearchTitle>
 
           {/* Research Papers Grid */}
           <Grid container spacing={4}>
             {RESEARCH_PAPERS.map((paper, index) => (
               <Grid size={{ xs: 12 }} key={index}>
-                <motion.div
-                  variants={cardVariants}
-                  whileHover={!useReducedMotion ? "hover" : undefined}
-                >
-                  <motion.div variants={cardHoverVariants}>
-                    <Card
+                <EnterpriseMotion.ResearchCard>
+                  <Card
                       elevation={6}
                       sx={{
                         background: `linear-gradient(135deg, 
@@ -440,14 +433,13 @@ const ModernResearch = memo(() => {
                         </Box>
                       </CardContent>
                     </Card>
-                  </motion.div>
-                </motion.div>
+                </EnterpriseMotion.ResearchCard>
               </Grid>
             ))}
           </Grid>
 
           {/* Research Statistics */}
-          <motion.div variants={cardVariants}>
+          <EnterpriseMotion.ResearchStats>
             <Box mt={8}>
               <Paper
                 elevation={4}
@@ -509,8 +501,8 @@ const ModernResearch = memo(() => {
                 </Grid>
               </Paper>
             </Box>
-          </motion.div>
-        </motion.div>
+          </EnterpriseMotion.ResearchStats>
+        </EnterpriseMotion.ResearchContainer>
       </Container>
 
       {/* Research Paper Detail Modal */}
@@ -659,3 +651,4 @@ const ModernResearch = memo(() => {
 ModernResearch.displayName = 'ModernResearch';
 
 export default ModernResearch;
+

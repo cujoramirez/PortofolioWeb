@@ -45,7 +45,7 @@ const SimpleAbout = () => {
 
           <Grid container spacing={4} alignItems="center">
             {/* Profile Image */}
-            <Grid item xs={12} md={4}>
+            <Grid xs={12} md={4}>
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.3 }}
@@ -75,7 +75,7 @@ const SimpleAbout = () => {
             </Grid>
 
             {/* Content */}
-            <Grid item xs={12} md={8}>
+            <Grid xs={12} md={8}>
               <Card
                 sx={{
                   background: 'rgba(255, 255, 255, 0.05)',
@@ -157,3 +157,4 @@ const SimpleAbout = () => {
 };
 
 export default SimpleAbout;
+

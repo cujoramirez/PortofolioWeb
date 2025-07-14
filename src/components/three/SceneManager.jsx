@@ -134,3 +134,4 @@ export const GlobalCanvas = ({ children, className = "" }) => {
 export const SceneManager = SceneProvider;
 
 export default SceneProvider;
+

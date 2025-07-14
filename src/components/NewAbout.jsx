@@ -195,7 +195,7 @@ const NewAbout = () => {
               {/* Stats Grid */}
               <Grid container spacing={3} sx={{ mb: 4 }}>
                 {stats.map((stat, index) => (
-                  <Grid item xs={6} sm={3} key={index}>
+                  <Grid size={6} sm={3} key={index}>
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
@@ -264,7 +264,7 @@ const NewAbout = () => {
                 </Typography>
                 <Grid container spacing={2}>
                   {skills.map((skill, index) => (
-                    <Grid item xs={12} sm={6} key={index}>
+                    <Grid size={12} sm={6} key={index}>
                       <motion.div
                         initial={{ opacity: 0, x: -30 }}
                         whileInView={{ opacity: 1, x: 0 }}
@@ -308,3 +308,4 @@ const NewAbout = () => {
 };
 
 export default NewAbout;
+

@@ -298,3 +298,4 @@ export const ProjectsScene3D = ({ projects = [], hoveredProject, setHoveredProje
 };
 
 export default ProjectsScene3D;
+

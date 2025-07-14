@@ -117,3 +117,4 @@ class AboutErrorBoundary extends React.Component {
 }
 
 export default AboutErrorBoundary;
+

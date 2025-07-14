@@ -653,7 +653,7 @@ const EnterpriseTechnologies = () => {
 
               <Grid container spacing={3}>
                 {category.technologies.map((tech, techIndex) => (
-                  <Grid item xs={12} sm={6} md={4} key={tech.name}>
+                  <Grid size={12} sm={6} md={4} key={tech.name}>
                     <EnhancedTechnologyCard
                       tech={tech}
                       index={techIndex}
@@ -692,7 +692,7 @@ const EnterpriseTechnologies = () => {
               </Typography>
               
               <Grid container spacing={4}>
-                <Grid item xs={6} md={3}>
+                <Grid size={6} md={3}>
                   <Typography variant="h3" sx={{ fontWeight: 800, color: theme.palette.primary.main }}>
                     25+
                   </Typography>
@@ -700,7 +700,7 @@ const EnterpriseTechnologies = () => {
                     Technologies
                   </Typography>
                 </Grid>
-                <Grid item xs={6} md={3}>
+                <Grid size={6} md={3}>
                   <Typography variant="h3" sx={{ fontWeight: 800, color: theme.palette.secondary.main }}>
                     5
                   </Typography>
@@ -708,7 +708,7 @@ const EnterpriseTechnologies = () => {
                     Categories
                   </Typography>
                 </Grid>
-                <Grid item xs={6} md={3}>
+                <Grid size={6} md={3}>
                   <Typography variant="h3" sx={{ fontWeight: 800, color: theme.palette.success.main }}>
                     90%
                   </Typography>
@@ -716,7 +716,7 @@ const EnterpriseTechnologies = () => {
                     Avg Proficiency
                   </Typography>
                 </Grid>
-                <Grid item xs={6} md={3}>
+                <Grid size={6} md={3}>
                   <Typography variant="h3" sx={{ fontWeight: 800, color: theme.palette.warning.main }}>
                     3+
                   </Typography>
@@ -752,3 +752,4 @@ const EnterpriseTechnologies = () => {
 };
 
 export default EnterpriseTechnologies;
+

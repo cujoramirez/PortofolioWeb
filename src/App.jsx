@@ -1,14 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import EnterpriseNavbar from "./components/EnterpriseNavbar";
-import Hero from "./components/Hero";
-import BulletproofAbout from "./components/BulletproofAbout";
-import Technologies from "./components/Technologies";
-import Experience from "./components/Experience";
-import Research from "./components/Research";
-import ModernProjects from "./components/ModernProjects";
-import Certifications from "./components/certificates";
-import ModernContact from "./components/ModernContact";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import LoadingScreen from "./components/LoadingScreen";
+import OptimizedIntroAnimation from "./components/OptimizedIntroAnimation";
+import OptimizedLandingPage from "./components/OptimizedLandingPage";
 import FloatingNavBubble from "./components/FloatingNavBubble";
 import EnterpriseBackground from "./components/EnterpriseBackground";
 import EnhancedScrollToTop from "./components/EnhancedScrollToTop";
@@ -17,6 +11,9 @@ import ScrollProgressIndicator from "./components/ScrollProgressIndicator";
 const App = () => {
   // Always call all hooks at the top level - no conditions!
   const [isIOSSafari, setIsIOSSafari] = useState(false);
+  const [showLoading, setShowLoading] = useState(true);
+  const [showIntro, setShowIntro] = useState(false);
+  const [introComplete, setIntroComplete] = useState(false);
   const { scrollYProgress } = useScroll();
   
   // ALWAYS call these hooks, regardless of platform
@@ -70,6 +67,21 @@ const App = () => {
       document.documentElement.classList.remove('ios-safari');
     };
   }, [browserInfo.isIOSSafariDetected]);
+
+  // Handle loading sequence
+  const handleLoadingComplete = () => {
+    setShowLoading(false);
+    setTimeout(() => {
+      setShowIntro(true);
+    }, 500);
+  };
+
+  const handleIntroComplete = () => {
+    setShowIntro(false);
+    setTimeout(() => {
+      setIntroComplete(true);
+    }, 1000);
+  };
   
   // Gradient update effect - always runs but may skip updates
   useEffect(() => {
@@ -104,6 +116,7 @@ const App = () => {
     accentColorTransform, 
     isIOSSafari
   ]);
+  
   return (
     <div className="overflow-x-hidden text-neutral-300 
       antialiased selection:bg-cyan-300 selection:text-cyan-900"
@@ -116,265 +129,84 @@ const App = () => {
         minHeight: '100vh'
       }}
     >
-      {/* Scroll Progress Indicator */}
-      <ScrollProgressIndicator />
-      
-      {/* Enterprise Background Layer */}
-      <EnterpriseBackground 
-        particleCount={60}
-        showGeometry={true}
-        showNeuralNetwork={true}
-        intensity="high"
-      />
-      
-      {/* Background gradient */}
-      {isIOSSafari ? (
-        <div 
-          className="fixed inset-0 -z-10 h-full w-full"
-          style={{
-            background: "radial-gradient(125% 125% at 50% 10%, #000 40%, #63e 100%)"
-          }}
-        />
-      ) : (
-        <motion.div
-          className="fixed inset-0 -z-10 h-full w-full"
-          style={{
-            background: "radial-gradient(var(--gradient-position), var(--primary-color), var(--accent-color))",
-            transition: "background 0.5s ease"
-          }}
-        />
-      )}
-      
-      {/* Parallax stars effect */}
-      {!isIOSSafari && (
-        <div className="fixed inset-0 -z-5 opacity-30">
-          <motion.div 
-            className="absolute h-full w-full"
-            style={{
-              backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px)',
-              backgroundSize: '50px 50px',
-              y: bigStarParallax
-            }}
-          />
-          <motion.div 
-            className="absolute h-full w-full"
-            style={{
-              backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.2) 1px, transparent 1px)',
-              backgroundSize: '30px 30px',
-              y: smallStarParallax
-            }}
-          />
-        </div>
-      )}
-      
-      {/* Content container with enterprise animations */}
-      <motion.div 
-        className="container mx-auto px-8 relative z-20"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
-      >
-        <EnterpriseNavbar />
-        
-        {/* Hero Section with Parallax */}
-        <motion.div
-          style={{
-            y: isIOSSafari ? 0 : useTransform(scrollYProgress, [0, 0.2], [0, -50])
-          }}
-        >
-          <Hero />
-        </motion.div>
-        
-        {/* Section Transition */}
-        <motion.div
-          className="h-20 bg-gradient-to-b from-transparent via-purple-500/5 to-transparent"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1 }}
-        />
-        
-        {/* About Section with Enhanced Animations */}
-        <BulletproofAbout />
-        
-        {/* Section Transition */}
-        <motion.div
-          className="h-20 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, delay: 0.2 }}
-        />
-        
-        {/* Technologies Section with Stagger Animation */}
-        <motion.div
-          initial={{ opacity: 0, y: 100 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-        >
-          <Technologies />
-        </motion.div>
-        
-        {/* Section Transition */}
-        <motion.div
-          className="h-20 bg-gradient-to-b from-transparent via-green-500/5 to-transparent"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, delay: 0.1 }}
-        />
-        
-        {/* Experience Section */}
-        <motion.div
-          initial={{ opacity: 0, x: -100 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <Experience />
-        </motion.div>
-        
-        {/* Section Transition */}
-        <motion.div
-          className="h-20 bg-gradient-to-b from-transparent via-indigo-500/5 to-transparent"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, delay: 0.3 }}
-        />
-        
-        {/* Research Section */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <Research />
-        </motion.div>
-        
-        {/* Section Transition */}
-        <motion.div
-          className="h-20 bg-gradient-to-b from-transparent via-pink-500/5 to-transparent"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, delay: 0.1 }}
-        />
-        
-        {/* Projects Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 100 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
-        >
-          <ModernProjects />
-        </motion.div>
-        
-        {/* Section Transition */}
-        <motion.div
-          className="h-20 bg-gradient-to-b from-transparent via-yellow-500/5 to-transparent"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, delay: 0.2 }}
-        />
-        
-        {/* Certifications Section */}
-        <motion.div
-          initial={{ opacity: 0, x: 100 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          style={{ 
-            position: 'relative',
-            zIndex: 150
-          }}
-        >
-          <Certifications />
-        </motion.div>
-        
-        {/* Section Transition */}
-        <motion.div
-          className="h-20 bg-gradient-to-b from-transparent via-teal-500/5 to-transparent"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, delay: 0.4 }}
-        />
-        
-        {/* Contact Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.5 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <ModernContact />
-        </motion.div>
-      </motion.div>
-      
-      {/* Floating Navigation Bubble */}
-      <FloatingNavBubble />
-      
-      {/* Scroll progress indicator */}
-      {isIOSSafari ? (
-        <div 
-          className="fixed bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-cyan-500 origin-left"
-          style={{ transform: "scaleX(0.1)" }}
-        />
-      ) : (
-        <motion.div
-          className="fixed bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-cyan-500 origin-left z-50"
-          style={{ scaleX: scrollYProgress }}
-        />
-      )}
+      {/* Loading Screen */}
+      <AnimatePresence mode="wait">
+        {showLoading && (
+          <LoadingScreen onLoadingComplete={handleLoadingComplete} />
+        )}
+      </AnimatePresence>
 
-      {/* Floating Scroll to Top Button */}
-      <EnhancedScrollToTop />
-      
-      {/* iOS Safari specific styles */}
-      <style>
-        {`
-          @supports (-webkit-touch-callout: none) {
-            html.ios-safari {
-              height: 100%;
-              -webkit-text-size-adjust: 100%;
-            }
+      {/* Optimized Intro Animation */}
+      <AnimatePresence mode="wait">
+        {showIntro && (
+          <OptimizedIntroAnimation onComplete={handleIntroComplete} />
+        )}
+      </AnimatePresence>
+
+      {/* Main App Content */}
+      <AnimatePresence>
+        {introComplete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.5 }}
+          >
+            {/* Scroll Progress Indicator */}
+            <ScrollProgressIndicator />
             
-            html.ios-safari body {
-              position: static !important;
-              height: auto !important;
-              overflow-y: auto !important;
-              -webkit-overflow-scrolling: touch;
-              overscroll-behavior-y: auto;
-              touch-action: pan-y !important;
-            }
+            {/* Enterprise Background Layer */}
+            <EnterpriseBackground 
+              particleCount={60}
+              showGeometry={true}
+              showNeuralNetwork={true}
+              intensity="high"
+            />
             
-            /* Disable ALL scroll-linked animations in iOS Safari */
-            html.ios-safari * {
-              transform: none !important; 
-              transition: none !important;
-              animation: none !important;
-              will-change: auto !important;
-            }
+            {/* Background gradient */}
+            {isIOSSafari ? (
+              <div 
+                className="fixed inset-0 -z-10 h-full w-full"
+                style={{
+                  background: "radial-gradient(125% 125% at 50% 10%, #000 40%, #63e 100%)"
+                }}
+              />
+            ) : (
+              <motion.div
+                className="fixed inset-0 -z-10 h-full w-full"
+                style={{
+                  background: "radial-gradient(var(--gradient-position), var(--primary-color), var(--accent-color))",
+                  transition: "background 0.5s ease"
+                }}
+              />
+            )}
             
-            /* Make sure static elements appear correctly */
-            html.ios-safari .fixed {
-              position: fixed !important;
-            }
+            {/* Parallax stars effect */}
+            {!isIOSSafari && (
+              <div className="fixed inset-0 -z-5 opacity-30">
+                <motion.div 
+                  className="absolute h-full w-full"
+                  style={{
+                    backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px)',
+                    backgroundSize: '50px 50px',
+                    y: bigStarParallax
+                  }}
+                />
+                <motion.div 
+                  className="absolute h-full w-full"
+                  style={{
+                    backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.2) 1px, transparent 1px)',
+                    backgroundSize: '30px 30px',
+                    y: smallStarParallax
+                  }}
+                />
+              </div>
+            )}
             
-            html.ios-safari #root,
-            html.ios-safari #app {
-              height: auto !important;
-              min-height: 100% !important;
-              position: relative !important;
-            }
-          }
-        `}
-      </style>
+            {/* Optimized Landing Page with integrated navigation - NO OTHER UI ELEMENTS */}
+            <OptimizedLandingPage introComplete={introComplete} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

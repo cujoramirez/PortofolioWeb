@@ -31,3 +31,4 @@ const ScrollProgressIndicator = () => {
 };
 
 export default ScrollProgressIndicator;
+

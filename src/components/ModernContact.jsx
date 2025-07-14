@@ -1,4 +1,8 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import { useSystemProfile } from './useSystemProfile';
+
+// Import morphing animations
+import { EnterpriseMotion } from './animations/EnterpriseMotion';
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { 
   Box, 
@@ -31,7 +35,6 @@ import {
   Analytics as AnalyticsIcon,
   Science as ScienceIcon
 } from "@mui/icons-material";
-import { useSystemProfile } from "./useSystemProfile";
 
 const contactMethods = [
   {
@@ -91,11 +94,27 @@ const ModernContact = () => {
   const { performanceTier } = useSystemProfile();
   
   const containerRef = useRef(null);
+  const [forceVisible, setForceVisible] = useState(false);
+  
   const isInView = useInView(containerRef, { 
     once: true, 
-    margin: "-100px",
-    amount: 0.2
+    margin: isMobile ? "0px" : "-50px",
+    amount: isMobile ? 0.1 : 0.2
   });
+
+  // Fallback mechanism for mobile devices
+  useEffect(() => {
+    if (isMobile) {
+      const timer = setTimeout(() => {
+        setForceVisible(true);
+      }, 2000); // Force visibility after 2 seconds on mobile
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isMobile]);
+
+  const shouldShowContent = isInView || forceVisible;
+  const shouldAnimate = shouldShowContent; // Enable animations when content shows
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -110,33 +129,41 @@ const ModernContact = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.1,
+        staggerChildren: shouldReduceMotion ? 0.1 : 0.2,
+        delayChildren: shouldReduceMotion ? 0.05 : 0.1,
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: shouldReduceMotion ? 15 : 30 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.8,
+        duration: shouldReduceMotion ? 0.4 : 0.8,
         ease: "easeOut"
       }
     }
   };
 
   const cardVariants = {
-    hidden: { opacity: 0, scale: 0.8, rotateY: -30 },
+    hidden: { 
+      opacity: 0, 
+      scale: shouldReduceMotion ? 0.95 : 0.8, 
+      rotateY: shouldReduceMotion ? 0 : -15,
+      rotateX: shouldReduceMotion ? 0 : -10,
+      z: shouldReduceMotion ? 0 : -50
+    },
     visible: {
       opacity: 1,
       scale: 1,
       rotateY: 0,
+      rotateX: 0,
+      z: 0,
       transition: {
-        duration: 0.6,
-        ease: "easeOut"
+        duration: shouldReduceMotion ? 0.3 : 0.7,
+        ease: "backOut"
       }
     }
   };
@@ -199,16 +226,9 @@ const ModernContact = () => {
       )}
 
       <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 10 }}>
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          style={{
-            y: shouldReduceMotion ? 0 : y,
-          }}
-        >
+        <EnterpriseMotion.ContactContainer>
           {/* Section Header */}
-          <motion.div variants={itemVariants}>
+          <EnterpriseMotion.ContactElement>
             <Box sx={{ textAlign: 'center', mb: 8 }}>
               <Chip
                 icon={<ContactIcon />}
@@ -296,12 +316,12 @@ const ModernContact = () => {
                 })}
               </Grid>
             </Box>
-          </motion.div>
+          </EnterpriseMotion.ContactElement>
 
           {/* Main Content Grid */}
-          <Grid container spacing={{ xs: 4, md: 6 }} alignItems="stretch">
+          <Grid container spacing={{ xs: 3, sm: 4, md: 6 }} alignItems="stretch">
             {/* Contact Methods */}
-            <Grid size={{ xs: 12, md: 8 }}>
+            <Grid size={{ xs: 12, lg: 8 }}>
               <motion.div variants={cardVariants}>
                 <Card
                   sx={{
@@ -341,10 +361,7 @@ const ModernContact = () => {
                       const Icon = method.icon;
                       return (
                         <Grid size={{ xs: 12, sm: 6 }} key={method.label}>
-                          <motion.div
-                            whileHover={method.href ? { scale: 1.02, x: 8 } : {}}
-                            transition={{ duration: 0.2 }}
-                          >
+                          <EnterpriseMotion.ContactElement>
                             <Box
                               component={method.href ? Link : 'div'}
                               href={method.href || undefined}
@@ -352,16 +369,19 @@ const ModernContact = () => {
                               rel={method.href ? "noopener noreferrer" : undefined}
                               sx={{
                                 display: 'flex',
-                                alignItems: 'center',
-                                p: 3,
+                                alignItems: 'flex-start',
+                                p: { xs: 2, sm: 2.5, md: 3 },
                                 borderRadius: '16px',
                                 background: 'rgba(255, 255, 255, 0.03)',
                                 border: '1px solid rgba(255, 255, 255, 0.1)',
                                 textDecoration: 'none',
                                 color: 'inherit',
                                 transition: 'all 0.3s ease',
-                                height: '100%',
+                                height: 'auto',
+                                minHeight: { xs: '80px', sm: '90px' },
                                 cursor: method.href ? 'pointer' : 'default',
+                                overflow: 'hidden',
+                                wordBreak: 'break-word',
                                 '&:hover': method.href ? {
                                   background: `rgba(${method.color === '#333' ? '99, 102, 241' : method.color.slice(1).match(/.{2}/g).map(x => parseInt(x, 16)).join(', ')}, 0.1)`,
                                   border: `1px solid rgba(${method.color === '#333' ? '99, 102, 241' : method.color.slice(1).match(/.{2}/g).map(x => parseInt(x, 16)).join(', ')}, 0.3)`,
@@ -373,27 +393,58 @@ const ModernContact = () => {
                               <Avatar
                                 sx={{
                                   background: method.color,
-                                  width: 60,
-                                  height: 60,
-                                  mr: 3,
+                                  width: { xs: 48, sm: 56, md: 60 },
+                                  height: { xs: 48, sm: 56, md: 60 },
+                                  mr: { xs: 2, sm: 2.5, md: 3 },
+                                  flexShrink: 0,
                                   boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
                                 }}
                               >
-                                <Icon sx={{ fontSize: 28 }} />
+                                <Icon sx={{ fontSize: { xs: 20, sm: 24, md: 28 } }} />
                               </Avatar>
-                              <Box sx={{ flex: 1 }}>
-                                <Typography variant="h6" sx={{ fontWeight: 700, color: 'white', mb: 0.5 }}>
+                              <Box sx={{ 
+                                flex: 1, 
+                                minWidth: 0, // Allow text to shrink
+                                overflow: 'hidden'
+                              }}>
+                                <Typography 
+                                  variant="h6" 
+                                  sx={{ 
+                                    fontWeight: 700, 
+                                    color: 'white', 
+                                    mb: 0.5,
+                                    fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
+                                    lineHeight: 1.2
+                                  }}
+                                >
                                   {method.label}
                                 </Typography>
-                                <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.8)', mb: 0.5, fontWeight: 500 }}>
+                                <Typography 
+                                  variant="body1" 
+                                  sx={{ 
+                                    color: 'rgba(255,255,255,0.8)', 
+                                    mb: 0.5, 
+                                    fontWeight: 500,
+                                    fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' },
+                                    wordBreak: 'break-all',
+                                    lineHeight: 1.3
+                                  }}
+                                >
                                   {method.value}
                                 </Typography>
-                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+                                <Typography 
+                                  variant="caption" 
+                                  sx={{ 
+                                    color: 'rgba(255,255,255,0.6)',
+                                    fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.8rem' },
+                                    lineHeight: 1.2
+                                  }}
+                                >
                                   {method.description}
                                 </Typography>
                               </Box>
                             </Box>
-                          </motion.div>
+                          </EnterpriseMotion.ContactElement>
                         </Grid>
                       );
                     })}
@@ -438,7 +489,7 @@ const ModernContact = () => {
             </Grid>
 
             {/* Expertise Areas */}
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, lg: 4 }}>
               <motion.div variants={cardVariants}>
                 <Card
                   sx={{
@@ -446,7 +497,7 @@ const ModernContact = () => {
                     backdropFilter: 'blur(30px)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     borderRadius: '24px',
-                    p: 3,
+                    p: { xs: 2.5, sm: 3 },
                     height: '100%',
                   }}
                 >
@@ -458,7 +509,7 @@ const ModernContact = () => {
                     {expertise.map((item, index) => {
                       const Icon = item.icon;
                       return (
-                        <Grid size={{ xs: 6 }} key={item.label}>
+                        <Grid size={{ xs: 6, sm: 4, lg: 6 }} key={item.label}>
                           <motion.div
                             whileHover={{ scale: 1.05 }}
                             transition={{ duration: 0.2 }}
@@ -528,7 +579,7 @@ const ModernContact = () => {
           </Grid>
 
           {/* Footer */}
-          <motion.div variants={itemVariants}>
+          <EnterpriseMotion.ContactElement>
             <Box sx={{ textAlign: 'center', mt: 8, pt: 4, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
               <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 2 }}>
                 Let's create innovative solutions together. Reach out and let's discuss your next big idea.
@@ -537,11 +588,12 @@ const ModernContact = () => {
                 © {new Date().getFullYear()} Gading Aditya Perdana. All rights reserved.
               </Typography>
             </Box>
-          </motion.div>
-        </motion.div>
+          </EnterpriseMotion.ContactElement>
+        </EnterpriseMotion.ContactContainer>
       </Container>
     </Box>
   );
 };
 
 export default ModernContact;
+

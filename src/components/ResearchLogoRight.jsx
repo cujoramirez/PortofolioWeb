@@ -64,3 +64,4 @@ const ResearchLogoRight = () => {
 };
 
 export default React.memo(ResearchLogoRight);
+

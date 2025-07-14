@@ -342,3 +342,4 @@ const EnterpriseBackground = memo(({
 EnterpriseBackground.displayName = 'EnterpriseBackground';
 
 export default EnterpriseBackground;
+

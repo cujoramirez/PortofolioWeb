@@ -54,3 +54,4 @@ export function useIOSSafariFixes(isIOSSafari) {
     };
   }, [isIOSSafari]);
 }
+

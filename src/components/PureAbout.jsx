@@ -258,7 +258,7 @@ const PureAbout = () => {
 
           <Grid container spacing={6} alignItems="center">
             {/* Profile Section */}
-            <Grid item xs={12} md={5}>
+            <Grid xs={12} md={5}>
               <motion.div variants={itemVariants} className="text-center">
                 <Box sx={{ position: 'relative', display: 'inline-block', mb: 4 }}>
                   <ProfileImage
@@ -312,7 +312,7 @@ const PureAbout = () => {
             </Grid>
 
             {/* Content Section */}
-            <Grid item xs={12} md={7}>
+            <Grid xs={12} md={7}>
               <motion.div variants={itemVariants}>
                 <GlowCard>
                   <CardContent sx={{ p: 4 }}>
@@ -388,7 +388,7 @@ const PureAbout = () => {
                 
                 <Grid container spacing={4}>
                   {skills.map((skill, index) => (
-                    <Grid item xs={12} md={6} key={skill.name}>
+                    <Grid xs={12} md={6} key={skill.name}>
                       <AnimatedProgressBar
                         skill={skill.name}
                         level={skill.level}
@@ -407,3 +407,4 @@ const PureAbout = () => {
 };
 
 export default PureAbout;
+

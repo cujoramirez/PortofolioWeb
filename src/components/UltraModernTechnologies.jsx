@@ -691,7 +691,7 @@ const UltraModernTechnologies = () => {
                 }}
               >
                 <Grid container spacing={4} alignItems="center">
-                  <Grid item xs={12} sm={4}>
+                  <Grid size={12} sm={4}>
                     <Typography variant="h4" sx={{ color: activeCategory.color, fontWeight: 'bold' }}>
                       25+
                     </Typography>
@@ -699,7 +699,7 @@ const UltraModernTechnologies = () => {
                       Technologies
                     </Typography>
                   </Grid>
-                  <Grid item xs={12} sm={4}>
+                  <Grid size={12} sm={4}>
                     <Typography variant="h4" sx={{ color: '#22d3ee', fontWeight: 'bold' }}>
                       4+
                     </Typography>
@@ -707,7 +707,7 @@ const UltraModernTechnologies = () => {
                       Years Experience
                     </Typography>
                   </Grid>
-                  <Grid item xs={12} sm={4}>
+                  <Grid size={12} sm={4}>
                     <Typography variant="h4" sx={{ color: '#10b981', fontWeight: 'bold' }}>
                       15+
                     </Typography>
@@ -745,3 +745,4 @@ const UltraModernTechnologies = () => {
 };
 
 export default UltraModernTechnologies;
+

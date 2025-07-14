@@ -339,3 +339,4 @@ export const ResearchScene3D = ({ publications = [], scrollProgress = 0 }) => {
 };
 
 export default ResearchScene3D;
+

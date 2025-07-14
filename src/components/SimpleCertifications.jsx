@@ -43,3 +43,4 @@ const SimpleCertifications = () => {
 };
 
 export default SimpleCertifications;
+

@@ -23,3 +23,4 @@ export function useIOSSafariFixes2(isIOSSafari, setContentReady, setFallbackActi
     };
   }, [isIOSSafari, setContentReady, setFallbackActive]);
 }
+

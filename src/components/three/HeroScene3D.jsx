@@ -278,3 +278,4 @@ export const HeroScene3D = ({ mousePosition = { x: 0, y: 0 } }) => {
 };
 
 export default HeroScene3D;
+

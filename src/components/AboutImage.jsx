@@ -50,3 +50,4 @@ const AboutImage = ({ contentReady, isMobile }) => {
 };
 
 export default AboutImage;
+

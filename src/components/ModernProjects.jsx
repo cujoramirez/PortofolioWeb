@@ -39,6 +39,7 @@ import {
 } from '@mui/icons-material';
 import { PROJECTS } from '../constants';
 import { useSystemProfile } from './useSystemProfile';
+import EnterpriseMotion from './animations/EnterpriseMotion';
 
 // Enhanced floating particle component for projects
 const ProjectParticle = ({ delay = 0 }) => {
@@ -269,13 +270,9 @@ const ModernProjects = memo(() => {
       />
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-        >
+        <EnterpriseMotion.ProjectsContainer>
           {/* Enhanced section header */}
-          <motion.div variants={cardVariants}>
+          <EnterpriseMotion.ProjectsTitle>
             <Box textAlign="center" mb={{ xs: 6, md: 8 }}>
               <Box
                 sx={{
@@ -329,21 +326,14 @@ const ModernProjects = memo(() => {
                 Innovative solutions showcasing technical expertise and creative problem-solving
               </Typography>
             </Box>
-          </motion.div>
+          </EnterpriseMotion.ProjectsTitle>
 
           {/* Enhanced projects grid */}
           <Grid container spacing={{ xs: 3, md: 4 }}>
             {PROJECTS.map((project, index) => (
               <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }} key={index}>
-                <motion.div
-                  variants={cardVariants}
-                  whileHover={!useReducedMotion ? "hover" : undefined}
-                  style={{ height: '100%' }}
-                  onHoverStart={() => setHoveredProject(index)}
-                  onHoverEnd={() => setHoveredProject(null)}
-                >
-                  <motion.div variants={cardHoverVariants}>
-                    <Card
+                <EnterpriseMotion.ProjectCard>
+                  <Card
                       elevation={isMobile ? 2 : 4}
                       sx={{
                         height: '100%',
@@ -628,12 +618,11 @@ const ModernProjects = memo(() => {
                         </Box>
                       </CardContent>
                     </Card>
-                  </motion.div>
-                </motion.div>
+                  </EnterpriseMotion.ProjectCard>
               </Grid>
             ))}
           </Grid>
-        </motion.div>
+        </EnterpriseMotion.ProjectsContainer>
 
         <Dialog
           open={!!selectedProject}
@@ -762,3 +751,4 @@ const ModernProjects = memo(() => {
 ModernProjects.displayName = 'ModernProjects';
 
 export default ModernProjects;
+

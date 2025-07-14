@@ -203,3 +203,4 @@ export const AchievementStars = () => {
 };
 
 export default FloatingCertificate;
+

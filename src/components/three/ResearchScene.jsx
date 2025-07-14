@@ -226,3 +226,4 @@ export const PublicationCards = ({ publications = [] }) => {
 };
 
 export default ResearchVisualization;
+

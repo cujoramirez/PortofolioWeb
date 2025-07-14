@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import EnterpriseMotion from './animations/EnterpriseMotion';
 import { 
   Timeline, 
   TimelineItem, 
@@ -136,13 +137,9 @@ const ModernExperience = memo(() => {
       />
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate={isVisible ? "visible" : "hidden"}
-        >
+        <EnterpriseMotion.ExperienceContainer>
           {/* Section Header */}
-          <motion.div variants={itemVariants}>
+          <EnterpriseMotion.ExperienceTitle>
             <Box textAlign="center" mb={{ xs: 6, md: 8 }}>
               <Typography
                 variant="h2"
@@ -170,7 +167,7 @@ const ModernExperience = memo(() => {
                 A journey through impactful roles and transformative projects
               </Typography>
             </Box>
-          </motion.div>
+          </EnterpriseMotion.ExperienceTitle>
 
           {/* Experience Timeline */}
           <Timeline position="alternate">
@@ -179,11 +176,7 @@ const ModernExperience = memo(() => {
                 const IconComponent = experience.icon;
                 
                 return (
-                  <motion.div
-                    key={experience.id}
-                    variants={itemVariants}
-                    layout
-                  >
+                  <EnterpriseMotion.ExperienceCard key={experience.id}>
                     <TimelineItem>
                       {/* Timeline Date */}
                       <TimelineOppositeContent
@@ -408,12 +401,12 @@ const ModernExperience = memo(() => {
                         </motion.div>
                       </TimelineContent>
                     </TimelineItem>
-                  </motion.div>
+                  </EnterpriseMotion.ExperienceCard>
                 );
               })}
             </AnimatePresence>
           </Timeline>
-        </motion.div>
+        </EnterpriseMotion.ExperienceContainer>
       </Container>
     </Box>
   );
@@ -422,3 +415,4 @@ const ModernExperience = memo(() => {
 ModernExperience.displayName = 'ModernExperience';
 
 export default ModernExperience;
+

@@ -32,3 +32,4 @@ const AboutShapes = ({ showShapes, numShapes, contentReady, isMobile }) => {
 };
 
 export default AboutShapes;
+

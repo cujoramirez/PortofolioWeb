@@ -109,3 +109,4 @@ export const HeroOrbs = ({ count = 20 }) => {
 };
 
 export default GalaxyField;
+

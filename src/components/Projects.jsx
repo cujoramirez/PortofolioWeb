@@ -501,3 +501,4 @@ const Projects = () => {
 };
 
 export default React.memo(Projects);
+

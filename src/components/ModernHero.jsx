@@ -26,20 +26,20 @@ import {
 import { useSystemProfile } from "../components/useSystemProfile.jsx";
 import EnterpriseSceneManager, { useSceneManager } from "./three/EnterpriseSceneManager.jsx";
 import HeroScene3D from "./three/HeroScene3D.jsx";
-import { EnterpriseMotion, heroVariants } from "./EnterpriseMotion.jsx";
+import { EnterpriseMotion } from "./animations/EnterpriseMotion.jsx";
 import heroImg from "../assets/GadingAdityaPerdana.jpg";
 import resumePDF from "../assets/Gading_Resume.pdf";
 
-// Roles array defined outside component to prevent recreation
+// Professional roles array defined outside component to prevent recreation
 const TYPING_ROLES = [
-  "AI Researcher & Engineer",
-  "Machine Learning Expert", 
+  "AI/ML Engineer",
+  "Machine Learning Architect", 
   "Computer Vision Specialist",
-  "Data Scientist & Analyst",
-  "Deep Learning Innovator",
+  "Deep Learning Engineer",
+  "AI Solutions Developer",
   "Neural Network Architect",
-  "Algorithm Designer & Optimizer",
-  "Innovation Catalyst"
+  "Data Science Engineer",
+  "AI Research Engineer"
 ];
 
 // Animated 3D sphere component with enterprise enhancement
@@ -309,16 +309,7 @@ const ModernHero = () => {
       {(isMobile || shouldReduceMotion) && <FloatingParticles />}
 
       <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 10 }}>
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          style={{
-            y: shouldReduceMotion ? 0 : smoothY,
-            opacity: shouldReduceMotion ? 1 : opacity,
-            scale: shouldReduceMotion ? 1 : smoothScale,
-          }}
-        >
+        <EnterpriseMotion.HeroContainer>
           <Box
             sx={{
               display: 'grid',
@@ -330,7 +321,7 @@ const ModernHero = () => {
           >
             {/* Content Section */}
             <Box sx={{ order: { xs: 2, lg: 1 } }}>
-              <motion.div variants={itemVariants}>
+              <EnterpriseMotion.HeroSubtitle>
                 <Chip
                   label="Welcome to my portfolio"
                   sx={{
@@ -342,13 +333,9 @@ const ModernHero = () => {
                     fontWeight: 500
                   }}
                 />
-              </motion.div>
+              </EnterpriseMotion.HeroSubtitle>
 
-              <motion.div 
-                variants={heroVariants.container}
-                initial="hidden"
-                animate="visible"
-              >
+              <EnterpriseMotion.HeroTitle>
                 <Typography
                   variant="h1"
                   sx={{
@@ -364,13 +351,13 @@ const ModernHero = () => {
                     filter: 'drop-shadow(0 0 20px rgba(139, 92, 246, 0.4))',
                   }}
                 >
-                  Gading Aditya
+                  Gading Aditya Perdana
                   <br />
                   Perdana
                 </Typography>
-              </motion.div>
+              </EnterpriseMotion.HeroTitle>
 
-              <motion.div variants={itemVariants}>
+              <EnterpriseMotion.HeroSubtitle>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                   <Typography
                     variant="h4"
@@ -420,9 +407,9 @@ const ModernHero = () => {
                     </motion.span>
                   </Typography>
                 </Box>
-              </motion.div>
+              </EnterpriseMotion.HeroSubtitle>
 
-              <motion.div variants={itemVariants}>
+              <EnterpriseMotion.HeroSubtitle>
                 <Typography
                   variant="body1"
                   sx={{
@@ -437,9 +424,9 @@ const ModernHero = () => {
                   and practical applications. Specializing in computer vision, machine learning, 
                   and creating intelligent systems that solve real-world problems.
                 </Typography>
-              </motion.div>
+              </EnterpriseMotion.HeroSubtitle>
 
-              <motion.div variants={itemVariants}>
+              <EnterpriseMotion.HeroButton>
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                   <motion.button
                     whileHover={shouldReduceMotion ? {} : { scale: 1.05, y: -2 }}
@@ -540,7 +527,7 @@ const ModernHero = () => {
                   {/* Social Links */}
                   <Box sx={{ display: 'flex', gap: 1, ml: { xs: 0, sm: 2 }, mt: { xs: 2, sm: 0 } }}>
                     {[
-                      { icon: GitHub, url: 'https://github.com/gadingnst', label: 'GitHub' },
+                      { icon: GitHub, url: 'https://github.com/cujoramirez', label: 'GitHub' },
                       { icon: LinkedIn, url: 'https://www.linkedin.com/in/gadingadityaperdana/', label: 'LinkedIn' },
                       { icon: Email, url: 'mailto:gadingadityaperdana@gmail.com', label: 'Email' }
                     ].map((social, index) => (
@@ -572,10 +559,10 @@ const ModernHero = () => {
                     ))}
                   </Box>
                 </Box>
-              </motion.div>
+              </EnterpriseMotion.HeroButton>
 
               {/* Skill Tags */}
-              <motion.div variants={itemVariants}>
+              <EnterpriseMotion.HeroSubtitle>
                 <Box sx={{ mt: 6 }}>
                   <Typography variant="overline" sx={{ color: '#d4d4d4', mb: 2, display: 'block' }}>
                     Core Expertise
@@ -610,16 +597,12 @@ const ModernHero = () => {
                     ))}
                   </Box>
                 </Box>
-              </motion.div>
+              </EnterpriseMotion.HeroSubtitle>
             </Box>
 
             {/* Image Section */}
             <Box sx={{ order: { xs: 1, lg: 2 }, display: 'flex', justifyContent: 'center' }}>
-              <motion.div
-                variants={imageVariants}
-                {...(!shouldReduceMotion && floatVariants)}
-                animate={shouldReduceMotion ? "visible" : ["visible", "animate"]}
-              >
+              <EnterpriseMotion.AboutImage>
                 <Box
                   sx={{
                     position: 'relative',
@@ -703,10 +686,10 @@ const ModernHero = () => {
                     }}
                   />
                 </Box>
-              </motion.div>
+              </EnterpriseMotion.AboutImage>
             </Box>
           </Box>
-        </motion.div>
+        </EnterpriseMotion.HeroContainer>
       </Container>
 
 
@@ -715,3 +698,4 @@ const ModernHero = () => {
 };
 
 export default ModernHero;
+

@@ -23,6 +23,7 @@ import {
 } from "@mui/icons-material";
 import { useSystemProfile } from "../components/useSystemProfile.jsx";
 import { technologies } from "./techData.jsx";
+import EnterpriseMotion from "./animations/EnterpriseMotion.jsx";
 
 // Enhanced technology card component
 const ModernTechCard = ({ tech, index, isHovered, onHover, onHoverEnd, shouldReduceMotion }) => {
@@ -283,7 +284,7 @@ const TechStats = () => {
   return (
     <Grid container spacing={3} sx={{ mb: 6 }}>
       {stats.map((stat, index) => (
-        <Grid item xs={6} md={3} key={stat.label}>
+        <Grid xs={6} md={3} key={stat.label}>
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -451,18 +452,9 @@ const ModernTechnologies = () => {
       <TechParticles shouldReduceMotion={shouldReduceMotion} />
       
       <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 10 }}>
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-          style={{
-            y: shouldReduceMotion ? 0 : y,
-            opacity: shouldReduceMotion ? 1 : opacity,
-          }}
-        >
+        <EnterpriseMotion.TechContainer>
           {/* Section Header */}
-          <motion.div variants={headerVariants}>
+          <EnterpriseMotion.TechTitle>
             <Box sx={{ textAlign: 'center', mb: 8 }}>
               <Chip
                 icon={<Code />}
@@ -518,7 +510,7 @@ const ModernTechnologies = () => {
                 }}
               />
             </Box>
-          </motion.div>
+          </EnterpriseMotion.TechTitle>
 
           {/* Stats Section */}
           <TechStats />
@@ -526,7 +518,7 @@ const ModernTechnologies = () => {
           {/* Technologies Grid */}
           <Grid container spacing={3}>
             {technologies.map((tech, index) => (
-              <Grid item xs={6} sm={4} md={3} lg={2.4} key={tech.name}>
+              <Grid xs={6} sm={4} md={3} lg={2.4} key={tech.name}>
                 <ModernTechCard
                   tech={tech}
                   index={index}
@@ -558,7 +550,7 @@ const ModernTechnologies = () => {
             
             <Grid container spacing={2} justifyContent="center">
               {Object.entries(techCategories).map(([category, techs]) => (
-                <Grid item key={category}>
+                <Grid key={category}>
                   <motion.div
                     whileHover={shouldReduceMotion ? {} : { scale: 1.05, y: -4 }}
                   >
@@ -583,10 +575,11 @@ const ModernTechnologies = () => {
               ))}
             </Grid>
           </motion.div>
-        </motion.div>
+        </EnterpriseMotion.TechContainer>
       </Container>
     </Box>
   );
 };
 
 export default ModernTechnologies;
+

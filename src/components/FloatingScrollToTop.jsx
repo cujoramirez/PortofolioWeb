@@ -120,3 +120,4 @@ const FloatingScrollToTop = () => {
 };
 
 export default FloatingScrollToTop;
+
