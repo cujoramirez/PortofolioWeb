@@ -238,33 +238,10 @@ const ScrollProgress = ({ shouldReduceMotion }) => {
 
 // Section wrapper with intersection observer
 const SectionWrapper = ({ children, id, className = "" }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = React.useRef();
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
+  // Removed lazy loading - all sections now render immediately for proper navigation
   return (
-    <section ref={ref} id={id} className={className} style={{ position: 'relative' }}>
-      <Fade in={isVisible} timeout={800}>
-        <div>
-          {isVisible && children}
-        </div>
-      </Fade>
+    <section id={id} className={className} style={{ position: 'relative' }}>
+      {children}
     </section>
   );
 };

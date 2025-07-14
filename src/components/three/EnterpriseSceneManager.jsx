@@ -83,8 +83,8 @@ const EnterpriseSceneManager = ({
       
       const timer = setTimeout(() => {
         setActiveScene(currentSection);
-        setTimeout(() => setIsTransitioning(false), 500);
-      }, 1000);
+        setTimeout(() => setIsTransitioning(false), 200);
+      }, 400);
 
       return () => clearTimeout(timer);
     }
@@ -104,15 +104,16 @@ const EnterpriseSceneManager = ({
         }}
       >
         <Canvas
-          dpr={[1, 1.5]}
+          frameloop="demand"
+          dpr={[1, 1.2]}
           gl={{ 
             antialias: false, 
             alpha: true,
-            powerPreference: "default",
+            powerPreference: "high-performance",
             preserveDrawingBuffer: false,
             stencil: false,
             depth: true,
-            failIfMajorPerformanceCaveat: false
+            failIfMajorPerformanceCaveat: true
           }}
           shadows={false}
           camera={{
@@ -122,8 +123,9 @@ const EnterpriseSceneManager = ({
             far: 100
           }}
           onCreated={(state) => {
-            // Disable auto-clear to prevent flashing
+            // Optimize rendering performance
             state.gl.autoClear = true;
+            state.gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             
             // Handle WebGL context loss properly
             const canvas = state.gl.domElement;
@@ -171,10 +173,10 @@ const EnterpriseSceneManager = ({
               {!isTransitioning && (
                 <motion.group
                   key={activeScene}
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.1 }}
-                  transition={{ duration: 0.8, ease: "easeInOut" }}
+                  exit={{ opacity: 0, scale: 1.05 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
                 >
                   <CurrentSceneComponent
                     mousePosition={mousePosition}
@@ -237,28 +239,55 @@ export const useSceneManager = () => {
 
     const sections = ['hero', 'about', 'projects', 'research', 'certificates', 'contact'];
     
-    // Improved section detection with better thresholds
-    let sectionIndex;
-    if (progress >= 0.95) {
-      // Ensure contact section is reached when near bottom
-      sectionIndex = sections.length - 1;
-    } else if (progress >= 0.85) {
-      sectionIndex = 4; // certificates
-    } else if (progress >= 0.68) {
-      sectionIndex = 3; // research
-    } else if (progress >= 0.50) {
-      sectionIndex = 2; // projects
-    } else if (progress >= 0.25) {
-      sectionIndex = 1; // about
+    // Enhanced section detection - use DOM elements for better accuracy
+    const sectionElements = sections.map(section => document.getElementById(section));
+    let detectedSection = 'hero';
+    
+    // Check if we're near the bottom (within 100px) - force contact section
+    if ((scrollY + windowHeight) >= (documentHeight - 100)) {
+      detectedSection = 'contact';
     } else {
-      sectionIndex = 0; // hero
+      // Find the section that's most visible in viewport
+      let maxVisibility = 0;
+      sectionElements.forEach((element, index) => {
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const elementTop = rect.top;
+          const elementBottom = rect.bottom;
+          
+          // Calculate how much of the element is visible
+          const visibleTop = Math.max(0, Math.min(windowHeight, elementBottom));
+          const visibleBottom = Math.max(0, Math.min(windowHeight, windowHeight - elementTop));
+          const visibility = Math.max(0, visibleTop - (windowHeight - visibleBottom));
+          
+          if (visibility > maxVisibility) {
+            maxVisibility = visibility;
+            detectedSection = sections[index];
+          }
+        }
+      });
+      
+      // Fallback to progress-based detection if DOM detection fails
+      if (maxVisibility === 0) {
+        if (progress >= 0.90) {
+          detectedSection = 'contact';
+        } else if (progress >= 0.75) {
+          detectedSection = 'certificates';
+        } else if (progress >= 0.60) {
+          detectedSection = 'research';
+        } else if (progress >= 0.40) {
+          detectedSection = 'projects';
+        } else if (progress >= 0.20) {
+          detectedSection = 'about';
+        } else {
+          detectedSection = 'hero';
+        }
+      }
     }
     
-    const newSection = sections[sectionIndex];
-    
-    if (newSection !== currentSection) {
-      setCurrentSection(newSection);
-      setTransitionProgress(1); // Set to complete immediately to avoid animation loop
+    if (detectedSection !== currentSection) {
+      setCurrentSection(detectedSection);
+      setTransitionProgress(1);
     }
   }, [currentSection]);
 
@@ -269,12 +298,34 @@ export const useSceneManager = () => {
   }, []);
 
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    let ticking = false;
+    
+    const throttledHandleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    const throttledHandleMouseMove = (event) => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleMouseMove(event);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', throttledHandleScroll, { passive: true });
+    window.addEventListener('mousemove', throttledHandleMouseMove, { passive: true });
     
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('scroll', throttledHandleScroll);
+      window.removeEventListener('mousemove', throttledHandleMouseMove);
     };
   }, [handleScroll, handleMouseMove]);
 
