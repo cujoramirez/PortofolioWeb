@@ -13,7 +13,7 @@ const ParticleEffect = () => (
           height: 6 + Math.random() * 8,
           top: `${20 + Math.random() * 60}%`,
           left: `${20 + Math.random() * 60}%`,
-          filter: "blur(3px)",
+          filter: "blur(0px)",
         }}
         animate={{
           x: [0, Math.random() * 40 - 20, 0],
@@ -38,7 +38,7 @@ const ParticleEffect = () => (
           height: 5 + Math.random() * 6,
           top: `${20 + Math.random() * 60}%`,
           left: `${20 + Math.random() * 60}%`,
-          filter: "blur(2px)",
+          filter: "blur(0px)",
         }}
         animate={{
           x: [0, Math.random() * 30 - 15, 0],

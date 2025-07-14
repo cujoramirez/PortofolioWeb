@@ -208,7 +208,7 @@ const ModernContact = () => {
                 background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                 left: `${20 + i * 15}%`,
                 top: `${10 + i * 10}%`,
-                filter: 'blur(40px)',
+                // filter: 'blur(10px)', // Removed
               }}
               animate={{
                 scale: [1, 1.2, 1],
@@ -236,7 +236,7 @@ const ModernContact = () => {
                 sx={{
                   mb: 3,
                   background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(34, 211, 238, 0.2))',
-                  backdropFilter: 'blur(10px)',
+                  // backdropFilter: 'blur(2px)', // Removed
                   border: '1px solid rgba(99, 102, 241, 0.3)',
                   color: '#6366f1',
                   fontWeight: 600,
@@ -289,7 +289,7 @@ const ModernContact = () => {
                         <Card
                           sx={{
                             background: 'rgba(255, 255, 255, 0.05)',
-                            backdropFilter: 'blur(20px)',
+                            // backdropFilter: 'blur(3px)', // Removed
                             border: '1px solid rgba(255, 255, 255, 0.1)',
                             borderRadius: '16px',
                             p: 2,
@@ -326,7 +326,7 @@ const ModernContact = () => {
                 <Card
                   sx={{
                     background: 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(30px)',
+                    // backdropFilter: 'blur(5px)', // Removed
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     borderRadius: '24px',
                     p: { xs: 3, md: 4 },
@@ -494,7 +494,7 @@ const ModernContact = () => {
                 <Card
                   sx={{
                     background: 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(30px)',
+                    // backdropFilter: 'blur(5px)', // Removed
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     borderRadius: '24px',
                     p: { xs: 2.5, sm: 3 },

@@ -156,7 +156,6 @@ const SkillBar = ({ skill, index }) => {
           p: 3,
           borderRadius: '16px',
           background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))',
-          backdropFilter: 'blur(20px)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           position: 'relative',
           overflow: 'hidden',
@@ -256,7 +255,6 @@ const SkillBar = ({ skill, index }) => {
                   height: 8,
                   background: `linear-gradient(90deg, ${skill.color}80, ${skill.color}40)`,
                   borderRadius: 4,
-                  filter: 'blur(2px)',
                   zIndex: -1,
                 }}
               />
@@ -316,65 +314,57 @@ const ModernAbout = ({ landingComplete = true }) => {
   const [forceVisible, setForceVisible] = useState(false);
   const [isImageHovered, setIsImageHovered] = useState(false);
   
-  // Enhanced intersection observer with mobile-optimized triggering - MOVED EARLY
+  // Enhanced intersection observer with better triggering
   const isInView = useInView(containerRef, { 
-    once: false, // Allow multiple triggers to handle premature activation
-    amount: isMobile ? 0.01 : 0.1, // Much lower threshold for mobile devices
-    margin: isMobile ? "0px 0px -50px 0px" : "0px 0px -20px 0px" // More generous margins for mobile
+    once: false, // Allow multiple triggers
+    amount: isMobile ? 0.01 : 0.1, // Lower threshold for mobile
+    margin: isMobile ? "0px 0px -100px 0px" : "0px 0px -50px 0px" // More generous margins
   });
   
-  // Debug logging for mobile
-  useEffect(() => {
-    console.log('ModernAbout: Component state', {
-      isMobile,
-      landingComplete,
-      isComponentMounted,
-      forceVisible,
-      hasAnimated,
-      isInView
-    });
-  }, [isMobile, landingComplete, isComponentMounted, forceVisible, hasAnimated, isInView]);
+  // Enhanced visibility state management
+  const [shouldShowContent, setShouldShowContent] = useState(false);
   
-  // Immediate mobile visibility trigger (emergency fallback)
+  // Handle smooth scroll navigation and button clicks
   useEffect(() => {
-    if (isMobile && isComponentMounted) {
-      // Give mobile devices immediate visibility after a short delay
-      const immediateTimer = setTimeout(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#about') {
+        setShouldShowContent(true);
         setForceVisible(true);
-        console.log('ModernAbout: Emergency mobile visibility triggered');
-      }, 100);
-      
-      return () => clearTimeout(immediateTimer);
-    }
-  }, [isMobile, isComponentMounted]);
-  
-  
-  // Track if animations have completed to prevent re-rendering - but allow re-triggering for robustness
-  useEffect(() => {
-    if (isInView) {
-      // Trigger animation regardless of landing state if in view (mobile fallback)
-      setHasAnimated(true);
-      console.log('ModernAbout: Animation triggered via intersection observer', { isInView, landingComplete }); // Debug log
-    }
-  }, [isInView, landingComplete]);
-  
-  // Mobile-specific scroll-based fallback trigger (aggressive)
-  useEffect(() => {
-    if (!isMobile) return;
+        console.log('ModernAbout: Triggered by hash navigation');
+      }
+    };
     
+    const handleExploreWork = () => {
+      setShouldShowContent(true);
+      setForceVisible(true);
+      console.log('ModernAbout: Triggered by exploreMyWork event');
+    };
+    
+    // Check initial hash
+    handleHashChange();
+    
+    // Listen for hash changes and explore work events
+    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('exploreMyWork', handleExploreWork);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('exploreMyWork', handleExploreWork);
+    };
+  }, []);
+  
+  // Improved scroll-based triggering
+  useEffect(() => {
     const handleScroll = () => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         const windowHeight = window.innerHeight;
         
-        // Very aggressive triggering on mobile - trigger when section is visible at all
-        if (rect.top < windowHeight && rect.bottom > 0) {
+        // Trigger when section is 80% visible
+        if (rect.top < windowHeight * 0.8 && rect.bottom > windowHeight * 0.2) {
+          setShouldShowContent(true);
           setForceVisible(true);
-          console.log('ModernAbout: Mobile scroll fallback triggered (aggressive)', { 
-            rectTop: rect.top, 
-            windowHeight, 
-            landingComplete 
-          }); // Debug log
+          console.log('ModernAbout: Triggered by scroll visibility');
         }
       }
     };
@@ -383,29 +373,34 @@ const ModernAbout = ({ landingComplete = true }) => {
     handleScroll(); // Check immediately
     
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isMobile]);
+  }, []);
   
-  // Component mounting effect for stability + fallback visibility
+  // Standard intersection observer trigger
+  useEffect(() => {
+    if (isInView) {
+      setShouldShowContent(true);
+      setHasAnimated(true);
+      setForceVisible(true);
+      console.log('ModernAbout: Triggered by intersection observer');
+    }
+  }, [isInView]);
+  
+  // Component mounting effect
   useEffect(() => {
     setIsComponentMounted(true);
     
-    // Mobile-specific very fast fallback - don't wait for landing complete on mobile
+    // Quick fallback timer
     const visibilityTimer = setTimeout(() => {
-      if (isMobile) {
-        // Force visible on mobile regardless of landing state
-        setForceVisible(true);
-        console.log('ModernAbout: Mobile force visible fallback triggered (no landing dependency)'); // Debug log
-      } else if (landingComplete) {
-        setForceVisible(true);
-        console.log('ModernAbout: Desktop force visible fallback triggered'); // Debug log
-      }
-    }, isMobile ? 500 : 3000); // Very fast fallback on mobile
+      setShouldShowContent(true);
+      setForceVisible(true);
+      console.log('ModernAbout: Fallback timer triggered');
+    }, 2000);
     
     return () => {
       setIsComponentMounted(false);
       clearTimeout(visibilityTimer);
     };
-  }, [landingComplete, isMobile]);
+  }, []);
   
   // Enhanced scroll progress with container targeting for better animation - Fixed hydration warning
   const { scrollYProgress } = useScroll(
@@ -533,7 +528,7 @@ const ModernAbout = ({ landingComplete = true }) => {
           className="motion-div"
           variants={containerVariants}
           initial="hidden"
-          animate={isMobile ? (isInView || forceVisible ? "visible" : "hidden") : ((isInView && landingComplete) || forceVisible ? "visible" : "hidden")} // Mobile: ignore landing complete, Desktop: respect landing complete
+          animate={shouldShowContent || forceVisible ? "visible" : "hidden"}
           style={{
             y: shouldReduceMotion ? 0 : y,
             opacity: shouldReduceMotion ? 1 : opacity,
@@ -611,7 +606,6 @@ const ModernAbout = ({ landingComplete = true }) => {
                         borderRadius: '24px',
                         overflow: 'hidden',
                         background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))',
-                        backdropFilter: 'blur(30px)',
                         border: '2px solid rgba(255, 255, 255, 0.2)',
                         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
                         position: 'relative',
@@ -858,7 +852,6 @@ const ModernAbout = ({ landingComplete = true }) => {
                       elevation={0}
                       sx={{
                         background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))',
-                        backdropFilter: 'blur(20px)',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
                         borderRadius: '20px',
                         p: { xs: 3, md: 4 },
@@ -1025,7 +1018,6 @@ const ModernAbout = ({ landingComplete = true }) => {
                         <Card
                           sx={{
                             background: `linear-gradient(135deg, ${stat.color}25, ${stat.color}15)`,
-                            backdropFilter: 'blur(25px)',
                             border: `2px solid ${stat.color}40`,
                             borderRadius: '20px',
                             p: 3,

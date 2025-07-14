@@ -333,7 +333,6 @@ const Projects = () => {
               ...(isDesktop || reducedMotion || isMobile || isIOSSafari
                 ? {}
                 : {
-                    backdropFilter: "blur(8px)",
                     backgroundColor: "rgba(38, 38, 38, 0.4)"
                   }),
               transform: "translateZ(0)"

@@ -390,7 +390,6 @@ const Technologies = () => {
                         background: isSelected 
                           ? `linear-gradient(135deg, ${category.color}40, ${category.color}20)`
                           : 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
-                        backdropFilter: 'blur(10px)',
                         border: isSelected ? `2px solid ${category.color}` : '1px solid rgba(255, 255, 255, 0.1)',
                         cursor: 'pointer',
                         transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
@@ -523,17 +522,14 @@ const Technologies = () => {
           0% { 
             opacity: 0.8;
             transform: scale(1);
-            filter: blur(3px);
           }
           50% { 
             opacity: 1;
             transform: scale(1.02);
-            filter: blur(5px);
           }
           100% { 
             opacity: 0.8;
             transform: scale(1);
-            filter: blur(3px);
           }
         }
 
@@ -555,11 +551,9 @@ const Technologies = () => {
         @keyframes dividerGlow {
           0% { 
             opacity: 0.6;
-            filter: blur(8px);
           }
           100% { 
             opacity: 1;
-            filter: blur(12px);
           }
         }
 

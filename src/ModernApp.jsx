@@ -31,9 +31,9 @@ const ModernResearch = React.lazy(() => import("./components/ModernResearch.jsx"
 // Main ModernApp component
 const ModernApp = () => {
   // State management for loading sequence
-  const [showLoading, setShowLoading] = useState(true);
+  const [showLoading, setShowLoading] = useState(false);
   const [showIntro, setShowIntro] = useState(false);
-  const [introComplete, setIntroComplete] = useState(false);
+  const [introComplete, setIntroComplete] = useState(true);
   const [showNavbar, setShowNavbar] = useState(false);
   const [landingComplete, setLandingComplete] = useState(false);
   

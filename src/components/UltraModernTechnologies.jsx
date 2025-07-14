@@ -198,7 +198,6 @@ const FloatingTechCard = ({ tech, index, categoryColor, onHover, onLeave }) => {
           background: isHovered 
             ? `linear-gradient(135deg, ${alpha(categoryColor, 0.2)}, ${alpha(tech.color, 0.1)})`
             : 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'blur(20px)',
           border: isHovered 
             ? `1px solid ${tech.color}` 
             : '1px solid rgba(255, 255, 255, 0.1)',
@@ -402,7 +401,6 @@ const CategoryHeader = ({ category, index, isActive, onClick }) => {
           background: isActive 
             ? `linear-gradient(135deg, ${alpha(category.color, 0.3)}, ${alpha(category.color, 0.1)})`
             : 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'blur(20px)',
           border: isActive 
             ? `1px solid ${category.color}` 
             : '1px solid rgba(255, 255, 255, 0.1)',
@@ -683,7 +681,6 @@ const UltraModernTechnologies = () => {
               <Card
                 sx={{
                   background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(20px)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '20px',
                   p: 4,

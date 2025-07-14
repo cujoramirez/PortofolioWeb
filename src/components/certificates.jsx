@@ -20,7 +20,7 @@ const FilterButton = memo(({ issuer, isActive, onClick, useReducedMotion }) => {
   return (
     <motion.button
       onClick={onClick}
-      className="px-4 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm relative"
+      className="px-4 py-1.5 rounded-full text-sm font-medium relative"
       variants={filterButtonVariants}
       initial="initial"
       animate="animate"
@@ -131,7 +131,7 @@ const CertificationCard = memo(({ cert, useReducedMotion }) => {
       style={{ display: 'block', opacity: 1, visibility: 'visible' }}
     >
       <div 
-        className="h-full overflow-hidden rounded-xl bg-neutral-800/80 backdrop-blur-sm border border-neutral-700/50 shadow-xl group-hover:border-purple-500/50 transition-all duration-200"
+        className="h-full overflow-hidden rounded-xl bg-neutral-800/80 border border-neutral-700/50 shadow-xl group-hover:border-purple-500/50 transition-all duration-200"
         style={{ minHeight: '240px', backgroundColor: 'rgba(30, 41, 59, 0.8)' }}
       >
         <div className="relative aspect-video w-full overflow-hidden" style={{ backgroundColor: '#1e293b' }}>
@@ -144,7 +144,7 @@ const CertificationCard = memo(({ cert, useReducedMotion }) => {
           />
           
           <div className="absolute bottom-0 left-0 w-full p-3">
-            <div className="inline-block px-3 py-1 bg-purple-600/90 backdrop-blur-sm rounded text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+            <div className="inline-block px-3 py-1 bg-purple-600/90 rounded text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
               View Certificate
             </div>
           </div>
@@ -273,7 +273,7 @@ const Certifications = () => {
               sx={{
                 mb: 4,
                 background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(168, 85, 247, 0.2))',
-                backdropFilter: 'blur(10px)',
+                // backdropFilter: 'blur(2px)', // Removed
                 border: '1px solid rgba(236, 72, 153, 0.3)',
                 color: '#ec4899',
                 fontWeight: 600,

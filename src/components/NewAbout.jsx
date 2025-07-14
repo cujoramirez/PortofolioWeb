@@ -137,7 +137,6 @@ const NewAbout = () => {
                   borderRadius: '24px',
                   overflow: 'hidden',
                   background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
-                  backdropFilter: 'blur(20px)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   boxShadow: '0 25px 45px rgba(0, 0, 0, 0.3)',
                 }}
@@ -207,7 +206,6 @@ const NewAbout = () => {
                           p: 2.5,
                           textAlign: 'center',
                           background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
-                          backdropFilter: 'blur(20px)',
                           border: '1px solid rgba(255, 255, 255, 0.1)',
                           borderRadius: '16px',
                           transition: 'all 0.3s ease',

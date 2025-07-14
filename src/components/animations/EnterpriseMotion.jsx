@@ -10,14 +10,14 @@ export const enterpriseVariants = {
       y: 80,
       scale: 0.8,
       rotateX: -25,
-      filter: "blur(10px)"
+      // filter: "blur(10px)" // Removed
     },
     visible: { 
       opacity: 1, 
       y: 0,
       scale: 1,
       rotateX: 0,
-      filter: "blur(0px)",
+      // filter: "blur(0px)", // Removed
       transition: {
         duration: 1.4,
         ease: [0.16, 1, 0.3, 1],
@@ -89,7 +89,7 @@ export const enterpriseVariants = {
       rotateY: -60,
       rotateX: 30,
       z: -200,
-      filter: "blur(8px)"
+      // filter: "blur(8px)" // Removed
     },
     visible: { 
       opacity: 1, 
@@ -97,7 +97,7 @@ export const enterpriseVariants = {
       rotateY: 0,
       rotateX: 0,
       z: 0,
-      filter: "blur(0px)",
+      // filter: "blur(0px)", // Removed
       transition: {
         duration: 0.8,
         ease: "backOut"
@@ -110,13 +110,13 @@ export const enterpriseVariants = {
       opacity: 0, 
       scale: 0.7,
       rotateZ: -15,
-      filter: "blur(12px)"
+      // filter: "blur(12px)" // Removed
     },
     visible: { 
       opacity: 1, 
       scale: 1,
       rotateZ: 0,
-      filter: "blur(0px)",
+      // filter: "blur(0px)", // Removed
       transition: {
         duration: 1.3,
         type: "spring",
@@ -186,12 +186,12 @@ export const enterpriseVariants = {
     hidden: { 
       opacity: 0,
       scale: 0.5,
-      filter: "blur(10px)"
+      // filter: "blur(10px)" // Removed
     },
     visible: { 
       opacity: 1,
       scale: 1,
-      filter: "blur(0px)",
+      // filter: "blur(0px)", // Removed
       transition: {
         duration: 1.2,
         ease: "anticipate"
@@ -270,7 +270,7 @@ export const enterpriseVariants = {
       rotateY: -90,
       rotateX: 30,
       z: -200,
-      filter: "blur(10px)"
+      // filter: "blur(10px)" // Removed
     },
     visible: { 
       opacity: 1, 
@@ -278,7 +278,7 @@ export const enterpriseVariants = {
       rotateY: 0,
       rotateX: 0,
       z: 0,
-      filter: "blur(0px)",
+      // filter: "blur(0px)", // Removed
       transition: {
         type: "spring",
         damping: 20,
@@ -296,66 +296,6 @@ export const enterpriseVariants = {
       transition: {
         staggerChildren: 0.2,
         delayChildren: 0.1
-      }
-    }
-  },
-
-  heroMorphTitle: {
-    hidden: { 
-      opacity: 0, 
-      y: 100,
-      scale: 0.5,
-      rotateX: -45,
-      filter: "blur(20px)"
-    },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      scale: 1,
-      rotateX: 0,
-      filter: "blur(0px)",
-      transition: {
-        type: "spring",
-        damping: 25,
-        stiffness: 120,
-        duration: 1.5
-      }
-    }
-  },
-
-  // About Section Morphing - Professional Introduction
-  aboutMorphContainer: {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  },
-
-  aboutMorphElement: {
-    hidden: { 
-      opacity: 0, 
-      scale: 0.3,
-      rotateY: 180,
-      rotateZ: -45,
-      x: -200,
-      filter: "blur(15px)"
-    },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      rotateY: 0,
-      rotateZ: 0,
-      x: 0,
-      filter: "blur(0px)",
-      transition: {
-        type: "spring",
-        damping: 20,
-        stiffness: 80,
-        duration: 1.0
       }
     }
   },
@@ -378,14 +318,14 @@ export const enterpriseVariants = {
       x: -100,
       scale: 0.8,
       rotateY: 45,
-      filter: "blur(6px)"
+      // filter: "blur(6px)" // Removed
     },
     visible: { 
       opacity: 1, 
       x: 0,
       scale: 1,
       rotateY: 0,
-      filter: "blur(0px)",
+      // filter: "blur(0px)", // Removed
       transition: {
         duration: 0.9,
         type: "spring",
@@ -400,13 +340,13 @@ export const enterpriseVariants = {
       opacity: 0, 
       y: -50,
       scale: 0.9,
-      filter: "blur(8px)"
+      // filter: "blur(8px)" // Removed
     },
     visible: { 
       opacity: 1, 
       y: 0,
       scale: 1,
-      filter: "blur(0px)",
+      // filter: "blur(0px)", // Removed
       transition: {
         duration: 1.0,
         type: "spring",
@@ -451,7 +391,7 @@ export const enterpriseVariants = {
       rotateX: 45,
       rotateY: -30,
       z: -150,
-      filter: "blur(10px)"
+      // filter: "blur(10px)" // Removed
     },
     visible: { 
       opacity: 1, 
@@ -459,7 +399,7 @@ export const enterpriseVariants = {
       rotateX: 0,
       rotateY: 0,
       z: 0,
-      filter: "blur(0px)",
+      // filter: "blur(0px)", // Removed
       transition: {
         duration: 1.0,
         type: "spring",
@@ -475,14 +415,14 @@ export const enterpriseVariants = {
       y: -60,
       scale: 0.8,
       rotateX: 15,
-      filter: "blur(12px)"
+      // filter: "blur(12px)" // Removed
     },
     visible: { 
       opacity: 1, 
       y: 0,
       scale: 1,
       rotateX: 0,
-      filter: "blur(0px)",
+      // filter: "blur(0px)", // Removed
       transition: {
         duration: 1.2,
         type: "spring",
@@ -496,12 +436,12 @@ export const enterpriseVariants = {
     hidden: { 
       opacity: 0, 
       scale: 1.3,
-      filter: "blur(15px)"
+      // filter: "blur(15px)" // Removed
     },
     visible: { 
       opacity: 1, 
       scale: 1,
-      filter: "blur(0px)",
+      // filter: "blur(0px)", // Removed
       transition: {
         duration: 1.2,
         ease: [0.25, 0.46, 0.45, 0.94]
@@ -527,14 +467,14 @@ export const enterpriseVariants = {
       y: 60,
       scale: 0.6,
       rotateZ: 15,
-      filter: "blur(8px)"
+      // filter: "blur(8px)" // Removed
     },
     visible: { 
       opacity: 1, 
       y: 0,
       scale: 1,
       rotateZ: 0,
-      filter: "blur(0px)",
+      // filter: "blur(0px)", // Removed
       transition: {
         duration: 0.8,
         type: "spring",
@@ -582,14 +522,14 @@ export const enterpriseVariants = {
       scale: 0.7,
       rotateX: -30,
       y: 40,
-      filter: "blur(12px)"
+      // filter: "blur(12px)" // Removed
     },
     visible: { 
       opacity: 1, 
       scale: 1,
       rotateX: 0,
       y: 0,
-      filter: "blur(0px)",
+      // filter: "blur(0px)", // Removed
       transition: {
         duration: 1.1,
         type: "spring",
@@ -613,61 +553,6 @@ export const enterpriseVariants = {
         duration: 0.9,
         delay: 0.3,
         ease: [0.25, 0.46, 0.45, 0.94]
-      }
-    }
-  },
-
-  // Contact Section - Professional Elegance (already exists, enhancing)
-  contactMorphContainer: {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.1
-      }
-    }
-  },
-
-  contactMorphCard: {
-    hidden: { 
-      opacity: 0, 
-      scale: 0.4,
-      rotateY: -90,
-      rotateX: 45,
-      filter: "blur(15px)"
-    },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      rotateY: 0,
-      rotateX: 0,
-      filter: "blur(0px)",
-      transition: {
-        duration: 1.2,
-        type: "spring",
-        damping: 20,
-        stiffness: 80
-      }
-    }
-  },
-
-  contactMorphInfo: {
-    hidden: { 
-      opacity: 0, 
-      x: 40,
-      scale: 0.8
-    },
-    visible: { 
-      opacity: 1, 
-      x: 0,
-      scale: 1,
-      transition: {
-        duration: 0.8,
-        delay: 0.4,
-        type: "spring",
-        damping: 25,
-        stiffness: 100
       }
     }
   },
@@ -1009,20 +894,6 @@ export const EnterpriseMotion = {
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}
       whileHover={enterpriseVariants.hoverScale.whileHover}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  )),
-
-  // Contact Section Components
-  ContactContainer: forwardRef(({ children, ...props }, ref) => (
-    <motion.div
-      ref={ref}
-      variants={enterpriseVariants.contactMorphContainer}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.2 }}
       {...props}
     >
       {children}

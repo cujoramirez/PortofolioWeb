@@ -202,7 +202,7 @@ const ModernNavbar = memo(() => {
         id="main-navbar"
         sx={{
           backgroundColor: trigger ? 'rgba(10, 10, 10, 0.95)' : 'rgba(10, 10, 10, 0.4)',
-          backdropFilter: 'blur(20px)',
+          // backdropFilter: 'blur(20px)', // Removed
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           zIndex: 1100,
@@ -251,7 +251,7 @@ const ModernNavbar = memo(() => {
                       background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #22d3ee)',
                       zIndex: -1,
                       opacity: 0.5,
-                      filter: 'blur(4px)',
+                      // filter: 'blur(4px)', // Removed
                     }
                   }}
                 >
@@ -384,7 +384,7 @@ const ModernNavbar = memo(() => {
               <Box
                 sx={{
                   background: 'rgba(10, 10, 10, 0.95)',
-                  backdropFilter: 'blur(20px)',
+                  // backdropFilter: 'blur(20px)', // Removed
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: 3,
                   p: 3,

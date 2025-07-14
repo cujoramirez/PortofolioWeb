@@ -955,7 +955,7 @@ const ProgressIndicator = ({ progress, isOutro }) => {
               right: 0,
               bottom: 0,
               borderRadius: 3,
-              filter: 'blur(8px)',
+              // filter: 'blur(8px)', // Removed
               background: 'linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.6) 50%, transparent 100%)',
               backgroundSize: '200% 100%',
             }}
@@ -1065,7 +1065,7 @@ const EnhancedBlackHoleIntroAnimation = ({ onComplete }) => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0, filter: 'brightness(3) blur(20px)' }}
+          exit={{ opacity: 0, filter: 'brightness(3)' }} // Removed blur
           transition={{ duration: 0.3, ease: "easeInOut" }}
           style={{
             position: 'fixed',

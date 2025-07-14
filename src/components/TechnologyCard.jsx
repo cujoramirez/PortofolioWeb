@@ -63,7 +63,7 @@ const TechnologyCard = memo(
         <div
           className={`tech-card-static rounded-xl border-2 ${tech.borderColor} ${paddingSize}
             bg-gradient-to-br from-neutral-900/80 to-neutral-900/40
-            backdrop-blur-sm flex flex-col items-center justify-center`}
+            flex flex-col items-center justify-center`}
           style={{
             width: '100%',
             maxWidth: cardSize,
@@ -97,7 +97,6 @@ const TechnologyCard = memo(
               className="absolute inset-0 rounded-full"
               style={{
                 background: `radial-gradient(circle, ${tech.color}22 0%, transparent 70%)`,
-                filter: "blur(8px)",
                 opacity: 0.6,
                 transform: "scale(1.2)",
               }}
@@ -137,7 +136,7 @@ const TechnologyCard = memo(
       <motion.div
         className={`tech-card relative rounded-xl border-2 ${tech.borderColor} ${paddingSize}
           bg-gradient-to-br from-neutral-900/80 to-neutral-900/40
-          backdrop-blur-sm flex flex-col items-center justify-center`}
+          flex flex-col items-center justify-center`}
         variants={desktopContainerVariants}
         initial="hidden"
         animate="visible"
@@ -196,7 +195,6 @@ const TechnologyCard = memo(
             className="absolute inset-0 rounded-full"
             style={{
               background: `radial-gradient(circle, ${tech.color}33 0%, transparent 70%)`,
-              filter: "blur(10px)",
               zIndex: 0,
               transform: "scale(1.5)",
             }}

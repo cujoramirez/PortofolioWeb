@@ -151,6 +151,7 @@ const LandingPage = ({ introComplete, onNavbarVisibilityChange, onLandingComplet
         setShowLanding(false);
         setTimeout(() => {
           setLandingComplete(true);
+          onLandingComplete?.(true); // Notify parent component
           document.body.style.transition = '';
         }, 1200); // Smooth, professional timing
       }
@@ -179,7 +180,7 @@ const LandingPage = ({ introComplete, onNavbarVisibilityChange, onLandingComplet
               opacity: 0, 
               y: -50,
               scale: 0.95,
-              filter: "blur(2px)"
+              // filter: "blur(2px)" // Removed
             }}
             transition={{ 
               duration: 1.2, 

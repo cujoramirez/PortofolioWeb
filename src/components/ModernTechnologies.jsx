@@ -94,7 +94,7 @@ const ModernTechCard = ({ tech, index, isHovered, onHover, onHoverEnd, shouldRed
         sx={{
           position: 'relative',
           background: 'rgba(255, 255, 255, 0.02)',
-          backdropFilter: 'blur(20px)',
+          // backdropFilter: 'blur(20px)', // Removed
           border: `1px solid ${tech.color}30`,
           borderRadius: '1.5rem',
           p: 3,
@@ -121,7 +121,7 @@ const ModernTechCard = ({ tech, index, isHovered, onHover, onHoverEnd, shouldRed
             inset: -20,
             background: `radial-gradient(circle, ${tech.color}20 0%, transparent 70%)`,
             borderRadius: '50%',
-            filter: 'blur(20px)',
+            // filter: 'blur(20px)', // Removed
             zIndex: 0
           }}
         />
@@ -253,7 +253,7 @@ const TechParticles = ({ shouldReduceMotion }) => {
             height: 4,
             borderRadius: '50%',
             background: tech.color,
-            filter: `blur(1px)`,
+            // filter: `blur(1px)`, // Removed
           }}
           animate={{
             x: [0, Math.random() * 200 - 100],
@@ -294,7 +294,7 @@ const TechStats = () => {
             <Card
               sx={{
                 background: 'rgba(255, 255, 255, 0.05)',
-                backdropFilter: 'blur(20px)',
+                // backdropFilter: 'blur(20px)', // Removed
                 border: '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '1rem',
                 p: 2,
@@ -462,7 +462,7 @@ const ModernTechnologies = () => {
                 sx={{
                   mb: 3,
                   background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(34, 211, 238, 0.2))',
-                  backdropFilter: 'blur(10px)',
+                  // backdropFilter: 'blur(10px)', // Removed
                   border: '1px solid rgba(99, 102, 241, 0.3)',
                   color: 'primary.main',
                   fontWeight: 600,

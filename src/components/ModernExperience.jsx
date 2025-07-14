@@ -244,7 +244,6 @@ const ModernExperience = memo(() => {
                                     ${alpha(theme.palette.primary.main, 0.05)}, 
                                     ${alpha(theme.palette.secondary.main, 0.05)})`
                                 : alpha(theme.palette.background.paper, 0.8),
-                              backdropFilter: 'blur(10px)',
                               border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
                               cursor: 'pointer',
                               transition: 'all 0.3s ease-in-out',

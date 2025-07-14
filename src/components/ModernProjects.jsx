@@ -340,7 +340,7 @@ const ModernProjects = memo(() => {
                         display: 'flex',
                         flexDirection: 'column',
                         background: alpha(theme.palette.background.paper, 0.9),
-                        backdropFilter: 'blur(10px)',
+                        // backdropFilter: 'blur(2px)', // Removed
                         border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
                         cursor: 'pointer',
                         transition: 'all 0.3s ease-in-out',
@@ -469,7 +469,7 @@ const ModernProjects = memo(() => {
                               size="small"
                               sx={{
                                 backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                                backdropFilter: 'blur(10px)',
+                                // backdropFilter: 'blur(2px)', // Removed
                                 border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
                                 '&:hover': {
                                   backgroundColor: theme.palette.primary.main,
@@ -493,7 +493,7 @@ const ModernProjects = memo(() => {
                                 onClick={(e) => e.stopPropagation()}
                                 sx={{
                                   backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                                  backdropFilter: 'blur(10px)',
+                                  // backdropFilter: 'blur(2px)', // Removed
                                   border: `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
                                   '&:hover': {
                                     backgroundColor: theme.palette.secondary.main,
@@ -518,7 +518,7 @@ const ModernProjects = memo(() => {
                                 onClick={(e) => e.stopPropagation()}
                                 sx={{
                                   backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                                  backdropFilter: 'blur(10px)',
+                                  // backdropFilter: 'blur(2px)', // Removed
                                   border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
                                   '&:hover': {
                                     backgroundColor: theme.palette.info.main,
@@ -632,7 +632,7 @@ const ModernProjects = memo(() => {
           PaperProps={{
             sx: {
               background: alpha(theme.palette.background.paper, 0.95),
-              backdropFilter: 'blur(20px)',
+              // backdropFilter: 'blur(3px)', // Removed
               border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
             }
           }}

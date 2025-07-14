@@ -14,7 +14,6 @@ const ScrollProgressIndicator = () => {
         right: 0,
         height: 4,
         background: 'rgba(0, 0, 0, 0.1)',
-        backdropFilter: 'blur(10px)',
         zIndex: 1000,
       }}
     >

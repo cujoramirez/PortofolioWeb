@@ -219,7 +219,7 @@ export const muiTheme = createTheme({
                 root: {
                     borderRadius: 16,
                     backgroundColor: 'rgba(38, 38, 38, 0.6)',
-                    backdropFilter: 'blur(20px)',
+                    // backdropFilter: 'blur(20px)', // Removed
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     '&:hover': {
                         boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15), 0 0 20px rgba(99, 102, 241, 0.19)',
@@ -236,7 +236,7 @@ export const muiTheme = createTheme({
                 },
                 outlined: {
                     background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.13), rgba(34, 211, 238, 0.13))',
-                    backdropFilter: 'blur(10px)',
+                    // backdropFilter: 'blur(10px)', // Removed
                     border: '1px solid rgba(99, 102, 241, 0.19)',
                     color: '#a5b4fc',
                     '&:hover': {
@@ -252,7 +252,7 @@ export const muiTheme = createTheme({
             styleOverrides: {
                 root: {
                     backgroundColor: 'rgba(10, 10, 10, 0.9)',
-                    backdropFilter: 'blur(20px)',
+                    // backdropFilter: 'blur(20px)', // Removed
                     borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
                 },
             },
@@ -279,7 +279,7 @@ export const muiTheme = createTheme({
             styleOverrides: {
                 tooltip: {
                     backgroundColor: 'rgba(38, 38, 38, 0.95)',
-                    backdropFilter: 'blur(20px)',
+                    // backdropFilter: 'blur(20px)', // Removed
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     borderRadius: 8,
                     fontSize: '0.875rem',
@@ -291,7 +291,7 @@ export const muiTheme = createTheme({
             styleOverrides: {
                 root: {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    backdropFilter: 'blur(8px)',
+                    // backdropFilter: 'blur(8px)', // Removed
                 },
             },
         },

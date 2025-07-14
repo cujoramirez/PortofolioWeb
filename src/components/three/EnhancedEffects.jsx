@@ -109,7 +109,7 @@ export const CSSPostProcessing = ({ children, enableGlow = true, enableBlur = tr
   const styles = {
     filter: [
       enableGlow ? 'drop-shadow(0 0 10px rgba(99, 102, 241, 0.5))' : '',
-      enableBlur ? 'blur(0.5px)' : '',
+      enableBlur ? 'blur(0px)' : '',
       'brightness(1.1)',
       'contrast(1.05)',
       'saturate(1.1)'

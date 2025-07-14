@@ -232,7 +232,6 @@ const ModernResearch = memo(() => {
                         background: `linear-gradient(135deg, 
                           ${alpha(theme.palette.background.paper, 0.9)}, 
                           ${alpha(theme.palette.primary.main, 0.02)})`,
-                        backdropFilter: 'blur(20px)',
                         border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
                         cursor: 'pointer',
                         transition: 'all 0.4s ease-in-out',
@@ -448,7 +447,7 @@ const ModernResearch = memo(() => {
                   background: `linear-gradient(135deg, 
                     ${alpha(theme.palette.primary.main, 0.05)}, 
                     ${alpha(theme.palette.secondary.main, 0.05)})`,
-                  backdropFilter: 'blur(10px)',
+                  // backdropFilter: 'blur(2px)', // Removed
                   border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
                   display: 'flex',
                   flexDirection: 'column',
@@ -514,7 +513,7 @@ const ModernResearch = memo(() => {
         PaperProps={{
           sx: {
             background: alpha(theme.palette.background.paper, 0.95),
-            backdropFilter: 'blur(20px)',
+            // backdropFilter: 'blur(3px)', // Removed
             border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
           }
         }}

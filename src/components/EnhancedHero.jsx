@@ -773,13 +773,10 @@ const EnhancedHero = ({ introComplete }) => {
                                 window.dispatchEvent(new CustomEvent('exploreMyWork'));
                                 document.body.style.cursor = 'default';
                                 
-                                // Smooth scroll to portfolio section
-                                const portfolioSection = document.getElementById('main-hero');
-                                if (portfolioSection) {
-                                  portfolioSection.scrollIntoView({ 
-                                    behavior: 'smooth',
-                                    block: 'start'
-                                  });
+                                // Reset button style
+                                if (button) {
+                                  button.style.transform = '';
+                                  button.style.opacity = '';
                                 }
                               }, 300);
                             };
@@ -799,7 +796,6 @@ const EnhancedHero = ({ introComplete }) => {
                             textTransform: 'none',
                             letterSpacing: '0.5px',
                             boxShadow: '0 16px 50px rgba(99, 102, 241, 0.5), 0 6px 25px rgba(139, 92, 246, 0.4)',
-                            backdropFilter: 'blur(15px)',
                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                             '&:hover': {
                               background: 'linear-gradient(135deg, #8b5cf6 0%, #22d3ee 50%, #10b981 100%)',

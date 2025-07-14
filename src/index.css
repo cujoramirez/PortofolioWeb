@@ -166,13 +166,11 @@ html {
 
 .bg-glass {
     background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .bg-glass-dark {
     background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -1046,7 +1044,6 @@ html {
     will-change: transform;
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     border-radius: 12px;
-    backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -1072,8 +1069,6 @@ html {
     will-change: transform;
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     border-radius: 12px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: var(--shadow-glow);
     background: rgba(30, 41, 59, 0.8);
 }
@@ -1091,8 +1086,6 @@ html {
     will-change: transform;
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     border-radius: 12px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
     background: var(--gradient-primary);
     padding: 12px 24px;
     font-weight: 600;
@@ -1120,7 +1113,6 @@ html {
     height: 4px;
     background: rgba(0, 0, 0, 0.1);
     z-index: 1000;
-    backdrop-filter: blur(10px);
 }
 
 .scroll-progress-bar {
@@ -1211,164 +1203,4 @@ html {
         width: 2px;
         height: 2px;
     }
-}
-
-
-/* Accessibility Enhancements */
-
-@media (prefers-reduced-motion: reduce) {
-    .scroll-progress-bar,
-    .particle,
-    .text-gradient-enterprise {
-        animation: none;
-    }
-    .enterprise-card-3d:hover {
-        transform: translateY(-5px);
-    }
-}
-
-
-/* Enhanced About Section Animations */
-
-@keyframes shine {
-    0% {
-        transform: translateX(-100%) translateY(-100%) rotate(30deg);
-    }
-    100% {
-        transform: translateX(100%) translateY(100%) rotate(30deg);
-    }
-}
-
-@keyframes float-gentle {
-    0%,
-    100% {
-        transform: translateY(0px) rotate(0deg);
-    }
-    50% {
-        transform: translateY(-10px) rotate(2deg);
-    }
-}
-
-@keyframes pulse-glow {
-    0%,
-    100% {
-        box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-    }
-    50% {
-        box-shadow: 0 0 40px rgba(99, 102, 241, 0.6), 0 0 60px rgba(34, 211, 238, 0.3);
-    }
-}
-
-@keyframes skill-bar-glow {
-    0% {
-        filter: brightness(1);
-    }
-    50% {
-        filter: brightness(1.2) drop-shadow(0 0 10px currentColor);
-    }
-    100% {
-        filter: brightness(1);
-    }
-}
-
-
-/* About Section Stability Improvements */
-
-.about-section {
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    perspective: 1000px;
-    will-change: transform;
-    contain: layout style paint;
-}
-
-.profile-image-container {
-    transform: translateZ(0);
-    backface-visibility: hidden;
-}
-
-
-/* PureAbout Component Animations */
-
-@keyframes profileGlow {
-    0% {
-        box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
-    }
-    50% {
-        box-shadow: 0 0 50px rgba(99, 102, 241, 0.6), 0 0 80px rgba(34, 211, 238, 0.3);
-    }
-    100% {
-        box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
-    }
-}
-
-@keyframes cardShimmer {
-    0% {
-        background-position: -200% 0;
-    }
-    100% {
-        background-position: 200% 0;
-    }
-}
-
-@keyframes skillProgress {
-    0% {
-        width: 0%;
-        opacity: 0;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 1;
-    }
-}
-
-@keyframes techChipFloat {
-    0%,
-    100% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(-3px);
-    }
-}
-
-.profile-image-glow {
-    animation: profileGlow 3s ease-in-out infinite;
-}
-
-.card-shimmer::before {
-    background: linear-gradient( 90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    background-size: 200% 100%;
-    animation: cardShimmer 2s infinite;
-}
-
-.tech-chip-float {
-    animation: techChipFloat 2s ease-in-out infinite;
-}
-
-.skill-progress-bar {
-    animation: skillProgress 1s ease-out forwards;
-}
-
-
-/* Hover effects for better interactivity */
-
-.hover-lift {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.hover-lift:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-}
-
-.gradient-text {
-    background: linear-gradient(135deg, #6366f1 0%, #22d3ee 50%, #ec4899 100%);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-size: 200% 200%;
-    animation: gradientShift 3s ease-in-out infinite;
 }
