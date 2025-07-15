@@ -64,7 +64,7 @@ const LoadingScreen = ({ isLoading }) => (
             background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #22d3ee)',
             zIndex: -1,
             opacity: 0.5,
-            // filter: 'blur(8px)', // Removed
+            filter: 'blur(8px)',
             animation: 'pulse 2s ease-in-out infinite'
           }
         }}

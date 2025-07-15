@@ -35,7 +35,7 @@ const AmbientBackground = () => (
             height: `${400 + i * 100}px`,
             top: `${i * 10}%`,
             left: `${(i * 25) % 100}%`,
-            // filter: "blur(60px)", // Removed
+            filter: "blur(60px)",
             mixBlendMode: "normal",
           }}
           custom={i}
@@ -76,7 +76,7 @@ const AmbientBackground = () => (
           animate={{
             rotate: 360,
             scale: [1, 1.1, 1],
-            // filter: "blur(80px)", // Removed
+            filter: "blur(80px)",
           }}
           transition={{
             rotate: { duration: 60, ease: "linear", repeat: Infinity },

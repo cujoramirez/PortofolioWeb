@@ -351,7 +351,7 @@ const ModernHero = () => {
                     filter: 'drop-shadow(0 0 20px rgba(139, 92, 246, 0.4))',
                   }}
                 >
-                  Gading Aditya Perdana
+                  Gading Aditya
                   <br />
                   Perdana
                 </Typography>

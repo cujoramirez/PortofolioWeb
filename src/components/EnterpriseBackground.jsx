@@ -35,7 +35,7 @@ const EnhancedParticle = ({ index, useReducedMotion }) => {
         background: `radial-gradient(circle, ${color}, ${alpha(color, 0.5)})`,
         left: `${initialX}%`,
         top: `${initialY}%`,
-        // filter: 'blur(0.5px)', // Removed
+        filter: 'blur(0.5px)',
         pointerEvents: 'none'
       }}
       animate={useReducedMotion ? {} : {
@@ -302,7 +302,7 @@ const EnterpriseBackground = memo(({
           height: '300px',
           borderRadius: '50%',
           background: `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.1)} 0%, transparent 70%)`,
-          // filter: 'blur(60px)', // Removed
+          filter: 'blur(60px)',
           animation: !useReducedMotion ? 'breathe 8s ease-in-out infinite' : 'none'
         }}
       />
@@ -316,7 +316,7 @@ const EnterpriseBackground = memo(({
           height: '250px',
           borderRadius: '50%',
           background: `radial-gradient(circle, ${alpha(theme.palette.secondary.main, 0.08)} 0%, transparent 70%)`,
-          // filter: 'blur(50px)', // Removed
+          filter: 'blur(50px)',
           animation: !useReducedMotion ? 'breathe 6s ease-in-out infinite reverse' : 'none'
         }}
       />

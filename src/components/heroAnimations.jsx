@@ -157,13 +157,13 @@ export const nameVariants = {
       opacity: [0, 0.7, 1, 0.8, 0.6, 0.4, 0],
       scale: [0.8, 1.2, 1, 0.9, 0.8, 0.7, 0.6],
       filter: [
-        "brightness(0.8)", // Removed blur
-        "brightness(1.5)", // Removed blur
-        "brightness(1.2)", // Removed blur
-        "brightness(1)", // Removed blur
-        "brightness(0.9)", // Removed blur
-        "brightness(0.8)", // Removed blur
-        "brightness(0.7)", // Removed blur
+        "brightness(0.8) blur(0px)",
+        "brightness(1.5) blur(0px)",
+        "brightness(1.2) blur(0px)",
+        "brightness(1) blur(0px)",
+        "brightness(0.9) blur(1px)",
+        "brightness(0.8) blur(2px)",
+        "brightness(0.7) blur(3px)",
       ],
       transition: {
         duration: 2.2,

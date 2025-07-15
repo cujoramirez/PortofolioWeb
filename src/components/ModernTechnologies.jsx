@@ -253,7 +253,7 @@ const TechParticles = ({ shouldReduceMotion }) => {
             height: 4,
             borderRadius: '50%',
             background: tech.color,
-            // filter: `blur(1px)`, // Removed
+            //            // filter: `blur(1px)`, // Removed// Removed
           }}
           animate={{
             x: [0, Math.random() * 200 - 100],
