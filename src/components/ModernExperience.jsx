@@ -43,14 +43,23 @@ const enhancedExperiences = EXPERIENCES.map((exp, index) => ({
   link: exp.link || null
 }));
 
+
 const ModernExperience = memo(() => {
   const theme = useTheme();
   const { performanceTier } = useSystemProfile();
   const [selectedCard, setSelectedCard] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
-  
+
+  // Responsive: detect mobile (xs) width
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     setIsVisible(true);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 400); // 400px for some margin
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const useReducedMotion = performanceTier === 'low';
@@ -110,12 +119,13 @@ const ModernExperience = memo(() => {
       component="section"
       id="experience"
       sx={{
-        py: { xs: 8, md: 12 },
+        py: { xs: 4, md: 12 },
         position: 'relative',
         background: `linear-gradient(135deg, 
           ${alpha(theme.palette.primary.main, 0.02)} 0%, 
           ${alpha(theme.palette.secondary.main, 0.02)} 100%)`,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        minWidth: 0,
       }}
     >
       {/* Animated Background Elements */}
@@ -136,7 +146,7 @@ const ModernExperience = memo(() => {
         }}
       />
 
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, px: { xs: 0.5, sm: 2 } }}>
         <EnterpriseMotion.ExperienceContainer>
           {/* Section Header */}
           <EnterpriseMotion.ExperienceTitle>
@@ -170,7 +180,12 @@ const ModernExperience = memo(() => {
           </EnterpriseMotion.ExperienceTitle>
 
           {/* Experience Timeline */}
-          <Timeline position="alternate">
+          <Box sx={{
+            overflowX: isMobile ? 'auto' : 'visible',
+            WebkitOverflowScrolling: 'touch',
+            minWidth: 0,
+          }}>
+            <Timeline position={isMobile ? 'right' : 'alternate'} sx={{ minWidth: isMobile ? 320 : 'unset' }}>
             <AnimatePresence>
               {enhancedExperiences.map((experience, index) => {
                 const IconComponent = experience.icon;
@@ -179,6 +194,7 @@ const ModernExperience = memo(() => {
                   <EnterpriseMotion.ExperienceCard key={experience.id}>
                     <TimelineItem>
                       {/* Timeline Date */}
+                      {/* Timeline Date (always show on mobile, only in opposite content on md+) */}
                       <TimelineOppositeContent
                         sx={{ 
                           m: 'auto 0',
@@ -230,7 +246,7 @@ const ModernExperience = memo(() => {
                       </TimelineSeparator>
 
                       {/* Experience Card */}
-                      <TimelineContent sx={{ py: '12px', px: 2 }}>
+                      <TimelineContent sx={{ py: { xs: 1, sm: '12px' }, px: { xs: 0.5, sm: 2 }, minWidth: 0 }}>
                         <motion.div
                           variants={cardHoverVariants}
                           whileHover={!useReducedMotion ? "hover" : undefined}
@@ -253,22 +269,23 @@ const ModernExperience = memo(() => {
                               }
                             }}
                           >
-                            <CardContent sx={{ p: 3 }}>
-                              {/* Mobile Year Display */}
+                            <CardContent sx={{ p: { xs: 1.5, sm: 3 } }}>
+                              {/* Mobile Year Display (always show on xs) */}
                               <Typography
                                 variant="body2"
                                 color="primary"
                                 sx={{ 
                                   display: { xs: 'block', md: 'none' },
                                   fontWeight: 600,
-                                  mb: 1
+                                  mb: 1,
+                                  fontSize: { xs: '1rem', sm: '1.1rem' },
                                 }}
                               >
                                 {experience.year}
                               </Typography>
 
                               {/* Role and Company */}
-                              <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                              <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" mb={2} gap={1}>
                                 <Box>
                                   <Typography
                                     variant="h6"
@@ -276,7 +293,8 @@ const ModernExperience = memo(() => {
                                     sx={{
                                       fontWeight: 700,
                                       color: theme.palette.text.primary,
-                                      mb: 0.5
+                                      mb: 0.5,
+                                      fontSize: { xs: '1.1rem', sm: '1.25rem' },
                                     }}
                                   >
                                     {experience.role}
@@ -284,7 +302,7 @@ const ModernExperience = memo(() => {
                                   <Typography
                                     variant="body1"
                                     color="secondary"
-                                    sx={{ fontWeight: 500 }}
+                                    sx={{ fontWeight: 500, fontSize: { xs: '0.95rem', sm: '1rem' } }}
                                   >
                                     {experience.company}
                                   </Typography>
@@ -315,7 +333,7 @@ const ModernExperience = memo(() => {
                               <Typography
                                 variant="body2"
                                 color="text.secondary"
-                                sx={{ mb: 3, lineHeight: 1.6 }}
+                                sx={{ mb: 2, lineHeight: 1.6, fontSize: { xs: '0.95rem', sm: '1rem' } }}
                               >
                                 {experience.description}
                               </Typography>
@@ -324,11 +342,11 @@ const ModernExperience = memo(() => {
                               <Box mb={2}>
                                 <Typography
                                   variant="subtitle2"
-                                  sx={{ mb: 1, fontWeight: 600 }}
+                                  sx={{ mb: 1, fontWeight: 600, fontSize: { xs: '0.95rem', sm: '1rem' } }}
                                 >
                                   Technologies
                                 </Typography>
-                                <Box display="flex" flexWrap="wrap" gap={1}>
+                                <Box display="flex" flexWrap="wrap" gap={0.5}>
                                   <AnimatePresence>
                                     {experience.technologies.map((tech, techIndex) => (
                                       <motion.div
@@ -350,6 +368,7 @@ const ModernExperience = memo(() => {
                                             borderColor: alpha(theme.palette.primary.main, 0.3),
                                             color: theme.palette.primary.main,
                                             backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
                                             '&:hover': {
                                               backgroundColor: alpha(theme.palette.primary.main, 0.1),
                                               borderColor: theme.palette.primary.main
@@ -405,6 +424,7 @@ const ModernExperience = memo(() => {
               })}
             </AnimatePresence>
           </Timeline>
+        </Box>
         </EnterpriseMotion.ExperienceContainer>
       </Container>
     </Box>

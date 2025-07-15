@@ -309,9 +309,9 @@ const Certifications = () => {
 
           {/* Filter Buttons */}
           <Box sx={{ mb: 6 }}>
-            <Grid container spacing={2} justifyContent="center">
+            <Grid container spacing={1.5} justifyContent="center" wrap="wrap">
               {issuers.map((issuer, index) => (
-                <Grid size={{ xs: 6, sm: 4, md: 3, lg: 2 }} key={issuer}>
+                <Grid item xs={12} sm={6} md={4} lg={2} key={issuer} sx={{ display: 'flex', justifyContent: 'center', mb: { xs: 1, sm: 0 } }}>
                   <FilterButton
                     issuer={issuer}
                     isActive={selectedIssuer === issuer}
