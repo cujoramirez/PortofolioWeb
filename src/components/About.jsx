@@ -89,13 +89,13 @@ const AchievementCard = styled(Card)(({ theme, gradientcolor }) => ({
 }));
 
 function About() {
-  console.log("🚀 SIMPLE MUI About component is loading!");
+  console.log("SIMPLE MUI About component is loading!");
 
   const achievements = [
-    { number: "3+", label: "Years of Experience", color: "#2196f3", gradientColor: "#2196f3" },
-    { number: "15+", label: "Projects Completed", color: "#00bcd4", gradientColor: "#00bcd4" },
-    { number: "2+", label: "Research Papers", color: "#9c27b0", gradientColor: "#9c27b0" },
-    { number: "15+", label: "Certifications", color: "#4caf50", gradientColor: "#4caf50" }
+    { number: "3", label: "Years of Experience", color: "#2196f3", gradientColor: "#2196f3" },
+    { number: "15", label: "Projects Completed", color: "#00bcd4", gradientColor: "#00bcd4" },
+    { number: "2", label: "Research Papers", color: "#9c27b0", gradientColor: "#9c27b0" },
+    { number: "15", label: "Certifications", color: "#4caf50", gradientColor: "#4caf50" }
   ];
 
   return (

@@ -289,7 +289,7 @@ const Technologies = () => {
           >
             <Grid container spacing={3} justifyContent="center">
               {filteredTechnologies.map((tech, index) => (
-                <Grid item xs={6} sm={4} md={3} lg={2.4} xl={2} key={tech.name} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <Grid size={{ xs: 6, sm: 4, md: 3, lg: 2.4, xl: 2 }} key={tech.name} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <TechnologyCard
                     tech={tech}
                     index={index}

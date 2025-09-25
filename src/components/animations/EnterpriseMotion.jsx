@@ -300,65 +300,7 @@ export const enterpriseVariants = {
     }
   },
 
-  heroMorphTitle: {
-    hidden: { 
-      opacity: 0, 
-      y: 100,
-      scale: 0.5,
-      rotateX: -45,
-      filter: "blur(20px)"
-    },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      scale: 1,
-      rotateX: 0,
-      filter: "blur(0px)",
-      transition: {
-        type: "spring",
-        damping: 25,
-        stiffness: 120,
-        duration: 1.5
-      }
-    }
-  },
-
-  // About Section Morphing - Professional Introduction
-  aboutMorphContainer: {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  },
-
-  aboutMorphElement: {
-    hidden: { 
-      opacity: 0, 
-      scale: 0.3,
-      rotateY: 180,
-      rotateZ: -45,
-      x: -200,
-      filter: "blur(15px)"
-    },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      rotateY: 0,
-      rotateZ: 0,
-      x: 0,
-      filter: "blur(0px)",
-      transition: {
-        type: "spring",
-        damping: 20,
-        stiffness: 80,
-        duration: 1.0
-      }
-    }
-  },
+  // Duplicates removed - cleaned up orphaned code
 
   // Experience Section - Professional Slide-In
   experienceMorphContainer: {
@@ -617,60 +559,7 @@ export const enterpriseVariants = {
     }
   },
 
-  // Contact Section - Professional Elegance (already exists, enhancing)
-  contactMorphContainer: {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.1
-      }
-    }
-  },
-
-  contactMorphCard: {
-    hidden: { 
-      opacity: 0, 
-      scale: 0.4,
-      rotateY: -90,
-      rotateX: 45,
-      filter: "blur(15px)"
-    },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      rotateY: 0,
-      rotateX: 0,
-      filter: "blur(0px)",
-      transition: {
-        duration: 1.2,
-        type: "spring",
-        damping: 20,
-        stiffness: 80
-      }
-    }
-  },
-
-  contactMorphInfo: {
-    hidden: { 
-      opacity: 0, 
-      x: 40,
-      scale: 0.8
-    },
-    visible: { 
-      opacity: 1, 
-      x: 0,
-      scale: 1,
-      transition: {
-        duration: 0.8,
-        delay: 0.4,
-        type: "spring",
-        damping: 25,
-        stiffness: 100
-      }
-    }
-  },
+  // Contact Section duplicates removed
 
   // Global floating animation for background elements
   floatingElement: {
@@ -1096,19 +985,7 @@ export const EnterpriseMotion = {
     </motion.div>
   )),
 
-  // Contact Container
-  ContactContainer: forwardRef(({ children, ...props }, ref) => (
-    <motion.div
-      ref={ref}
-      variants={enterpriseVariants.contactMorphContainer}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.2 }}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  )),
+  // Contact Container (duplicate removed)
 
   // Hero Morph Container
   HeroMorphContainer: forwardRef(({ children, ...props }, ref) => (

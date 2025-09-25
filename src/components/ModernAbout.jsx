@@ -36,10 +36,10 @@ import aboutImg from "../assets/GadingAdityaPerdana2.jpg";
 
 // Stats data with enhanced animations
 const statsData = [
-  { label: "Years of Experience", value: 3, displayValue: "3+", icon: TrendingUp, color: "#6366f1", delay: 0 },
-  { label: "Projects Completed", value: 15, displayValue: "15+", icon: Code, color: "#22d3ee", delay: 0.2 },
-  { label: "Research Papers", value: 2, displayValue: "2+", icon: Science, color: "#8b5cf6", delay: 0.4 },
-  { label: "Certifications", value: 15, displayValue: "15+", icon: EmojiEvents, color: "#10b981", delay: 0.6 },
+  { label: "Peer-reviewed Publications", value: 4, displayValue: "4", icon: Science, color: "#6366f1", delay: 0 },
+  { label: "Conference Awards", value: 1, displayValue: "1", icon: EmojiEvents, color: "#22d3ee", delay: 0.2 },
+  { label: "Intelligent Systems Delivered", value: 6, displayValue: "6", icon: Rocket, color: "#8b5cf6", delay: 0.4 },
+  { label: "Certifications", value: 15, displayValue: "15", icon: EmojiEvents, color: "#10b981", delay: 0.6 },
 ];
 
 // Skills data with 3D effects
@@ -312,7 +312,6 @@ const ModernAbout = ({ landingComplete = true }) => {
   const [isComponentMounted, setIsComponentMounted] = useState(false);
   const [hasAnimated, setHasAnimated] = useState(false);
   const [forceVisible, setForceVisible] = useState(false);
-  const [isImageHovered, setIsImageHovered] = useState(false);
   
   // Enhanced intersection observer with better triggering
   const isInView = useInView(containerRef, { 
@@ -583,23 +582,11 @@ const ModernAbout = ({ landingComplete = true }) => {
                 <Floating3DElement intensity={1.5}>
                   <motion.div
                     variants={itemVariants}
-                    whileHover={{ 
-                      scale: 1.05,
-                      rotateY: 8,
-                      rotateX: 3
-                    }}
-                    transition={{ 
-                      type: "spring", 
-                      stiffness: 300, 
-                      damping: 20 
-                    }}
                     style={{
                       transformStyle: 'preserve-3d'
                     }}
                   >
                     <Box
-                      onMouseEnter={() => setIsImageHovered(true)}
-                      onMouseLeave={() => setIsImageHovered(false)}
                       sx={{
                         width: { xs: '380px', md: '450px' },
                         height: { xs: '450px', md: '550px' },
@@ -609,22 +596,7 @@ const ModernAbout = ({ landingComplete = true }) => {
                         border: '2px solid rgba(255, 255, 255, 0.2)',
                         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
                         position: 'relative',
-                        cursor: 'pointer',
                         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                        '&:hover': {
-                          boxShadow: '0 35px 70px -12px rgba(99, 102, 241, 0.6)',
-                          border: '2px solid rgba(99, 102, 241, 0.5)',
-                          '& .profile-image': {
-                            filter: 'brightness(1.3) contrast(1.2) saturate(1.2)',
-                            transform: 'scale(1.1)',
-                          },
-                          '& .image-overlay': {
-                            opacity: 1,
-                          },
-                          '& .floating-icons': {
-                            opacity: 1,
-                          }
-                        },
                         '&::before': {
                           content: '""',
                           position: 'absolute',
@@ -652,158 +624,7 @@ const ModernAbout = ({ landingComplete = true }) => {
                         }}
                       />
                       
-                      {/* Interactive Overlay - Only visible on hover */}
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ 
-                          opacity: isImageHovered ? 1 : 0,
-                        }}
-                        transition={{ duration: 0.4, ease: "easeInOut" }}
-                        style={{
-                          position: 'absolute',
-                          inset: 0,
-                          background: isImageHovered 
-                            ? 'linear-gradient(45deg, rgba(99, 102, 241, 0.88), rgba(139, 92, 246, 0.88))' 
-                            : 'transparent',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexDirection: 'column',
-                          zIndex: 3,
-                          visibility: isImageHovered ? 'visible' : 'hidden',
-                        }}
-                      >
-                        <motion.div
-                          initial={{ y: 30, opacity: 0, scale: 0.8 }}
-                          animate={isImageHovered ? { 
-                            y: 0, 
-                            opacity: 1, 
-                            scale: 1.05 
-                          } : { 
-                            y: 30, 
-                            opacity: 0, 
-                            scale: 0.8 
-                          }}
-                          transition={{ duration: 0.3, ease: "easeOut" }}
-                          style={{ textAlign: 'center', color: 'white' }}
-                        >
-                          <Typography 
-                            variant="h6" 
-                            sx={{ 
-                              fontWeight: 700, 
-                              mb: 1, 
-                              textShadow: '0 4px 12px rgba(0,0,0,0.8)',
-                              background: 'linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%)',
-                              WebkitBackgroundClip: 'text',
-                              WebkitTextFillColor: 'transparent',
-                              fontSize: '1.4rem',
-                              letterSpacing: '0.5px'
-                            }}
-                          >
-                            AI/ML Engineer
-                          </Typography>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
-                              opacity: 0.95, 
-                              textShadow: '0 2px 8px rgba(0,0,0,0.6)',
-                              color: 'rgba(255, 255, 255, 0.95)',
-                              fontWeight: 600,
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            Passionate about Innovation
-                          </Typography>
-                        </motion.div>
-                      </motion.div>
-                      
-                      {/* Floating Interactive Icons */}
-                      <Box
-                        className="floating-icons"
-                        sx={{
-                          position: 'absolute',
-                          inset: 0,
-                          opacity: 0,
-                          transition: 'opacity 0.4s ease',
-                          pointerEvents: 'none',
-                          zIndex: 4,
-                        }}
-                      >
-                        {/* AI Icon - Top Right */}
-                        <motion.div
-                          style={{
-                            position: 'absolute',
-                            top: '15%',
-                            right: '10%',
-                          }}
-                          animate={{
-                            y: [-5, 5, -5],
-                            rotate: [0, 10, 0],
-                          }}
-                          transition={{
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
-                        >
-                          <Psychology sx={{ 
-                            color: '#6366f1', 
-                            fontSize: '2rem',
-                            filter: 'drop-shadow(0 4px 8px rgba(99, 102, 241, 0.4))'
-                          }} />
-                        </motion.div>
-                        
-                        {/* Code Icon - Bottom Left */}
-                        <motion.div
-                          style={{
-                            position: 'absolute',
-                            bottom: '15%',
-                            left: '10%',
-                          }}
-                          animate={{
-                            y: [5, -5, 5],
-                            rotate: [0, -10, 0],
-                          }}
-                          transition={{
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: 1,
-                          }}
-                        >
-                          <Code sx={{ 
-                            color: '#22d3ee', 
-                            fontSize: '2rem',
-                            filter: 'drop-shadow(0 4px 8px rgba(34, 211, 238, 0.4))'
-                          }} />
-                        </motion.div>
-                        
-                        {/* Rocket Icon - Top Left */}
-                        <motion.div
-                          style={{
-                            position: 'absolute',
-                            top: '20%',
-                            left: '15%',
-                          }}
-                          animate={{
-                            y: [-3, 3, -3],
-                            x: [-2, 2, -2],
-                            rotate: [0, 15, 0],
-                          }}
-                          transition={{
-                            duration: 2.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: 0.5,
-                          }}
-                        >
-                          <Rocket sx={{ 
-                            color: '#8b5cf6', 
-                            fontSize: '1.8rem',
-                            filter: 'drop-shadow(0 4px 8px rgba(139, 92, 246, 0.4))'
-                          }} />
-                        </motion.div>
-                      </Box>
+                      {/* Overlay and floating icon hover effects removed for static presentation */}
                       
                       {/* Animated Border Accent */}
                       <motion.div

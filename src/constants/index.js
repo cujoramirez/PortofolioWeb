@@ -25,7 +25,9 @@ I'm a passionate AI/ML Engineer and Computer Science specialist with deep expert
 `;
 
 export const ABOUT_TEXT = `
-As an AI/ML Engineer with a strong foundation in deep learning and computer vision research, I specialize in developing cutting-edge artificial intelligence solutions. My expertise spans the entire AI development lifecycle, from research and experimentation to production deployment and optimization. I've successfully built and deployed innovative projects including a state-of-the-art Diabetic Retinopathy Detection system, advanced facial recognition solutions for security applications, and intelligent automation platforms. My experience at OJK provided valuable insights into regulatory compliance and enterprise-grade AI governance, while my leadership roles have honed my ability to guide cross-functional teams toward successful AI implementations. I thrive in challenging environments where I can leverage my technical expertise in machine learning, computer vision, and full-stack development to create transformative solutions that bridge the gap between cutting-edge research and practical business applications.
+I'm an award-winning AI researcher and engineer who designs calibrated, production-ready deep learning systems. My CALM framework earned Best Presenter at ICCSCI 2025 and is part of a portfolio of four peer-reviewed publications that push adaptive curriculum, ensemble learning, and model calibration forward. Beyond the lab, I translate theory into shipped products, delivering intelligent computer vision and NLP solutions, architecting full-stack applications in React and C#/.NET, and scaling data pipelines that meet enterprise standards.
+
+I thrive at the intersection of research and impact: curating complex datasets, leading cross-functional teams, and mentoring developers so breakthrough ideas become reliable tools. Whether I'm optimizing PyTorch/TensorFlow training loops, automating compliance workflows, or mobilizing 30 dedicated volunteers for community programs, I stay focused on building AI that is rigorous, transparent, and genuinely useful.
 `;
 
 export const EXPERIENCES = [{

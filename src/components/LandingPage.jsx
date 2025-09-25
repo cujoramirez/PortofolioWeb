@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Box, Button, IconButton } from '@mui/material';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { Box } from '@mui/material';
 import { KeyboardArrowDown } from '@mui/icons-material';
 import EnhancedHero from './EnhancedHero.jsx';
 import ModernHero from './ModernHero.jsx';
@@ -9,157 +9,241 @@ import WebGLErrorBoundary from './WebGLErrorBoundary.jsx';
 const LandingPage = ({ introComplete, onNavbarVisibilityChange, onLandingComplete }) => {
   const [showLanding, setShowLanding] = useState(true);
   const [landingComplete, setLandingComplete] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return window.matchMedia('(max-width: 768px)').matches;
+  });
 
-  // Enhanced scroll and touch detection for all devices
+  const showLandingRef = useRef(showLanding);
+  const transitionTimeoutRef = useRef(null);
+  const autoTransitionRef = useRef(null);
+  const touchStateRef = useRef({ startY: 0, startX: 0, hasTriggered: false });
+  const bodyStylesRef = useRef(null);
+  const prefersReducedMotion = useReducedMotion();
+  const exitDelay = prefersReducedMotion ? 420 : 650;
+  const autoTransitionDuration = prefersReducedMotion ? 12000 : 20000;
+  const indicatorDelay = prefersReducedMotion ? 1.2 : 2.2;
+  const wheelThreshold = prefersReducedMotion ? 6 : 10;
+  const swipeThreshold = prefersReducedMotion ? 45 : 60;
+
   useEffect(() => {
-    let timeoutId;
-    let startY = 0;
-    let startX = 0;
-    let currentY = 0;
-    let currentX = 0;
-    let isScrolling = false;
-    
-    const completeLanding = () => {
+    showLandingRef.current = showLanding;
+  }, [showLanding]);
+
+  const clearTimeoutRef = useCallback((ref) => {
+    if (ref.current) {
+      clearTimeout(ref.current);
+      ref.current = null;
+    }
+  }, []);
+
+  const restoreBodyStyles = useCallback(() => {
+    if (typeof document === 'undefined' || !bodyStylesRef.current) {
+      return;
+    }
+
+    const body = document.body;
+    if (!body) {
+      return;
+    }
+
+    const previousStyles = bodyStylesRef.current;
+    Object.keys(previousStyles).forEach((key) => {
+      body.style[key] = previousStyles[key];
+    });
+
+    bodyStylesRef.current = null;
+  }, []);
+
+  const completeLanding = useCallback(
+    (delay) => {
+      if (!showLandingRef.current || typeof window === 'undefined') {
+        return;
+      }
+
+      showLandingRef.current = false;
       setShowLanding(false);
-      setTimeout(() => {
+
+      clearTimeoutRef(autoTransitionRef);
+      clearTimeoutRef(transitionTimeoutRef);
+
+      const finalDelay = typeof delay === 'number' ? delay : exitDelay;
+      transitionTimeoutRef.current = window.setTimeout(() => {
         setLandingComplete(true);
-        onLandingComplete?.(true); // Notify parent component
-      }, 1000);
-    };
-    
-    const handleScroll = (e) => {
-      if (showLanding) {
-        // Allow some natural scroll but trigger transition on intentional scroll
-        if (window.scrollY > 30) { // Reduced threshold for mobile
-          e.preventDefault();
-          e.stopPropagation();
-          completeLanding();
-        }
-      }
-    };
+        onLandingComplete?.(true);
+      }, finalDelay);
+    },
+    [clearTimeoutRef, exitDelay, onLandingComplete]
+  );
 
-    const handleWheel = (e) => {
-      if (showLanding && e.deltaY > 0) {
-        if (Math.abs(e.deltaY) > 5) { // Lower threshold for sensitivity
-          e.preventDefault();
-          completeLanding();
-        }
-      }
-    };
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
 
-    // Enhanced touch handling for mobile/tablet
-    const handleTouchStart = (e) => {
-      if (showLanding) {
-        const touch = e.touches[0];
-        startY = touch.clientY;
-        startX = touch.clientX;
-        isScrolling = false;
-      }
-    };
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const handleChange = (event) => setIsMobile(event.matches);
 
-    const handleTouchMove = (e) => {
-      if (showLanding && !isScrolling) {
-        const touch = e.touches[0];
-        currentY = touch.clientY;
-        currentX = touch.clientX;
-        
-        const deltaY = startY - currentY;
-        const deltaX = Math.abs(startX - currentX);
-        
-        // Detect vertical swipe (ignore horizontal swipes)
-        if (Math.abs(deltaY) > deltaX && Math.abs(deltaY) > 50) {
-          isScrolling = true;
-          
-          // Downward swipe (swipe up gesture)
-          if (deltaY > 0) {
-            // Only prevent default if the event is cancelable
-            if (e.cancelable) {
-              e.preventDefault();
-            }
-            completeLanding();
-          }
-        }
-      }
-    };
+    handleChange(mediaQuery);
 
-    const handleTouchEnd = (e) => {
-      if (showLanding) {
-        isScrolling = false;
-      }
-    };
-
-    // Auto-transition after a longer delay (more professional)
-    const autoTransition = () => {
-      timeoutId = setTimeout(() => {
-        if (showLanding) {
-          completeLanding();
-        }
-      }, 30000); // Increased to 30 seconds for better UX
-    };
-
-    if (introComplete) {
-      // Prevent body scroll during landing
-      if (showLanding) {
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.width = '100%';
-        document.body.style.height = '100%';
-        document.body.style.touchAction = 'none'; // Prevent default touch behaviors
-      } else {
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.width = '';
-        document.body.style.height = '';
-        document.body.style.touchAction = '';
-      }
-      
-      window.addEventListener('scroll', handleScroll, { passive: false });
-      window.addEventListener('wheel', handleWheel, { passive: false });
-      window.addEventListener('touchstart', handleTouchStart, { passive: true });
-      window.addEventListener('touchmove', handleTouchMove, { passive: false });
-      window.addEventListener('touchend', handleTouchEnd, { passive: true });
-      autoTransition();
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+    } else {
+      mediaQuery.addListener(handleChange);
     }
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleChange);
+      } else {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!introComplete || typeof document === 'undefined') {
+      return undefined;
+    }
+
+    const body = document.body;
+    if (!body) {
+      return undefined;
+    }
+
+    if (showLanding) {
+      if (!bodyStylesRef.current) {
+        bodyStylesRef.current = {
+          overflow: body.style.overflow,
+          position: body.style.position,
+          width: body.style.width,
+          height: body.style.height,
+          touchAction: body.style.touchAction,
+        };
+      }
+
+      Object.assign(body.style, {
+        overflow: 'hidden',
+        position: 'fixed',
+        width: '100%',
+        height: '100%',
+        touchAction: 'none',
+      });
+    } else {
+      restoreBodyStyles();
+    }
+
+    return restoreBodyStyles;
+  }, [introComplete, showLanding, restoreBodyStyles]);
+
+  useEffect(() => {
+    if (!introComplete || !showLanding || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const handleWheel = (event) => {
+      if (event.deltaY <= 0) {
+        return;
+      }
+
+      if (Math.abs(event.deltaY) < wheelThreshold) {
+        return;
+      }
+
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+      completeLanding(exitDelay);
+    };
+
+    const handleTouchStart = (event) => {
+      const touch = event.touches[0];
+      if (!touch) {
+        return;
+      }
+
+      touchStateRef.current = {
+        startY: touch.clientY,
+        startX: touch.clientX,
+        hasTriggered: false,
+      };
+    };
+
+    const handleTouchMove = (event) => {
+      const touch = event.touches[0];
+      if (!touch || touchStateRef.current.hasTriggered) {
+        return;
+      }
+
+      const deltaY = touchStateRef.current.startY - touch.clientY;
+      const deltaX = Math.abs(touchStateRef.current.startX - touch.clientX);
+
+      if (Math.abs(deltaY) <= deltaX || deltaY <= swipeThreshold) {
+        return;
+      }
+
+      touchStateRef.current.hasTriggered = true;
+
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+
+      completeLanding(exitDelay);
+    };
+
+    const handleTouchEnd = () => {
+      touchStateRef.current.hasTriggered = false;
+    };
+
+    const handleKeyDown = (event) => {
+      if (!['Enter', ' ', 'ArrowDown', 'PageDown'].includes(event.key)) {
+        return;
+      }
+
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+
+      completeLanding(Math.max(exitDelay - 80, 280));
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('keydown', handleKeyDown, { passive: false });
+
+    clearTimeoutRef(autoTransitionRef);
+    autoTransitionRef.current = window.setTimeout(() => {
+      completeLanding();
+    }, autoTransitionDuration);
+
+    return () => {
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
-      
-      // Restore body scroll
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
-      document.body.style.touchAction = '';
-      
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+      window.removeEventListener('keydown', handleKeyDown);
+      clearTimeoutRef(autoTransitionRef);
     };
-  }, [showLanding, introComplete]);
+  }, [introComplete, showLanding, completeLanding, clearTimeoutRef, wheelThreshold, swipeThreshold, autoTransitionDuration, exitDelay]);
 
-  // Listen for custom event from "Explore My Work" button
   useEffect(() => {
-    const handleExploreWork = () => {
-      if (showLanding) {
-        // Add professional transition effect
-        document.body.style.transition = 'all 0.3s ease-out';
-        
-        setShowLanding(false);
-        setTimeout(() => {
-          setLandingComplete(true);
-          onLandingComplete?.(true); // Notify parent component
-          document.body.style.transition = '';
-        }, 1200); // Smooth, professional timing
-      }
-    };
+    if (!introComplete || typeof window === 'undefined') {
+      return undefined;
+    }
 
+    const handleExploreWork = () => completeLanding(Math.max(exitDelay - 80, 260));
     window.addEventListener('exploreMyWork', handleExploreWork);
     return () => window.removeEventListener('exploreMyWork', handleExploreWork);
-  }, [showLanding]);
+  }, [introComplete, completeLanding, exitDelay]);
+
+  useEffect(() => () => {
+    clearTimeoutRef(autoTransitionRef);
+    clearTimeoutRef(transitionTimeoutRef);
+  }, [clearTimeoutRef]);
 
   // Control navbar visibility
   useEffect(() => {
@@ -176,41 +260,40 @@ const LandingPage = ({ introComplete, onNavbarVisibilityChange, onLandingComplet
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ 
+            exit={prefersReducedMotion ? { opacity: 0 } : { 
               opacity: 0, 
               y: -50,
               scale: 0.95,
-              // filter: "blur(2px)" // Removed
             }}
             transition={{ 
-              duration: 1.2, 
-              ease: [0.25, 0.46, 0.45, 0.94] // Professional easing curve
+              duration: prefersReducedMotion ? 0.3 : 1.2, 
+              ease: prefersReducedMotion ? "easeOut" : [0.25, 0.46, 0.45, 0.94]
             }}
             style={{
               position: 'relative',
               height: '100vh',
               width: '100vw',
               overflow: 'hidden',
-              touchAction: 'pan-y', // Allow vertical panning for swipe gestures
+              touchAction: 'pan-y',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
-            <WebGLErrorBoundary>
-              <EnhancedHero introComplete={introComplete} />
-            </WebGLErrorBoundary>
+            <EnhancedHero introComplete={introComplete} />
             
             {/* Professional Scroll Indicator */}
             <Box
               sx={{
                 position: 'absolute',
-                bottom: 0,
+                bottom: { xs: '-36px', sm: '-48px' },
                 left: 0,
                 right: 0,
                 zIndex: 1000,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                pb: { xs: 4, sm: 6 }, // Responsive padding
-                background: 'linear-gradient(transparent, rgba(0,0,0,0.15))',
+                pb: { xs: 5, sm: 7 }, // Responsive padding
+                background: 'linear-gradient(transparent, rgba(0,0,0,0.2))',
                 pointerEvents: 'none', // Allow touch events to pass through
                 '& > *': {
                   pointerEvents: 'auto', // Re-enable for child elements
@@ -221,7 +304,10 @@ const LandingPage = ({ introComplete, onNavbarVisibilityChange, onLandingComplet
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.6 }}
-                transition={{ duration: 1.5, delay: 3 }}
+                transition={{ 
+                  duration: prefersReducedMotion ? 0.3 : 1.2, 
+                  delay: prefersReducedMotion ? 0 : indicatorDelay 
+                }}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -232,19 +318,8 @@ const LandingPage = ({ introComplete, onNavbarVisibilityChange, onLandingComplet
                   minHeight: '80px', // Minimum touch target size
                   touchAction: 'manipulation', // Optimize for touch
                 }}
-                onClick={() => {
-                  // Enhanced transition when clicked
-                  const transition = () => {
-                    document.body.style.cursor = 'wait';
-                    setTimeout(() => {
-                      window.dispatchEvent(new CustomEvent('exploreMyWork'));
-                      document.body.style.cursor = 'default';
-                    }, 150);
-                  };
-                  transition();
-                }}
+                onClick={() => completeLanding(Math.max(exitDelay - 120, 240))}
                 onTouchStart={(e) => {
-                  // Handle touch specifically for better mobile experience
                   e.currentTarget.style.transform = 'scale(0.95)';
                 }}
                 onTouchEnd={(e) => {
@@ -252,13 +327,13 @@ const LandingPage = ({ introComplete, onNavbarVisibilityChange, onLandingComplet
                 }}
               >
                 <motion.div
-                  animate={{ 
+                  animate={prefersReducedMotion ? { opacity: 0.8 } : { 
                     y: [0, -6, 0],
                     opacity: [0.5, 0.8, 0.5]
                   }}
-                  transition={{ 
-                    duration: 2.5, 
-                    repeat: Infinity, 
+                  transition={prefersReducedMotion ? { duration: 0.3 } : { 
+                    duration: 2.3,
+                    repeat: Infinity,
                     ease: "easeInOut",
                     repeatDelay: 1
                   }}
@@ -272,7 +347,7 @@ const LandingPage = ({ introComplete, onNavbarVisibilityChange, onLandingComplet
                     fontFamily: '"Inter", system-ui, sans-serif',
                   }}
                 >
-                  {window.innerWidth <= 768 ? 'Swipe Up to Continue' : 'Scroll to Portfolio'}
+                  {isMobile ? 'Swipe Up to Continue' : 'Scroll to Portfolio'}
                 </motion.div>
                 <motion.div
                   animate={{ 
@@ -280,11 +355,11 @@ const LandingPage = ({ introComplete, onNavbarVisibilityChange, onLandingComplet
                     scale: [1, 1.1, 1]
                   }}
                   transition={{ 
-                    duration: 2.5, 
-                    repeat: Infinity, 
+                    duration: 2.3,
+                    repeat: prefersReducedMotion ? 4 : Infinity,
                     ease: "easeInOut", 
                     delay: 0.3,
-                    repeatDelay: 1
+                    repeatDelay: prefersReducedMotion ? 0 : 1
                   }}
                 >
                   <KeyboardArrowDown 

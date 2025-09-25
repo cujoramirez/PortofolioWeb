@@ -1,34 +1,50 @@
-import React, { useEffect, useState, useRef, Suspense } from "react";
-import { motion, useScroll, useTransform, useSpring, useInView } from "framer-motion";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Sphere, MeshDistortMaterial, Stars } from "@react-three/drei";
+import React, { useEffect, useState, useRef, Suspense, lazy, useMemo, useCallback } from "react";
+import { motion, useScroll, useTransform, useSpring, useInView, useReducedMotion } from "framer-motion";
 import { 
   Box, 
   Typography, 
   Container, 
   Chip, 
   IconButton,
-  Fade,
-  Grow,
   useMediaQuery,
   useTheme
 } from "@mui/material";
 import { 
-  PlayArrow,
-  Pause,
-  VolumeOff,
-  VolumeUp,
   Download,
   GitHub,
   LinkedIn,
   Email
 } from "@mui/icons-material";
 import { useSystemProfile } from "../components/useSystemProfile.jsx";
-import EnterpriseSceneManager, { useSceneManager } from "./three/EnterpriseSceneManager.jsx";
-import HeroScene3D from "./three/HeroScene3D.jsx";
 import { EnterpriseMotion } from "./animations/EnterpriseMotion.jsx";
 import heroImg from "../assets/GadingAdityaPerdana.jpg";
 import resumePDF from "../assets/Gading_Resume.pdf";
+
+// Optimized 3D constants - now enabled everywhere with smart optimizations
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const ENABLE_3D = true; // Re-enabled with heavy optimizations
+
+// Dynamic imports with Vercel-optimized chunks
+const Canvas = lazy(() => 
+  import("@react-three/fiber")
+    .then(module => ({ default: module.Canvas }))
+    .catch(() => ({ default: () => null })) // Graceful fallback
+);
+
+const HeroScene3D = lazy(() => 
+  import("./three/HeroScene3D.jsx")
+    .catch(() => ({ default: () => null })) // Graceful fallback
+);
+
+// Preload critical resources on interaction
+const preloadResources = () => {
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    requestIdleCallback(() => {
+      import("@react-three/fiber");
+      import("./three/HeroScene3D.jsx");
+    });
+  }
+};
 
 // Professional roles array defined outside component to prevent recreation
 const TYPING_ROLES = [
@@ -42,102 +58,115 @@ const TYPING_ROLES = [
   "AI Research Engineer"
 ];
 
-// Animated 3D sphere component with enterprise enhancement
-const AnimatedSphere = ({ position = [0, 0, 0] }) => {
-  const meshRef = useRef();
-  const [isReady, setIsReady] = useState(false);
-  
-  useEffect(() => {
-    // Wait for the component to be fully rendered before starting animation
-    const timer = setTimeout(() => {
-      setIsReady(true);
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
-  useEffect(() => {
-    if (!isReady) return;
-    
-    let animationId;
-    const animate = () => {
-      if (meshRef.current && meshRef.current.rotation) {
-        meshRef.current.rotation.x += 0.005; // Reduced speed
-        meshRef.current.rotation.y += 0.003; // Reduced speed
-      }
-      animationId = requestAnimationFrame(animate);
-    };
-    
-    if (meshRef.current) {
-      animate();
-    }
-    
-    return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-    };
-  }, [isReady]);
-
-  return (
-    <Sphere ref={meshRef} args={[1, 100, 200]} position={position}>
-      <MeshDistortMaterial
-        color="#6366f1"
-        attach="material"
-        distort={0.3}
-        speed={1.5}
-        roughness={0}
-        metalness={0.8}
-      />
-    </Sphere>
+// Ultra-lightweight CSS particles with GPU acceleration
+const OptimizedParticles = () => {
+  const particles = useMemo(() => 
+    Array.from({ length: 5 }, (_, i) => ({
+      id: i,
+      delay: i * 2.5,
+      left: 20 + (i * 15) % 80,
+      duration: 15 + (i * 3)
+    })), []
   );
-};
 
-// Floating particles component
-const FloatingParticles = () => {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(20)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-primary-400 rounded-full"
-          initial={{
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * window.innerHeight,
-            opacity: 0
-          }}
-          animate={{
-            y: [null, -100, -200],
-            opacity: [0, 1, 0],
-          }}
-          transition={{
-            duration: Math.random() * 10 + 10,
-            repeat: Infinity,
-            delay: Math.random() * 5,
-            ease: "linear"
+    <Box
+      sx={{
+        position: 'absolute',
+        inset: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        zIndex: 1,
+      }}
+    >
+      {particles.map((particle) => (
+        <Box
+          key={particle.id}
+          sx={{
+            position: 'absolute',
+            left: `${particle.left}%`,
+            bottom: 0,
+            width: '2px',
+            height: '2px',
+            borderRadius: '50%',
+            background: 'linear-gradient(45deg, #6366f1, #22d3ee)',
+            transform: 'translateZ(0)', // Force GPU layer
+            animation: `float-up-${particle.id} ${particle.duration}s linear infinite`,
+            animationDelay: `${particle.delay}s`,
+            [`@keyframes float-up-${particle.id}`]: {
+              '0%': {
+                transform: 'translateY(0) translateZ(0)',
+                opacity: 0,
+              },
+              '10%': {
+                opacity: 0.8,
+              },
+              '90%': {
+                opacity: 0.4,
+              },
+              '100%': {
+                transform: 'translateY(-100vh) translateZ(0)',
+                opacity: 0,
+              },
+            },
           }}
         />
       ))}
-    </div>
+    </Box>
   );
 };
 
-// Modern Hero Section with Enterprise 3D Integration
+// Optimized Modern Hero Section with advanced memory management
 const ModernHero = () => {
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
   const { performanceTier, deviceType } = useSystemProfile();
   const containerRef = useRef(null);
   const heroRef = useRef(null);
   const theme = useTheme();
+  const prefersReducedMotion = useReducedMotion();
   
-  // Scene management integration
-  const sceneManager = useSceneManager();
-  const isInView = useInView(heroRef, { threshold: 0.3 });
+  // Advanced intersection observer with memory cleanup
+  const isInView = useInView(heroRef, { 
+    threshold: 0.1, 
+    margin: "100px",
+    once: false // Allow re-triggering for memory management
+  });
   
+  // Optimized media query calculations
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
-  const shouldReduceMotion = performanceTier === "low" || isMobile;
+  const shouldReduceMotion = useMemo(() => 
+    performanceTier === "low" || isMobile || prefersReducedMotion,
+    [performanceTier, isMobile, prefersReducedMotion]
+  );
+  const canRender3D = useMemo(() =>
+    ENABLE_3D && performanceTier !== "low" && deviceType !== "mobile" && !prefersReducedMotion,
+    [performanceTier, deviceType, prefersReducedMotion]
+  );
+  const lowPower3D = useMemo(() => 
+    performanceTier !== "high" || isTablet,
+    [performanceTier, isTablet]
+  );
+
+  const pixelRatio = useMemo(() => {
+    if (typeof window === 'undefined') return 1;
+    return Math.min(window.devicePixelRatio || 1, 2);
+  }, []);
+  
+  // Smart 3D loading with memory management
+  const [show3D, setShow3D] = useState(false);
+  
+  useEffect(() => {
+    if (!ENABLE_3D) return;
+
+    if (canRender3D && isInView) {
+      const timer = setTimeout(() => setShow3D(true), show3D ? 0 : 300);
+      return () => clearTimeout(timer);
+    }
+
+    if (!isInView && show3D) {
+      setShow3D(false);
+    }
+  }, [canRender3D, isInView, show3D]);
 
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 1000], [0, -200]);
@@ -148,12 +177,29 @@ const ModernHero = () => {
   const smoothY = useSpring(y, { stiffness: 100, damping: 30 });
   const smoothScale = useSpring(scale, { stiffness: 100, damping: 30 });
 
-  // Enhanced typing animation with more dynamic effects
+  // Optimized typing animation with better performance
   const [currentRole, setCurrentRole] = useState(0);
   const [displayText, setDisplayText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
   const [cursor, setCursor] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+  
+  // Preload resources on user interaction
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      preloadResources();
+      document.removeEventListener('mouseenter', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+    };
+    
+    document.addEventListener('mouseenter', handleUserInteraction, { once: true, passive: true });
+    document.addEventListener('touchstart', handleUserInteraction, { once: true, passive: true });
+    
+    return () => {
+      document.removeEventListener('mouseenter', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+    };
+  }, []);
 
   // Enhanced cursor blinking effect
   useEffect(() => {
@@ -203,53 +249,74 @@ const ModernHero = () => {
     return () => clearTimeout(timeout);
   }, [displayText, isTyping, currentRole, isPaused]);
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.3,
+  // Memoized animation variants for performance
+  const animationVariants = useMemo(() => ({
+    container: {
+      hidden: { opacity: 0 },
+      visible: {
+        opacity: 1,
+        transition: {
+          staggerChildren: shouldReduceMotion ? 0 : 0.2,
+          delayChildren: shouldReduceMotion ? 0 : 0.3,
+        }
+      }
+    },
+    item: {
+      hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 30 },
+      visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+          duration: shouldReduceMotion ? 0.3 : 0.8,
+          ease: "easeOut"
+        }
+      }
+    },
+    image: {
+      hidden: { opacity: 0, scale: shouldReduceMotion ? 1 : 0.8, rotateY: shouldReduceMotion ? 0 : -30 },
+      visible: {
+        opacity: 1,
+        scale: 1,
+        rotateY: 0,
+        transition: {
+          duration: shouldReduceMotion ? 0.5 : 1.2,
+          ease: "easeOut"
+        }
+      }
+    },
+    float: shouldReduceMotion ? {} : {
+      animate: {
+        y: [-10, 10, -10],
+        transition: {
+          duration: 4,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }
       }
     }
-  };
+  }), [shouldReduceMotion]);
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.8,
-        ease: "easeOut"
+  // Performance monitoring for Vercel
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'performance' in window && isInView) {
+      const observer = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        entries.forEach((entry) => {
+          if (entry.name.includes('hero') && entry.duration > 100) {
+            console.warn('Hero performance issue:', entry.name, entry.duration);
+          }
+        });
+      });
+      
+      try {
+        observer.observe({ entryTypes: ['measure', 'navigation'] });
+      } catch (e) {
+        // Fallback for older browsers
       }
+      
+      return () => observer.disconnect();
     }
-  };
-
-  const imageVariants = {
-    hidden: { opacity: 0, scale: 0.8, rotateY: -30 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      rotateY: 0,
-      transition: {
-        duration: 1.2,
-        ease: "easeOut"
-      }
-    }
-  };
-
-  const floatVariants = {
-    animate: {
-      y: [-10, 10, -10],
-      transition: {
-        duration: 4,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  };
+  }, [isInView]);
 
   return (
     <Box
@@ -271,8 +338,8 @@ const ModernHero = () => {
         }
       }}
     >
-      {/* Enhanced 3D Background with Enterprise Scene Manager */}
-      {!isMobile && !shouldReduceMotion && (
+      {/* Ultra-Optimized 3D Background - Lightweight & Fast */}
+      {ENABLE_3D && show3D && (
         <Box
           sx={{
             position: 'absolute',
@@ -280,33 +347,53 @@ const ModernHero = () => {
             left: 0,
             width: '100%',
             height: '100%',
-            opacity: 0.8,
+            opacity: shouldReduceMotion ? 0.3 : 0.5,
             zIndex: 1,
             pointerEvents: 'none'
           }}
         >
-          <Suspense fallback={<div className="loading-3d">Loading 3D Scene...</div>}>
+          <Suspense fallback={<OptimizedParticles />}>
             <Canvas
-              camera={{ position: [0, 0, 10], fov: 75 }}
-              gl={{ 
-                antialias: false, 
-                alpha: true,
-                powerPreference: "default"
+              camera={{ 
+                position: [0, 0, 8],
+                fov: lowPower3D ? 52 : 65,
+                near: 1,
+                far: 20
               }}
+              gl={{ 
+                antialias: false,
+                alpha: true,
+                powerPreference: "low-power",
+                precision: "lowp",
+                stencil: false,
+                depth: false,
+                preserveDrawingBuffer: false,
+                logarithmicDepthBuffer: false
+              }}
+              dpr={lowPower3D ? 1 : pixelRatio}
               style={{ pointerEvents: 'none' }}
+              frameloop={lowPower3D ? "demand" : "always"}
+              performance={{ 
+                min: 0.1,
+                max: lowPower3D ? 0.6 : 1
+              }}
+              onCreated={({ gl }) => {
+                // Additional optimizations
+                gl.setClearColor(0x000000, 0);
+                gl.setPixelRatio(lowPower3D ? 1 : pixelRatio);
+              }}
             >
-              <HeroScene3D
-                mousePosition={sceneManager.mousePosition}
-                scrollProgress={sceneManager.scrollProgress}
-                isVisible={isInView}
+              <HeroScene3D 
+                lowPerformanceMode={lowPower3D}
+                reducedMotion={shouldReduceMotion}
               />
             </Canvas>
           </Suspense>
         </Box>
       )}
 
-      {/* Animated Background Particles for Mobile/Low Performance */}
-      {(isMobile || shouldReduceMotion) && <FloatingParticles />}
+      {/* Optimized particles for all devices */}
+      <OptimizedParticles />
 
       <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 10 }}>
         <EnterpriseMotion.HeroContainer>
@@ -578,7 +665,7 @@ const ModernHero = () => {
                     ].map((skill, index) => (
                       <motion.div
                         key={skill}
-                        variants={itemVariants}
+                        variants={animationVariants.item}
                         whileHover={shouldReduceMotion ? {} : { scale: 1.1, y: -2 }}
                       >
                         <Chip
@@ -610,16 +697,16 @@ const ModernHero = () => {
                     height: { xs: 350, md: 420, lg: 480 },
                   }}
                 >
-                  {/* Glowing background */}
+                  {/* Optimized glowing background */}
                   <Box
                     sx={{
                       position: 'absolute',
-                      inset: -4,
+                      inset: -2,
                       background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #22d3ee)',
                       borderRadius: '2rem',
-                      filter: 'blur(20px)',
-                      opacity: 0.7,
-                      animation: shouldReduceMotion ? 'none' : 'pulse 3s ease-in-out infinite alternate'
+                      filter: 'blur(12px)',
+                      opacity: shouldReduceMotion ? 0.4 : 0.6,
+                      animation: shouldReduceMotion ? 'none' : 'pulse 4s ease-in-out infinite alternate'
                     }}
                   />
                   
@@ -632,19 +719,27 @@ const ModernHero = () => {
                       borderRadius: '2rem',
                       overflow: 'hidden',
                       background: 'rgba(255, 255, 255, 0.05)',
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      backdropFilter: shouldReduceMotion ? 'blur(8px)' : 'blur(16px)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
                       transform: 'perspective(1000px) rotateY(-5deg)',
                     }}
                   >
                     <img
                       src={heroImg}
-                      alt="Gading Aditya Perdana"
+                      alt="Gading Aditya Perdana - AI/ML Engineer"
+                      loading="eager"
+                      decoding="async"
                       style={{
                         width: '100%',
                         height: '100%',
                         objectFit: 'cover',
                         borderRadius: '2rem',
+                        willChange: shouldReduceMotion ? 'auto' : 'transform',
+                        transform: 'translateZ(0)', // Force GPU layer
+                      }}
+                      onLoad={(e) => {
+                        // Optimize image rendering
+                        e.target.style.imageRendering = 'optimizeQuality';
                       }}
                     />
                     
@@ -659,32 +754,22 @@ const ModernHero = () => {
                     />
                   </Box>
 
-                  {/* Decorative elements */}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: -20,
-                      right: -20,
-                      width: 40,
-                      height: 40,
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #22d3ee, #6366f1)',
-                      animation: shouldReduceMotion ? 'none' : 'bounce-subtle 2s ease-in-out infinite'
-                    }}
-                  />
-                  
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      bottom: -10,
-                      left: -10,
-                      width: 30,
-                      height: 30,
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
-                      animation: shouldReduceMotion ? 'none' : 'float 4s ease-in-out infinite'
-                    }}
-                  />
+                  {/* Simplified decorative element */}
+                  {!shouldReduceMotion && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: -15,
+                        right: -15,
+                        width: 24,
+                        height: 24,
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #22d3ee, #6366f1)',
+                        animation: 'pulse 3s ease-in-out infinite alternate',
+                        opacity: 0.8
+                      }}
+                    />
+                  )}
                 </Box>
               </EnterpriseMotion.AboutImage>
             </Box>

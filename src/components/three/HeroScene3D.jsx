@@ -4,31 +4,34 @@ import { Sphere, Torus, Octahedron, Float, Trail, Sparkles, Preload } from '@rea
 import { motion } from 'framer-motion-3d';
 import * as THREE from 'three';
 
-// Quantum Particle System for Hero
-export const QuantumParticles = ({ count = 100 }) => {
+// Ultra-Optimized Particle System for Hero
+export const QuantumParticles = ({ count = 25, lowPerformanceMode = false }) => {
   const particlesRef = useRef();
   const [hovered, setHovered] = useState(false);
   const [startTime, setStartTime] = useState(null);
 
+  // Reduced particle count for performance
+  const optimizedCount = lowPerformanceMode ? Math.min(count, 10) : Math.min(count, 25);
+
   const particles = useMemo(() => {
     const temp = [];
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < optimizedCount; i++) {
       temp.push({
         position: [
-          (Math.random() - 0.5) * 30,
-          (Math.random() - 0.5) * 30,
-          (Math.random() - 0.5) * 30
+          (Math.random() - 0.5) * 20, // Reduced range
+          (Math.random() - 0.5) * 20,
+          (Math.random() - 0.5) * 10
         ],
-        scale: Math.random() * 0.5 + 0.1,
-        speed: Math.random() * 0.02 + 0.01,
-        color: new THREE.Color().setHSL(Math.random() * 0.3 + 0.6, 0.8, 0.7)
+        scale: Math.random() * 0.3 + 0.1, // Reduced size
+        speed: lowPerformanceMode ? 0.005 : (Math.random() * 0.015 + 0.005), // Slower
+        color: new THREE.Color().setHSL(Math.random() * 0.2 + 0.65, 0.7, 0.6) // Less variation
       });
     }
     return temp;
-  }, [count]);
+  }, [optimizedCount, lowPerformanceMode]);
 
   useFrame((state) => {
-    if (!particlesRef.current) return;
+    if (!particlesRef.current || lowPerformanceMode) return;
     
     // Initialize start time after first frame
     if (!startTime) {
@@ -40,13 +43,16 @@ export const QuantumParticles = ({ count = 100 }) => {
     const elapsed = state.clock.elapsedTime - startTime;
     if (elapsed < 0.3) return;
     
+    // Skip frames for better performance
+    if (state.frameloop === 'demand' && Math.floor(state.clock.elapsedTime * 30) % 3 !== 0) return;
+    
     particles.forEach((particle, i) => {
       const child = particlesRef.current.children[i];
       if (child) {
-        child.position.y += Math.sin(state.clock.elapsedTime * particle.speed + i) * 0.01; // Reduced speed
-        child.position.x += Math.cos(state.clock.elapsedTime * particle.speed + i) * 0.005; // Reduced speed
-        child.rotation.y += particle.speed * 0.5; // Reduced speed
-        child.material.opacity = 0.6 + Math.sin(state.clock.elapsedTime * 1.5 + i) * 0.4; // Reduced speed
+        child.position.y += Math.sin(state.clock.elapsedTime * particle.speed + i) * 0.005; // Ultra reduced speed
+        child.position.x += Math.cos(state.clock.elapsedTime * particle.speed + i) * 0.002; // Ultra reduced speed
+        child.rotation.y += particle.speed * 0.3; // Ultra reduced rotation
+        child.material.opacity = 0.4 + Math.sin(state.clock.elapsedTime * 0.8 + i) * 0.2; // Ultra reduced opacity variation
       }
     });
   });
@@ -75,7 +81,7 @@ export const QuantumParticles = ({ count = 100 }) => {
 };
 
 // Morphing Geometric Shapes
-export const MorphingShapes = () => {
+export const MorphingShapes = ({ lowPerformanceMode = false, reducedMotion = false }) => {
   const groupRef = useRef();
   const shapeRefs = useRef([]);
 
@@ -95,48 +101,58 @@ export const MorphingShapes = () => {
     }
   });
 
-  const shapes = [
-    { Component: Octahedron, position: [-8, 0, 0], color: '#6366f1' },
-    { Component: Torus, position: [0, 0, 0], color: '#22d3ee', args: [2, 0.5, 16, 32] },
-    { Component: Sphere, position: [8, 0, 0], color: '#8b5cf6' }
-  ];
+  // Ultra-optimized shapes - reduced complexity
+  const shapes = lowPerformanceMode ? 
+    [{ Component: Sphere, position: [0, 0, 0], color: '#6366f1' }] :
+    [
+      { Component: Octahedron, position: [-6, 0, 0], color: '#6366f1' },
+      { Component: Torus, position: [0, 0, 0], color: '#22d3ee', args: [1.5, 0.3, 8, 16] }, // Reduced segments
+      { Component: Sphere, position: [6, 0, 0], color: '#8b5cf6' }
+    ];
 
   return (
     <group ref={groupRef}>
       {shapes.map((shape, i) => (
-        <Float key={i} speed={2} rotationIntensity={1} floatIntensity={2}>
+        <Float 
+          key={i} 
+          speed={lowPerformanceMode ? 0.5 : 1.5} 
+          rotationIntensity={lowPerformanceMode ? 0.2 : 0.8} 
+          floatIntensity={lowPerformanceMode ? 0.5 : 1.5}
+        >
           <motion.group
-            initial={{ scale: 0, rotateY: -180 }}
+            initial={reducedMotion ? { scale: 1 } : { scale: 0, rotateY: -180 }}
             animate={{ scale: 1, rotateY: 0 }}
-            transition={{ duration: 2, delay: i * 0.5, ease: "backOut" }}
+            transition={{ 
+              duration: reducedMotion ? 0.3 : 1.5, 
+              delay: reducedMotion ? 0 : i * 0.3, 
+              ease: "easeOut" 
+            }}
           >
             <shape.Component
               ref={(el) => (shapeRefs.current[i] = el)}
               position={shape.position}
               args={shape.args}
             >
-              <meshStandardMaterial
+              <meshBasicMaterial // Changed to meshBasicMaterial for better performance
                 color={shape.color}
                 transparent
-                opacity={0.8}
-                emissive={shape.color}
-                emissiveIntensity={0.3}
-                roughness={0.1}
-                metalness={0.8}
+                opacity={lowPerformanceMode ? 0.4 : 0.6}
               />
             </shape.Component>
             
-            {/* Trailing effects */}
-            <Trail
-              width={2}
-              length={8}
-              color={shape.color}
-              attenuation={(t) => t * t}
-            >
-              <Sphere scale={0.3} position={shape.position}>
-                <meshStandardMaterial color={shape.color} emissive={shape.color} />
-              </Sphere>
-            </Trail>
+            {/* Conditional trailing effects - only for high performance */}
+            {!lowPerformanceMode && !reducedMotion && (
+              <Trail
+                width={1}
+                length={4}
+                color={shape.color}
+                attenuation={(t) => t * t}
+              >
+                <Sphere scale={0.2} position={shape.position}>
+                  <meshBasicMaterial color={shape.color} />
+                </Sphere>
+              </Trail>
+            )}
           </motion.group>
         </Float>
       ))}
@@ -239,40 +255,46 @@ export const NeuralNetwork = () => {
   );
 };
 
-// Main Hero 3D Scene
-export const HeroScene3D = ({ mousePosition = { x: 0, y: 0 } }) => {
+// Main Hero 3D Scene - Ultra Optimized
+export const HeroScene3D = ({ 
+  mousePosition = { x: 0, y: 0 }, 
+  lowPerformanceMode = false,
+  reducedMotion = false 
+}) => {
   const sceneRef = useRef();
   
   useFrame((state) => {
-    if (sceneRef.current) {
-      // Parallax effect based on mouse movement
-      sceneRef.current.rotation.y = mousePosition.x * 0.1;
-      sceneRef.current.rotation.x = mousePosition.y * 0.05;
+    if (sceneRef.current && !reducedMotion && !lowPerformanceMode) {
+      // Reduced parallax effect for better performance
+      sceneRef.current.rotation.y = mousePosition.x * 0.05;
+      sceneRef.current.rotation.x = mousePosition.y * 0.025;
     }
   });
 
   return (
     <group ref={sceneRef}>
-      {/* Ambient lighting */}
-      <ambientLight intensity={0.3} />
-      <pointLight position={[10, 10, 10]} intensity={1} color="#6366f1" />
-      <pointLight position={[-10, -10, -10]} intensity={0.5} color="#22d3ee" />
-      <spotLight
-        position={[0, 20, 0]}
-        angle={0.3}
-        penumbra={1}
-        intensity={0.5}
-        color="#8b5cf6"
-        castShadow
+      {/* Optimized lighting - reduced complexity */}
+      <ambientLight intensity={lowPerformanceMode ? 0.5 : 0.4} />
+      {!lowPerformanceMode && (
+        <>
+          <pointLight position={[8, 8, 8]} intensity={0.6} color="#6366f1" />
+          <pointLight position={[-8, -8, -8]} intensity={0.3} color="#22d3ee" />
+        </>
+      )}
+      
+      {/* Ultra-optimized 3D Elements */}
+      <QuantumParticles 
+        count={lowPerformanceMode ? 10 : 30} 
+        lowPerformanceMode={lowPerformanceMode} 
       />
+      <MorphingShapes 
+        lowPerformanceMode={lowPerformanceMode}
+        reducedMotion={reducedMotion}
+      />
+      {!lowPerformanceMode && <NeuralNetwork />}
       
-      {/* 3D Elements */}
-      <QuantumParticles count={80} />
-      <MorphingShapes />
-      <NeuralNetwork />
-      
-      {/* Preload for performance */}
-      <Preload all />
+      {/* Conditional preload */}
+      {!lowPerformanceMode && <Preload all />}
     </group>
   );
 };
