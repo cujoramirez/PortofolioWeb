@@ -58,7 +58,7 @@ const EnhancedHero = ({ introComplete }) => {
   }, [pointerX, pointerY]);
 
   const tags = useMemo(
-    () => ['AI Systems', 'Real-Time Research', 'Creative Engineering'],
+    () => ['AI Systems', 'Research', 'Creative Engineering'],
     []
   );
 
@@ -231,7 +231,7 @@ const EnhancedHero = ({ introComplete }) => {
                 : '0 24px 60px rgba(79, 70, 229, 0.35)',
             }}
           >
-            Building delightful AI experiences for the modern web
+            Gading Aditya Perdana
           </Typography>
         </motion.div>
 
@@ -250,9 +250,8 @@ const EnhancedHero = ({ introComplete }) => {
               fontSize: { xs: '1.05rem', md: '1.2rem' },
             }}
           >
-            I craft immersive interfaces that blend research-grade machine learning with expressive design.
-            Lightweight, responsive and accessible by default — built for teams that expect more from their product
-            experiences.
+            Welcome to my portfolio, where I blend creativity and technology,
+            showcasing interfaces that unite advanced machine learning and research with elegant, polished design.
           </Typography>
         </motion.div>
 

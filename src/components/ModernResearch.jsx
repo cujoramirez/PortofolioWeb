@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect, useRef } from 'react';
+import React, { memo, useState, useRef, useMemo, useCallback } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import EnterpriseMotion from './animations/EnterpriseMotion';
 import { 
@@ -40,7 +40,6 @@ const ModernResearch = memo(() => {
   const theme = useTheme();
   const { performanceTier } = useSystemProfile();
   const [selectedPaper, setSelectedPaper] = useState(null);
-  const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef(null);
   
   const { scrollYProgress } = useScroll({
@@ -48,77 +47,46 @@ const ModernResearch = memo(() => {
     offset: ["start end", "end start"]
   });
   
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
   const useReducedMotion = performanceTier === 'low';
+  const isInteractiveMotion = !useReducedMotion;
 
   // Parallax transforms for background elements
   const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
-  const titleGradient = useTransform(
-    scrollYProgress, 
-    [0, 0.5, 1], 
-    ['0% 50%', '50% 50%', '100% 50%']
-  );
-
   // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
+  const chipVariants = useMemo(() => ({
+    hidden: { opacity: 0, scale: 0.9, y: 8 },
+    visible: (index = 0) => ({
       opacity: 1,
-      transition: {
-        duration: 0.8,
-        staggerChildren: useReducedMotion ? 0 : 0.2
-      }
-    }
-  };
-
-  const cardVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: 60,
-      scale: 0.95
-    },
-    visible: { 
-      opacity: 1, 
+      scale: 1,
       y: 0,
-      scale: 1,
-      transition: { 
-        duration: 0.7,
-        ease: "easeOut"
+      transition: {
+        duration: 0.25,
+        ease: 'easeOut',
+        delay: isInteractiveMotion ? index * 0.05 : 0
       }
-    }
-  };
-
-  const cardHoverVariants = {
-    hover: {
-      y: -12,
-      scale: 1.02,
-      transition: { duration: 0.3 }
-    }
-  };
-
-  const chipVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: { duration: 0.3 }
-    },
+    }),
     hover: {
       scale: 1.05,
+      y: -2,
       transition: { duration: 0.2 }
     }
-  };
+  }), [isInteractiveMotion]);
 
-  const handlePaperClick = (paper) => {
+  const processedPapers = useMemo(() =>
+    RESEARCH_PAPERS.map((paper) => {
+      const previewKeywords = paper.keywords?.slice(0, 5) ?? [];
+      const extraKeywords = Math.max(0, (paper.keywords?.length ?? 0) - previewKeywords.length);
+      return { ...paper, previewKeywords, extraKeywords };
+    }),
+  []);
+
+  const handlePaperClick = useCallback((paper) => {
     setSelectedPaper(paper);
-  };
+  }, []);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setSelectedPaper(null);
-  };
+  }, []);
 
   return (
     <Box
@@ -144,7 +112,7 @@ const ModernResearch = memo(() => {
           left: 0,
           right: 0,
           bottom: 0,
-          y: backgroundY,
+          ...(isInteractiveMotion ? { y: backgroundY } : {}),
           pointerEvents: 'none'
         }}
       >
@@ -223,7 +191,7 @@ const ModernResearch = memo(() => {
 
           {/* Research Papers Grid */}
           <Grid container spacing={4}>
-            {RESEARCH_PAPERS.map((paper, index) => (
+            {processedPapers.map((paper, index) => (
               <Grid size={{ xs: 12 }} key={index}>
                 <EnterpriseMotion.ResearchCard>
                   <Card
@@ -385,49 +353,64 @@ const ModernResearch = memo(() => {
                             Keywords
                           </Typography>
                           <Box display="flex" flexWrap="wrap" gap={1}>
-                            <AnimatePresence>
-                              {paper.keywords?.slice(0, 5).map((keyword, keywordIndex) => (
-                                <motion.div
-                                  key={keyword}
-                                  variants={chipVariants}
-                                  initial="hidden"
-                                  animate="visible"
-                                  exit="hidden"
-                                  whileHover="hover"
-                                  style={{ 
-                                    animationDelay: `${keywordIndex * 0.1}s` 
-                                  }}
-                                >
-                                  <Chip
-                                    label={keyword}
-                                    size="small"
-                                    variant="outlined"
-                                    sx={{
-                                      borderColor: alpha(theme.palette.primary.main, 0.3),
-                                      color: theme.palette.primary.main,
-                                      backgroundColor: alpha(theme.palette.primary.main, 0.05),
-                                      fontSize: '0.75rem',
-                                      '&:hover': {
-                                        backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                                        borderColor: theme.palette.primary.main
-                                      }
-                                    }}
-                                  />
-                                </motion.div>
-                              ))}
-                              {paper.keywords?.length > 5 && (
+                            {isInteractiveMotion ? (
+                              <AnimatePresence initial={false}>
+                                {paper.previewKeywords.map((keyword, keywordIndex) => (
+                                  <motion.div
+                                    key={keyword}
+                                    variants={chipVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    exit="hidden"
+                                    whileHover="hover"
+                                    custom={keywordIndex}
+                                  >
+                                    <Chip
+                                      label={keyword}
+                                      size="small"
+                                      variant="outlined"
+                                      sx={{
+                                        borderColor: alpha(theme.palette.primary.main, 0.3),
+                                        color: theme.palette.primary.main,
+                                        backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                                        fontSize: '0.75rem',
+                                        '&:hover': {
+                                          backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                          borderColor: theme.palette.primary.main
+                                        }
+                                      }}
+                                    />
+                                  </motion.div>
+                                ))}
+                              </AnimatePresence>
+                            ) : (
+                              paper.previewKeywords.map((keyword) => (
                                 <Chip
-                                  label={`+${paper.keywords.length - 5} more`}
+                                  key={keyword}
+                                  label={keyword}
                                   size="small"
-                                  variant="filled"
+                                  variant="outlined"
                                   sx={{
-                                    backgroundColor: alpha(theme.palette.secondary.main, 0.1),
-                                    color: theme.palette.secondary.main,
+                                    borderColor: alpha(theme.palette.primary.main, 0.3),
+                                    color: theme.palette.primary.main,
+                                    backgroundColor: alpha(theme.palette.primary.main, 0.05),
                                     fontSize: '0.75rem'
                                   }}
                                 />
-                              )}
-                            </AnimatePresence>
+                              ))
+                            )}
+                            {paper.extraKeywords > 0 && (
+                              <Chip
+                                label={`+${paper.extraKeywords} more`}
+                                size="small"
+                                variant="filled"
+                                sx={{
+                                  backgroundColor: alpha(theme.palette.secondary.main, 0.1),
+                                  color: theme.palette.secondary.main,
+                                  fontSize: '0.75rem'
+                                }}
+                              />
+                            )}
                           </Box>
                         </Box>
                       </CardContent>
@@ -475,7 +458,7 @@ const ModernResearch = memo(() => {
                   </Grid>
                   <Grid size={{ xs: 6, sm: 3 }} sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" fontWeight={800} color="secondary.main">
-                      4
+                      3
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       First Author

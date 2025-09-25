@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import EnterpriseMotion from './animations/EnterpriseMotion';
 import { 
@@ -19,7 +19,7 @@ import {
   Container,
   useTheme,
   alpha,
-  Avatar,
+  useMediaQuery,
   IconButton,
   Tooltip
 } from '@mui/material';
@@ -48,71 +48,9 @@ const ModernExperience = memo(() => {
   const theme = useTheme();
   const { performanceTier } = useSystemProfile();
   const [selectedCard, setSelectedCard] = useState(null);
-  const [isVisible, setIsVisible] = useState(false);
-
-  // Responsive: detect mobile (xs) width
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    setIsVisible(true);
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 400); // 400px for some margin
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   const useReducedMotion = performanceTier === 'low';
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        staggerChildren: useReducedMotion ? 0 : 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { 
-      opacity: 0, 
-      x: -30,
-      scale: 0.95
-    },
-    visible: { 
-      opacity: 1, 
-      x: 0,
-      scale: 1,
-      transition: { 
-        duration: 0.5,
-        ease: "easeOut"
-      }
-    }
-  };
-
-  const cardHoverVariants = {
-    hover: {
-      scale: 1.02,
-      y: -5,
-      transition: { duration: 0.2 }
-    }
-  };
-
-  const chipVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: { duration: 0.3 }
-    },
-    hover: {
-      scale: 1.1,
-      transition: { duration: 0.2 }
-    }
-  };
+  const isMobile = useMediaQuery('(max-width:400px)', { noSsr: true });
 
   return (
     <Box
@@ -186,13 +124,12 @@ const ModernExperience = memo(() => {
             minWidth: 0,
           }}>
             <Timeline position={isMobile ? 'right' : 'alternate'} sx={{ minWidth: isMobile ? 320 : 'unset' }}>
-            <AnimatePresence>
               {enhancedExperiences.map((experience, index) => {
                 const IconComponent = experience.icon;
+                const isLeftColumn = !isMobile && index % 2 === 1;
                 
                 return (
-                  <EnterpriseMotion.ExperienceCard key={experience.id}>
-                    <TimelineItem>
+                  <TimelineItem key={experience.id}>
                       {/* Timeline Date */}
                       {/* Timeline Date (always show on mobile, only in opposite content on md+) */}
                       <TimelineOppositeContent
@@ -247,13 +184,10 @@ const ModernExperience = memo(() => {
 
                       {/* Experience Card */}
                       <TimelineContent sx={{ py: { xs: 1, sm: '12px' }, px: { xs: 0.5, sm: 2 }, minWidth: 0 }}>
-                        <motion.div
-                          variants={cardHoverVariants}
-                          whileHover={!useReducedMotion ? "hover" : undefined}
-                          onClick={() => setSelectedCard(selectedCard === experience.id ? null : experience.id)}
-                        >
+                        <EnterpriseMotion.ExperienceCard>
                           <Card
                             elevation={selectedCard === experience.id ? 8 : 2}
+                            onClick={() => setSelectedCard(selectedCard === experience.id ? null : experience.id)}
                             sx={{
                               background: selectedCard === experience.id 
                                 ? `linear-gradient(135deg, 
@@ -285,8 +219,16 @@ const ModernExperience = memo(() => {
                               </Typography>
 
                               {/* Role and Company */}
-                              <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" mb={2} gap={1}>
-                                <Box>
+                              <Box
+                                display="flex"
+                                flexDirection={{ xs: 'column', sm: 'row' }}
+                                alignItems={{ xs: 'flex-start', sm: isLeftColumn ? 'flex-end' : 'center' }}
+                                justifyContent={{ xs: 'flex-start', sm: isLeftColumn ? 'flex-end' : 'space-between' }}
+                                textAlign={{ xs: 'left', sm: isLeftColumn ? 'right' : 'left' }}
+                                mb={2}
+                                gap={1}
+                              >
+                                <Box sx={{ flexGrow: 1 }}>
                                   <Typography
                                     variant="h6"
                                     component="h3"
@@ -295,6 +237,7 @@ const ModernExperience = memo(() => {
                                       color: theme.palette.text.primary,
                                       mb: 0.5,
                                       fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                                      textAlign: { xs: 'left', sm: isLeftColumn ? 'right' : 'left' }
                                     }}
                                   >
                                     {experience.role}
@@ -302,7 +245,11 @@ const ModernExperience = memo(() => {
                                   <Typography
                                     variant="body1"
                                     color="secondary"
-                                    sx={{ fontWeight: 500, fontSize: { xs: '0.95rem', sm: '1rem' } }}
+                                    sx={{
+                                      fontWeight: 500,
+                                      fontSize: { xs: '0.95rem', sm: '1rem' },
+                                      textAlign: { xs: 'left', sm: isLeftColumn ? 'right' : 'left' }
+                                    }}
                                   >
                                     {experience.company}
                                   </Typography>
@@ -318,6 +265,7 @@ const ModernExperience = memo(() => {
                                       size="small"
                                       sx={{ 
                                         color: theme.palette.primary.main,
+                                        alignSelf: { xs: 'flex-start', sm: isLeftColumn ? 'flex-end' : 'center' },
                                         '&:hover': {
                                           backgroundColor: alpha(theme.palette.primary.main, 0.1)
                                         }
@@ -333,51 +281,56 @@ const ModernExperience = memo(() => {
                               <Typography
                                 variant="body2"
                                 color="text.secondary"
-                                sx={{ mb: 2, lineHeight: 1.6, fontSize: { xs: '0.95rem', sm: '1rem' } }}
+                                sx={{
+                                  mb: 2,
+                                  lineHeight: 1.6,
+                                  fontSize: { xs: '0.95rem', sm: '1rem' },
+                                  textAlign: { xs: 'left', sm: isLeftColumn ? 'right' : 'left' }
+                                }}
                               >
                                 {experience.description}
                               </Typography>
 
                               {/* Technologies */}
-                              <Box mb={2}>
+                              <Box mb={2} sx={{ textAlign: { xs: 'left', sm: isLeftColumn ? 'right' : 'left' } }}>
                                 <Typography
                                   variant="subtitle2"
-                                  sx={{ mb: 1, fontWeight: 600, fontSize: { xs: '0.95rem', sm: '1rem' } }}
+                                  sx={{
+                                    mb: 1,
+                                    fontWeight: 600,
+                                    fontSize: { xs: '0.95rem', sm: '1rem' },
+                                    textAlign: { xs: 'left', sm: isLeftColumn ? 'right' : 'left' }
+                                  }}
                                 >
                                   Technologies
                                 </Typography>
-                                <Box display="flex" flexWrap="wrap" gap={0.5}>
-                                  <AnimatePresence>
-                                    {experience.technologies.map((tech, techIndex) => (
-                                      <motion.div
-                                        key={tech}
-                                        variants={chipVariants}
-                                        initial="hidden"
-                                        animate="visible"
-                                        exit="hidden"
-                                        whileHover="hover"
-                                        style={{ 
-                                          animationDelay: `${techIndex * 0.05}s` 
-                                        }}
-                                      >
-                                        <Chip
-                                          label={tech}
-                                          size="small"
-                                          variant="outlined"
-                                          sx={{
-                                            borderColor: alpha(theme.palette.primary.main, 0.3),
-                                            color: theme.palette.primary.main,
-                                            backgroundColor: alpha(theme.palette.primary.main, 0.05),
-                                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                                            '&:hover': {
-                                              backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                                              borderColor: theme.palette.primary.main
-                                            }
-                                          }}
-                                        />
-                                      </motion.div>
-                                    ))}
-                                  </AnimatePresence>
+                                <Box
+                                  display="flex"
+                                  flexWrap="wrap"
+                                  gap={0.5}
+                                  justifyContent={{ xs: 'flex-start', sm: isLeftColumn ? 'flex-end' : 'flex-start' }}
+                                >
+                                  {experience.technologies.map((tech, techIndex) => (
+                                    <Chip
+                                      key={tech}
+                                      label={tech}
+                                      size="small"
+                                      variant="outlined"
+                                      sx={{
+                                        borderColor: alpha(theme.palette.primary.main, 0.3),
+                                        color: theme.palette.primary.main,
+                                        backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                                        fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                                        transition: 'transform 0.2s ease, background-color 0.2s ease',
+                                        transform: `translateY(${!useReducedMotion ? Math.sin(techIndex) * 0.2 : 0}px)`,
+                                        '&:hover': {
+                                          backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                          borderColor: theme.palette.primary.main,
+                                          transform: 'translateY(-1px)'
+                                        }
+                                      }}
+                                    />
+                                  ))}
                                 </Box>
                               </Box>
 
@@ -416,13 +369,11 @@ const ModernExperience = memo(() => {
                               </AnimatePresence>
                             </CardContent>
                           </Card>
-                        </motion.div>
+                        </EnterpriseMotion.ExperienceCard>
                       </TimelineContent>
                     </TimelineItem>
-                  </EnterpriseMotion.ExperienceCard>
                 );
               })}
-            </AnimatePresence>
           </Timeline>
         </Box>
         </EnterpriseMotion.ExperienceContainer>

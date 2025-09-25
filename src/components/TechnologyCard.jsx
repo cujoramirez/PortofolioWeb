@@ -10,9 +10,9 @@ const TechnologyCard = memo(
     hoveredTechRef, 
     isMobile, 
     isTablet, 
-    isIOSSafari, 
-    contentReady,
-    performanceTier
+  isIOSSafari, 
+  contentReady,
+    enableHoverFx = true
   }) => {
     // Check if we're on a mobile/tablet device
     const isHandheld = isMobile || isTablet;
@@ -140,50 +140,54 @@ const TechnologyCard = memo(
         variants={desktopContainerVariants}
         initial="hidden"
         animate="visible"
-        whileHover="hover"
+        whileHover={enableHoverFx ? "hover" : undefined}
         style={{
           width: '100%',
           maxWidth: cardSize,
           aspectRatio: '1/1',
           boxShadow:
-            hoveredTech === index
+            enableHoverFx && hoveredTech === index
               ? `0 0 20px 3px ${tech.color}55`
               : `0 0 25px rgba(0, 0, 0, 0.4)`,
           transformOrigin: "center",
           opacity: contentReady ? 1 : 0,
         }}
-        onHoverStart={() => {
+        onHoverStart={enableHoverFx ? () => {
           setHoveredTech(index);
-          hoveredTechRef.current = index;
-        }}
-        onHoverEnd={() => {
+          if (hoveredTechRef) {
+            hoveredTechRef.current = index;
+          }
+        } : undefined}
+        onHoverEnd={enableHoverFx ? () => {
           setHoveredTech(null);
-          hoveredTechRef.current = null;
-        }}
+          if (hoveredTechRef) {
+            hoveredTechRef.current = null;
+          }
+        } : undefined}
       >
         {/* Desktop animated border glow */}
         <motion.div
           className="absolute inset-0 rounded-xl z-0"
-          animate={{
+          animate={enableHoverFx ? {
             boxShadow: [
               `0 0 5px ${tech.color}33`, 
               `0 0 12px ${tech.color}44`, 
               `0 0 5px ${tech.color}33`
             ],
-          }}
-          transition={{
+          } : undefined}
+          transition={enableHoverFx ? {
             duration: tech.pulseSpeed,
             repeat: Infinity,
             ease: "easeInOut",
-          }}
+          } : undefined}
         />
 
         {/* Icon with animations */}
         <motion.div
           className="relative flex-1 flex items-center justify-center"
           variants={desktopIconVariants}
-          animate="animate"
-          whileHover="hover"
+          animate={enableHoverFx ? "animate" : undefined}
+          whileHover={enableHoverFx ? "hover" : undefined}
           style={{ 
             position: "relative",
             zIndex: 2,
@@ -198,15 +202,15 @@ const TechnologyCard = memo(
               zIndex: 0,
               transform: "scale(1.5)",
             }}
-            animate={{
+            animate={enableHoverFx ? {
               opacity: [0.3, 0.7, 0.3],
               scale: [1.4, 1.6, 1.4],
-            }}
-            transition={{
+            } : undefined}
+            transition={enableHoverFx ? {
               duration: tech.pulseSpeed,
               repeat: Infinity,
               ease: "easeInOut",
-            }}
+            } : undefined}
           />
 
           <tech.icon
@@ -244,6 +248,7 @@ const TechnologyCard = memo(
     return (
       prevProps.contentReady === nextProps.contentReady &&
       prevProps.hoveredTech === nextProps.hoveredTech &&
+      prevProps.enableHoverFx === nextProps.enableHoverFx &&
       (prevProps.index === nextProps.hoveredTech) === (prevProps.hoveredTech === prevProps.index)
     );
   }

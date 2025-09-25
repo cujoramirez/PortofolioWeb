@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from "react";
+import React, { useState, Suspense, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ThemeProvider, 
@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import { muiTheme } from "./theme/muiTheme.js";
 import { useSystemProfile } from "./components/useSystemProfile.jsx";
+import { getPerformanceProfile } from "./utils/performanceOptimizations.js";
 
 // Import new loading and intro components
 import LoadingScreen from "./components/LoadingScreen.jsx";
@@ -21,30 +22,40 @@ import ModernAbout from "./components/ModernAbout.jsx";
 import AboutErrorBoundary from "./components/AboutErrorBoundary.jsx";
 import Technologies from "./components/Technologies.jsx";
 import ModernExperience from "./components/ModernExperience.jsx";
-import ModernContact from "./components/ModernContact.jsx";
+import OptimizedModernContact from "./components/OptimizedModernContact.jsx";
 import ModernProjects from "./components/ModernProjects.jsx";
-import Certifications from "./components/certificates.jsx";
+import OptimizedCertifications from "./components/OptimizedCertifications.jsx";
 
 // Only lazy load Research (least accessed)
 const ModernResearch = React.lazy(() => import("./components/ModernResearch.jsx"));
 
 // Main ModernApp component
 const ModernApp = () => {
+  // Performance-aware state management
+  const performanceProfile = useMemo(() => getPerformanceProfile(), []);
+  const skipIntroAnimations = performanceProfile.isLowEnd || performanceProfile.reducedMotion;
+  
   // State management for loading sequence
-  const [showLoading, setShowLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(!skipIntroAnimations);
   const [showIntro, setShowIntro] = useState(false);
-  const [introComplete, setIntroComplete] = useState(true);
-  const [showNavbar, setShowNavbar] = useState(false);
-  const [landingComplete, setLandingComplete] = useState(false);
+  const [introComplete, setIntroComplete] = useState(skipIntroAnimations);
+  const [showNavbar, setShowNavbar] = useState(skipIntroAnimations);
+  const [landingComplete, setLandingComplete] = useState(skipIntroAnimations);
   
   const { performanceTier, deviceType } = useSystemProfile();
 
-  // Handle loading sequence
+  // Handle loading sequence - skip on low-end devices
   const handleLoadingComplete = () => {
     setShowLoading(false);
-    setTimeout(() => {
-      setShowIntro(true);
-    }, 500);
+    if (skipIntroAnimations) {
+      setIntroComplete(true);
+      setShowNavbar(true);
+      setLandingComplete(true);
+    } else {
+      setTimeout(() => {
+        setShowIntro(true);
+      }, 500);
+    }
   };
 
   const handleIntroComplete = () => {
@@ -156,12 +167,12 @@ const ModernApp = () => {
               
               {/* Certifications Section */}
               <section id="certifications">
-                <Certifications />
+                <OptimizedCertifications />
               </section>
-              
+
               {/* Contact Section */}
               <section id="contact">
-                <ModernContact />
+                <OptimizedModernContact />
               </section>
             </Box>
           </motion.div>

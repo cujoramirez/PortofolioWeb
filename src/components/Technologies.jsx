@@ -1,17 +1,22 @@
-import React, { useState, useRef, memo, lazy, Suspense, useEffect, useMemo } from "react";
+import React, { useState, useRef, memo, lazy, Suspense, useEffect, useMemo, useCallback } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { Box, Container, Typography, Grid, Paper } from "@mui/material";
 import { Code, Psychology, Science, Architecture, Memory } from "@mui/icons-material";
-import { Canvas } from "@react-three/fiber";
 import TechnologyCard from "./TechnologyCard";
 import { technologies } from "./techData";
 import useDeviceDetection from "./useDeviceDetection";
 import { useSystemProfile } from './useSystemProfile';
-import { SceneManager } from "./three/SceneManager.jsx";
-import { TechConstellation } from "./three/InteractiveTechSphere.jsx";
 
 // Lazy-load enhanced light effects only for desktop
 const LightEffects = lazy(() => import("./LightEffects"));
+
+const CATEGORY_DEFINITIONS = [
+  { name: 'All', icon: Architecture, color: '#ffffff' },
+  { name: 'AI/ML', icon: Psychology, color: '#6366f1' },
+  { name: 'Frontend', icon: Code, color: '#22d3ee' },
+  { name: 'Backend', icon: Memory, color: '#10b981' },
+  { name: 'Other', icon: Science, color: '#8b5cf6' }
+];
 
 const Technologies = () => {
   const { performanceTier } = useSystemProfile();
@@ -20,10 +25,9 @@ const Technologies = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [hoveredTech, setHoveredTech] = useState(null);
   const hoveredTechRef = useRef(null);
+  const dormantHoverRef = useRef(null);
   const containerRef = useRef(null);
-  const isMountedRef = useRef(false);
-  const [contentReady, setContentReady] = useState(false);
-  const [animationsComplete, setAnimationsComplete] = useState(false);
+  const [isContentReady, setIsContentReady] = useState(false);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -34,42 +38,39 @@ const Technologies = () => {
   const titleY = useTransform(scrollYProgress, [0, 0.5], [20, 0]);
 
   const isHandheld = useMemo(() => isMobile || isTablet, [isMobile, isTablet]);
+  const shouldRenderInteractiveFx = useMemo(
+    () => !isHandheld && !isIOSSafari && performanceTier === "high",
+    [isHandheld, isIOSSafari, performanceTier]
+  );
+  const shouldAnimateBackdrop = useMemo(
+    () => !isHandheld && performanceTier !== "low",
+    [isHandheld, performanceTier]
+  );
+  const noop = useCallback(() => {}, []);
+  const effectiveHoveredTech = shouldRenderInteractiveFx ? hoveredTech : null;
+  const setHoveredTechHandler = shouldRenderInteractiveFx ? setHoveredTech : noop;
+  const hoverRef = shouldRenderInteractiveFx ? hoveredTechRef : dormantHoverRef;
 
   const shouldUseScrollTrigger = useMemo(() =>
     performanceTier !== "low" && !isIOSSafari && !isHandheld,
   [performanceTier, isIOSSafari, isHandheld]);
 
   useEffect(() => {
-    isMountedRef.current = true;
     if (isHandheld || isIOSSafari) {
-      setContentReady(true);
-      setAnimationsComplete(true);
-    } else {
-      const timer = setTimeout(() => {
-        if (isMountedRef.current) setContentReady(true);
-      }, 200);
-      const animationTimer = setTimeout(() => {
-        if (isMountedRef.current) setAnimationsComplete(true);
-      }, 2000);
-      return () => {
-        clearTimeout(timer);
-        clearTimeout(animationTimer);
-        isMountedRef.current = false;
-      };
+      setIsContentReady(true);
+      return;
     }
+
+    const frame = requestAnimationFrame(() => setIsContentReady(true));
+    return () => cancelAnimationFrame(frame);
   }, [isHandheld, isIOSSafari]);
 
-  const categories = [
-    { name: 'All', icon: Architecture, color: '#ffffff' },
-    { name: 'AI/ML', icon: Psychology, color: '#6366f1' },
-    { name: 'Frontend', icon: Code, color: '#22d3ee' },
-    { name: 'Backend', icon: Memory, color: '#10b981' },
-    { name: 'Other', icon: Science, color: '#8b5cf6' }
-  ];
-
-  const filteredTechnologies = selectedCategory === 'All'
-    ? technologies
-    : technologies.filter(tech => tech.category === selectedCategory);
+  const filteredTechnologies = useMemo(() => {
+    if (selectedCategory === 'All') {
+      return technologies;
+    }
+    return technologies.filter(tech => tech.category === selectedCategory);
+  }, [selectedCategory]);
 
   useEffect(() => {
     if (isIOSSafari) {
@@ -112,54 +113,30 @@ const Technologies = () => {
           position: 'absolute',
           inset: 0,
           background: 'radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.15), transparent 50%), radial-gradient(circle at 70% 80%, rgba(34, 211, 238, 0.15), transparent 50%)',
-          animation: performanceTier !== 'low' ? 'backgroundPulse 8s ease-in-out infinite alternate' : 'none'
+          animation: shouldAnimateBackdrop ? 'backgroundPulse 8s ease-in-out infinite alternate' : 'none'
         }
       }}
     >
-      {!isHandheld && performanceTier !== "low" && (
-        <SceneManager>
+      {shouldRenderInteractiveFx && (
+        <motion.div
+          style={{ position: 'absolute', inset: 0, zIndex: 2, mixBlendMode: 'screen', y: backgroundY, pointerEvents: 'none' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.45 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+        >
           <Box
             sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
               width: '100%',
               height: '100%',
-              opacity: 0.3,
-              zIndex: 2,
-              pointerEvents: 'auto'
+              background: 'radial-gradient(60% 80% at 20% 30%, rgba(99, 102, 241, 0.15), transparent), radial-gradient(80% 60% at 80% 70%, rgba(34, 211, 238, 0.15), transparent)',
+              // filter: 'blur(60px) saturate(120%)', // Removed heavy blur
+              opacity: 0.6
             }}
-          >
-            <Suspense fallback={
-              <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.8rem' }}>
-                Loading 3D Scene...
-              </Box>
-            }>
-              <Canvas
-                camera={{ position: [0, 0, 15], fov: 60 }}
-                onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
-                gl={{ antialias: performanceTier !== 'low', alpha: true, preserveDrawingBuffer: false }}
-                onError={(error) => console.warn('3D Canvas error:', error)}
-              >
-                <Suspense fallback={null}>
-                  <ambientLight intensity={0.2} />
-                  <pointLight position={[10, 10, 10]} intensity={0.5} />
-                  <pointLight position={[-10, -10, -10]} intensity={0.3} color="#8b5cf6" />
-                  {filteredTechnologies && filteredTechnologies.length > 0 && (
-                    <TechConstellation
-                      technologies={filteredTechnologies.slice(0, 12)}
-                      hoveredTech={hoveredTech}
-                      setHoveredTech={setHoveredTech}
-                    />
-                  )}
-                </Suspense>
-              </Canvas>
-            </Suspense>
-          </Box>
-        </SceneManager>
+          />
+        </motion.div>
       )}
 
-      {!isHandheld && performanceTier !== "low" && (
+      {shouldRenderInteractiveFx && (
         <>
           <motion.div style={{ position: 'absolute', inset: 0, zIndex: 1, y: backgroundY }}>
             <Suspense fallback={null}>
@@ -226,10 +203,10 @@ const Technologies = () => {
           </Box>
         </motion.div>
 
-        {categories && (
+        {CATEGORY_DEFINITIONS && (
           <Box sx={{ mb: 6 }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: { xs: 1.5, sm: 2 }, px: { xs: 2, sm: 0 }, maxWidth: '600px', margin: '0 auto' }}>
-              {categories.map((category, index) => {
+              {CATEGORY_DEFINITIONS.map((category, index) => {
                 const IconComponent = category.icon;
                 const isSelected = selectedCategory === category.name;
                 return (
@@ -293,16 +270,14 @@ const Technologies = () => {
                   <TechnologyCard
                     tech={tech}
                     index={index}
-                    hoveredTech={hoveredTech}
-                    setHoveredTech={setHoveredTech}
-                    hoveredTechRef={hoveredTechRef}
+                    hoveredTech={effectiveHoveredTech}
+                    setHoveredTech={setHoveredTechHandler}
+                    hoveredTechRef={hoverRef}
                     isMobile={isMobile}
                     isTablet={isTablet}
                     isIOSSafari={isIOSSafari}
-                    reducedMotion={isHandheld}
-                    contentReady={contentReady || animationsComplete}
-                    performanceTier={performanceTier}
-                    useStaticStyles={isHandheld}
+                    contentReady={isContentReady}
+                    enableHoverFx={shouldRenderInteractiveFx}
                   />
                 </Grid>
               ))}

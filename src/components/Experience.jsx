@@ -128,48 +128,58 @@ function Experience() {
 
         {/* Experience Cards - Optimized for all platforms */}
         <div className="space-y-8 md:space-y-10">
-          {EXPERIENCES.map((experience, index) => (
-            <motion.div
-              key={index}
-              className="flex flex-col lg:flex-row lg:justify-center items-start p-5 md:p-6 rounded-lg border border-neutral-800"
-              variants={itemVariants}
-              whileHover={useReducedMotion ? undefined : "hover"}
-              style={cardStyle}
-              layoutId={`exp-${index}`}
-            >
-              <div className="w-full lg:w-1/4 mb-3 lg:mb-0">
-                <p className="text-sm text-neutral-400 font-medium">
-                  {experience.year}
-                </p>
-              </div>
-              <div className="w-full lg:w-3/4">
-                <div className="flex flex-wrap items-center mb-2">
-                  <h3 className="font-semibold text-lg mr-2">
-                    {experience.role}
-                  </h3>
-                  <span className="text-sm text-purple-300">
-                    {experience.company}
-                  </span>
+          {EXPERIENCES.map((experience, index) => {
+            const isLeftSide = index % 2 !== 0;
+            const contentClassName = isLeftSide
+              ? "w-full lg:w-3/4 flex flex-col gap-4 lg:items-end lg:text-right lg:ml-auto"
+              : "w-full lg:w-3/4 flex flex-col gap-4";
+            const headerAlignment = isLeftSide ? "lg:justify-end lg:text-right" : "";
+            const descriptionAlignment = isLeftSide ? "lg:text-right" : "";
+            const tagsAlignment = isLeftSide ? "lg:justify-end" : "";
+
+            return (
+              <motion.div
+                key={index}
+                className="flex flex-col lg:flex-row lg:justify-center items-start p-5 md:p-6 rounded-lg border border-neutral-800"
+                variants={itemVariants}
+                whileHover={useReducedMotion ? undefined : "hover"}
+                style={cardStyle}
+                layoutId={`exp-${index}`}
+              >
+                <div className="w-full lg:w-1/4 mb-3 lg:mb-0">
+                  <p className={`text-sm text-neutral-400 font-medium ${isLeftSide ? "lg:text-right" : ""}`}>
+                    {experience.year}
+                  </p>
                 </div>
-                <p className="mb-4 text-neutral-400">
-                  {experience.description}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {experience.technologies.map((tech, idx) => (
-                    <motion.span
-                      key={idx}
-                      className="rounded bg-neutral-900 px-2.5 py-1 text-sm font-medium text-purple-400 border border-neutral-800"
-                      variants={tagVariants}
-                      whileHover="hover"
-                      whileTap="hover"
-                    >
-                      {tech}
-                    </motion.span>
-                  ))}
+                <div className={contentClassName}>
+                  <div className={`flex flex-wrap items-center mb-2 gap-x-2 ${headerAlignment}`}>
+                    <h3 className="font-semibold text-lg">
+                      {experience.role}
+                    </h3>
+                    <span className={`text-sm text-purple-300 ${isLeftSide ? "lg:text-right" : ""}`}>
+                      {experience.company}
+                    </span>
+                  </div>
+                  <p className={`text-neutral-400 ${descriptionAlignment}`}>
+                    {experience.description}
+                  </p>
+                  <div className={`flex flex-wrap gap-2 ${tagsAlignment}`}>
+                    {experience.technologies.map((tech, idx) => (
+                      <motion.span
+                        key={idx}
+                        className="rounded bg-neutral-900 px-2.5 py-1 text-sm font-medium text-purple-400 border border-neutral-800"
+                        variants={tagVariants}
+                        whileHover="hover"
+                        whileTap="hover"
+                      >
+                        {tech}
+                      </motion.span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       </motion.div>
 

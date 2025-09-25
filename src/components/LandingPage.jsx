@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Box } from '@mui/material';
 import { KeyboardArrowDown } from '@mui/icons-material';
 import EnhancedHero from './EnhancedHero.jsx';
 import ModernHero from './ModernHero.jsx';
 import WebGLErrorBoundary from './WebGLErrorBoundary.jsx';
+import { getPerformanceProfile, debounce } from '../utils/performanceOptimizations.js';
 
 const LandingPage = ({ introComplete, onNavbarVisibilityChange, onLandingComplete }) => {
   const [showLanding, setShowLanding] = useState(true);
@@ -15,6 +16,9 @@ const LandingPage = ({ introComplete, onNavbarVisibilityChange, onLandingComplet
     }
     return window.matchMedia('(max-width: 768px)').matches;
   });
+
+  // Memoize performance profile to avoid recalculation
+  const performanceProfile = useMemo(() => getPerformanceProfile(), []);
 
   const showLandingRef = useRef(showLanding);
   const transitionTimeoutRef = useRef(null);
