@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo, useCallback, useRef } from "react";
+import React, { useState, useEffect, memo, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import { 
   AppBar, 
@@ -96,7 +96,7 @@ const ModernNavbar = memo(() => {
   const isTabletDevice = isTablet || (window.innerWidth > 768 && window.innerWidth < 1024 && (isMobile || isMobileCSS));
 
   // Navigation items with modern icons - Updated to include Certificates
-  const navItems = [
+  const navItems = useMemo(() => ([
     { name: "Home", href: "#hero", icon: Home },
     { name: "About", href: "#about", icon: Person },
     { name: "Tech", href: "#technologies", icon: Code },
@@ -105,10 +105,10 @@ const ModernNavbar = memo(() => {
     { name: "Projects", href: "#projects", icon: School },
     { name: "Certificates", href: "#certifications", icon: School },
     { name: "Contact", href: "#contact", icon: ContactMail },
-  ];
+  ]), []);
 
   // Social links with enhanced styling
-  const socialLinks = [
+  const socialLinks = useMemo(() => ([
     {
       icon: LinkedIn,
       tooltip: "LinkedIn Profile",
@@ -138,7 +138,66 @@ const ModernNavbar = memo(() => {
       label: "Resume",
       viewResume: true
     },
-  ];
+  ]), []);
+
+  const getNavChipStyles = useCallback((isActive) => {
+    const accentGradient = "linear-gradient(135deg, rgba(99, 102, 241, 0.85) 0%, rgba(139, 92, 246, 0.75) 45%, rgba(34, 211, 238, 0.65) 100%)";
+    const hoverTransform = shouldReduceMotion ? "none" : "translateY(-2px)";
+
+    return {
+      position: "relative",
+      overflow: "hidden",
+      borderRadius: "999px",
+      px: 1.75,
+      height: 44,
+      color: "#e2e8f0",
+      fontWeight: 600,
+      letterSpacing: "0.01em",
+      borderColor: isActive ? "transparent" : "rgba(148, 163, 184, 0.22)",
+      background: isActive ? accentGradient : "rgba(15, 23, 42, 0.55)",
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
+      boxShadow: isActive
+        ? "0 12px 28px rgba(99, 102, 241, 0.32)"
+        : "0 6px 16px rgba(15, 23, 42, 0.28)",
+      transition: "color 0.35s ease, background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease",
+      zIndex: 2,
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        inset: -1,
+        borderRadius: 'inherit',
+        background: accentGradient,
+        opacity: isActive ? 0.35 : 0,
+        transition: 'opacity 0.35s ease',
+        zIndex: -1,
+      },
+      '& .MuiChip-label': {
+        px: 1,
+        fontWeight: 600,
+      },
+      '& .MuiChip-icon': {
+        color: isActive ? '#f8fafc' : '#94a3b8',
+        transition: 'color 0.3s ease',
+      },
+      '&:hover': {
+        borderColor: 'transparent',
+        background: accentGradient,
+        transform: hoverTransform,
+        boxShadow: '0 12px 26px rgba(99, 102, 241, 0.36)',
+      },
+      '&:hover::after': {
+        opacity: shouldReduceMotion ? (isActive ? 0.35 : 0.2) : 0.6,
+      },
+      '&:hover .MuiChip-icon': {
+        color: '#f8fafc',
+      },
+      '&:focus-visible': {
+        outline: '2px solid rgba(99, 102, 241, 0.9)',
+        outlineOffset: 2,
+      }
+    };
+  }, [shouldReduceMotion]);
 
   // Smooth scroll function
   const scrollToSection = useCallback((sectionId) => {
@@ -475,55 +534,31 @@ const ModernNavbar = memo(() => {
                 
                 {/* Navigation Items */}
                 <Box sx={{ display: 'flex', gap: 1, position: 'relative', zIndex: 1 }}>
-                  {navItems.map((item, index) => (
-                    <motion.div key={item.name} variants={itemVariants}>
+                  {navItems.map((item, index) => {
+                    const sectionKey = item.href.replace("#", "");
+                    const isActive = activeSection === sectionKey;
+
+                    return (
+                      <motion.div
+                        key={item.name}
+                        variants={itemVariants}
+                        whileHover={shouldReduceMotion ? undefined : { y: -2, scale: 1.03 }}
+                        whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+                      >
                       <Tooltip title={item.name} arrow>
                         <Chip
-                          data-nav-item={item.href.replace("#", "")}
+                          data-nav-item={sectionKey}
                           icon={<item.icon />}
                           label={item.name}
                           onClick={() => scrollToSection(item.href)}
                           clickable
-                          variant={activeSection === item.href.replace("#", "") ? "filled" : "outlined"}
-                          sx={{
-                            color: '#ffffff',
-                            borderColor: activeSection === item.href.replace("#", "") ? 'transparent' : 'rgba(99, 102, 241, 0.3)',
-                            backgroundColor: activeSection === item.href.replace("#", "") ? 'rgba(99, 102, 241, 0.8)' : 'transparent',
-                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                            position: 'relative',
-                            zIndex: 2,
-                            backdropFilter: 'blur(10px)',
-                            '&:hover': {
-                              transform: shouldReduceMotion ? 'none' : 'translateY(-3px) scale(1.05)',
-                              boxShadow: '0 8px 25px rgba(99, 102, 241, 0.4)',
-                              backgroundColor: 'rgba(99, 102, 241, 0.9)',
-                              borderColor: 'transparent',
-                            },
-                            '& .MuiChip-icon': { 
-                              color: activeSection === item.href.replace("#", "") ? '#ffffff' : '#a855f7',
-                              transition: 'color 0.3s ease'
-                            },
-                            '&:hover .MuiChip-icon': { 
-                              color: '#ffffff'
-                            },
-                            // Add glow effect for active item
-                            ...(activeSection === item.href.replace("#", "") && !shouldReduceMotion && {
-                              '&::before': {
-                                content: '""',
-                                position: 'absolute',
-                                inset: -2,
-                                borderRadius: '24px',
-                                background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #22d3ee)',
-                                zIndex: -1,
-                                opacity: 0.6,
-                                filter: 'blur(8px)',
-                              }
-                            })
-                          }}
+                          variant={isActive ? "filled" : "outlined"}
+                          sx={getNavChipStyles(isActive)}
                         />
                       </Tooltip>
                     </motion.div>
-                  ))}
+                    );
+                  })}
                 </Box>
               </motion.div>
             )}

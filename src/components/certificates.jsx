@@ -69,7 +69,7 @@ const CertificationImage = memo(({ src, alt }) => {
         <img
           src={src}
           alt={alt}
-          className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-103 ${
+          className={`w-full h-full object-contain transition-all duration-300 group-hover:scale-103 ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           loading="lazy"
@@ -122,17 +122,17 @@ const CertificationCard = memo(({ cert, useReducedMotion }) => {
       href={cert.link}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block h-full"
+      className="group flex h-full w-full"
       variants={certCardVariants}
       initial="hidden"
       animate="visible"
       whileHover={useReducedMotion ? undefined : "hover"}
       whileTap={useReducedMotion ? undefined : { scale: 0.98 }}
-      style={{ display: 'block', opacity: 1, visibility: 'visible' }}
+      style={{ opacity: 1, visibility: 'visible' }}
     >
       <div 
-        className="h-full overflow-hidden rounded-xl bg-neutral-800/80 border border-neutral-700/50 shadow-xl group-hover:border-purple-500/50 transition-all duration-200"
-        style={{ minHeight: '240px', backgroundColor: 'rgba(30, 41, 59, 0.8)' }}
+        className="flex h-full flex-col overflow-hidden rounded-xl bg-neutral-800/80 border border-neutral-700/50 shadow-xl group-hover:border-purple-500/50 transition-all duration-200"
+        style={{ height: '100%', backgroundColor: 'rgba(30, 41, 59, 0.8)' }}
       >
         <div className="relative aspect-video w-full overflow-hidden" style={{ backgroundColor: '#1e293b' }}>
           {/* Simplified overlay */}
@@ -150,15 +150,25 @@ const CertificationCard = memo(({ cert, useReducedMotion }) => {
           </div>
         </div>
         
-        <div className="p-3" style={{ color: 'white' }}>
-          <h3 className="font-bold text-base text-white group-hover:text-purple-300 transition-colors duration-200" style={{ color: 'white' }}>
+        <div className="flex flex-1 flex-col p-3" style={{ color: 'white' }}>
+          <h3
+            className="font-bold text-base text-white group-hover:text-purple-300 transition-colors duration-200"
+            style={{
+              color: 'white',
+              minHeight: '48px',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}
+          >
             {cert.title}
           </h3>
           <div className="mt-1.5 flex items-center">
             <div className="w-1.5 h-1.5 rounded-full bg-purple-400 mr-1.5"></div>
             <p className="text-neutral-300 text-xs" style={{ color: '#d1d5db' }}>{cert.issuer}</p>
           </div>
-          <div className="mt-1.5 text-neutral-400 text-xs" style={{ color: '#9ca3af' }}>
+          <div className="mt-auto pt-2 text-neutral-400 text-xs" style={{ color: '#9ca3af' }}>
             {cert.date || "Certification verified"}
           </div>
         </div>
@@ -327,18 +337,41 @@ const Certifications = () => {
           <Box
             sx={{
               display: 'grid',
+              width: '100%',
+              maxWidth: '1320px',
+              margin: '0 auto',
+              gap: { xs: 2, sm: 2.5, md: 3 },
               gridTemplateColumns: {
-                xs: 'repeat(2, 1fr)',
-                sm: 'repeat(3, 1fr)', 
-                md: 'repeat(4, 1fr)',
-                lg: 'repeat(5, 1fr)'
+                xs: 'repeat(auto-fit, minmax(160px, 200px))',
+                sm: 'repeat(auto-fit, minmax(200px, 240px))',
+                md: 'repeat(auto-fit, minmax(220px, 260px))',
+                lg: 'repeat(auto-fit, minmax(240px, 280px))',
+                xl: 'repeat(auto-fit, minmax(240px, 300px))'
               },
-              gap: 3,
-              width: '100%'
+              justifyContent: 'center',
+              justifyItems: 'center',
+              alignItems: 'stretch',
+              alignContent: 'center',
+              gridAutoRows: {
+                xs: 'minmax(280px, auto)',
+                sm: 'minmax(300px, auto)',
+                md: 'minmax(320px, auto)',
+                lg: 'minmax(340px, auto)',
+                xl: 'minmax(360px, auto)'
+              }
             }}
           >
             {filteredCertifications.map((cert, index) => (
-              <Box key={`${cert.title}-${index}`}>
+              <Box
+                key={`${cert.title}-${index}`}
+                sx={{
+                  display: 'flex',
+                  height: '100%',
+                  width: '100%',
+                  maxWidth: { xs: 200, sm: 240, md: 260, lg: 280, xl: 300 },
+                  justifySelf: 'center'
+                }}
+              >
                 <CertificationCard 
                   cert={cert} 
                   useReducedMotion={useReducedMotion} 
