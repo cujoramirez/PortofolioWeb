@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 
 const TechnologyCard = memo(
@@ -22,40 +22,7 @@ const TechnologyCard = memo(
     const iconSize = isTablet ? "text-4xl" : isMobile ? "text-3xl" : "text-5xl";
     const paddingSize = isTablet ? "p-3" : isMobile ? "p-2" : "p-4";
 
-    // For desktop: Create animation variants
-    const desktopContainerVariants = {
-      hidden: { opacity: 0, y: 15 },
-      visible: {
-        opacity: 1,
-        y: 0,
-        transition: { duration: 0.6, ease: "easeOut" },
-      },
-      hover: {
-        scale: 1.05,
-        boxShadow: `0 0 20px 3px ${tech.color}55`,
-        transition: { duration: 0.3 }
-      }
-    };
-    
-    const desktopIconVariants = {
-      animate: {
-        y: [-2, 2, -2],
-        filter: `drop-shadow(0 0 2px ${tech.color}33)`,
-        transition: {
-          y: {
-            duration: 4,
-            repeat: Infinity,
-            repeatType: "reverse",
-            ease: "easeInOut",
-          },
-        },
-      },
-      hover: {
-        scale: 1.1,
-        filter: `drop-shadow(0 0 12px ${tech.color})`,
-        transition: { duration: 0.3, ease: "easeOut" },
-      }
-    };
+    const isActive = useMemo(() => enableHoverFx && hoveredTech === index, [enableHoverFx, hoveredTech, index]);
 
     // MOBILE & TABLET: Render static card with "shiny" appearance
     if (isHandheld || isIOSSafari) {
@@ -137,10 +104,9 @@ const TechnologyCard = memo(
         className={`tech-card relative rounded-xl border-2 ${tech.borderColor} ${paddingSize}
           bg-gradient-to-br from-neutral-900/80 to-neutral-900/40
           flex flex-col items-center justify-center`}
-        variants={desktopContainerVariants}
-        initial="hidden"
-        animate="visible"
-        whileHover={enableHoverFx ? "hover" : undefined}
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={enableHoverFx ? { scale: 1.04, boxShadow: `0 0 20px 3px ${tech.color}40` } : undefined}
         style={{
           width: '100%',
           maxWidth: cardSize,
@@ -165,52 +131,34 @@ const TechnologyCard = memo(
           }
         } : undefined}
       >
-        {/* Desktop animated border glow */}
-        <motion.div
+        {/* Desktop background glow */}
+        <div
           className="absolute inset-0 rounded-xl z-0"
-          animate={enableHoverFx ? {
-            boxShadow: [
-              `0 0 5px ${tech.color}33`, 
-              `0 0 12px ${tech.color}44`, 
-              `0 0 5px ${tech.color}33`
-            ],
-          } : undefined}
-          transition={enableHoverFx ? {
-            duration: tech.pulseSpeed,
-            repeat: Infinity,
-            ease: "easeInOut",
-          } : undefined}
+          style={{
+            boxShadow: isActive ? `0 0 18px ${tech.color}40` : `0 0 8px ${tech.color}22`,
+            transition: "box-shadow 0.35s ease"
+          }}
         />
 
-        {/* Icon with animations */}
-        <motion.div
+        {/* Icon with subtle hover response */}
+        <div
           className="relative flex-1 flex items-center justify-center"
-          variants={desktopIconVariants}
-          animate={enableHoverFx ? "animate" : undefined}
-          whileHover={enableHoverFx ? "hover" : undefined}
           style={{ 
             position: "relative",
             zIndex: 2,
             padding: "8px",
+            transition: "transform 0.35s ease, filter 0.35s ease"
           }}
         >
-          {/* Desktop pulsing background glow */}
-          <motion.div
+          <div
             className="absolute inset-0 rounded-full"
             style={{
-              background: `radial-gradient(circle, ${tech.color}33 0%, transparent 70%)`,
+              background: `radial-gradient(circle, ${tech.color}2b 0%, transparent 70%)`,
               zIndex: 0,
-              transform: "scale(1.5)",
+              transform: isActive ? "scale(1.45)" : "scale(1.25)",
+              opacity: isActive ? 0.55 : 0.35,
+              transition: "transform 0.4s ease, opacity 0.4s ease"
             }}
-            animate={enableHoverFx ? {
-              opacity: [0.3, 0.7, 0.3],
-              scale: [1.4, 1.6, 1.4],
-            } : undefined}
-            transition={enableHoverFx ? {
-              duration: tech.pulseSpeed,
-              repeat: Infinity,
-              ease: "easeInOut",
-            } : undefined}
           />
 
           <tech.icon
@@ -218,10 +166,13 @@ const TechnologyCard = memo(
             style={{ 
               color: tech.color, 
               display: "block",
-              fontSize: "2.5rem"
+              fontSize: "2.5rem",
+              transform: isActive ? "translateY(-4px) scale(1.04)" : "translateY(0) scale(1)",
+              filter: isActive ? `drop-shadow(0 0 10px ${tech.color}90)` : `drop-shadow(0 0 4px ${tech.color}40)`,
+              transition: "transform 0.35s ease, filter 0.35s ease"
             }}
           />
-        </motion.div>
+        </div>
         
         {/* Technology name */}
         <div

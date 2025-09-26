@@ -1,5 +1,5 @@
 import React, { useState, useRef, memo, lazy, Suspense, useEffect, useMemo, useCallback } from "react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence, useInView } from "framer-motion";
 import { Box, Container, Typography, Grid, Paper } from "@mui/material";
 import { Code, Psychology, Science, Architecture, Memory } from "@mui/icons-material";
 import TechnologyCard from "./TechnologyCard";
@@ -14,7 +14,7 @@ const CATEGORY_DEFINITIONS = [
   { name: 'All', icon: Architecture, color: '#ffffff' },
   { name: 'AI/ML', icon: Psychology, color: '#6366f1' },
   { name: 'Frontend', icon: Code, color: '#22d3ee' },
-  { name: 'Backend', icon: Memory, color: '#10b981' },
+  { name: 'Backend', icon: Memory, color: '#10b981' },  
   { name: 'Other', icon: Science, color: '#8b5cf6' }
 ];
 
@@ -28,6 +28,23 @@ const Technologies = () => {
   const dormantHoverRef = useRef(null);
   const containerRef = useRef(null);
   const [isContentReady, setIsContentReady] = useState(false);
+  const [devicePixelRatio, setDevicePixelRatio] = useState(() => (typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1));
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const updatePixelRatio = () => {
+      setDevicePixelRatio(window.devicePixelRatio || 1);
+    };
+
+    window.addEventListener('resize', updatePixelRatio);
+    window.addEventListener('orientationchange', updatePixelRatio);
+
+    return () => {
+      window.removeEventListener('resize', updatePixelRatio);
+      window.removeEventListener('orientationchange', updatePixelRatio);
+    };
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -37,14 +54,21 @@ const Technologies = () => {
   const backgroundY = useTransform(scrollYProgress, [0, 1], [0, -50]);
   const titleY = useTransform(scrollYProgress, [0, 0.5], [20, 0]);
 
+  const isSectionInView = useInView(containerRef, { amount: 0.3, margin: "-15% 0px" });
+
   const isHandheld = useMemo(() => isMobile || isTablet, [isMobile, isTablet]);
   const shouldRenderInteractiveFx = useMemo(
-    () => !isHandheld && !isIOSSafari && performanceTier === "high",
-    [isHandheld, isIOSSafari, performanceTier]
+    () =>
+      isSectionInView &&
+      !isHandheld &&
+      !isIOSSafari &&
+      performanceTier === "high" &&
+      devicePixelRatio <= 1.6,
+    [isSectionInView, isHandheld, isIOSSafari, performanceTier, devicePixelRatio]
   );
   const shouldAnimateBackdrop = useMemo(
-    () => !isHandheld && performanceTier !== "low",
-    [isHandheld, performanceTier]
+    () => isSectionInView && !isHandheld && performanceTier !== "low",
+    [isSectionInView, isHandheld, performanceTier]
   );
   const noop = useCallback(() => {}, []);
   const effectiveHoveredTech = shouldRenderInteractiveFx ? hoveredTech : null;
@@ -130,7 +154,8 @@ const Technologies = () => {
               height: '100%',
               background: 'radial-gradient(60% 80% at 20% 30%, rgba(99, 102, 241, 0.15), transparent), radial-gradient(80% 60% at 80% 70%, rgba(34, 211, 238, 0.15), transparent)',
               // filter: 'blur(60px) saturate(120%)', // Removed heavy blur
-              opacity: 0.6
+              opacity: shouldAnimateBackdrop ? 0.6 : 0.35,
+              transition: 'opacity 0.6s ease'
             }}
           />
         </motion.div>
@@ -143,15 +168,32 @@ const Technologies = () => {
               <LightEffects hoveredTech={hoveredTech} hoveredTechRef={hoveredTechRef} />
             </Suspense>
           </motion.div>
-          <Box sx={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 1, '&::before': { content: '""', position: 'absolute', width: '200%', height: '200%', background: `radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(34, 211, 238, 0.1) 0%, transparent 50%), radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.08) 0%, transparent 50%)`, animation: 'floatSlow 20s ease-in-out infinite' }, '&::after': { content: '""', position: 'absolute', width: '150%', height: '150%', background: `radial-gradient(circle at 60% 70%, rgba(16, 185, 129, 0.08) 0%, transparent 40%), radial-gradient(circle at 30% 30%, rgba(245, 101, 101, 0.06) 0%, transparent 30%)`, animation: 'floatReverse 15s ease-in-out infinite' } }} />
-          <Box sx={{ position: 'absolute', inset: 0, zIndex: 1, '& .floating-symbol': { position: 'absolute', color: 'rgba(99, 102, 241, 0.1)', fontSize: '2rem', fontFamily: 'monospace', fontWeight: 'bold', animation: 'symbolFloat 8s ease-in-out infinite', pointerEvents: 'none' } }}>
-            <Typography className="floating-symbol" sx={{ top: '10%', left: '5%', animationDelay: '0s' }}>{'<>'}</Typography>
-            <Typography className="floating-symbol" sx={{ top: '20%', right: '8%', animationDelay: '1s' }}>{'{ }'}</Typography>
-            <Typography className="floating-symbol" sx={{ top: '60%', left: '3%', animationDelay: '2s' }}>{'</>'}</Typography>
-            <Typography className="floating-symbol" sx={{ bottom: '20%', right: '5%', animationDelay: '3s' }}>{'[ ]'}</Typography>
-            <Typography className="floating-symbol" sx={{ bottom: '40%', left: '7%', animationDelay: '4s' }}>{'( )'}</Typography>
-            <Typography className="floating-symbol" sx={{ top: '40%', right: '3%', animationDelay: '5s' }}>{'*'}</Typography>
-          </Box>
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              overflow: 'hidden',
+              zIndex: 1,
+              opacity: shouldAnimateBackdrop ? 0.6 : 0.35,
+              transition: 'opacity 0.6s ease',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                width: '200%',
+                height: '200%',
+                background: `radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(34, 211, 238, 0.1) 0%, transparent 50%), radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.08) 0%, transparent 50%)`,
+                animation: 'floatSlow 20s ease-in-out infinite'
+              },
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                width: '150%',
+                height: '150%',
+                background: `radial-gradient(circle at 60% 70%, rgba(16, 185, 129, 0.08) 0%, transparent 40%), radial-gradient(circle at 30% 30%, rgba(245, 101, 101, 0.06) 0%, transparent 30%)`,
+                animation: 'floatReverse 15s ease-in-out infinite'
+              }
+            }}
+          />
         </>
       )}
 
@@ -296,10 +338,9 @@ const Technologies = () => {
         @keyframes dividerPulse { 0% { opacity: 0.1; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 0.3; transform: translate(-50%, -50%) scale(1.1); } 100% { opacity: 0.1; transform: translate(-50%, -50%) scale(1); } }
         @keyframes floatSlow { 0% { transform: translate(0%, 0%) rotate(0deg); opacity: 0.3; } 33% { transform: translate(2%, -2%) rotate(120deg); opacity: 0.5; } 66% { transform: translate(-1%, 1%) rotate(240deg); opacity: 0.3; } 100% { transform: translate(0%, 0%) rotate(360deg); opacity: 0.3; } }
         @keyframes floatReverse { 0% { transform: translate(0%, 0%) rotate(0deg); opacity: 0.2; } 50% { transform: translate(-3%, 2%) rotate(-180deg); opacity: 0.4; } 100% { transform: translate(0%, 0%) rotate(-360deg); opacity: 0.2; } }
-        @keyframes symbolFloat { 0% { transform: translateY(0px) rotate(0deg); opacity: 0.1; } 25% { transform: translateY(-10px) rotate(90deg); opacity: 0.3; } 50% { transform: translateY(-20px) rotate(180deg); opacity: 0.2; } 75% { transform: translateY(-10px) rotate(270deg); opacity: 0.3; } 100% { transform: translateY(0px) rotate(360deg); opacity: 0.1; } }
-        @keyframes categoryShimmer { 0% { transform: translateX(-100%); opacity: 0; } 50% { transform: translateX(0%); opacity: 1; } 100% { transform: translateX(100%); opacity: 0; } }
-        .tech-grid { perspective: 1000px; transform-style: preserve-3d; }
-        .floating-card { transform: translate3d(0, 0, 0); will-change: transform; }
+  @keyframes categoryShimmer { 0% { transform: translateX(-100%); opacity: 0; } 50% { transform: translateX(0%); opacity: 1; } 100% { transform: translateX(100%); opacity: 0; } }
+  .tech-grid { perspective: 1000px; transform-style: preserve-3d; }
+  .floating-card { transform: translate3d(0, 0, 0); will-change: transform; }
         @media (prefers-reduced-motion: reduce) { .floating-symbol, [style*="animation"] { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; } }
       `}</style>
     </Box>
