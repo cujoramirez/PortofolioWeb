@@ -121,6 +121,7 @@ const ModernHero = () => {
   const { performanceTier, deviceType } = useSystemProfile();
   const containerRef = useRef(null);
   const heroRef = useRef(null);
+  const glCleanupRef = useRef(null);
   const theme = useTheme();
   const prefersReducedMotion = useReducedMotion();
   
@@ -167,6 +168,20 @@ const ModernHero = () => {
       setShow3D(false);
     }
   }, [canRender3D, isInView, show3D]);
+
+  useEffect(() => {
+    if (!show3D && glCleanupRef.current) {
+      glCleanupRef.current();
+      glCleanupRef.current = null;
+    }
+  }, [show3D]);
+
+  useEffect(() => () => {
+    if (glCleanupRef.current) {
+      glCleanupRef.current();
+      glCleanupRef.current = null;
+    }
+  }, []);
 
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 1000], [0, -200]);
@@ -370,17 +385,26 @@ const ModernHero = () => {
                 preserveDrawingBuffer: false,
                 logarithmicDepthBuffer: false
               }}
-              dpr={lowPower3D ? 1 : pixelRatio}
+              dpr={[1, lowPower3D ? 1.25 : pixelRatio]}
               style={{ pointerEvents: 'none' }}
               frameloop={lowPower3D ? "demand" : "always"}
               performance={{ 
-                min: 0.1,
-                max: lowPower3D ? 0.6 : 1
+                min: 0.05,
+                max: lowPower3D ? 0.5 : 0.8
               }}
               onCreated={({ gl }) => {
                 // Additional optimizations
+                if (glCleanupRef.current) {
+                  glCleanupRef.current();
+                }
                 gl.setClearColor(0x000000, 0);
                 gl.setPixelRatio(lowPower3D ? 1 : pixelRatio);
+                glCleanupRef.current = () => {
+                  gl.dispose();
+                  if (typeof gl.forceContextLoss === 'function') {
+                    gl.forceContextLoss();
+                  }
+                };
               }}
             >
               <HeroScene3D 

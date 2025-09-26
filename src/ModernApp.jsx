@@ -11,8 +11,8 @@ import { useSystemProfile } from "./components/useSystemProfile.jsx";
 import { getPerformanceProfile } from "./utils/performanceOptimizations.js";
 
 // Import new loading and intro components
-import LoadingScreen from "./components/LoadingScreen.jsx";
-import IntroAnimation from "./components/IntroAnimationOverhauled.jsx";
+const LoadingScreen = React.lazy(() => import("./components/LoadingScreen.jsx"));
+const IntroAnimation = React.lazy(() => import("./components/IntroAnimationOverhauled.jsx"));
 import LandingPage from "./components/LandingPage.jsx";
 import WebGLErrorBoundary from "./components/WebGLErrorBoundary.jsx";
 
@@ -33,7 +33,8 @@ const ModernResearch = React.lazy(() => import("./components/ModernResearch.jsx"
 const ModernApp = () => {
   // Performance-aware state management
   const performanceProfile = useMemo(() => getPerformanceProfile(), []);
-  const skipIntroAnimations = performanceProfile.isLowEnd || performanceProfile.reducedMotion;
+  const disableLoadingSequences = true;
+  const skipIntroAnimations = disableLoadingSequences || performanceProfile.isLowEnd || performanceProfile.reducedMotion;
   
   // State management for loading sequence
   const [showLoading, setShowLoading] = useState(!skipIntroAnimations);
@@ -74,7 +75,9 @@ const ModernApp = () => {
       <AnimatePresence mode="wait">
         {showLoading && (
           <WebGLErrorBoundary>
-            <LoadingScreen onLoadingComplete={handleLoadingComplete} />
+            <Suspense fallback={null}>
+              <LoadingScreen onLoadingComplete={handleLoadingComplete} />
+            </Suspense>
           </WebGLErrorBoundary>
         )}
       </AnimatePresence>
@@ -83,7 +86,9 @@ const ModernApp = () => {
       <AnimatePresence mode="wait">
         {showIntro && (
           <WebGLErrorBoundary>
-            <IntroAnimation onComplete={handleIntroComplete} />
+            <Suspense fallback={null}>
+              <IntroAnimation onComplete={handleIntroComplete} />
+            </Suspense>
           </WebGLErrorBoundary>
         )}
       </AnimatePresence>

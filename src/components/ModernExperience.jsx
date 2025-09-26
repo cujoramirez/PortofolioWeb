@@ -123,7 +123,35 @@ const ModernExperience = memo(() => {
             WebkitOverflowScrolling: 'touch',
             minWidth: 0,
           }}>
-            <Timeline position={isMobile ? 'right' : 'alternate'} sx={{ minWidth: isMobile ? 320 : 'unset' }}>
+            <Timeline
+              position={isMobile ? 'right' : 'alternate'}
+              sx={(theme) => ({
+                minWidth: isMobile ? 320 : 'unset',
+                '& .MuiTimelineItem-root:before': {
+                  display: isMobile ? 'none' : 'block',
+                },
+                ...(isMobile && {
+                  px: 0,
+                  '& .MuiTimelineSeparator-root': {
+                    flex: '0 0 auto',
+                    alignItems: 'flex-start',
+                    minWidth: theme.spacing(5),
+                    marginLeft: 0,
+                  },
+                  '& .MuiTimelineDot-root': {
+                    margin: theme.spacing(0.5, 0),
+                  },
+                  '& .MuiTimelineConnector-root': {
+                    margin: 0,
+                  },
+                  '& .MuiTimelineContent-root': {
+                    paddingLeft: theme.spacing(1.5),
+                    marginLeft: 0,
+                    textAlign: 'left',
+                  },
+                })
+              })}
+            >
               {enhancedExperiences.map((experience, index) => {
                 const IconComponent = experience.icon;
                 const isLeftColumn = !isMobile && index % 2 === 1;
@@ -155,7 +183,9 @@ const ModernExperience = memo(() => {
                       </TimelineOppositeContent>
 
                       {/* Timeline Separator */}
-                      <TimelineSeparator>
+                      <TimelineSeparator
+                        sx={isMobile ? { pr: 1 } : undefined}
+                      >
                         <motion.div
                           whileHover={{ scale: 1.2, rotate: 5 }}
                           transition={{ duration: 0.2 }}
@@ -183,7 +213,14 @@ const ModernExperience = memo(() => {
                       </TimelineSeparator>
 
                       {/* Experience Card */}
-                      <TimelineContent sx={{ py: { xs: 1, sm: '12px' }, px: { xs: 0.5, sm: 2 }, minWidth: 0 }}>
+                      <TimelineContent
+                        sx={{
+                          py: { xs: 1, sm: '12px' },
+                          px: { xs: 0.5, sm: 2 },
+                          minWidth: 0,
+                          ml: isMobile ? 0 : undefined,
+                        }}
+                      >
                         <EnterpriseMotion.ExperienceCard>
                           <Card
                             elevation={selectedCard === experience.id ? 8 : 2}

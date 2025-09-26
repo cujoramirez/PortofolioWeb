@@ -1,17 +1,17 @@
 import React, { useRef, useState, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Sphere, Torus, Octahedron, Float, Trail, Sparkles, Preload } from '@react-three/drei';
+import { Sphere, Torus, Octahedron, Float, Trail, Sparkles } from '@react-three/drei';
 import { motion } from 'framer-motion-3d';
 import * as THREE from 'three';
 
 // Ultra-Optimized Particle System for Hero
-export const QuantumParticles = ({ count = 25, lowPerformanceMode = false }) => {
+export const QuantumParticles = ({ count = 20, lowPerformanceMode = false }) => {
   const particlesRef = useRef();
   const [hovered, setHovered] = useState(false);
   const [startTime, setStartTime] = useState(null);
 
   // Reduced particle count for performance
-  const optimizedCount = lowPerformanceMode ? Math.min(count, 10) : Math.min(count, 25);
+  const optimizedCount = lowPerformanceMode ? Math.min(count, 8) : Math.min(count, 18);
 
   const particles = useMemo(() => {
     const temp = [];
@@ -49,10 +49,10 @@ export const QuantumParticles = ({ count = 25, lowPerformanceMode = false }) => 
     particles.forEach((particle, i) => {
       const child = particlesRef.current.children[i];
       if (child) {
-        child.position.y += Math.sin(state.clock.elapsedTime * particle.speed + i) * 0.005; // Ultra reduced speed
-        child.position.x += Math.cos(state.clock.elapsedTime * particle.speed + i) * 0.002; // Ultra reduced speed
-        child.rotation.y += particle.speed * 0.3; // Ultra reduced rotation
-        child.material.opacity = 0.4 + Math.sin(state.clock.elapsedTime * 0.8 + i) * 0.2; // Ultra reduced opacity variation
+        child.position.y += Math.sin(state.clock.elapsedTime * particle.speed + i) * 0.004; // Ultra reduced speed
+        child.position.x += Math.cos(state.clock.elapsedTime * particle.speed + i) * 0.0015; // Ultra reduced speed
+        child.rotation.y += particle.speed * 0.25; // Ultra reduced rotation
+        child.material.opacity = 0.35 + Math.sin(state.clock.elapsedTime * 0.7 + i) * 0.18; // Ultra reduced opacity variation
       }
     });
   });
@@ -158,7 +158,9 @@ export const MorphingShapes = ({ lowPerformanceMode = false, reducedMotion = fal
       ))}
       
       {/* Sparkle effects */}
-      <Sparkles count={50} scale={20} size={3} speed={0.5} />
+      {!lowPerformanceMode && !reducedMotion && (
+        <Sparkles count={35} scale={18} size={2.4} speed={0.45} />
+      )}
     </group>
   );
 };
@@ -170,7 +172,7 @@ export const NeuralNetwork = () => {
   
   const nodes = useMemo(() => {
     const temp = [];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 14; i++) {
       temp.push({
         position: [
           (Math.random() - 0.5) * 25,
@@ -187,7 +189,7 @@ export const NeuralNetwork = () => {
         if (i !== j) {
           const distance = new THREE.Vector3(...node.position)
             .distanceTo(new THREE.Vector3(...otherNode.position));
-          if (distance < 8 && Math.random() > 0.7) {
+          if (distance < 7 && Math.random() > 0.75) {
             node.connections.push(j);
           }
         }
@@ -284,17 +286,14 @@ export const HeroScene3D = ({
       
       {/* Ultra-optimized 3D Elements */}
       <QuantumParticles 
-        count={lowPerformanceMode ? 10 : 30} 
+        count={lowPerformanceMode ? 8 : 20} 
         lowPerformanceMode={lowPerformanceMode} 
       />
       <MorphingShapes 
         lowPerformanceMode={lowPerformanceMode}
         reducedMotion={reducedMotion}
       />
-      {!lowPerformanceMode && <NeuralNetwork />}
-      
-      {/* Conditional preload */}
-      {!lowPerformanceMode && <Preload all />}
+      {!lowPerformanceMode && !reducedMotion && <NeuralNetwork />}
     </group>
   );
 };

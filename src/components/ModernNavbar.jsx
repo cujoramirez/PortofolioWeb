@@ -5,7 +5,6 @@ import {
   Toolbar, 
   IconButton, 
   Fab, 
-  Tooltip, 
   Box, 
   useScrollTrigger,
   Zoom,
@@ -545,7 +544,6 @@ const ModernNavbar = memo(() => {
                         whileHover={shouldReduceMotion ? undefined : { y: -2, scale: 1.03 }}
                         whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
                       >
-                      <Tooltip title={item.name} arrow>
                         <Chip
                           data-nav-item={sectionKey}
                           icon={<item.icon />}
@@ -555,7 +553,6 @@ const ModernNavbar = memo(() => {
                           variant={isActive ? "filled" : "outlined"}
                           sx={getNavChipStyles(isActive)}
                         />
-                      </Tooltip>
                     </motion.div>
                     );
                   })}

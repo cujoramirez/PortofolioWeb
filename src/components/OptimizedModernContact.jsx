@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, memo, useMemo, useCallback } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import { 
   Box, 
   Container, 
@@ -23,9 +23,6 @@ import {
   ContactMail as ContactIcon,
   Schedule as ScheduleIcon,
   Work as WorkIcon,
-  Psychology as PsychologyIcon,
-  AutoAwesome as AutoAwesomeIcon,
-  Rocket as RocketIcon,
   Business as BusinessIcon,
   Code as CodeIcon,
   Analytics as AnalyticsIcon,
@@ -70,21 +67,24 @@ const contactMethods = [
 ];
 
 const stats = [
-  { icon: WorkIcon, value: "3+", label: "Years Experience" },
-  { icon: BusinessIcon, value: "20+", label: "Projects Completed" },
-  { icon: CodeIcon, value: "10+", label: "Technologies" },
+  { icon: WorkIcon, value: "3", label: "Years Experience" },
+  { icon: BusinessIcon, value: "14", label: "Projects Completed" },
   { icon: AnalyticsIcon, value: "24/7", label: "Availability" },
   { icon: ScienceIcon, value: "AI/ML", label: "Specialization" }
 ];
 
 const expertise = [
-  { icon: PsychologyIcon, label: "AI Strategy", color: "#6366f1" },
-  { icon: AutoAwesomeIcon, label: "Machine Learning", color: "#8b5cf6" },
-  { icon: RocketIcon, label: "Digital Innovation", color: "#22d3ee" },
-  { icon: BusinessIcon, label: "Enterprise Solutions", color: "#10b981" },
-  { icon: CodeIcon, label: "Full-Stack Development", color: "#f59e0b" },
-  { icon: AnalyticsIcon, label: "Data Analytics", color: "#ef4444" }
+  { label: "AI Strategy", color: "#6366f1" },
+  { label: "Machine Learning", color: "#8b5cf6" },
+  { label: "Full-Stack Development", color: "#f59e0b" },
+  { label: "Data Analytics", color: "#ef4444" }
 ];
+
+const itemVariants = {
+  hover: {
+    scale: 1.02
+  }
+};
 
 // Lightweight CSS-only background decoration
 const OptimizedBackground = memo(({ theme, shouldAnimate }) => (
@@ -201,8 +201,8 @@ const ContactMethodCard = memo(({ method, index, theme, shouldAnimate }) => {
 
         {method.href && (
           <Box display="flex" alignItems="center" gap={1} sx={{ color: method.color, fontSize: '0.95rem', fontWeight: 500 }}>
-            <ScheduleIcon sx={{ fontSize: 18 }} />
-            <Typography component="span">Available for quick introductions</Typography>
+
+
           </Box>
         )}
       </Card>
@@ -269,48 +269,46 @@ const StatCard = memo(({ stat, index, theme, shouldAnimate }) => {
 });
 
 // Memoized expertise chip
-const ExpertiseChip = memo(({ item, index, shouldAnimate }) => {
-  const IconComponent = item.icon;
-  
-  return (
-    <motion.div
-      key={item.label}
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.1 }}
-    >
-      <Chip
-        icon={<IconComponent sx={{ fontSize: 18 }} />}
-        label={item.label}
-        variant="outlined"
-        sx={{
-          borderColor: alpha(item.color, 0.3),
-          color: item.color,
-          backgroundColor: alpha(item.color, 0.05),
-          fontWeight: 500,
-          fontSize: '0.875rem',
-          height: 36,
-          transition: shouldAnimate ? 'all 0.2s ease-in-out' : 'none',
-          '&:hover': shouldAnimate ? {
-            backgroundColor: alpha(item.color, 0.1),
-            borderColor: alpha(item.color, 0.5),
-            transform: 'scale(1.05)'
-          } : {}
-        }}
-      />
-    </motion.div>
-  );
-});
+const ExpertiseChip = memo(({ item, index, shouldAnimate }) => (
+  <motion.div
+    key={item.label}
+    initial={{ opacity: 0, x: -10 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ duration: 0.3, delay: index * 0.1 }}
+  >
+    <Chip
+      label={item.label}
+      variant="outlined"
+      sx={{
+        borderColor: alpha(item.color, 0.3),
+        color: item.color,
+        backgroundColor: alpha(item.color, 0.05),
+        fontWeight: 600,
+        fontSize: '0.875rem',
+        height: 40,
+        px: 2,
+        transition: shouldAnimate ? 'all 0.2s ease-in-out' : 'none',
+        '&:hover': shouldAnimate ? {
+          backgroundColor: alpha(item.color, 0.12),
+          borderColor: alpha(item.color, 0.5),
+          transform: 'scale(1.05)'
+        } : {}
+      }}
+    />
+  </motion.div>
+));
 
 const OptimizedModernContact = memo(() => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const prefersReducedMotion = useReducedMotion();
   const { performanceTier } = useSystemProfile();
   
   const containerRef = useRef(null);
   const isInView = useInView(containerRef, { once: true, threshold: 0.1 });
   
   const shouldAnimate = performanceTier !== "low" && !isMobile;
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
 
   // Memoized callbacks to prevent re-renders
   const memoizedContactMethods = useMemo(() => contactMethods, []);
@@ -477,10 +475,11 @@ const OptimizedModernContact = memo(() => {
               gap: { xs: 2, sm: 2.5 },
               gridTemplateColumns: {
                 xs: 'repeat(2, minmax(0, 1fr))',
-                sm: 'repeat(3, minmax(0, 1fr))',
-                md: 'repeat(5, minmax(0, 1fr))'
+                sm: 'repeat(3, minmax(0, 180px))',
+                md: 'repeat(4, minmax(0, 200px))'
               },
-              justifyItems: 'stretch'
+              justifyContent: 'center',
+              justifyItems: 'center'
             }}
           >
             {memoizedStats.map((stat, index) => (
@@ -521,44 +520,28 @@ const OptimizedModernContact = memo(() => {
               />
             ))}
           </Box>
+        </Box>
 
-          {/* Call to Action */}
-          <Box mt={6}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-            >
-              <Button
-                variant="contained"
-                size="large"
-                component="a"
-                href="mailto:gadingadityaperdana@gmail.com"
-                sx={{
-                  backgroundImage: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                  color: 'white',
-                  fontWeight: 700,
-                  letterSpacing: 0.4,
-                  fontSize: '1.12rem',
-                  py: 1.6,
-                  px: 4.5,
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  boxShadow: '0 22px 34px rgba(99, 102, 241, 0.28)',
-                  '&:hover': {
-                    boxShadow: '0 26px 40px rgba(99, 102, 241, 0.35)',
-                    transform: shouldAnimate ? 'translateY(-3px)' : 'none'
-                  },
-                  transition: 'all 0.25s ease-in-out'
-                }}
-              >
-                Start a Project
-              </Button>
-            </motion.div>
-          </Box>
+        <Box
+          component={motion.div}
+          variants={itemVariants}
+          whileHover={prefersReducedMotion ? undefined : "hover"}
+          sx={{
+            textAlign: 'center',
+            mt: { xs: 6, md: 8 }
+          }}
+        >
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontSize: '0.95rem' }}
+          >
+            © {currentYear} Gading Aditya Perdana. All rights reserved.
+          </Typography>
         </Box>
       </Container>
     </Box>
+    
   );
 });
 
