@@ -1,10 +1,43 @@
 import React, { useRef, useEffect, memo, useCallback } from 'react';
 import { technologies } from "./techData";
 
+const clampChannel = (value) => Math.max(0, Math.min(255, value));
+const clampAlpha = (value) => Math.max(0, Math.min(1, value));
+
+const createColorComponents = (r, g, b, a) => ({
+  r: clampChannel(r),
+  g: clampChannel(g),
+  b: clampChannel(b),
+  a: clampAlpha(a)
+});
+
+const cloneColorComponents = (color) => ({
+  r: color.r,
+  g: color.g,
+  b: color.b,
+  a: color.a
+});
+
+const colorToString = (color, alphaOverride) => {
+  const alpha = typeof alphaOverride === "number" ? clampAlpha(alphaOverride) : color.a;
+  return `rgba(${Math.round(clampChannel(color.r))}, ${Math.round(clampChannel(color.g))}, ${Math.round(clampChannel(color.b))}, ${alpha})`;
+};
+
+const applyColor = (target, colorComponents) => {
+  target.colorComponents = colorComponents;
+  target.color = colorToString(colorComponents);
+};
+
+const applyBaseColor = (target, colorComponents) => {
+  target.baseColorComponents = cloneColorComponents(colorComponents);
+  target.baseColor = colorToString(target.baseColorComponents);
+};
+
 // Professional 3D-inspired atomic visualization with interactive particles
 const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
   const canvasRef = useRef(null);
   const dimensionsRef = useRef({ width: 0, height: 0 });
+  const techElementsRef = useRef([]);
   const isNestHubMaxRef = useRef(false);
   const animationRef = useRef(null);
   const particlesRef = useRef([]);
@@ -16,6 +49,14 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
   const transitioningColorsRef = useRef(false);
   const colorTransitionProgressRef = useRef(0);
   const frameCountRef = useRef(0);
+  const performanceStateRef = useRef({
+    quality: 'high',
+    profile: null,
+    initialQuality: null,
+    lowFpsFrames: 0,
+    highFpsFrames: 0
+  });
+  const pendingProfileUpdateRef = useRef(false);
   
   // Extract technology colors - compute once
   const techColorsMap = useRef(technologies.map((tech, index) => {
@@ -58,6 +99,16 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
+
+  useEffect(() => {
+    techElementsRef.current = Array.from(document.querySelectorAll('.tech-card'));
+  }, []);
+
+  useEffect(() => {
+    if (hoveredTech !== null && !techElementsRef.current[hoveredTech]) {
+      techElementsRef.current = Array.from(document.querySelectorAll('.tech-card'));
+    }
+  }, [hoveredTech]);
   
   // Update color scheme when hoveredTech changes
   useEffect(() => {
@@ -87,21 +138,176 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
     let lastFrameTime = 0;
     const targetFPS = 60;
     const frameInterval = 1000 / targetFPS;
+
+    const PERFORMANCE_PROFILES = {
+      high: {
+        particleCount: 26,
+        strayParticleCount: 24,
+        orbitalSystemCount: 4,
+        molecularStructureCount: 3,
+        heavyTaskModulo: 1,
+        connectionStride: 1,
+        hoverRippleThreshold: 0.97,
+        hoverEmissionThreshold: 0.7,
+        mouseParticleThreshold: 0.95,
+        maxStrayParticles: 30,
+        additionalOrbitalSpawnThreshold: 0.7
+      },
+      medium: {
+        particleCount: 18,
+        strayParticleCount: 18,
+        orbitalSystemCount: 3,
+        molecularStructureCount: 2,
+        heavyTaskModulo: 2,
+        connectionStride: 2,
+        hoverRippleThreshold: 0.985,
+        hoverEmissionThreshold: 0.82,
+        mouseParticleThreshold: 0.975,
+        maxStrayParticles: 24,
+        additionalOrbitalSpawnThreshold: 0.82
+      },
+      low: {
+        particleCount: 12,
+        strayParticleCount: 12,
+        orbitalSystemCount: 2,
+        molecularStructureCount: 1,
+        heavyTaskModulo: 3,
+        connectionStride: 3,
+        hoverRippleThreshold: 0.992,
+        hoverEmissionThreshold: 0.92,
+        mouseParticleThreshold: 0.985,
+        maxStrayParticles: 18,
+        additionalOrbitalSpawnThreshold: 0.9
+      }
+    };
+
+    const selectInitialProfile = () => {
+      const prefersReducedMotion = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) {
+        return 'low';
+      }
+
+      const deviceMemory = typeof navigator !== 'undefined' && 'deviceMemory' in navigator ? navigator.deviceMemory : 8;
+      const hardwareConcurrency = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 8;
+      const isSmallViewport = window.innerWidth < 1024 || window.innerHeight < 720;
+
+      if (deviceMemory <= 3 || hardwareConcurrency <= 4 || isSmallViewport) {
+        return 'medium';
+      }
+
+      return 'high';
+    };
+
+    const applyProfile = (quality) => {
+      const profile = PERFORMANCE_PROFILES[quality] ?? PERFORMANCE_PROFILES.high;
+      performanceStateRef.current.profile = profile;
+      performanceStateRef.current.quality = quality;
+      if (!performanceStateRef.current.initialQuality) {
+        performanceStateRef.current.initialQuality = quality;
+      }
+      performanceStateRef.current.lowFpsFrames = 0;
+      performanceStateRef.current.highFpsFrames = 0;
+    };
+
+    const getCurrentProfile = () => performanceStateRef.current.profile ?? PERFORMANCE_PROFILES.high;
+
+    applyProfile(selectInitialProfile());
+
+    const scheduleProfileRefresh = () => {
+      pendingProfileUpdateRef.current = true;
+    };
+
+    const qualityOrder = ['low', 'medium', 'high'];
+
+    const adjustQuality = (direction) => {
+      const state = performanceStateRef.current;
+      const currentIndex = qualityOrder.indexOf(state.quality);
+      if (currentIndex === -1) return false;
+
+      let targetIndex = direction === 'down' ? currentIndex - 1 : currentIndex + 1;
+      const initialIndex = qualityOrder.indexOf(state.initialQuality ?? 'high');
+
+      if (direction === 'up' && initialIndex >= 0) {
+        targetIndex = Math.min(targetIndex, initialIndex);
+      }
+
+      if (targetIndex < 0 || targetIndex >= qualityOrder.length || targetIndex === currentIndex) {
+        return false;
+      }
+
+      const nextQuality = qualityOrder[targetIndex];
+      applyProfile(nextQuality);
+      scheduleProfileRefresh();
+      return true;
+    };
+
+    const recordPerformanceSample = (fps) => {
+      if (!Number.isFinite(fps) || fps <= 0) {
+        return;
+      }
+
+      const state = performanceStateRef.current;
+      const lowThreshold = 48;
+      const recoveryThreshold = 58;
+
+      if (fps < lowThreshold) {
+        state.lowFpsFrames = Math.min(state.lowFpsFrames + 1, 240);
+        state.highFpsFrames = Math.max(0, state.highFpsFrames - 2);
+
+        if (state.lowFpsFrames > 45) {
+          if (adjustQuality('down')) {
+            state.lowFpsFrames = 0;
+          }
+        }
+      } else if (fps > recoveryThreshold) {
+        state.highFpsFrames = Math.min(state.highFpsFrames + 1, 1200);
+        state.lowFpsFrames = Math.max(0, state.lowFpsFrames - 1);
+
+        if (state.highFpsFrames > 600) {
+          if (adjustQuality('up')) {
+            state.highFpsFrames = 0;
+          }
+        }
+      } else {
+        state.lowFpsFrames = Math.max(0, state.lowFpsFrames - 1);
+        state.highFpsFrames = Math.max(0, state.highFpsFrames - 1);
+      }
+    };
+
+    const ensureStrayParticleBudget = () => {
+      const maxStray = getCurrentProfile().maxStrayParticles;
+      while (strayParticles.length > maxStray) {
+        strayParticles.shift();
+      }
+    };
     
     // Set canvas dimensions with high DPI support
     const setCanvasDimensions = () => {
       const container = canvas.parentElement;
+      if (!container) return;
+
       const dpr = window.devicePixelRatio || 1;
       const width = container.offsetWidth;
       const height = container.offsetHeight;
-      
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-      ctx.scale(dpr, dpr);
-      
-      dimensionsRef.current = { width, height };
+      const scaledWidth = Math.round(width * dpr);
+      const scaledHeight = Math.round(height * dpr);
+
+      if (canvas.width !== scaledWidth || canvas.height !== scaledHeight) {
+        canvas.width = scaledWidth;
+        canvas.height = scaledHeight;
+      }
+
+      if (canvas.style.width !== `${width}px`) {
+        canvas.style.width = `${width}px`;
+      }
+
+      if (canvas.style.height !== `${height}px`) {
+        canvas.style.height = `${height}px`;
+      }
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      dimensionsRef.current = { width, height, dpr };
       checkNestHubMax();
     };
 
@@ -109,44 +315,41 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
     const getParticleColor = (i, opacity, z = 1, isIonized = false) => {
       // Scale opacity based on z-position and ionization
       const adjustedOpacity = opacity * (0.3 + (z * 0.7)) * (isIonized ? 1.2 : 1);
-      
+
       // If we have an active color scheme from hover
       if (activeColorSchemeRef.current) {
         const { r, g, b } = activeColorSchemeRef.current;
-        
+
         // Add subtle variation but keep it professional
         const variation = Math.sin(i * 0.3) * 10;
-        
-        // Ionized particles glow more in the blue spectrum
+
         if (isIonized) {
-          return `rgba(${Math.min(255, r + variation - 30)}, 
-                        ${Math.min(255, g + variation)}, 
-                        ${Math.min(255, b + variation + 50)}, 
-                        ${adjustedOpacity})`;
+          return createColorComponents(r + variation - 30, g + variation, b + variation + 50, adjustedOpacity);
         }
-        
-        return `rgba(${Math.min(255, r + variation)}, 
-                      ${Math.min(255, g + variation)}, 
-                      ${Math.min(255, b + variation)}, 
-                      ${adjustedOpacity})`;
+
+        return createColorComponents(r + variation, g + variation, b + variation, adjustedOpacity);
       }
-      
+
       // Otherwise use a tech color
       const colorIndex = Math.floor(i % techColorsMap.length);
       const baseColor = techColorsMap[colorIndex].color;
-      
+
       // Slightly adjust color based on particle properties
       const desaturationFactor = isIonized ? 0.7 : 0.85;
-      const r = Math.min(255, Math.round(baseColor.r * desaturationFactor + 255 * (1 - desaturationFactor)));
-      const g = Math.min(255, Math.round(baseColor.g * desaturationFactor + 255 * (1 - desaturationFactor)));
-      const b = Math.min(255, Math.round(baseColor.b * desaturationFactor + (isIonized ? 50 : 0) + 255 * (1 - desaturationFactor)));
-      
-      return `rgba(${r}, ${g}, ${b}, ${adjustedOpacity})`;
+      const r = baseColor.r * desaturationFactor + 255 * (1 - desaturationFactor);
+      const g = baseColor.g * desaturationFactor + 255 * (1 - desaturationFactor);
+      const b = baseColor.b * desaturationFactor + (isIonized ? 50 : 0) + 255 * (1 - desaturationFactor);
+
+      return createColorComponents(r, g, b, adjustedOpacity);
     };  
     
     // Create molecular structures (DNA, crystal lattices, etc.)
     const createMolecularStructures = () => {
-      const structureCount = isNestHubMaxRef.current ? 1 : 3;
+      const profile = getCurrentProfile();
+      const baseStructureCount = profile.molecularStructureCount;
+      const structureCount = isNestHubMaxRef.current
+        ? Math.min(1, baseStructureCount)
+        : baseStructureCount;
       molecularStructures.length = 0;
       
       for (let s = 0; s < structureCount; s++) {
@@ -298,7 +501,11 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
     
     // Create orbital systems with enhanced behaviors
     const createOrbitalSystems = () => {
-      const systemCount = isNestHubMaxRef.current ? 2 : 4;
+      const profile = getCurrentProfile();
+      const configuredCount = profile.orbitalSystemCount;
+      const systemCount = isNestHubMaxRef.current
+        ? Math.min(2, configuredCount)
+        : configuredCount;
       orbitals.length = 0;
       
       for (let s = 0; s < systemCount; s++) {
@@ -379,7 +586,11 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
 
     // Create stray particles (free electrons, ions)
     const createStrayParticles = () => {
-      const particleCount = isNestHubMaxRef.current ? 10 : 25;
+      const profile = getCurrentProfile();
+      const baseCount = profile.strayParticleCount;
+      const particleCount = isNestHubMaxRef.current
+        ? Math.min(10, baseCount)
+        : baseCount;
       strayParticles.length = 0;
       
       for (let i = 0; i < particleCount; i++) {
@@ -390,14 +601,15 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
         const opacity = Math.random() * 0.25 + (isIon ? 0.3 : 0.15);
         const speed = 0.2 + Math.random() * 0.4;
         
-        strayParticles.push({
+        const colorComponents = getParticleColor(i, opacity, z, isIon);
+        const baseColorComponents = cloneColorComponents(colorComponents);
+
+        const particle = {
           x: Math.random() * dimensionsRef.current.width,
           y: Math.random() * dimensionsRef.current.height,
           z, // z-position for pseudo-3D
           radius: size * z,
           originRadius: size,
-          color: getParticleColor(i, opacity, z, isIon),
-          baseColor: getParticleColor(i, opacity, z, isIon),
           vx: (Math.random() - 0.5) * speed,
           vy: (Math.random() - 0.5) * speed,
           vz: (Math.random() - 0.5) * 0.01,
@@ -413,31 +625,40 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
           interactionForce: 0, // Strength of attraction/repulsion
           trailPoints: [], // Trail for visual effect
           trailMaxLength: Math.floor(Math.random() * 5) + 3
-        });
+        };
+
+        applyColor(particle, colorComponents);
+        applyBaseColor(particle, baseColorComponents);
+
+        strayParticles.push(particle);
       }
       
+      ensureStrayParticleBudget();
       strayParticlesRef.current = strayParticles;
     };
 
     // Initialize standalone particles
     const initializeParticles = () => {
-      const particleCount = isNestHubMaxRef.current ? 15 : 25;
+      const profile = getCurrentProfile();
+      const baseCount = profile.particleCount;
+      const particleCount = isNestHubMaxRef.current
+        ? Math.min(15, baseCount)
+        : baseCount;
       particles.length = 0;
 
       for (let i = 0; i < particleCount; i++) {
         const z = Math.random() * 0.8 + 0.2;
         const size = Math.random() * 2 + 1;
         const opacity = Math.random() * 0.2 + 0.2;
-        const color = getParticleColor(i, opacity, z);
-        
-        particles.push({
+        const colorComponents = getParticleColor(i, opacity, z);
+        const baseColorComponents = cloneColorComponents(colorComponents);
+
+        const particle = {
           x: Math.random() * dimensionsRef.current.width,
           y: Math.random() * dimensionsRef.current.height,
           z,
           radius: size * z,
           originRadius: size,
-          color,
-          baseColor: color,
           vx: (Math.random() - 0.5) * 0.15,
           vy: (Math.random() - 0.5) * 0.15,
           vz: (Math.random() - 0.5) * 0.01,
@@ -456,25 +677,38 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
           bondDuration: 0,
           canBond: true,
           bondCooldown: 0
-        });
+        };
+
+        applyColor(particle, colorComponents);
+        applyBaseColor(particle, baseColorComponents);
+        particle.isIon = false;
+
+        particles.push(particle);
       }
       
       particlesRef.current = particles;
     };
+
+    const refreshSimulation = () => {
+      initializeParticles();
+      createOrbitalSystems();
+      createStrayParticles();
+      createMolecularStructures();
+      pendingProfileUpdateRef.current = false;
+    };
     
     // Draw glowing effect
-    const drawGlow = (x, y, radius, color, intensity = 0.5) => {
+    const drawGlow = (x, y, radius, colorComponents, intensity = 0.5) => {
+      if (!colorComponents) return;
+
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 3);
-      
-      // Extract RGB components
-      const colorMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([.\d]+)\)/);
-      if (!colorMatch) return;
-      
-      const [, r, g, b, a] = colorMatch.map(Number);
-      
-      gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${a * intensity})`);
-      gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${a * intensity * 0.4})`);
-      gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+      const { r, g, b, a } = colorComponents;
+      const innerAlpha = clampAlpha(a * intensity);
+      const midAlpha = clampAlpha(innerAlpha * 0.4);
+
+      gradient.addColorStop(0, colorToString(colorComponents, innerAlpha));
+      gradient.addColorStop(0.5, colorToString(colorComponents, midAlpha));
+      gradient.addColorStop(1, colorToString(colorComponents, 0));
       
       ctx.fillStyle = gradient;
       ctx.beginPath();
@@ -483,58 +717,48 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
     };
     
     // Update particle color with smooth transition
-    const updateParticleColor = (particle, progress, index) => {
-      const currentColorMatch = particle.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([.\d]+)\)/);
-      if (!currentColorMatch) return particle.color;
-      
-      const [, currentR, currentG, currentB, currentA] = currentColorMatch.map(Number);
-      
-      // If we're transitioning to specific color
+    const updateParticleColor = (particle, progress) => {
+      if (!particle || !particle.colorComponents || !particle.baseColorComponents) {
+        return particle?.color;
+      }
+
+      const current = particle.colorComponents;
+
       if (activeColorSchemeRef.current) {
         const { r, g, b } = activeColorSchemeRef.current;
-        const opacity = Number(currentA);
-        
-        // Smoother easing
         const easeProgress = progress < 0.5
           ? 4 * progress * progress * progress
           : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-        
-        // Special treatment for ionized particles
+
         if (particle.isIon) {
-          const newR = Math.round(currentR + (r - 30 - currentR) * easeProgress);
-          const newG = Math.round(currentG + (g - currentG) * easeProgress);
-          const newB = Math.round(currentB + (b + 50 - currentB) * easeProgress);
-          return `rgba(${newR}, ${newG}, ${newB}, ${opacity})`;
+          current.r += (r - 30 - current.r) * easeProgress;
+          current.g += (g - current.g) * easeProgress;
+          current.b += (b + 50 - current.b) * easeProgress;
+        } else {
+          current.r += (r - current.r) * easeProgress;
+          current.g += (g - current.g) * easeProgress;
+          current.b += (b - current.b) * easeProgress;
         }
-        
-        const newR = Math.round(currentR + (r - currentR) * easeProgress);
-        const newG = Math.round(currentG + (g - currentG) * easeProgress);
-        const newB = Math.round(currentB + (b - currentB) * easeProgress);
-        
-        return `rgba(${newR}, ${newG}, ${newB}, ${opacity})`;
+      } else {
+        const base = particle.baseColorComponents;
+        const easeOutProgress = 1 - Math.pow(1 - progress, 3);
+        current.r += (base.r - current.r) * easeOutProgress;
+        current.g += (base.g - current.g) * easeOutProgress;
+        current.b += (base.b - current.b) * easeOutProgress;
+        current.a += (base.a - current.a) * easeOutProgress;
       }
-      
-      // If we're transitioning back to original colors
-      const baseColorMatch = particle.baseColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([.\d]+)\)/);
-      if (!baseColorMatch) return particle.color;
-      
-      const [, baseR, baseG, baseB, baseA] = baseColorMatch.map(Number);
-      
-      // Ease transition back to base color
-      const easeOutProgress = 1 - Math.pow(1 - progress, 3);
-      const newR = Math.round(currentR + (baseR - currentR) * easeOutProgress);
-      const newG = Math.round(currentG + (baseG - currentG) * easeOutProgress);
-      const newB = Math.round(currentB + (baseB - currentB) * easeOutProgress);
-      const newA = Number(currentA) + (Number(baseA) - Number(currentA)) * easeOutProgress;
-      
-      return `rgba(${newR}, ${newG}, ${newB}, ${newA})`;
+
+      particle.color = colorToString(current);
+      return particle.color;
     };
     
     // Process electron transfers between orbital systems
     const processElectronTransfers = () => {
+      const profile = getCurrentProfile();
+      const allowHeavyTransfers = frameCountRef.current % profile.heavyTaskModulo === 0;
       orbitals.forEach((system, systemIndex) => {
         // Only allow transfers if cooldown is complete
-        if (system.electronTransferCooldown <= 0 && system.canTransferElectron) {
+        if (allowHeavyTransfers && system.electronTransferCooldown <= 0 && system.canTransferElectron) {
           // Find an orbital ring with particles
           const sourceRingIndex = system.orbitalRings.findIndex(ring => ring.particles.length > 0);
           if (sourceRingIndex >= 0) {
@@ -578,7 +802,7 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
               }
             }
           }
-        } else {
+        } else if (system.electronTransferCooldown > 0) {
           // Decrease cooldown
           system.electronTransferCooldown = Math.max(0, system.electronTransferCooldown - 1);
         }
@@ -630,15 +854,15 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
         const baseColor = techColorsMap[colorIndex].color;
         const speed = 0.5 + Math.random() * 1;
         const angle = Math.random() * Math.PI * 2;
+        const primaryColor = createColorComponents(baseColor.r + 30, baseColor.g + 30, baseColor.b + 50, 0.7);
+        const secondaryColor = createColorComponents(baseColor.r, baseColor.g, baseColor.b, 0.4);
         
-        strayParticles.push({
+        const particle = {
           x,
           y,
           z: Math.random() * 0.5 + 0.5,
           radius: (size * 0.8) + Math.random(),
           originRadius: size,
-          color: `rgba(${baseColor.r + 30}, ${baseColor.g + 30}, ${baseColor.b + 50}, 0.7)`,
-          baseColor: `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.4)`,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
           vz: (Math.random() - 0.5) * 0.05,
@@ -652,7 +876,13 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
           maxLifespan: 50 + Math.random() * 30, // Short lifespan
           trailPoints: [],
           trailMaxLength: 5 + Math.floor(Math.random() * 3)
-        });
+        };
+
+        applyColor(particle, primaryColor);
+        applyBaseColor(particle, secondaryColor);
+
+        strayParticles.push(particle);
+        ensureStrayParticleBudget();
       }
     };
 
@@ -1165,6 +1395,10 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
 
     // Process interactions between particles and systems
     const processParticleInteractions = () => {
+      const profile = getCurrentProfile();
+      const heavyModulo = profile.heavyTaskModulo;
+      const runHeavyInteractions = frameCountRef.current % heavyModulo === 0;
+      
       strayParticles.forEach(particle => {
         // Update lifespan
         particle.lifespan++;
@@ -1182,94 +1416,98 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
           });
         }
         
-        // Process interactions with orbital systems
-        orbitals.forEach(system => {
-          const dx = particle.x - system.x;
-          const dy = particle.y - system.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          const maxInfluence = 150;
-          
-          if (distance < maxInfluence) {
-            // Calculate attraction or repulsion based on charges
-            let force = 0;
+        if (runHeavyInteractions) {
+          // Process interactions with orbital systems
+          orbitals.forEach(system => {
+            const dx = particle.x - system.x;
+            const dy = particle.y - system.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const maxInfluence = 150;
             
-            if (particle.charge && system.charge) {
-              // Opposite charges attract, same charges repel
-              force = (particle.charge * system.charge) * -0.002 / Math.max(1, distance * 0.5);
-            } else {
-              // Subtle attraction to systems for neutral particles
-              force = -0.0005 / Math.max(1, distance * 0.5);
-            }
-            
-            // Apply force
-            const angle = Math.atan2(dy, dx);
-            particle.vx += Math.cos(angle) * force;
-            particle.vy += Math.sin(angle) * force;
-            
-            // Limit max velocity
-            const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
-            const maxSpeed = particle.isIon ? 1.5 : 0.8;
-            if (speed > maxSpeed) {
-              particle.vx = (particle.vx / speed) * maxSpeed;
-              particle.vy = (particle.vy / speed) * maxSpeed;
-            }
-            
-            // Occasionally, ions may be captured into orbits
-            if (particle.isIon && Math.random() > 0.995 && distance < 50) {
-              if (system.orbitalRings.length > 0) {
-                const targetRing = system.orbitalRings[Math.floor(Math.random() * system.orbitalRings.length)];
-                
-                targetRing.particles.push({
-                  angle: Math.atan2(dy, dx),
-                  size: particle.originRadius * 1.2,
-                  pulsePhase: Math.random() * Math.PI * 2,
-                  pulseSpeed: 0.03 + Math.random() * 0.02,
-                  colorOffset: Math.random() * 20,
-                  opacity: 0.6 + Math.random() * 0.4,
-                  ionized: true,
-                  canJump: true,
-                  jumpCooldown: 0
-                });
-                
-                // Remove the captured particle
-                const index = strayParticles.indexOf(particle);
-                if (index !== -1) {
-                  strayParticles.splice(index, 1);
+            if (distance < maxInfluence) {
+              // Calculate attraction or repulsion based on charges
+              let force = 0;
+              
+              if (particle.charge && system.charge) {
+                // Opposite charges attract, same charges repel
+                force = (particle.charge * system.charge) * -0.002 / Math.max(1, distance * 0.5);
+              } else {
+                // Subtle attraction to systems for neutral particles
+                force = -0.0005 / Math.max(1, distance * 0.5);
+              }
+              
+              // Apply force
+              const angle = Math.atan2(dy, dx);
+              particle.vx += Math.cos(angle) * force;
+              particle.vy += Math.sin(angle) * force;
+              
+              // Limit max velocity
+              const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
+              const maxSpeed = particle.isIon ? 1.5 : 0.8;
+              if (speed > maxSpeed) {
+                particle.vx = (particle.vx / speed) * maxSpeed;
+                particle.vy = (particle.vy / speed) * maxSpeed;
+              }
+              
+              // Occasionally, ions may be captured into orbits
+              if (particle.isIon && Math.random() > 0.995 && distance < 50) {
+                if (system.orbitalRings.length > 0) {
+                  const targetRing = system.orbitalRings[Math.floor(Math.random() * system.orbitalRings.length)];
+                  
+                  targetRing.particles.push({
+                    angle: Math.atan2(dy, dx),
+                    size: particle.originRadius * 1.2,
+                    pulsePhase: Math.random() * Math.PI * 2,
+                    pulseSpeed: 0.03 + Math.random() * 0.02,
+                    colorOffset: Math.random() * 20,
+                    opacity: 0.6 + Math.random() * 0.4,
+                    ionized: true,
+                    canJump: true,
+                    jumpCooldown: 0
+                  });
+                  
+                  // Remove the captured particle
+                  const index = strayParticles.indexOf(particle);
+                  if (index !== -1) {
+                    strayParticles.splice(index, 1);
+                  }
+                  
+                  // Create energy flash on capture
+                  createEnergyRelease(particle.x, particle.y, particle.radius * 2, system.colorIndex);
                 }
-                
-                // Create energy flash on capture
-                createEnergyRelease(particle.x, particle.y, particle.radius * 2, system.colorIndex);
               }
             }
-          }
-        });
+          });
+        }
         
         // Interactions with molecular structures
-        molecularStructures.forEach(structure => {
-          const dx = particle.x - structure.x;
-          const dy = particle.y - structure.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          const maxInfluence = 100;
-          
-          if (distance < maxInfluence) {
-            // Subtle attraction or deflection
-            const force = -0.001 / Math.max(1, distance * 0.5);
-            const angle = Math.atan2(dy, dx);
+        if (runHeavyInteractions) {
+          molecularStructures.forEach(structure => {
+            const dx = particle.x - structure.x;
+            const dy = particle.y - structure.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const maxInfluence = 100;
             
-            particle.vx += Math.cos(angle) * force;
-            particle.vy += Math.sin(angle) * force;
-            
-            // Occasionally create energy effects when particles interact with structures
-            if (Math.random() > 0.99 && distance < 30) {
-              createEnergyRelease(
-                particle.x,
-                particle.y,
-                particle.radius,
-                structure.colorIndex
-              );
+            if (distance < maxInfluence) {
+              // Subtle attraction or deflection
+              const force = -0.001 / Math.max(1, distance * 0.5);
+              const angle = Math.atan2(dy, dx);
+              
+              particle.vx += Math.cos(angle) * force;
+              particle.vy += Math.sin(angle) * force;
+              
+              // Occasionally create energy effects when particles interact with structures
+              if (Math.random() > 0.99 && distance < 30) {
+                createEnergyRelease(
+                  particle.x,
+                  particle.y,
+                  particle.radius,
+                  structure.colorIndex
+                );
+              }
             }
-          }
-        });
+          });
+        }
         
         // Apply decay for energy particles
         if (particle.isEnergyParticle) {
@@ -1295,8 +1533,10 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
             
             // Update appearance
             const opacity = Math.random() * 0.25 + (particle.isIon ? 0.3 : 0.15);
-            particle.color = getParticleColor(strayParticles.indexOf(particle), opacity, particle.z, particle.isIon);
-            particle.baseColor = particle.color;
+            const index = strayParticles.indexOf(particle);
+            const updatedColor = getParticleColor(index, opacity, particle.z, particle.isIon);
+            applyColor(particle, updatedColor);
+            applyBaseColor(particle, updatedColor);
             
             // Reset lifespan
             particle.lifespan = 0;
@@ -1318,7 +1558,7 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
           p1.bondCooldown--;
         }
         
-        if (p1.bondPartner === null && p1.canBond && p1.bondCooldown === 0) {
+        if (runHeavyInteractions && p1.bondPartner === null && p1.canBond && p1.bondCooldown === 0) {
           // Look for a nearby particle to bond with
           for (let j = i + 1; j < particles.length; j++) {
             const p2 = particles[j];
@@ -1759,10 +1999,17 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
 
     // Helper for drawing connections between particles
     const drawConnections = () => {
+      const profile = getCurrentProfile();
+      const connectionStride = profile.connectionStride;
+      if (connectionStride > 1 && frameCountRef.current % connectionStride !== 0) {
+        return;
+      }
+      const step = connectionStride > 1 ? connectionStride : 1;
+      const offset = connectionStride > 1 ? frameCountRef.current % connectionStride : 0;
       for (let i = 0; i < particles.length; i++) {
         const p1 = particles[i];
         
-        for (let j = i + 1; j < particles.length; j++) {
+        for (let j = i + 1 + offset; j < particles.length; j += step) {
           const p2 = particles[j];
           const dx = p1.x - p2.x;
           const dy = p1.y - p2.y;
@@ -1777,8 +2024,8 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
             
             // Create gradient for connection
             const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-            gradient.addColorStop(0, p1.color.replace(/[^,]+(?=\))/, opacity.toString()));
-            gradient.addColorStop(1, p2.color.replace(/[^,]+(?=\))/, opacity.toString()));
+            gradient.addColorStop(0, colorToString(p1.colorComponents ?? createColorComponents(255, 255, 255, opacity), opacity));
+            gradient.addColorStop(1, colorToString(p2.colorComponents ?? createColorComponents(255, 255, 255, opacity), opacity));
             
             // Thinner lines
             ctx.beginPath();
@@ -1804,14 +2051,11 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
             
             // Create gradient for bond
             const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-            
-            // Interpolate between particle colors
-            const c1 = p1.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-            const c2 = p2.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-            
-            if (c1 && c2) {
-              gradient.addColorStop(0, `rgba(${c1[1]}, ${c1[2]}, ${c1[3]}, ${bondOpacity})`);
-              gradient.addColorStop(1, `rgba(${c2[1]}, ${c2[2]}, ${c2[3]}, ${bondOpacity})`);
+            const startColor = p1.colorComponents ?? createColorComponents(255, 255, 255, bondOpacity);
+            const endColor = p2.colorComponents ?? createColorComponents(255, 255, 255, bondOpacity);
+
+            gradient.addColorStop(0, colorToString(startColor, bondOpacity));
+            gradient.addColorStop(1, colorToString(endColor, bondOpacity));
               
               // Thicker line for bond
               ctx.beginPath();
@@ -1827,16 +2071,17 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
                 const ratio = i / steps;
                 const pointX = p1.x + (p2.x - p1.x) * ratio;
                 const pointY = p1.y + (p2.y - p1.y) * ratio;
-                
+                const interpolatedColor = createColorComponents(
+                  startColor.r * (1 - ratio) + endColor.r * ratio,
+                  startColor.g * (1 - ratio) + endColor.g * ratio,
+                  startColor.b * (1 - ratio) + endColor.b * ratio,
+                  bondOpacity * 1.5
+                );
                 ctx.beginPath();
                 ctx.arc(pointX, pointY, 1, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${c1[1] * (1 - ratio) + c2[1] * ratio}, 
-                                      ${c1[2] * (1 - ratio) + c2[2] * ratio}, 
-                                      ${c1[3] * (1 - ratio) + c2[3] * ratio}, 
-                                      ${bondOpacity * 1.5})`;
+                ctx.fillStyle = colorToString(interpolatedColor);
                 ctx.fill();
               }
-            }
           }
         }
       }
@@ -1872,11 +2117,9 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
           particle.trailPoints.forEach((point, i) => {
             const trailSize = finalSize * (1 - i / particle.trailMaxLength);
             
-            // Extract the base color
-            const colorMatch = particle.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([.\d]+)\)/);
-            if (colorMatch) {
-              const [, r, g, b] = colorMatch.map(Number);
-              ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${point.opacity * 0.3})`;
+            const colorComponents = particle.colorComponents;
+            if (colorComponents) {
+              ctx.fillStyle = colorToString(colorComponents, point.opacity * 0.3);
               ctx.beginPath();
               ctx.arc(point.x, point.y, trailSize, 0, Math.PI * 2);
               ctx.fill();
@@ -1892,7 +2135,7 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
         
         // Add glow effect for ions and energy particles
         if (particle.isIon || particle.isEnergyParticle) {
-          drawGlow(particle.x, particle.y, finalSize, particle.color, 0.5);
+          drawGlow(particle.x, particle.y, finalSize, particle.colorComponents, 0.5);
         }
       });
     };
@@ -1903,12 +2146,21 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
       frameCountRef.current++;
       
       // Frame rate control
-      if (currentTime - lastFrameTime < frameInterval) return;
-      lastFrameTime = currentTime;
+    const elapsed = currentTime - lastFrameTime;
+    if (elapsed < frameInterval) return;
+    lastFrameTime = currentTime;
+
+    const fps = elapsed > 0 ? 1000 / elapsed : targetFPS;
+    recordPerformanceSample(fps);
+
+      if (pendingProfileUpdateRef.current) {
+        refreshSimulation();
+      }
       
       // Semi-transparent clear for subtle trails
       ctx.fillStyle = 'rgba(15, 5, 40, 0.2)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const { width: canvasWidth = canvas.width, height: canvasHeight = canvas.height } = dimensionsRef.current;
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
       
       // Update color transition progress with easing
       if (transitioningColorsRef.current) {
@@ -1920,10 +2172,10 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
       }
       
       // Update particle positions
-      particles.forEach((particle, i) => {
+      particles.forEach((particle) => {
         // Apply color transition if needed
         if (transitioningColorsRef.current) {
-          particle.color = updateParticleColor(particle, colorTransitionProgressRef.current, i);
+          updateParticleColor(particle, colorTransitionProgressRef.current);
         }
         
         if (particle.useOrbit) {
@@ -1980,14 +2232,23 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
       
       // Special subtle effect for hovered tech
       if (hoveredTech !== null && hoveredTechRef && hoveredTechRef.current !== null && !isNestHubMaxRef.current) {
-        const techElements = document.querySelectorAll('.tech-card');
-        if (techElements[hoveredTech]) {
-          const rect = techElements[hoveredTech].getBoundingClientRect();
+        const techElements = techElementsRef.current;
+        let hoveredElement = techElements[hoveredTech];
+
+        if (!hoveredElement && frameCountRef.current % 60 === 0) {
+          techElementsRef.current = Array.from(document.querySelectorAll('.tech-card'));
+          hoveredElement = techElementsRef.current[hoveredTech];
+        }
+
+        if (hoveredElement) {
+          const rect = hoveredElement.getBoundingClientRect();
           const centerX = rect.left + rect.width / 2;
           const centerY = rect.top + rect.height / 2;
           
+          const profile = getCurrentProfile();
+
           // Create elegant ripple effect
-          if (Math.random() > 0.97) {
+          if (Math.random() > profile.hoverRippleThreshold) {
             const tech = technologies[hoveredTech];
             
             // Multiple concentric ripples
@@ -2003,19 +2264,19 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
             }
             
             // Occasionally emit particles from the tech card
-            if (Math.random() > 0.7) {
+            if (Math.random() > profile.hoverEmissionThreshold) {
               const baseColor = techColorsMap[hoveredTech % techColorsMap.length].color;
               const angle = Math.random() * Math.PI * 2;
               const speed = 0.5 + Math.random() * 1;
+              const primaryColor = createColorComponents(baseColor.r + 30, baseColor.g + 30, baseColor.b + 50, 0.6);
+              const baseColorComponents = createColorComponents(baseColor.r, baseColor.g, baseColor.b, 0.4);
               
-              strayParticles.push({
+              const particle = {
                 x: centerX,
                 y: centerY,
                 z: Math.random() * 0.3 + 0.7,
                 radius: 1 + Math.random(),
                 originRadius: 1 + Math.random(),
-                color: `rgba(${baseColor.r + 30}, ${baseColor.g + 30}, ${baseColor.b + 50}, 0.6)`,
-                baseColor: `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.4)`,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
                 vz: (Math.random() - 0.5) * 0.01,
@@ -2029,7 +2290,12 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
                 maxLifespan: 60 + Math.random() * 30,
                 trailPoints: [],
                 trailMaxLength: 5 + Math.floor(Math.random() * 3)
-              });
+              };
+
+              applyColor(particle, primaryColor);
+              applyBaseColor(particle, baseColorComponents);
+              strayParticles.push(particle);
+              ensureStrayParticleBudget();
             }
           }
           
@@ -2098,18 +2364,19 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
           });
           
           // Maybe create a new energy particle on mouse movement
-          if (Math.random() > 0.95) {
+          const profile = getCurrentProfile();
+          if (Math.random() > profile.mouseParticleThreshold) {
             const randIndex = Math.floor(Math.random() * techColorsMap.length);
             const baseColor = techColorsMap[randIndex].color;
-            
-            strayParticles.push({
+            const primaryColor = createColorComponents(baseColor.r, baseColor.g, baseColor.b, 0.6);
+            const secondaryColor = createColorComponents(baseColor.r, baseColor.g, baseColor.b, 0.4);
+
+            const particle = {
               x: mouseX + (Math.random() - 0.5) * 20,
               y: mouseY + (Math.random() - 0.5) * 20,
               z: Math.random() * 0.3 + 0.7,
               radius: 1 + Math.random(),
               originRadius: 1 + Math.random(),
-              color: `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.6)`,
-              baseColor: `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.4)`,
               vx: (Math.random() - 0.5) * 0.5,
               vy: (Math.random() - 0.5) * 0.5,
               vz: (Math.random() - 0.5) * 0.01,
@@ -2122,7 +2389,12 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
               maxLifespan: 100 + Math.random() * 100,
               trailPoints: [],
               trailMaxLength: 3 + Math.floor(Math.random() * 2)
-            });
+            };
+
+            applyColor(particle, primaryColor);
+            applyBaseColor(particle, secondaryColor);
+            strayParticles.push(particle);
+            ensureStrayParticleBudget();
           }
         }
       }
@@ -2130,7 +2402,8 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
       // Periodically refresh some particles for variety
       if (frameCountRef.current % 300 === 0) {
         // Ensure fresh energy particles are created
-        if (strayParticles.length < 30) {
+        const maxStray = getCurrentProfile().maxStrayParticles;
+        if (strayParticles.length < maxStray) {
           const randIndex = Math.floor(Math.random() * techColorsMap.length);
           const baseColor = techColorsMap[randIndex].color;
           const x = Math.random() * dimensionsRef.current.width;
@@ -2140,7 +2413,9 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
         }
         
         // Random chance to create a new orbital system if few exist
-        if (orbitals.length < 3 && Math.random() > 0.7) {
+        const profile = getCurrentProfile();
+        const targetOrbitals = profile.orbitalSystemCount;
+        if (orbitals.length < targetOrbitals && Math.random() > profile.additionalOrbitalSpawnThreshold) {
           const system = {
             x: Math.random() * dimensionsRef.current.width,
             y: Math.random() * dimensionsRef.current.height,
@@ -2206,32 +2481,29 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
     // Handle window resize
     const handleResize = () => {
       setCanvasDimensions();
-      initializeParticles();
-      createOrbitalSystems();
-      createStrayParticles();
-      createMolecularStructures();
+      refreshSimulation();
     };
 
     // Initial setup
     setCanvasDimensions();
-    initializeParticles();
-    createOrbitalSystems();
-    createStrayParticles();
-    createMolecularStructures();
+    refreshSimulation();
     animate(0);
     
     // Event listeners
     window.addEventListener('resize', handleResize);
-    document.addEventListener('visibilitychange', () => {
+
+    const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         handleResize();
       }
-    });
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
-      document.removeEventListener('visibilitychange', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       cancelAnimationFrame(animationRef.current);
     };
   }, []); // Empty dependency array ensures setup runs only once
