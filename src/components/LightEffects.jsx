@@ -33,6 +33,8 @@ const applyBaseColor = (target, colorComponents) => {
   target.baseColor = colorToString(target.baseColorComponents);
 };
 
+const MAX_DEVICE_PIXEL_RATIO = 1.35;
+
 // Professional 3D-inspired atomic visualization with interactive particles
 const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
   const canvasRef = useRef(null);
@@ -45,6 +47,7 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
   const molecularStructuresRef = useRef([]);
   const strayParticlesRef = useRef([]);
   const mousePositionRef = useRef({ x: null, y: null });
+  const scrollStateRef = useRef({ isScrolling: false, lastEventTime: 0 });
   const activeColorSchemeRef = useRef(null);
   const transitioningColorsRef = useRef(false);
   const colorTransitionProgressRef = useRef(0);
@@ -101,6 +104,20 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
   }, []);
 
   useEffect(() => {
+    const handleScroll = () => {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      scrollStateRef.current.isScrolling = true;
+      scrollStateRef.current.lastEventTime = now;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  useEffect(() => {
     techElementsRef.current = Array.from(document.querySelectorAll('.tech-card'));
   }, []);
 
@@ -136,48 +153,60 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
     const strayParticles = [];
     const molecularStructures = [];
     let lastFrameTime = 0;
-    const targetFPS = 60;
-    const frameInterval = 1000 / targetFPS;
+    let targetFPS = 60;
+    let frameInterval = 1000 / targetFPS;
 
     const PERFORMANCE_PROFILES = {
       high: {
-        particleCount: 26,
-        strayParticleCount: 24,
-        orbitalSystemCount: 4,
-        molecularStructureCount: 3,
-        heavyTaskModulo: 1,
-        connectionStride: 1,
-        hoverRippleThreshold: 0.97,
-        hoverEmissionThreshold: 0.7,
-        mouseParticleThreshold: 0.95,
-        maxStrayParticles: 30,
-        additionalOrbitalSpawnThreshold: 0.7
-      },
-      medium: {
-        particleCount: 18,
+        particleCount: 20,
         strayParticleCount: 18,
         orbitalSystemCount: 3,
         molecularStructureCount: 2,
         heavyTaskModulo: 2,
         connectionStride: 2,
-        hoverRippleThreshold: 0.985,
-        hoverEmissionThreshold: 0.82,
-        mouseParticleThreshold: 0.975,
+        hoverRippleThreshold: 0.975,
+        hoverEmissionThreshold: 0.78,
+        mouseParticleThreshold: 0.97,
         maxStrayParticles: 24,
-        additionalOrbitalSpawnThreshold: 0.82
+        additionalOrbitalSpawnThreshold: 0.78,
+        maxConnectionsPerParticle: 3,
+        useConnectionGradients: true,
+        targetFps: 55,
+        scrollHeavyTaskStride: 2
       },
-      low: {
-        particleCount: 12,
+      medium: {
+        particleCount: 14,
         strayParticleCount: 12,
         orbitalSystemCount: 2,
         molecularStructureCount: 1,
         heavyTaskModulo: 3,
         connectionStride: 3,
+        hoverRippleThreshold: 0.985,
+        hoverEmissionThreshold: 0.84,
+        mouseParticleThreshold: 0.978,
+        maxStrayParticles: 18,
+        additionalOrbitalSpawnThreshold: 0.84,
+        maxConnectionsPerParticle: 2,
+        useConnectionGradients: false,
+        targetFps: 42,
+        scrollHeavyTaskStride: 3
+      },
+      low: {
+        particleCount: 9,
+        strayParticleCount: 9,
+        orbitalSystemCount: 1,
+        molecularStructureCount: 1,
+        heavyTaskModulo: 4,
+        connectionStride: 4,
         hoverRippleThreshold: 0.992,
         hoverEmissionThreshold: 0.92,
         mouseParticleThreshold: 0.985,
-        maxStrayParticles: 18,
-        additionalOrbitalSpawnThreshold: 0.9
+        maxStrayParticles: 12,
+        additionalOrbitalSpawnThreshold: 0.9,
+        maxConnectionsPerParticle: 1,
+        useConnectionGradients: false,
+        targetFps: 30,
+        scrollHeavyTaskStride: 4
       }
     };
 
@@ -207,6 +236,8 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
       }
       performanceStateRef.current.lowFpsFrames = 0;
       performanceStateRef.current.highFpsFrames = 0;
+      targetFPS = profile.targetFps ?? 60;
+      frameInterval = 1000 / targetFPS;
     };
 
     const getCurrentProfile = () => performanceStateRef.current.profile ?? PERFORMANCE_PROFILES.high;
@@ -286,7 +317,22 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
       const container = canvas.parentElement;
       if (!container) return;
 
-      const dpr = window.devicePixelRatio || 1;
+      const deviceDpr = window.devicePixelRatio || 1;
+      const quality = performanceStateRef.current.quality ?? 'high';
+      const isScrolling = scrollStateRef.current.isScrolling;
+      let dprCap = MAX_DEVICE_PIXEL_RATIO;
+
+      if (quality === 'medium') {
+        dprCap = 1.2;
+      } else if (quality === 'low') {
+        dprCap = 1;
+      }
+
+      if (isScrolling) {
+        dprCap = Math.min(dprCap, 1);
+      }
+
+      const dpr = Math.min(deviceDpr, dprCap);
       const width = container.offsetWidth;
       const height = container.offsetHeight;
       const scaledWidth = Math.round(width * dpr);
@@ -755,7 +801,7 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
     // Process electron transfers between orbital systems
     const processElectronTransfers = () => {
       const profile = getCurrentProfile();
-      const allowHeavyTransfers = frameCountRef.current % profile.heavyTaskModulo === 0;
+      const allowHeavyTransfers = !scrollStateRef.current.isScrolling && frameCountRef.current % profile.heavyTaskModulo === 0;
       orbitals.forEach((system, systemIndex) => {
         // Only allow transfers if cooldown is complete
         if (allowHeavyTransfers && system.electronTransferCooldown <= 0 && system.canTransferElectron) {
@@ -888,6 +934,9 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
 
     // Process molecular structures
     const updateMolecularStructures = (currentTime) => {
+      if (scrollStateRef.current.isScrolling && performanceStateRef.current.quality !== 'high') {
+        return;
+      }
       molecularStructures.forEach(structure => {
         // Update position and rotation
         structure.x += structure.vx;
@@ -1397,7 +1446,7 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
     const processParticleInteractions = () => {
       const profile = getCurrentProfile();
       const heavyModulo = profile.heavyTaskModulo;
-      const runHeavyInteractions = frameCountRef.current % heavyModulo === 0;
+      const runHeavyInteractions = !scrollStateRef.current.isScrolling && frameCountRef.current % heavyModulo === 0;
       
       strayParticles.forEach(particle => {
         // Update lifespan
@@ -2000,15 +2049,21 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
     // Helper for drawing connections between particles
     const drawConnections = () => {
       const profile = getCurrentProfile();
+      if (scrollStateRef.current.isScrolling && performanceStateRef.current.quality !== 'high') {
+        return;
+      }
       const connectionStride = profile.connectionStride;
       if (connectionStride > 1 && frameCountRef.current % connectionStride !== 0) {
         return;
       }
       const step = connectionStride > 1 ? connectionStride : 1;
       const offset = connectionStride > 1 ? frameCountRef.current % connectionStride : 0;
+      const maxConnectionsPerParticle = profile.maxConnectionsPerParticle ?? particles.length;
+      const useGradients = profile.useConnectionGradients !== false && !scrollStateRef.current.isScrolling;
       for (let i = 0; i < particles.length; i++) {
         const p1 = particles[i];
-        
+        let connectionsDrawn = 0;
+
         for (let j = i + 1 + offset; j < particles.length; j += step) {
           const p2 = particles[j];
           const dx = p1.x - p2.x;
@@ -2023,17 +2078,28 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
             const opacity = Math.pow(1 - distance / maxDistance, 2) * 0.15;
             
             // Create gradient for connection
-            const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-            gradient.addColorStop(0, colorToString(p1.colorComponents ?? createColorComponents(255, 255, 255, opacity), opacity));
-            gradient.addColorStop(1, colorToString(p2.colorComponents ?? createColorComponents(255, 255, 255, opacity), opacity));
-            
+            let strokeStyle;
+            if (useGradients) {
+              const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+              gradient.addColorStop(0, colorToString(p1.colorComponents ?? createColorComponents(255, 255, 255, opacity), opacity));
+              gradient.addColorStop(1, colorToString(p2.colorComponents ?? createColorComponents(255, 255, 255, opacity), opacity));
+              strokeStyle = gradient;
+            } else {
+              strokeStyle = colorToString(p1.colorComponents ?? createColorComponents(200, 200, 255, opacity), opacity);
+            }
+
             // Thinner lines
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = gradient;
+            ctx.strokeStyle = strokeStyle;
             ctx.lineWidth = Math.min(0.5, ((p1.radius + p2.radius) * 0.2));
             ctx.stroke();
+
+            connectionsDrawn++;
+            if (connectionsDrawn >= maxConnectionsPerParticle) {
+              break;
+            }
           }
         }
         
@@ -2146,12 +2212,24 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
       frameCountRef.current++;
       
       // Frame rate control
-    const elapsed = currentTime - lastFrameTime;
-    if (elapsed < frameInterval) return;
-    lastFrameTime = currentTime;
+      const elapsed = currentTime - lastFrameTime;
+      if (elapsed < frameInterval) return;
+      lastFrameTime = currentTime;
 
-    const fps = elapsed > 0 ? 1000 / elapsed : targetFPS;
-    recordPerformanceSample(fps);
+      const fps = elapsed > 0 ? 1000 / elapsed : targetFPS;
+      recordPerformanceSample(fps);
+
+      if (scrollStateRef.current.isScrolling) {
+        const scrollDelta = currentTime - scrollStateRef.current.lastEventTime;
+        if (scrollDelta > 240) {
+          scrollStateRef.current.isScrolling = false;
+        }
+      }
+
+      const isScrolling = scrollStateRef.current.isScrolling;
+      const currentProfile = getCurrentProfile();
+      const heavyTaskStride = isScrolling ? (currentProfile.scrollHeavyTaskStride ?? 3) : 1;
+      const shouldRunHeavySystems = frameCountRef.current % heavyTaskStride === 0;
 
       if (pendingProfileUpdateRef.current) {
         refreshSimulation();
@@ -2172,10 +2250,14 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
       }
       
       // Update particle positions
-      particles.forEach((particle) => {
+      const deferColorUpdates = isScrolling && !shouldRunHeavySystems;
+
+      particles.forEach((particle, index) => {
         // Apply color transition if needed
         if (transitioningColorsRef.current) {
-          updateParticleColor(particle, colorTransitionProgressRef.current);
+          if (!deferColorUpdates || (frameCountRef.current + index) % 2 === 0) {
+            updateParticleColor(particle, colorTransitionProgressRef.current);
+          }
         }
         
         if (particle.useOrbit) {
@@ -2199,6 +2281,11 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
           
           // Update radius based on z-depth
           particle.radius = particle.originRadius * particle.z;
+
+          if (deferColorUpdates) {
+            particle.vx *= 0.96;
+            particle.vy *= 0.96;
+          }
         }
         
         // Pulse effect
@@ -2213,22 +2300,32 @@ const LightEffects = memo(({ hoveredTech, hoveredTechRef }) => {
       });
       
       // Draw connections between particles
-      drawConnections();
-      
+      if (shouldRunHeavySystems) {
+        drawConnections();
+      }
+
       // Update orbital systems
-      updateOrbitals(currentTime);
-      
+      if (shouldRunHeavySystems || frameCountRef.current % 2 === 0) {
+        updateOrbitals(currentTime);
+      }
+
       // Update and draw stray particles
       drawStrayParticles();
-      
-      // Process particle interactions
-      processParticleInteractions();
-      
-      // Process electron transfers
-      processElectronTransfers();
-      
-      // Update molecular structures
-      updateMolecularStructures(currentTime);
+
+      if (shouldRunHeavySystems || (!isScrolling && frameCountRef.current % 2 === 0)) {
+        // Process particle interactions
+        processParticleInteractions();
+      }
+
+      if (shouldRunHeavySystems) {
+        // Process electron transfers
+        processElectronTransfers();
+      }
+
+      if (shouldRunHeavySystems || (!isScrolling && frameCountRef.current % 3 === 0)) {
+        // Update molecular structures
+        updateMolecularStructures(currentTime);
+      }
       
       // Special subtle effect for hovered tech
       if (hoveredTech !== null && hoveredTechRef && hoveredTechRef.current !== null && !isNestHubMaxRef.current) {
