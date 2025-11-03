@@ -11,12 +11,10 @@ import {
 } from 'react';
 import {
 	motion,
-	AnimatePresence,
 	useScroll,
 	useTransform,
 	useSpring,
 	useMotionValue,
-	type Variants,
 	type MotionValue,
 	type SpringOptions,
 	type MotionStyle,
@@ -24,17 +22,12 @@ import {
 import {
 	AppBar,
 	Toolbar,
-	IconButton,
 	Fab,
 	Box,
 	useScrollTrigger,
 	Zoom,
-	Backdrop,
-	Chip,
 } from '@mui/material';
 import {
-	Menu as MenuIcon,
-	Close as CloseIcon,
 	Home,
 	Person,
 	Code,
@@ -142,6 +135,7 @@ const MagnifiedInteractive = ({
 };
 
 import './ModernNavbar.css';
+import { StaggeredMenu } from './StaggeredMenu';
 
 type NavItem = {
 	name: string;
@@ -178,6 +172,7 @@ const ModernNavbarComponent = () => {
 	const [isMobileCSS, setIsMobileCSS] = useState(false);
 	const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
 	const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+	const [navbarReady, setNavbarReady] = useState(() => typeof window === 'undefined');
 
 	const navRef = useRef<HTMLDivElement | null>(null);
 	const logoBoxRef = useRef<HTMLDivElement | null>(null);
@@ -209,7 +204,6 @@ const ModernNavbarComponent = () => {
 	const liquidOpacity = useMotionValue(0);
 	const navMagnifyMouseX = useMotionValue(Number.POSITIVE_INFINITY);
 	const brandMagnifyMouseX = useMotionValue(Number.POSITIVE_INFINITY);
-	const menuMagnifyMouseX = useMotionValue(Number.POSITIVE_INFINITY);
 	const fabMagnifyMouseX = useMotionValue(Number.POSITIVE_INFINITY);
 
 	const springX = useSpring(liquidX, {
@@ -240,6 +234,15 @@ const ModernNavbarComponent = () => {
 	useEffect(() => {
 		activeSectionRef.current = activeSection;
 	}, [activeSection]);
+
+	useEffect(() => {
+		if (typeof window === 'undefined') {
+			return;
+		}
+
+		const raf = window.requestAnimationFrame(() => setNavbarReady(true));
+		return () => window.cancelAnimationFrame(raf);
+	}, []);
 
 	useEffect(() => {
 		if (typeof window === 'undefined') {
@@ -736,56 +739,6 @@ const ModernNavbarComponent = () => {
 		};
 	}, [navItems, prefersLightweightMenu, shouldReduceMotion]);
 
-	const menuVariants = useMemo<Variants>(() => {
-		if (prefersLightweightMenu) {
-			return {
-				closed: {
-					opacity: 0,
-					y: -8,
-					transition: { type: 'tween', duration: 0.16, ease: 'easeInOut' },
-				},
-				open: {
-					opacity: 1,
-					y: 0,
-					transition: { type: 'tween', duration: 0.22, ease: 'easeOut' },
-				},
-			};
-		}
-
-		return {
-			closed: {
-				opacity: 0,
-				scale: 0.95,
-				transition: { type: 'tween', duration: 0.18, ease: 'easeIn' },
-			},
-			open: {
-				opacity: 1,
-				scale: 1,
-				transition: {
-					type: 'tween',
-					duration: 0.26,
-					ease: 'easeOut',
-					staggerChildren: 0.035,
-					delayChildren: 0.06,
-				},
-			},
-		};
-	}, [prefersLightweightMenu]);
-
-	const mobileMenuItemVariants = useMemo<Variants>(
-		() =>
-			prefersLightweightMenu
-				? {
-					closed: { opacity: 0, y: -10, transition: { type: 'tween', duration: 0.14, ease: 'easeInOut' } },
-					open: { opacity: 1, y: 0, transition: { type: 'tween', duration: 0.2, ease: 'easeOut' } },
-				}
-				: {
-					closed: { opacity: 0, x: -16, transition: { type: 'tween', duration: 0.18, ease: 'easeIn' } },
-					open: { opacity: 1, x: 0, transition: { type: 'tween', duration: 0.24, ease: 'easeOut' } },
-				},
-		[prefersLightweightMenu],
-	);
-
 	return (
 		<>
 			<AppBar
@@ -799,6 +752,9 @@ const ModernNavbarComponent = () => {
 					borderBottom: 'none',
 					zIndex: 1100,
 					boxShadow: 'none',
+					opacity: navbarReady ? 1 : 0,
+					pointerEvents: navbarReady ? 'auto' : 'none',
+					transition: 'opacity 0.35s ease',
 				}}
 			>
 				<GlassSurface
@@ -1205,158 +1161,6 @@ const ModernNavbarComponent = () => {
 						</motion.div>
 					)}
 
-					{(isMobileDevice || isTabletDevice) && (() => {
-						const toggleSize = isMobileDevice ? 48 : 52;
-
-						const menuToggleButtonSx = prefersLightweightMenu
-							? {
-								width: '100%',
-								height: '100%',
-								borderRadius: 'inherit',
-								color: isMenuOpen ? '#0f172a' : '#e2e8f0',
-								backgroundColor: isMenuOpen ? 'rgba(255, 255, 255, 0.65)' : 'rgba(15, 23, 42, 0.45)',
-								border: '1px solid rgba(148, 163, 184, 0.35)',
-								boxShadow: '0 6px 18px rgba(15, 23, 42, 0.28)',
-								transition: 'all 0.28s ease',
-								'&:hover': {
-									color: '#0f172a',
-									backgroundColor: 'rgba(255, 255, 255, 0.72)',
-									boxShadow: '0 10px 24px rgba(15, 23, 42, 0.32)',
-									transform: 'translateY(-1px)',
-								},
-							}
-							: {
-								width: '100%',
-								height: '100%',
-								borderRadius: 'inherit',
-								color: isMenuOpen ? '#0f172a' : '#e2e8f0',
-								backgroundColor: isMenuOpen ? 'rgba(255, 255, 255, 0.55)' : 'rgba(15, 23, 42, 0.28)',
-								border: '1px solid rgba(255, 255, 255, 0.35)',
-								boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.65), inset 0 -4px 12px rgba(15, 23, 42, 0.45)',
-								transition: 'color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease',
-								'&:hover': {
-									color: '#1e293b',
-									backgroundColor: 'rgba(255, 255, 255, 0.68)',
-									boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -4px 16px rgba(15, 23, 42, 0.38)',
-									transform: 'translateY(-1px)',
-								},
-							};
-
-						const toggleButton = (
-							<IconButton
-								onClick={() => setIsMenuOpen((prev) => !prev)}
-								aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-								sx={menuToggleButtonSx}
-							>
-								<motion.div animate={{ rotate: isMenuOpen ? 90 : 0 }} transition={{ duration: 0.2 }}>
-									{isMenuOpen ? <CloseIcon /> : <MenuIcon />}
-								</motion.div>
-							</IconButton>
-						);
-
-						const toggleSurface = prefersLightweightMenu ? (
-							<Box
-								className={`navbar-menu-toggle-glass${isMenuOpen ? ' navbar-menu-toggle-glass--open' : ''}`}
-								sx={{
-									position: 'relative',
-									display: 'flex',
-									alignItems: 'center',
-									justifyContent: 'center',
-									width: toggleSize,
-									height: toggleSize,
-									borderRadius: 16,
-									border: '1px solid rgba(148, 163, 184, 0.28)',
-									background: isMenuOpen
-										? 'linear-gradient(135deg, rgba(226, 232, 240, 0.38), rgba(148, 163, 184, 0.26))'
-										: 'rgba(15, 23, 42, 0.5)',
-									backdropFilter: 'blur(10px)',
-									WebkitBackdropFilter: 'blur(10px)',
-									boxShadow: '0 12px 24px rgba(15, 23, 42, 0.28)',
-									overflow: 'hidden',
-									transition: 'all 0.28s ease',
-								}}
-							>
-								<Box
-									sx={{
-										position: 'absolute',
-										inset: 0,
-										pointerEvents: 'none',
-										opacity: isMenuOpen ? 0.9 : 0.6,
-										background:
-											'radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.35), transparent 55%)',
-								}}
-								/>
-								{toggleButton}
-							</Box>
-						) : (
-							<GlassSurface
-								width={toggleSize}
-								height={toggleSize}
-								borderRadius={16}
-								brightness={18}
-								opacity={0.88}
-								blur={14}
-								displace={1.6}
-								backgroundOpacity={0.1}
-								saturation={1.45}
-								distortionScale={-150}
-								redOffset={3}
-								greenOffset={10}
-								blueOffset={18}
-								mixBlendMode="screen"
-								className={`navbar-menu-toggle-glass${isMenuOpen ? ' navbar-menu-toggle-glass--open' : ''}`}
-								style={{
-									border: '1px solid rgba(226, 232, 240, 0.22)',
-									boxShadow: '0 18px 32px rgba(15, 23, 42, 0.28)',
-									transition: 'box-shadow 0.35s ease',
-								}}
-							>
-								<Box
-									sx={{
-										position: 'absolute',
-										inset: 0,
-										borderRadius: 'inherit',
-										pointerEvents: 'none',
-										background:
-											'radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.4), transparent 55%)',
-										mixBlendMode: 'screen',
-										opacity: isMenuOpen ? 1 : 0.85,
-										transition: 'opacity 0.35s ease',
-									}}
-								/>
-								<Box
-									sx={{
-										position: 'absolute',
-										inset: 0,
-										borderRadius: 'inherit',
-										pointerEvents: 'none',
-										boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(15, 23, 42, 0.45)',
-										background:
-											'linear-gradient(135deg, rgba(226, 232, 240, 0.22), rgba(30, 41, 59, 0.32))',
-										opacity: isMenuOpen ? 0.95 : 0.75,
-										transition: 'opacity 0.35s ease',
-									}}
-								/>
-								{toggleButton}
-							</GlassSurface>
-						);
-
-						if (magnificationDisabled) {
-							return toggleSurface;
-						}
-
-						return (
-							<MagnifiedInteractive
-								mouseX={menuMagnifyMouseX}
-								magnification={1.18}
-								distance={170}
-								spring={sharedMagnifySpring}
-								style={{ display: 'inline-flex' }}
-							>
-								{toggleSurface}
-							</MagnifiedInteractive>
-						);
-					})()}
 				</Toolbar>
 
 				{/* Progress bar */}
@@ -1375,168 +1179,33 @@ const ModernNavbarComponent = () => {
 				/>
 				</GlassSurface>
 			</AppBar>
-			<AnimatePresence>
-				{isMenuOpen && (isMobileDevice || isTabletDevice) && (
-					<>
-						<Backdrop
-							open={isMenuOpen}
-							onClick={() => setIsMenuOpen(false)}
-							sx={{
-								zIndex: 1200,
-								backdropFilter: prefersLightweightMenu ? 'blur(3px)' : 'blur(6px)',
-								backgroundColor: 'rgba(15, 23, 42, 0.38)',
-							}}
-						/>
-						<motion.div
-							variants={menuVariants}
-							initial="closed"
-							animate="open"
-							exit="closed"
-							style={{
-								position: 'fixed',
-								top: '80px',
-								right: '16px',
-								left: isMobileDevice ? '16px' : 'auto',
-								zIndex: 1300,
-								width: isMobileDevice ? 'auto' : '320px',
-								maxWidth: isMobileDevice ? 'calc(100vw - 32px)' : '320px',
-								maxHeight: '80vh',
-								overflowY: 'auto',
-								WebkitOverflowScrolling: 'touch',
-								touchAction: 'pan-y',
-								overflowX: 'hidden',
-								overscrollBehavior: 'contain',
-							}}
-						>
-							{(() => {
-								const menuItems = (
-									<Box sx={{ p: 2 }}>
-										{navItems.map((item) => {
-											const isActive = activeSection === item.href.replace('#', '');
-											const Icon = item.icon;
-
-											const baseBackground = isActive
-												? prefersLightweightMenu
-													? 'rgba(99, 102, 241, 0.82)'
-													: 'rgba(99, 102, 241, 0.9)'
-												: prefersLightweightMenu
-													? 'rgba(15, 23, 42, 0.35)'
-													: 'transparent';
-
-											const chipStyles: Record<string, unknown> = {
-												width: '100%',
-												justifyContent: 'flex-start',
-												py: prefersLightweightMenu ? 1 : 1.25,
-												px: prefersLightweightMenu ? 1.25 : 1.5,
-												height: 'auto',
-												fontSize: '0.9375rem',
-												fontWeight: 600,
-												color: isActive ? '#ffffff' : '#cbd5e1',
-												backgroundColor: baseBackground,
-												borderRadius: '10px',
-												border: isActive ? 'none' : '1px solid rgba(148, 163, 184, 0.18)',
-												transition: prefersLightweightMenu
-													? 'background-color 0.2s ease, color 0.2s ease'
-													: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-												'& .MuiChip-label': {
-													px: prefersLightweightMenu ? 0.75 : 1,
-												},
-												'& .MuiChip-icon': {
-													color: isActive ? '#ffffff' : '#94a3b8',
-													transition: prefersLightweightMenu ? 'color 0.2s ease' : 'color 0.3s ease',
-												},
-											};
-
-											if (prefersLightweightMenu) {
-												chipStyles['&:hover'] = {
-													backgroundColor: 'rgba(99, 102, 241, 0.76)',
-													borderColor: 'transparent',
-													color: '#ffffff',
-												};
-											} else {
-												chipStyles['&:hover'] = {
-													backgroundColor: '#9f12db',
-													borderColor: 'transparent',
-													color: '#ffffff',
-													transform: 'translateX(4px)',
-												};
-											}
-
-											chipStyles['&:hover .MuiChip-icon'] = { color: '#ffffff' };
-
-											return (
-												<motion.div
-													key={item.name}
-													variants={mobileMenuItemVariants}
-													style={{ marginBottom: prefersLightweightMenu ? '6px' : '8px' }}
-												>
-													<Chip
-														icon={<Icon sx={{ fontSize: '1.125rem' }} />}
-														label={item.name}
-														onClick={() => scrollToSection(item.href)}
-														sx={chipStyles}
-													/>
-												</motion.div>
-											);
-										})}
-									</Box>
-								);
-
-								if (prefersLightweightMenu) {
-									return (
-										<Box
-											className="navbar-mobile-menu-glass"
-											sx={{
-												position: 'relative',
-												borderRadius: 16,
-												width: '100%',
-												background: 'rgba(15, 23, 42, 0.7)',
-												backdropFilter: 'blur(10px)',
-												WebkitBackdropFilter: 'blur(10px)',
-												border: '1px solid rgba(148, 163, 184, 0.2)',
-												boxShadow: '0 12px 28px rgba(15, 23, 42, 0.28)',
-												maxHeight: 'inherit',
-												overflowY: 'auto',
-												overflowX: 'hidden',
-												WebkitOverflowScrolling: 'touch',
-												touchAction: 'pan-y',
-										}}
-										>
-											{menuItems}
-										</Box>
-									);
-								}
-
-								return (
-									<GlassSurface
-										width="100%"
-										height="auto"
-										borderRadius={16}
-										brightness={8}
-										opacity={0.9}
-										blur={12}
-										displace={1.5}
-										backgroundOpacity={0.12}
-										saturation={1.4}
-										distortionScale={-150}
-										redOffset={3}
-										greenOffset={10}
-										blueOffset={20}
-										mixBlendMode="screen"
-										className="navbar-mobile-menu-glass"
-										style={{
-											border: '1px solid rgba(148, 163, 184, 0.15)',
-											boxShadow: '0 16px 32px rgba(0, 0, 0, 0.22)',
-										}}
-									>
-										{menuItems}
-									</GlassSurface>
-								);
-							})()}
-						</motion.div>
-					</>
-				)}
-			</AnimatePresence>
+			
+			{/* StaggeredMenu for mobile/tablet */}
+			{navbarReady && (isMobileDevice || isTabletDevice) && (
+				<StaggeredMenu
+					position="right"
+					colors={['#6366f1', '#8b5cf6']}
+					items={navItems.map((item) => ({
+						label: item.name,
+						ariaLabel: `Navigate to ${item.name}`,
+						link: item.href,
+					}))}
+					displaySocials={false}
+					displayItemNumbering={false}
+					menuButtonColor="#e2e8f0"
+					openMenuButtonColor="#ffffff"
+					accentColor="#6366f1"
+					isFixed={true}
+					changeMenuColorOnOpen={true}
+					open={isMenuOpen}
+					onOpenChange={(open) => setIsMenuOpen(open)}
+					onItemClick={(link) => {
+						scrollToSection(link);
+						setIsMenuOpen(false);
+					}}
+					zIndex={1350}
+				/>
+			)}
 
 			{!isMenuOpen && (
 				<Zoom in={trigger}>

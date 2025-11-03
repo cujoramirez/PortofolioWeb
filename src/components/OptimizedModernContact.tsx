@@ -465,7 +465,7 @@ const OptimizedModernContact = memo(() => {
                   display: 'inline-block',
                 }}
               >
-                Let's Work Together
+                {"Let's Work\nTogether"}
               </ScrollFloat>
 
               <Typography

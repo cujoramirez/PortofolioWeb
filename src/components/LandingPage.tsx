@@ -58,7 +58,11 @@ const LandingPage = ({
   const indicatorDelay = prefersReducedMotion ? 1.2 : 2.2;
   const wheelThreshold = prefersReducedMotion ? 6 : 10;
   const swipeThreshold = prefersReducedMotion ? 45 : 60;
-  const shouldRunSplashCursor = showLanding && !prefersReducedMotion && performanceTier !== 'low';
+  const shouldRunSplashCursor =
+    showLanding &&
+    !prefersReducedMotion &&
+    performanceTier === 'high' &&
+    !isMobile;
   const [showSplashCursor, setShowSplashCursor] = useState(false);
 
   const splashCursorProps = useMemo(() => {
@@ -76,18 +80,6 @@ const LandingPage = ({
       TRANSPARENT: true,
     } as const;
 
-    if (performanceTier === 'mid') {
-      return {
-        ...baseConfig,
-        SIM_RESOLUTION: 96,
-        DYE_RESOLUTION: 960,
-        CAPTURE_RESOLUTION: 360,
-        PRESSURE_ITERATIONS: 16,
-        SPLAT_FORCE: 5600,
-        COLOR_UPDATE_SPEED: 9,
-      } as const;
-    }
-
     return {
       ...baseConfig,
       SIM_RESOLUTION: 120,
@@ -97,7 +89,7 @@ const LandingPage = ({
       SPLAT_FORCE: 6400,
       COLOR_UPDATE_SPEED: 11,
     } as const;
-  }, [performanceTier, shouldRunSplashCursor]);
+  }, [shouldRunSplashCursor]);
 
   useEffect(() => {
     showLandingRef.current = showLanding;
