@@ -2,7 +2,7 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 :root {
-    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #22d3ee 100%);
+    --primary-gradient: linear-gradient(135deg, #6b7cff 0%, #a855f7 50%, #38bdf8 100%);
     --glow-blue: rgba(99, 102, 241, 0.3);
     --glow-purple: rgba(139, 92, 246, 0.3);
     --glow-cyan: rgba(34, 211, 238, 0.3);

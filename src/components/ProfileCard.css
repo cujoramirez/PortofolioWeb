@@ -1,0 +1,316 @@
+/* ProfileCard.css */
+:root {
+  --pointer-x: 50%;
+  --pointer-y: 50%;
+  --pointer-from-center: 0;
+  --pointer-from-top: 0.5;
+  --pointer-from-left: 0.5;
+  --rotate-x: 0deg;
+  --rotate-y: 0deg;
+  --card-radius: 28px;
+  --glow-primary: rgba(0, 214, 255, 0.65);
+  --glow-secondary: rgba(134, 74, 255, 0.45);
+  --behind-gradient: radial-gradient(120% 200% at 50% 10%, rgba(0, 214, 255, 0.28) 0%, rgba(0, 214, 255, 0) 55%),
+    radial-gradient(120% 120% at 50% 110%, rgba(134, 74, 255, 0.22) 0%, rgba(134, 74, 255, 0) 70%);
+  --inner-gradient: linear-gradient(165deg, rgba(21, 17, 44, 0.95) 0%, rgba(26, 36, 88, 0.9) 55%, rgba(22, 16, 46, 0.95) 100%);
+}
+
+.pc-card-wrapper {
+  position: relative;
+  width: min(320px, 72vw);
+  margin: 0 auto;
+  perspective: 700px;
+  touch-action: none;
+}
+
+.pc-card-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: -18px;
+  border-radius: calc(var(--card-radius) + 18px);
+  background-image: var(--behind-gradient);
+  filter: blur(28px) saturate(130%);
+  opacity: clamp(var(--pointer-from-center), 0.4, 0.8);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+  z-index: -1;
+}
+
+
+.pc-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 0.68;
+  border-radius: var(--card-radius);
+  background: linear-gradient(160deg, #15112c 0%, #1d2955 55%, #171330 100%);
+  border: 1px solid rgba(0, 214, 255, 0.55);
+  box-shadow: 0 32px 60px rgba(5, 6, 23, 0.72), 0 0 28px rgba(0, 214, 255, 0.35);
+  overflow: hidden;
+  transform: rotateX(0deg) rotateY(0deg) translateZ(0);
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.22, 0.68, 0.19, 1.01), box-shadow 0.6s ease;
+}
+
+.pc-card:hover,
+.pc-card.active {
+  transform: rotateX(var(--rotate-y)) rotateY(var(--rotate-x));
+  box-shadow: 0 36px 70px rgba(5, 6, 23, 0.78), 0 0 42px rgba(0, 214, 255, 0.45);
+}
+
+.pc-inside {
+  position: absolute;
+  inset: 1px;
+  border-radius: calc(var(--card-radius) - 1px);
+  background-image: var(--inner-gradient);
+  box-shadow: inset 0 0 60px rgba(0, 214, 255, 0.08);
+  overflow: hidden;
+}
+
+.pc-shine {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(70% 45% at 50% 0%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 70%);
+  mix-blend-mode: screen;
+  opacity: 0.4;
+  transition: opacity 0.35s ease;
+}
+
+.pc-card:hover .pc-shine,
+.pc-card.active .pc-shine {
+  opacity: 0.55;
+}
+
+.pc-glare {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(200deg, rgba(45, 70, 130, 0.35) 0%, rgba(12, 11, 24, 0.1) 45%, rgba(12, 11, 24, 0.8) 100%);
+  mix-blend-mode: lighten;
+  opacity: 0.35;
+  transition: opacity 0.35s ease;
+}
+
+.pc-card:hover .pc-glare,
+.pc-card.active .pc-glare {
+  opacity: 0.5;
+}
+
+
+.pc-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.pc-avatar-content {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.pc-avatar-content .avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: calc(var(--card-radius) - 6px);
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.4s ease;
+}
+
+.pc-card:hover .pc-avatar-content .avatar,
+.pc-card.active .pc-avatar-content .avatar {
+  transform: translateY(calc((var(--pointer-from-top) - 0.5) * 14px));
+}
+
+.pc-avatar-content::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: calc(var(--card-radius) - 4px);
+  background: linear-gradient(185deg, rgba(15, 17, 36, 0.05) 0%, rgba(15, 17, 36, 0.28) 70%, rgba(15, 17, 36, 0.55) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pc-avatar-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: calc(var(--card-radius) - 4px);
+  background: linear-gradient(140deg, rgba(0, 214, 255, 0.12) 0%, rgba(134, 74, 255, 0.06) 45%, rgba(19, 18, 49, 0.24) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pc-details {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.pc-details h3 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: #e6f2ff;
+  text-shadow: 0 0 16px rgba(0, 214, 255, 0.45);
+}
+
+.pc-details p {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgba(188, 206, 255, 0.8);
+  letter-spacing: 0.3px;
+}
+
+.pc-user-info {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: rgba(20, 24, 47, 0.7);
+  border: 1px solid rgba(0, 214, 255, 0.25);
+  box-shadow: 0 10px 22px rgba(6, 12, 32, 0.6);
+  backdrop-filter: blur(18px);
+  pointer-events: auto;
+  z-index: 5;
+}
+
+.pc-user-details {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.pc-mini-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid rgba(0, 214, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.pc-mini-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.pc-user-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pc-handle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(224, 239, 255, 0.85);
+}
+
+.pc-status {
+  font-size: 0.75rem;
+  color: rgba(167, 192, 255, 0.7);
+}
+
+.pc-contact-btn {
+  border: 1px solid rgba(0, 214, 255, 0.35);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(224, 239, 255, 0.9);
+  background: rgba(24, 36, 76, 0.65);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.pc-contact-btn:hover {
+  border-color: rgba(0, 214, 255, 0.65);
+  background: rgba(30, 52, 110, 0.75);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .pc-card-wrapper {
+    width: min(300px, 78vw);
+  }
+
+  .pc-avatar-content {
+    padding: 0;
+  }
+
+  .pc-details {
+    top: 32px;
+  }
+
+  .pc-details h3 {
+    font-size: 1.55rem;
+  }
+
+  .pc-contact-btn {
+    padding: 7px 16px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pc-card-wrapper {
+    width: min(260px, 82vw);
+  }
+
+  .pc-avatar-content {
+    padding: 0;
+  }
+
+  .pc-user-info {
+    left: 18px;
+    right: 18px;
+    bottom: 20px;
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .pc-card-wrapper {
+    width: min(240px, 88vw);
+  }
+
+  .pc-details h3 {
+    font-size: 1.35rem;
+  }
+
+  .pc-details p {
+    font-size: 0.85rem;
+  }
+
+  .pc-user-info {
+    gap: 12px;
+  }
+
+  .pc-contact-btn {
+    padding: 6px 14px;
+  }
+}

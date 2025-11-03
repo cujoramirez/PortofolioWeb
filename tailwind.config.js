@@ -138,6 +138,8 @@ module.exports = {
                 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                 'spin-slow': 'spin 3s linear infinite',
                 'ping-slow': 'ping 3s cubic-bezier(0, 0, 0.2, 1) infinite',
+                'star-movement-bottom': 'star-movement-bottom linear infinite alternate',
+                'star-movement-top': 'star-movement-top linear infinite alternate',
             },
             keyframes: {
                 fadeIn: {
@@ -147,6 +149,20 @@ module.exports = {
                 slideUp: {
                     '0%': { opacity: '0', transform: 'translateY(60px)' },
                     '100%': { opacity: '1', transform: 'translateY(0)' }
+                },
+                'star-movement-bottom': {
+                    '0%': { transform: 'rotate(0deg) translateX(50px) rotate(0deg)', opacity: '0.8' },
+                    '25%': { opacity: '1' },
+                    '50%': { transform: 'rotate(180deg) translateX(50px) rotate(-180deg)', opacity: '1' },
+                    '75%': { opacity: '1' },
+                    '100%': { transform: 'rotate(360deg) translateX(50px) rotate(-360deg)', opacity: '0.8' }
+                },
+                'star-movement-top': {
+                    '0%': { transform: 'rotate(180deg) translateX(50px) rotate(-180deg)', opacity: '0.8' },
+                    '25%': { opacity: '1' },
+                    '50%': { transform: 'rotate(360deg) translateX(50px) rotate(-360deg)', opacity: '1' },
+                    '75%': { opacity: '1' },
+                    '100%': { transform: 'rotate(540deg) translateX(50px) rotate(-540deg)', opacity: '0.8' }
                 },
                 scaleIn: {
                     '0%': { opacity: '0', transform: 'scale(0.8)' },

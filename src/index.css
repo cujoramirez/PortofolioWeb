@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap');
+@import 'lenis/dist/lenis.css';
+@import './styles/performance.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -32,7 +34,7 @@
     --secondary-700: #0e7490;
     --secondary-800: #155e75;
     --secondary-900: #164e63;
-    --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #22d3ee 100%);
+    --gradient-primary: linear-gradient(135deg, #6b7cff 0%, #a855f7 50%, #38bdf8 100%);
     --gradient-secondary: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
     --gradient-accent: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #6366f1 100%);
     --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.4);
@@ -51,7 +53,6 @@
 }
 
 html {
-    scroll-behavior: smooth;
     overflow-x: hidden;
     /* Fix for iOS Safari scrolling issues */
     -webkit-overflow-scrolling: touch;
@@ -1017,8 +1018,12 @@ html {
 
 /* === THEME TRANSITIONS === */
 
-.theme-transition * {
-    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, fill 0.3s ease, stroke 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+.theme-transition {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.theme-transition svg {
+    transition: fill 0.3s ease, stroke 0.3s ease;
 }
 
 
@@ -1170,7 +1175,7 @@ html {
 /* Enhanced Typography Animations */
 
 .text-gradient-enterprise {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #22d3ee 100%);
+    background: linear-gradient(135deg, #6b7cff 0%, #a855f7 50%, #38bdf8 100%);
     background-size: 200% 200%;
     background-clip: text;
     -webkit-background-clip: text;
@@ -1204,3 +1209,99 @@ html {
         height: 2px;
     }
 }
+
+/* ScrollStack Optimizations */
+.scroll-stack-card {
+    contain: layout style paint;
+    content-visibility: auto;
+}
+
+.experience-scroll-stack {
+    isolation: isolate;
+}
+
+/* Smooth Scrolling Performance */
+html.lenis {
+    height: auto;
+}
+
+.lenis.lenis-smooth {
+    scroll-behavior: auto;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+    overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+    pointer-events: none;
+}
+
+/* Landing overlay scroll prevention - pure CSS approach */
+html[data-landing-active] {
+    overflow: hidden !important;
+    height: 100vh;
+    position: fixed;
+    width: 100%;
+}
+
+html[data-landing-active] body,
+body[data-landing-active] {
+    overflow: hidden !important;
+    height: 100vh;
+    position: relative;
+}
+
+/* Enterprise-level hover optimization - FIXED for instant response */
+button,
+a,
+[role="button"],
+.MuiButton-root,
+.MuiIconButton-root,
+.MuiCard-root,
+.MuiPaper-root {
+    /* Base state - no will-change to save GPU memory */
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    
+    /* Fast transitions for instant response */
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Only apply will-change on hover for performance */
+button:hover,
+a:hover,
+[role="button"]:hover,
+.MuiButton-root:hover,
+.MuiIconButton-root:hover,
+.MuiCard-root:hover,
+.MuiPaper-root:hover {
+    will-change: transform;
+}
+
+/* Remove will-change after hover ends (critical!) */
+button:not(:hover),
+a:not(:hover),
+[role="button"]:not(:hover),
+.MuiButton-root:not(:hover),
+.MuiIconButton-root:not(:hover),
+.MuiCard-root:not(:hover),
+.MuiPaper-root:not(:hover) {
+    will-change: auto;
+}
+
+/* Critical: Prevent layout thrashing during animations */
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove the aggressive transition disabling - it was causing hover lag */

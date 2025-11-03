@@ -1,0 +1,1626 @@
+import {
+	memo,
+	useState,
+	useEffect,
+	useCallback,
+	useRef,
+	useMemo,
+	type ElementType,
+	type PointerEvent as ReactPointerEvent,
+	type ReactNode,
+} from 'react';
+import {
+	motion,
+	AnimatePresence,
+	useScroll,
+	useTransform,
+	useSpring,
+	useMotionValue,
+	type Variants,
+	type MotionValue,
+	type SpringOptions,
+	type MotionStyle,
+} from 'framer-motion';
+import {
+	AppBar,
+	Toolbar,
+	IconButton,
+	Fab,
+	Box,
+	useScrollTrigger,
+	Zoom,
+	Backdrop,
+	Chip,
+} from '@mui/material';
+import {
+	Menu as MenuIcon,
+	Close as CloseIcon,
+	Home,
+	Person,
+	Code,
+	Work,
+	Science,
+	School,
+	ContactMail,
+} from '@mui/icons-material';
+import { useSystemProfile } from './useSystemProfile';
+import { gsap } from 'gsap';
+import StarBorder from './StarBorder';
+import GlassSurface from './GlassSurface';
+import { useLenis } from '../hooks/useLenis';
+
+const MotionBox = motion(Box);
+
+type MagnifiedInteractiveProps = {
+	children: ReactNode;
+	mouseX: MotionValue<number>;
+	baseScale?: number;
+	magnification?: number;
+	distance?: number;
+	spring?: SpringOptions;
+	style?: MotionStyle;
+	onPointerEnter?: (event: ReactPointerEvent<HTMLDivElement>) => void;
+	onPointerLeave?: (event: ReactPointerEvent<HTMLDivElement>) => void;
+	onPointerMove?: (event: ReactPointerEvent<HTMLDivElement>) => void;
+} & Record<string, unknown>;
+
+const defaultMagnifySpring: SpringOptions = { stiffness: 260, damping: 24, mass: 0.4 };
+
+const MagnifiedInteractive = ({
+	children,
+	mouseX,
+	baseScale = 1,
+	magnification = 5,
+	distance = 300,
+	spring,
+	style,
+	onPointerEnter,
+	onPointerLeave,
+	onPointerMove,
+	...rest
+}: MagnifiedInteractiveProps) => {
+	const itemRef = useRef<HTMLDivElement | null>(null);
+	const springConfig = useMemo(() => spring ?? defaultMagnifySpring, [spring]);
+	const handlePointerMove = useCallback(
+		(event: ReactPointerEvent<HTMLDivElement>) => {
+			mouseX.set(event.clientX);
+			onPointerMove?.(event);
+		},
+		[mouseX, onPointerMove],
+	);
+	const handlePointerLeave = useCallback(
+		(event: ReactPointerEvent<HTMLDivElement>) => {
+			mouseX.set(Number.POSITIVE_INFINITY);
+			onPointerLeave?.(event);
+		},
+		[mouseX, onPointerLeave],
+	);
+	const handlePointerEnter = useCallback(
+		(event: ReactPointerEvent<HTMLDivElement>) => {
+			onPointerEnter?.(event);
+		},
+		[onPointerEnter],
+	);
+	const pointerHandlers = useMemo(
+		() => ({
+			onPointerEnter: handlePointerEnter,
+			onPointerLeave: handlePointerLeave,
+			onPointerMove: handlePointerMove,
+		}),
+		[handlePointerEnter, handlePointerLeave, handlePointerMove],
+	);
+
+	const pointerDelta = useTransform(mouseX, (value) => {
+		if (!itemRef.current || !Number.isFinite(value)) {
+			return distance * 2;
+		}
+
+		const rect = itemRef.current.getBoundingClientRect();
+		const centerX = rect.left + rect.width / 2;
+		return value - centerX;
+	});
+
+	const targetScale = useTransform(pointerDelta, [-distance, 0, distance], [baseScale, magnification, baseScale]);
+	const scale = useSpring(targetScale, springConfig);
+
+	return (
+		<motion.div
+			ref={itemRef}
+			{...(pointerHandlers as Record<string, unknown>)}
+			style={{
+				display: 'inline-flex',
+				flexShrink: 0,
+				willChange: 'transform',
+				...style,
+				scale,
+			}}
+			{...rest}
+		>
+			{children}
+		</motion.div>
+	);
+};
+
+import './ModernNavbar.css';
+
+type NavItem = {
+	name: string;
+	href: string;
+	icon: ElementType;
+};
+
+type NavItemPosition = {
+	x: number;
+	width: number;
+	height: number;
+};
+
+type NavItemPositions = Record<string, NavItemPosition>;
+
+type InterpolationDatum = {
+	section: string;
+	visibilityRatio: number;
+	index: number;
+};
+
+type LenisScrollEvent = {
+	scroll: number;
+	limit: number;
+	velocity: number;
+	direction: number;
+	progress: number;
+};
+
+const ModernNavbarComponent = () => {
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [activeSection, setActiveSection] = useState('hero');
+	const [navItemPositions, setNavItemPositions] = useState<NavItemPositions>({});
+	const [isMobileCSS, setIsMobileCSS] = useState(false);
+	const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
+	const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+	const navRef = useRef<HTMLDivElement | null>(null);
+	const logoBoxRef = useRef<HTMLDivElement | null>(null);
+	const desktopNavRef = useRef<HTMLDivElement | null>(null);
+	const circleRefs = useRef<Array<HTMLSpanElement | null>>([]);
+	const tlRefs = useRef<Array<gsap.core.Timeline | null>>([]);
+	const activeTweenRefs = useRef<Array<gsap.core.Tween | null>>([]);
+	const activeSectionRef = useRef('hero');
+	const evaluationFrameRef = useRef<number | null>(null);
+	const evaluationScrollRef = useRef(0);
+	const reducedEvaluationFrameRef = useRef<number | null>(null);
+	const reducedEvaluationScrollRef = useRef(0);
+
+	const { lenis } = useLenis();
+	const getScrollPosition = useCallback(() => {
+		if (lenis) {
+			const { scroll } = (lenis as unknown as { scroll?: number });
+			if (typeof scroll === 'number') {
+				return scroll;
+			}
+		}
+		return typeof window !== 'undefined' ? window.scrollY : 0;
+	}, [lenis]);
+
+	const { performanceTier, deviceType } = useSystemProfile();
+
+	const liquidX = useMotionValue(0);
+	const liquidWidth = useMotionValue(0);
+	const liquidOpacity = useMotionValue(0);
+	const navMagnifyMouseX = useMotionValue(Number.POSITIVE_INFINITY);
+	const brandMagnifyMouseX = useMotionValue(Number.POSITIVE_INFINITY);
+	const menuMagnifyMouseX = useMotionValue(Number.POSITIVE_INFINITY);
+	const fabMagnifyMouseX = useMotionValue(Number.POSITIVE_INFINITY);
+
+	const springX = useSpring(liquidX, {
+		stiffness: 260,
+		damping: 32,
+		mass: 0.7,
+	});
+	const springWidth = useSpring(liquidWidth, {
+		stiffness: 240,
+		damping: 36,
+		mass: 0.8,
+	});
+	const springOpacity = useSpring(liquidOpacity, {
+		stiffness: 350,
+		damping: 38,
+	});
+
+	const { scrollY, scrollYProgress } = useScroll({ layoutEffect: false });
+	const trigger = useScrollTrigger({ disableHysteresis: true, threshold: 50 });
+
+	const logoScale = useTransform(scrollY, [0, 100], [1, 0.9]);
+
+	const isMobile = deviceType === 'mobile';
+	const isTablet = deviceType === 'tablet';
+	const shouldReduceMotion = performanceTier === 'low' || isMobile;
+	const sharedMagnifySpring = useMemo<SpringOptions>(() => ({ stiffness: 280, damping: 26, mass: 0.42 }), []);
+
+	useEffect(() => {
+		activeSectionRef.current = activeSection;
+	}, [activeSection]);
+
+	useEffect(() => {
+		if (typeof window === 'undefined') {
+			return;
+		}
+
+		const checkMobile = () => {
+			setIsMobileCSS(
+				window.innerWidth <= 768 ||
+					window.matchMedia('(pointer: coarse)').matches,
+			);
+		};
+
+		checkMobile();
+		window.addEventListener('resize', checkMobile);
+
+		return () => {
+			window.removeEventListener('resize', checkMobile);
+		};
+	}, []);
+
+	const windowWidth = typeof window !== 'undefined' ? window.innerWidth : undefined;
+	const isMobileDevice = isMobile || isMobileCSS;
+	const isTabletDevice =
+		isTablet ||
+		(windowWidth !== undefined &&
+			windowWidth > 768 &&
+			windowWidth < 1024 &&
+			(isMobile || isMobileCSS));
+
+	const magnificationDisabled = shouldReduceMotion || isMobileDevice || isTabletDevice;
+	const prefersLightweightMenu = isTabletDevice || performanceTier === 'low';
+
+	const navItems = useMemo<NavItem[]>(
+		() => [
+			{ name: 'Home', href: '#hero', icon: Home },
+			{ name: 'About', href: '#about', icon: Person },
+			{ name: 'Tech', href: '#technologies', icon: Code },
+			{ name: 'Experience', href: '#experience', icon: Work },
+			{ name: 'Research', href: '#research', icon: Science },
+			{ name: 'Projects', href: '#projects', icon: School },
+			{ name: 'Certificates', href: '#certifications', icon: School },
+			{ name: 'Contact', href: '#contact', icon: ContactMail },
+		],
+		[],
+	);
+
+	// GSAP Pill Animation Setup
+	useEffect(() => {
+		if (shouldReduceMotion || prefersLightweightMenu) return;
+
+		const layoutPills = () => {
+			circleRefs.current.forEach((circle, index) => {
+				if (!circle?.parentElement) return;
+
+				const pill = circle.parentElement as HTMLElement;
+				const rect = pill.getBoundingClientRect();
+				const { width: w, height: h } = rect;
+				
+				// Calculate circle dimensions for pill effect
+				const R = ((w * w) / 4 + h * h) / (2 * h);
+				const D = Math.ceil(2 * R) + 2;
+				const delta = Math.ceil(R - Math.sqrt(Math.max(0, R * R - (w * w) / 4))) + 1;
+				const originY = D - delta;
+
+				circle.style.width = `${D}px`;
+				circle.style.height = `${D}px`;
+				circle.style.bottom = `-${delta}px`;
+
+				gsap.set(circle, {
+					xPercent: -50,
+					scale: 0,
+					transformOrigin: `50% ${originY}px`,
+				});
+
+				const label = pill.querySelector<HTMLElement>('.pill-label');
+				const labelHover = pill.querySelector<HTMLElement>('.pill-label-hover');
+
+				if (label) gsap.set(label, { y: 0 });
+				if (labelHover) {
+					gsap.set(labelHover, { y: h + 12, opacity: 0 });
+				}
+
+				// Create GPU-accelerated timeline for hover animation
+				tlRefs.current[index]?.kill();
+				const tl = gsap.timeline({ paused: true });
+
+				tl.to(
+					circle,
+					{ scale: 1.15, xPercent: -50, duration: 0.5, ease: 'power2.out', overwrite: 'auto', force3D: true },
+					0
+				);
+
+				if (label) {
+					tl.to(label, { y: -(h + 8), duration: 0.5, ease: 'power2.out', overwrite: 'auto', force3D: true }, 0);
+				}
+
+				if (labelHover) {
+					gsap.set(labelHover, { y: Math.ceil(h + 100), opacity: 0, force3D: true });
+					tl.to(labelHover, { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out', overwrite: 'auto', force3D: true }, 0);
+				}
+
+				tlRefs.current[index] = tl;
+			});
+		};
+
+		layoutPills();
+
+		const handleResize = () => layoutPills();
+		window.addEventListener('resize', handleResize);
+
+		if (document.fonts) {
+			document.fonts.ready.then(layoutPills).catch(() => {});
+		}
+
+		// Dramatic Enterprise-Level Initial Load Animation
+		if (!hasInitialLoaded) {
+			const logo = logoBoxRef.current;
+			const navContainer = desktopNavRef.current;
+
+			if (logo) {
+				gsap.fromTo(
+					logo,
+					{ opacity: 0, y: -18, filter: 'blur(8px)', force3D: true },
+					{
+						opacity: 1,
+						y: 0,
+						filter: 'blur(0px)',
+						duration: 0.9,
+						ease: 'expo.out',
+						force3D: true,
+					},
+				);
+			}
+
+			if (navContainer) {
+				const pillElements = Array.from(
+					navContainer.querySelectorAll<HTMLElement>('[data-nav-item]'),
+				);
+
+				gsap.fromTo(
+					navContainer,
+					{ opacity: 0, y: 24, filter: 'blur(12px)', force3D: true },
+					{
+						opacity: 1,
+						y: 0,
+						filter: 'blur(0px)',
+						duration: 1,
+						ease: 'expo.out',
+						force3D: true,
+					},
+				);
+
+				if (pillElements.length > 0) {
+					gsap.fromTo(
+						pillElements,
+						{ opacity: 0, y: 16, scale: 0.92, force3D: true },
+						{
+							opacity: 1,
+							y: 0,
+							scale: 1,
+							duration: 0.7,
+							ease: 'power3.out',
+							stagger: 0.06,
+							force3D: true,
+						},
+					);
+				}
+			}
+
+			setHasInitialLoaded(true);
+		}
+
+		return () => window.removeEventListener('resize', handleResize);
+		}, [shouldReduceMotion, prefersLightweightMenu, navItems, hasInitialLoaded]);
+
+	// Pill hover handlers
+	const handlePillEnter = useCallback(
+		(index: number) => {
+			if (shouldReduceMotion || prefersLightweightMenu) return;
+			const tl = tlRefs.current[index];
+			if (!tl) return;
+			activeTweenRefs.current[index]?.kill();
+			activeTweenRefs.current[index] = tl.tweenTo(tl.duration(), {
+				duration: 0.4,
+				ease: 'power2.out',
+				overwrite: 'auto',
+			});
+		},
+		[shouldReduceMotion, prefersLightweightMenu]
+	);
+
+	const handlePillLeave = useCallback(
+		(index: number) => {
+			if (shouldReduceMotion || prefersLightweightMenu) return;
+			const tl = tlRefs.current[index];
+			if (!tl) return;
+			activeTweenRefs.current[index]?.kill();
+			activeTweenRefs.current[index] = tl.tweenTo(0, {
+				duration: 0.3,
+				ease: 'power2.out',
+				overwrite: 'auto',
+			});
+		},
+		[shouldReduceMotion, prefersLightweightMenu]
+	);
+
+	const scrollToSection = useCallback(
+		(sectionId: string) => {
+			if (typeof document === 'undefined') {
+				return;
+			}
+
+			const target = document.querySelector(sectionId);
+			if (!(target instanceof HTMLElement)) {
+				return;
+			}
+
+			const targetSection = sectionId.replace('#', '');
+
+			if (lenis) {
+				lenis.scrollTo(target, {
+					duration: shouldReduceMotion ? 0 : 1,
+					offset: 0,
+					immediate: shouldReduceMotion,
+				});
+			} else {
+				target.scrollIntoView({
+					behavior: shouldReduceMotion ? 'auto' : 'smooth',
+					block: 'start',
+				});
+			}
+
+			setActiveSection(targetSection);
+			activeSectionRef.current = targetSection;
+			setIsMenuOpen(false);
+		},
+		[lenis, shouldReduceMotion],
+	);
+
+	const updateLiquidIndicator = useCallback(
+		(interpolationData: InterpolationDatum[], primarySection: string) => {
+			if (shouldReduceMotion) {
+				return;
+			}
+
+			const primaryPosition = navItemPositions[primarySection];
+			if (!primaryPosition) {
+				return;
+			}
+
+			const sortedData = interpolationData
+				.filter((data) => data.visibilityRatio > 0)
+				.sort((a, b) => b.visibilityRatio - a.visibilityRatio)
+				.slice(0, 2);
+
+			if (sortedData.length === 0) {
+				return;
+			}
+
+			const [primary, secondary] = sortedData;
+
+			let targetX = primaryPosition.x;
+			let targetWidth = primaryPosition.width;
+
+			if (secondary && secondary.visibilityRatio > 0.1) {
+				const secondaryPosition = navItemPositions[secondary.section];
+
+				if (secondaryPosition) {
+					const interpolationStrength =
+						secondary.visibilityRatio /
+						(primary.visibilityRatio + secondary.visibilityRatio);
+
+					const easedInterpolation = 1 - Math.pow(1 - interpolationStrength, 3);
+
+					if (secondary.index > primary.index) {
+						targetX =
+							primaryPosition.x +
+							(secondaryPosition.x - primaryPosition.x) * easedInterpolation * 0.3;
+						targetWidth =
+							primaryPosition.width +
+							(secondaryPosition.width - primaryPosition.width +
+								Math.abs(secondaryPosition.x - primaryPosition.x) * 0.5) *
+								easedInterpolation;
+					} else {
+						targetX =
+							secondaryPosition.x +
+							(primaryPosition.x - secondaryPosition.x) * (1 - easedInterpolation * 0.3);
+						targetWidth =
+							secondaryPosition.width +
+							(primaryPosition.width - secondaryPosition.width +
+								Math.abs(primaryPosition.x - secondaryPosition.x) * 0.5) *
+								(1 - easedInterpolation);
+					}
+				}
+			}
+
+			liquidX.set(targetX);
+			liquidWidth.set(Math.max(targetWidth, 60));
+			liquidOpacity.set(1);
+		},
+		[liquidOpacity, liquidWidth, liquidX, navItemPositions, shouldReduceMotion],
+	);
+
+	useEffect(() => {
+		if (shouldReduceMotion || typeof document === 'undefined' || typeof window === 'undefined') {
+			return undefined;
+		}
+
+		const sections = navItems.map((item) => item.href.replace('#', ''));
+
+		const evaluateSections = (scrollTop: number) => {
+			let currentSection = 'hero';
+			let maxVisibleArea = 0;
+			const interpolationData: InterpolationDatum[] = [];
+			const viewportHeight = window.innerHeight;
+
+			sections.forEach((section, index) => {
+				const element = document.getElementById(section);
+				if (!element) {
+					return;
+				}
+
+				const { offsetTop, offsetHeight } = element;
+				const visibleTop = Math.max(scrollTop, offsetTop);
+				const visibleBottom = Math.min(scrollTop + viewportHeight, offsetTop + offsetHeight);
+				const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+				const visibilityRatio = visibleHeight / Math.min(offsetHeight, viewportHeight);
+
+				interpolationData.push({ section, visibilityRatio, index });
+
+				if (visibilityRatio > maxVisibleArea) {
+					maxVisibleArea = visibilityRatio;
+					currentSection = section;
+				}
+			});
+
+			if (currentSection !== activeSectionRef.current) {
+				activeSectionRef.current = currentSection;
+				setActiveSection(currentSection);
+			}
+
+			updateLiquidIndicator(interpolationData, currentSection);
+		};
+
+		const scheduleEvaluation = (scrollTop: number) => {
+			evaluationScrollRef.current = scrollTop;
+			if (evaluationFrameRef.current !== null) {
+				return;
+			}
+			evaluationFrameRef.current = requestAnimationFrame(() => {
+				evaluationFrameRef.current = null;
+				evaluateSections(evaluationScrollRef.current);
+			});
+		};
+
+		if (lenis) {
+			const handleLenisScroll = ({ scroll }: LenisScrollEvent) => {
+				scheduleEvaluation(typeof scroll === 'number' ? scroll : getScrollPosition());
+			};
+			lenis.on('scroll', handleLenisScroll);
+			scheduleEvaluation(getScrollPosition());
+			return () => {
+				lenis.off('scroll', handleLenisScroll);
+				if (evaluationFrameRef.current !== null) {
+					cancelAnimationFrame(evaluationFrameRef.current);
+					evaluationFrameRef.current = null;
+				}
+			};
+		}
+
+		const handleWindowScroll = () => scheduleEvaluation(getScrollPosition());
+		window.addEventListener('scroll', handleWindowScroll, { passive: true });
+		scheduleEvaluation(getScrollPosition());
+
+		return () => {
+			window.removeEventListener('scroll', handleWindowScroll);
+			if (evaluationFrameRef.current !== null) {
+				cancelAnimationFrame(evaluationFrameRef.current);
+				evaluationFrameRef.current = null;
+			}
+		};
+	}, [getScrollPosition, lenis, navItems, shouldReduceMotion, updateLiquidIndicator]);
+
+	useEffect(() => {
+		if (!shouldReduceMotion || typeof document === 'undefined' || typeof window === 'undefined') {
+			return undefined;
+		}
+
+		const sections = navItems.map((item) => item.href.replace('#', ''));
+
+		const updateSection = (scrollTop: number) => {
+			const scrollPosition = scrollTop + 100;
+
+			for (const section of sections) {
+				const element = document.getElementById(section);
+				if (!element) {
+					continue;
+				}
+
+				const { offsetTop, offsetHeight } = element;
+				if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+					if (section !== activeSectionRef.current) {
+						activeSectionRef.current = section;
+						setActiveSection(section);
+					}
+					break;
+				}
+			}
+		};
+
+		const scheduleUpdate = (scrollTop: number) => {
+			reducedEvaluationScrollRef.current = scrollTop;
+			if (reducedEvaluationFrameRef.current !== null) {
+				return;
+			}
+			reducedEvaluationFrameRef.current = requestAnimationFrame(() => {
+				reducedEvaluationFrameRef.current = null;
+				updateSection(reducedEvaluationScrollRef.current);
+			});
+		};
+
+		if (lenis) {
+			const handleLenisScroll = ({ scroll }: LenisScrollEvent) => {
+				scheduleUpdate(typeof scroll === 'number' ? scroll : getScrollPosition());
+			};
+			lenis.on('scroll', handleLenisScroll);
+			scheduleUpdate(getScrollPosition());
+			return () => {
+				lenis.off('scroll', handleLenisScroll);
+				if (reducedEvaluationFrameRef.current !== null) {
+					cancelAnimationFrame(reducedEvaluationFrameRef.current);
+					reducedEvaluationFrameRef.current = null;
+				}
+			};
+		}
+
+		const handleWindowScroll = () => scheduleUpdate(getScrollPosition());
+		window.addEventListener('scroll', handleWindowScroll, { passive: true });
+		scheduleUpdate(getScrollPosition());
+
+		return () => {
+			window.removeEventListener('scroll', handleWindowScroll);
+			if (reducedEvaluationFrameRef.current !== null) {
+				cancelAnimationFrame(reducedEvaluationFrameRef.current);
+				reducedEvaluationFrameRef.current = null;
+			}
+		};
+	}, [getScrollPosition, lenis, navItems, shouldReduceMotion]);
+
+	useEffect(() => {
+		if (typeof window === 'undefined') {
+			return;
+		}
+
+		const measurePositions = () => {
+			const navElement = navRef.current;
+
+			if (!navElement) {
+				return;
+			}
+
+			const parentRect = navElement.getBoundingClientRect();
+			const navElements = navElement.querySelectorAll<HTMLElement>('[data-nav-item]');
+			const positions: NavItemPositions = {};
+
+			navElements.forEach((item) => {
+				const section = item.getAttribute('data-nav-item');
+
+				if (!section) {
+					return;
+				}
+
+				const rect = item.getBoundingClientRect();
+
+				positions[section] = {
+					x: rect.left - parentRect.left,
+					width: rect.width,
+					height: rect.height,
+				};
+			});
+
+			setNavItemPositions(positions);
+		};
+
+		measurePositions();
+		window.addEventListener('resize', measurePositions);
+
+		const timer = window.setTimeout(measurePositions, 100);
+
+		return () => {
+			window.removeEventListener('resize', measurePositions);
+			window.clearTimeout(timer);
+		};
+	}, [navItems, prefersLightweightMenu, shouldReduceMotion]);
+
+	const menuVariants = useMemo<Variants>(() => {
+		if (prefersLightweightMenu) {
+			return {
+				closed: {
+					opacity: 0,
+					y: -8,
+					transition: { type: 'tween', duration: 0.16, ease: 'easeInOut' },
+				},
+				open: {
+					opacity: 1,
+					y: 0,
+					transition: { type: 'tween', duration: 0.22, ease: 'easeOut' },
+				},
+			};
+		}
+
+		return {
+			closed: {
+				opacity: 0,
+				scale: 0.95,
+				transition: { type: 'tween', duration: 0.18, ease: 'easeIn' },
+			},
+			open: {
+				opacity: 1,
+				scale: 1,
+				transition: {
+					type: 'tween',
+					duration: 0.26,
+					ease: 'easeOut',
+					staggerChildren: 0.035,
+					delayChildren: 0.06,
+				},
+			},
+		};
+	}, [prefersLightweightMenu]);
+
+	const mobileMenuItemVariants = useMemo<Variants>(
+		() =>
+			prefersLightweightMenu
+				? {
+					closed: { opacity: 0, y: -10, transition: { type: 'tween', duration: 0.14, ease: 'easeInOut' } },
+					open: { opacity: 1, y: 0, transition: { type: 'tween', duration: 0.2, ease: 'easeOut' } },
+				}
+				: {
+					closed: { opacity: 0, x: -16, transition: { type: 'tween', duration: 0.18, ease: 'easeIn' } },
+					open: { opacity: 1, x: 0, transition: { type: 'tween', duration: 0.24, ease: 'easeOut' } },
+				},
+		[prefersLightweightMenu],
+	);
+
+	return (
+		<>
+			<AppBar
+				position="fixed"
+				elevation={0}
+				id="main-navbar"
+				sx={{
+					background: 'transparent',
+					backdropFilter: 'none',
+					WebkitBackdropFilter: 'none',
+					borderBottom: 'none',
+					zIndex: 1100,
+					boxShadow: 'none',
+				}}
+			>
+				<GlassSurface
+					width="100%"
+					height="auto"
+					borderRadius={0}
+					brightness={8}
+					opacity={0.9}
+					blur={14}
+					displace={1.6}
+					backgroundOpacity={0.12}
+					saturation={1.4}
+					distortionScale={-140}
+					redOffset={2}
+					greenOffset={10}
+					blueOffset={18}
+					mixBlendMode="screen"
+					className="navbar-glass-surface"
+					style={{
+						borderBottom: '1px solid rgba(148, 163, 184, 0.15)',
+						boxShadow: trigger
+							? '0 4px 24px rgba(0, 0, 0, 0.12)'
+							: '0 2px 12px rgba(0, 0, 0, 0.06)',
+					}}
+				>
+				<Toolbar
+					sx={{
+						justifyContent: 'space-between',
+						alignItems: 'center',
+						px: { xs: 2, md: 4 },
+						py: 0,
+						minHeight: { xs: 66, md: 76 },
+						overflow: 'visible',
+						width: '100%',
+						columnGap: { xs: 2, md: 3 },
+					}}
+				>
+					<motion.div
+						initial={{ opacity: 0, x: -24, filter: 'blur(4px)' }}
+						animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+						transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
+						style={{ scale: shouldReduceMotion ? 1 : logoScale }}
+						whileHover={shouldReduceMotion ? undefined : { scale: 1.05 }}
+						whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
+					>
+						{magnificationDisabled ? (
+							<Box
+								ref={logoBoxRef}
+								onClick={() => scrollToSection('#hero')}
+								sx={{
+									display: 'flex',
+									alignItems: 'center',
+									gap: 2,
+									cursor: 'pointer',
+								}}
+							>
+								<Box
+									sx={{
+										width: 44,
+										height: 44,
+										borderRadius: '12px',
+										background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+										fontSize: '1.25rem',
+										fontWeight: 700,
+										color: '#ffffff',
+										boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+										transition: 'box-shadow 0.2s ease',
+										willChange: 'box-shadow',
+										'&:hover': {
+											boxShadow: '0 6px 20px rgba(99, 102, 241, 0.4)',
+										},
+									}}
+								>
+									G
+								</Box>
+								{!isMobileDevice && (
+									<Box>
+										<Box
+											sx={{
+												fontWeight: 700,
+												fontSize: '1.125rem',
+												color: '#f1f5f9',
+												letterSpacing: '-0.02em',
+											}}
+										>
+											Gading Aditya Perdana
+										</Box>
+										<Box sx={{ fontSize: '0.8125rem', color: '#94a3b8', fontWeight: 500 }}>
+											AI Researcher & Engineer
+										</Box>
+									</Box>
+								)}
+							</Box>
+						) : (
+							<MagnifiedInteractive
+								mouseX={brandMagnifyMouseX}
+								magnification={1.12}
+								distance={150}
+								spring={sharedMagnifySpring}
+								style={{ alignItems: 'center' }}
+							>
+								<Box
+									ref={logoBoxRef}
+									onClick={() => scrollToSection('#hero')}
+									sx={{
+										display: 'flex',
+										alignItems: 'center',
+										gap: 2,
+										cursor: 'pointer',
+									}}
+								>
+									<Box
+										sx={{
+											width: 44,
+											height: 44,
+											borderRadius: '12px',
+											background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'center',
+											fontSize: '1.25rem',
+											fontWeight: 700,
+											color: '#ffffff',
+											boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+											transition: 'all 0.3s ease',
+											'&:hover': {
+												boxShadow: '0 6px 20px rgba(99, 102, 241, 0.4)',
+											},
+										}}
+									>
+										G
+									</Box>
+									{!isMobileDevice && (
+										<Box>
+											<Box
+												sx={{
+													fontWeight: 700,
+													fontSize: '1.125rem',
+													color: '#f1f5f9',
+													letterSpacing: '-0.02em',
+												}}
+											>
+												Gading Aditya Perdana
+											</Box>
+											<Box sx={{ fontSize: '0.8125rem', color: '#94a3b8', fontWeight: 500 }}>
+												AI Researcher & Engineer
+											</Box>
+										</Box>
+									)}
+								</Box>
+							</MagnifiedInteractive>
+						)}
+					</motion.div>
+
+					{!isMobileDevice && !isTabletDevice && (
+						<motion.div
+							ref={desktopNavRef}
+							initial={{ opacity: 0, y: -12, filter: 'blur(4px)' }}
+							animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+							transition={{ duration: 0.7, delay: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+							style={{ position: 'relative', overflow: 'visible' }}
+						>
+							{!shouldReduceMotion && (
+								<motion.div
+									style={{
+										position: 'absolute',
+										top: '50%',
+										left: springX,
+										width: springWidth,
+										height: '42px',
+										transform: 'translateY(-50%)',
+										background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.1))',
+										borderRadius: '11px',
+										opacity: springOpacity,
+										zIndex: 0,
+										boxShadow: '0 0 24px rgba(99, 102, 241, 0.18), inset 0 0 20px rgba(255, 255, 255, 0.03)',
+										border: '1px solid rgba(99, 102, 241, 0.15)',
+									}}
+									transition={{ type: 'spring', stiffness: 260, damping: 32 }}
+								/>
+							)}
+
+							<Box 
+								ref={navRef}
+								onMouseMove={magnificationDisabled ? undefined : (event) => navMagnifyMouseX.set(event.clientX)}
+								onMouseLeave={magnificationDisabled ? undefined : () => navMagnifyMouseX.set(Number.POSITIVE_INFINITY)}
+								sx={{ display: 'flex', gap: 0.75, position: 'relative', zIndex: 1, overflow: 'visible' }}
+							>
+								{navItems.map((item, index) => {
+									const sectionKey = item.href.replace('#', '');
+									const isActive = activeSection === sectionKey;
+									const Icon = item.icon;
+									const isHomeButton = index === 0;
+									const isHovered = hoveredIndex === index;
+
+									const handleMouseEnter = () => {
+										handlePillEnter(index);
+										setHoveredIndex(index);
+									};
+
+									const handleMouseLeave = () => {
+										handlePillLeave(index);
+										setHoveredIndex((prev) => (prev === index ? null : prev));
+										if (!magnificationDisabled) {
+											navMagnifyMouseX.set(Number.POSITIVE_INFINITY);
+										}
+									};
+
+									const homeButtonContent = (
+										<Box sx={{ position: 'relative', zIndex: 1, overflow: 'visible' }}>
+											<StarBorder
+												as="div"
+												color={isHovered ? '#9f12db' : '#6366f1'}
+												speed="4s"
+												className="cursor-pointer"
+												onClick={() => scrollToSection(item.href)}
+												style={{ padding: 0, margin: 0 }}
+											>
+												<Box
+													sx={{
+														display: 'inline-flex',
+														alignItems: 'center',
+														gap: 0.5,
+														px: 1.5,
+														py: 0.75,
+														height: 40,
+														background: isActive
+															? 'rgba(99, 102, 241, 0.9)'
+															: isHovered
+																? 'rgba(159, 18, 219, 0.18)'
+																: 'transparent',
+														borderRadius: '10px',
+														border: isActive || isHovered ? 'none' : '1px solid rgba(148, 163, 184, 0.2)',
+														transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+													}}
+												>
+													<Icon
+														sx={{
+															fontSize: '1.125rem',
+															color: isActive ? '#ffffff' : isHovered ? '#9f12db' : '#94a3b8',
+															transition: 'color 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+														}}
+													/>
+													<Box
+														component="span"
+														sx={{
+															fontSize: '0.875rem',
+															fontWeight: 600,
+															color: isActive ? '#ffffff' : isHovered ? '#9f12db' : '#cbd5e1',
+															lineHeight: 1,
+															transition: 'color 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+														}}
+													>
+														{item.name}
+													</Box>
+												</Box>
+											</StarBorder>
+										</Box>
+									);
+
+									const regularButtonContent = (
+										<Box
+											sx={{
+												position: 'relative',
+												overflow: 'hidden',
+												display: 'inline-flex',
+												alignItems: 'center',
+												justifyContent: 'center',
+												px: 1.5,
+												height: 40,
+												borderRadius: '10px',
+												cursor: 'pointer',
+												border: isActive
+													? 'none'
+													: `1px solid ${isHovered ? 'rgba(159, 18, 219, 0.4)' : 'rgba(148, 163, 184, 0.2)'}`,
+												backgroundColor: isActive
+													? 'rgba(99, 102, 241, 0.9)'
+													: isHovered
+														? 'rgba(159, 18, 219, 0.18)'
+														: 'transparent',
+												transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+											}}
+										>
+											<Box
+												component="span"
+												ref={(el) => {
+													if (el instanceof HTMLSpanElement) {
+														circleRefs.current[index] = el;
+													}
+												}}
+												sx={{
+													position: 'absolute',
+													left: '50%',
+													bottom: 0,
+													borderRadius: '50%',
+													background: isHovered ? 'rgba(159, 18, 219, 0.25)' : 'rgba(99, 102, 241, 0.25)',
+													pointerEvents: 'none',
+													zIndex: 1,
+											}}
+											/>
+
+											<Box
+												sx={{
+													position: 'relative',
+													display: 'inline-flex',
+													alignItems: 'center',
+													gap: 0.5,
+													zIndex: 2,
+											}}
+											>
+												<Icon sx={{ fontSize: '1.125rem', color: isActive ? '#ffffff' : isHovered ? '#9f12db' : '#94a3b8', transition: 'color 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+												<Box
+													component="span"
+													className="pill-label"
+													sx={{
+														fontSize: '0.875rem',
+														fontWeight: 600,
+														color: isActive ? '#ffffff' : isHovered ? '#9f12db' : '#cbd5e1',
+														lineHeight: 1,
+													}}
+												>
+													{item.name}
+												</Box>
+												<Box
+													component="span"
+													className="pill-label-hover"
+													sx={{
+														position: 'absolute',
+														left: '20px',
+														top: 0,
+														fontSize: '0.875rem',
+														fontWeight: 600,
+														color: isActive ? '#ffffff' : '#9f12db',
+														lineHeight: 1,
+														pointerEvents: 'none',
+													}}
+												>
+													{item.name}
+												</Box>
+											</Box>
+
+											{isActive && (
+												<Box
+													sx={{
+														position: 'absolute',
+														left: '50%',
+														bottom: -6,
+														transform: 'translateX(-50%)',
+														width: 12,
+														height: 12,
+														borderRadius: '50%',
+														background: 'rgba(99, 102, 241, 0.9)',
+														zIndex: 4,
+													}}
+												/>
+											)}
+										</Box>
+									);
+
+									const content = isHomeButton ? homeButtonContent : regularButtonContent;
+
+									if (magnificationDisabled) {
+										return (
+											<Box
+												key={item.name}
+												data-nav-item={sectionKey}
+												onMouseEnter={handleMouseEnter}
+												onMouseLeave={handleMouseLeave}
+												onClick={() => scrollToSection(item.href)}
+												sx={{
+													position: 'relative',
+													display: 'inline-flex',
+													alignItems: 'center',
+													justifyContent: 'center',
+													overflow: 'visible',
+												}}
+											>
+												{content}
+											</Box>
+										);
+									}
+
+									return (
+										<MagnifiedInteractive
+											key={item.name}
+											data-nav-item={sectionKey}
+											mouseX={navMagnifyMouseX}
+											magnification={isHomeButton ? 1.22 : 1.16}
+											distance={190}
+											spring={sharedMagnifySpring}
+											onPointerEnter={handleMouseEnter}
+											onPointerLeave={handleMouseLeave}
+											onClick={() => scrollToSection(item.href)}
+											style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+										>
+											{content}
+										</MagnifiedInteractive>
+									);
+								})}
+							</Box>
+						</motion.div>
+					)}
+
+					{(isMobileDevice || isTabletDevice) && (() => {
+						const toggleSize = isMobileDevice ? 48 : 52;
+
+						const menuToggleButtonSx = prefersLightweightMenu
+							? {
+								width: '100%',
+								height: '100%',
+								borderRadius: 'inherit',
+								color: isMenuOpen ? '#0f172a' : '#e2e8f0',
+								backgroundColor: isMenuOpen ? 'rgba(255, 255, 255, 0.65)' : 'rgba(15, 23, 42, 0.45)',
+								border: '1px solid rgba(148, 163, 184, 0.35)',
+								boxShadow: '0 6px 18px rgba(15, 23, 42, 0.28)',
+								transition: 'all 0.28s ease',
+								'&:hover': {
+									color: '#0f172a',
+									backgroundColor: 'rgba(255, 255, 255, 0.72)',
+									boxShadow: '0 10px 24px rgba(15, 23, 42, 0.32)',
+									transform: 'translateY(-1px)',
+								},
+							}
+							: {
+								width: '100%',
+								height: '100%',
+								borderRadius: 'inherit',
+								color: isMenuOpen ? '#0f172a' : '#e2e8f0',
+								backgroundColor: isMenuOpen ? 'rgba(255, 255, 255, 0.55)' : 'rgba(15, 23, 42, 0.28)',
+								border: '1px solid rgba(255, 255, 255, 0.35)',
+								boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.65), inset 0 -4px 12px rgba(15, 23, 42, 0.45)',
+								transition: 'color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease',
+								'&:hover': {
+									color: '#1e293b',
+									backgroundColor: 'rgba(255, 255, 255, 0.68)',
+									boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -4px 16px rgba(15, 23, 42, 0.38)',
+									transform: 'translateY(-1px)',
+								},
+							};
+
+						const toggleButton = (
+							<IconButton
+								onClick={() => setIsMenuOpen((prev) => !prev)}
+								aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+								sx={menuToggleButtonSx}
+							>
+								<motion.div animate={{ rotate: isMenuOpen ? 90 : 0 }} transition={{ duration: 0.2 }}>
+									{isMenuOpen ? <CloseIcon /> : <MenuIcon />}
+								</motion.div>
+							</IconButton>
+						);
+
+						const toggleSurface = prefersLightweightMenu ? (
+							<Box
+								className={`navbar-menu-toggle-glass${isMenuOpen ? ' navbar-menu-toggle-glass--open' : ''}`}
+								sx={{
+									position: 'relative',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									width: toggleSize,
+									height: toggleSize,
+									borderRadius: 16,
+									border: '1px solid rgba(148, 163, 184, 0.28)',
+									background: isMenuOpen
+										? 'linear-gradient(135deg, rgba(226, 232, 240, 0.38), rgba(148, 163, 184, 0.26))'
+										: 'rgba(15, 23, 42, 0.5)',
+									backdropFilter: 'blur(10px)',
+									WebkitBackdropFilter: 'blur(10px)',
+									boxShadow: '0 12px 24px rgba(15, 23, 42, 0.28)',
+									overflow: 'hidden',
+									transition: 'all 0.28s ease',
+								}}
+							>
+								<Box
+									sx={{
+										position: 'absolute',
+										inset: 0,
+										pointerEvents: 'none',
+										opacity: isMenuOpen ? 0.9 : 0.6,
+										background:
+											'radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.35), transparent 55%)',
+								}}
+								/>
+								{toggleButton}
+							</Box>
+						) : (
+							<GlassSurface
+								width={toggleSize}
+								height={toggleSize}
+								borderRadius={16}
+								brightness={18}
+								opacity={0.88}
+								blur={14}
+								displace={1.6}
+								backgroundOpacity={0.1}
+								saturation={1.45}
+								distortionScale={-150}
+								redOffset={3}
+								greenOffset={10}
+								blueOffset={18}
+								mixBlendMode="screen"
+								className={`navbar-menu-toggle-glass${isMenuOpen ? ' navbar-menu-toggle-glass--open' : ''}`}
+								style={{
+									border: '1px solid rgba(226, 232, 240, 0.22)',
+									boxShadow: '0 18px 32px rgba(15, 23, 42, 0.28)',
+									transition: 'box-shadow 0.35s ease',
+								}}
+							>
+								<Box
+									sx={{
+										position: 'absolute',
+										inset: 0,
+										borderRadius: 'inherit',
+										pointerEvents: 'none',
+										background:
+											'radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.4), transparent 55%)',
+										mixBlendMode: 'screen',
+										opacity: isMenuOpen ? 1 : 0.85,
+										transition: 'opacity 0.35s ease',
+									}}
+								/>
+								<Box
+									sx={{
+										position: 'absolute',
+										inset: 0,
+										borderRadius: 'inherit',
+										pointerEvents: 'none',
+										boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(15, 23, 42, 0.45)',
+										background:
+											'linear-gradient(135deg, rgba(226, 232, 240, 0.22), rgba(30, 41, 59, 0.32))',
+										opacity: isMenuOpen ? 0.95 : 0.75,
+										transition: 'opacity 0.35s ease',
+									}}
+								/>
+								{toggleButton}
+							</GlassSurface>
+						);
+
+						if (magnificationDisabled) {
+							return toggleSurface;
+						}
+
+						return (
+							<MagnifiedInteractive
+								mouseX={menuMagnifyMouseX}
+								magnification={1.18}
+								distance={170}
+								spring={sharedMagnifySpring}
+								style={{ display: 'inline-flex' }}
+							>
+								{toggleSurface}
+							</MagnifiedInteractive>
+						);
+					})()}
+				</Toolbar>
+
+				{/* Progress bar */}
+				<motion.div
+					style={{
+						position: 'absolute',
+						bottom: 0,
+						left: 0,
+						right: 0,
+						height: 2,
+						background: 'linear-gradient(90deg, #6b7cff 0%, #a855f7 50%, #38bdf8 100%)',
+						transformOrigin: 'left',
+						scaleX: shouldReduceMotion ? 0 : scrollYProgress,
+						opacity: 0.8,
+					}}
+				/>
+				</GlassSurface>
+			</AppBar>
+			<AnimatePresence>
+				{isMenuOpen && (isMobileDevice || isTabletDevice) && (
+					<>
+						<Backdrop
+							open={isMenuOpen}
+							onClick={() => setIsMenuOpen(false)}
+							sx={{
+								zIndex: 1200,
+								backdropFilter: prefersLightweightMenu ? 'blur(3px)' : 'blur(6px)',
+								backgroundColor: 'rgba(15, 23, 42, 0.38)',
+							}}
+						/>
+						<motion.div
+							variants={menuVariants}
+							initial="closed"
+							animate="open"
+							exit="closed"
+							style={{
+								position: 'fixed',
+								top: '80px',
+								right: '16px',
+								left: isMobileDevice ? '16px' : 'auto',
+								zIndex: 1300,
+								width: isMobileDevice ? 'auto' : '320px',
+								maxWidth: isMobileDevice ? 'calc(100vw - 32px)' : '320px',
+								maxHeight: '80vh',
+								overflowY: 'auto',
+								WebkitOverflowScrolling: 'touch',
+								touchAction: 'pan-y',
+								overflowX: 'hidden',
+								overscrollBehavior: 'contain',
+							}}
+						>
+							{(() => {
+								const menuItems = (
+									<Box sx={{ p: 2 }}>
+										{navItems.map((item) => {
+											const isActive = activeSection === item.href.replace('#', '');
+											const Icon = item.icon;
+
+											const baseBackground = isActive
+												? prefersLightweightMenu
+													? 'rgba(99, 102, 241, 0.82)'
+													: 'rgba(99, 102, 241, 0.9)'
+												: prefersLightweightMenu
+													? 'rgba(15, 23, 42, 0.35)'
+													: 'transparent';
+
+											const chipStyles: Record<string, unknown> = {
+												width: '100%',
+												justifyContent: 'flex-start',
+												py: prefersLightweightMenu ? 1 : 1.25,
+												px: prefersLightweightMenu ? 1.25 : 1.5,
+												height: 'auto',
+												fontSize: '0.9375rem',
+												fontWeight: 600,
+												color: isActive ? '#ffffff' : '#cbd5e1',
+												backgroundColor: baseBackground,
+												borderRadius: '10px',
+												border: isActive ? 'none' : '1px solid rgba(148, 163, 184, 0.18)',
+												transition: prefersLightweightMenu
+													? 'background-color 0.2s ease, color 0.2s ease'
+													: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+												'& .MuiChip-label': {
+													px: prefersLightweightMenu ? 0.75 : 1,
+												},
+												'& .MuiChip-icon': {
+													color: isActive ? '#ffffff' : '#94a3b8',
+													transition: prefersLightweightMenu ? 'color 0.2s ease' : 'color 0.3s ease',
+												},
+											};
+
+											if (prefersLightweightMenu) {
+												chipStyles['&:hover'] = {
+													backgroundColor: 'rgba(99, 102, 241, 0.76)',
+													borderColor: 'transparent',
+													color: '#ffffff',
+												};
+											} else {
+												chipStyles['&:hover'] = {
+													backgroundColor: '#9f12db',
+													borderColor: 'transparent',
+													color: '#ffffff',
+													transform: 'translateX(4px)',
+												};
+											}
+
+											chipStyles['&:hover .MuiChip-icon'] = { color: '#ffffff' };
+
+											return (
+												<motion.div
+													key={item.name}
+													variants={mobileMenuItemVariants}
+													style={{ marginBottom: prefersLightweightMenu ? '6px' : '8px' }}
+												>
+													<Chip
+														icon={<Icon sx={{ fontSize: '1.125rem' }} />}
+														label={item.name}
+														onClick={() => scrollToSection(item.href)}
+														sx={chipStyles}
+													/>
+												</motion.div>
+											);
+										})}
+									</Box>
+								);
+
+								if (prefersLightweightMenu) {
+									return (
+										<Box
+											className="navbar-mobile-menu-glass"
+											sx={{
+												position: 'relative',
+												borderRadius: 16,
+												width: '100%',
+												background: 'rgba(15, 23, 42, 0.7)',
+												backdropFilter: 'blur(10px)',
+												WebkitBackdropFilter: 'blur(10px)',
+												border: '1px solid rgba(148, 163, 184, 0.2)',
+												boxShadow: '0 12px 28px rgba(15, 23, 42, 0.28)',
+												maxHeight: 'inherit',
+												overflowY: 'auto',
+												overflowX: 'hidden',
+												WebkitOverflowScrolling: 'touch',
+												touchAction: 'pan-y',
+										}}
+										>
+											{menuItems}
+										</Box>
+									);
+								}
+
+								return (
+									<GlassSurface
+										width="100%"
+										height="auto"
+										borderRadius={16}
+										brightness={8}
+										opacity={0.9}
+										blur={12}
+										displace={1.5}
+										backgroundOpacity={0.12}
+										saturation={1.4}
+										distortionScale={-150}
+										redOffset={3}
+										greenOffset={10}
+										blueOffset={20}
+										mixBlendMode="screen"
+										className="navbar-mobile-menu-glass"
+										style={{
+											border: '1px solid rgba(148, 163, 184, 0.15)',
+											boxShadow: '0 16px 32px rgba(0, 0, 0, 0.22)',
+										}}
+									>
+										{menuItems}
+									</GlassSurface>
+								);
+							})()}
+						</motion.div>
+					</>
+				)}
+			</AnimatePresence>
+
+			{!isMenuOpen && (
+				<Zoom in={trigger}>
+					<motion.div
+						whileHover={shouldReduceMotion ? undefined : { scale: 1.1, rotate: 5 }}
+						whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
+						style={{
+							position: 'fixed',
+							bottom: 32,
+							right: 32,
+							zIndex: 1000,
+						}}
+					>
+						{(() => {
+							const fabContent = (
+								<GlassSurface
+									width={56}
+									height={56}
+									borderRadius={28}
+									brightness={15}
+									opacity={0.9}
+									blur={16}
+									displace={2}
+									backgroundOpacity={0.25}
+									saturation={1.8}
+									distortionScale={-180}
+									redOffset={4}
+									greenOffset={10}
+									blueOffset={18}
+									mixBlendMode="screen"
+									className="navbar-fab-glass"
+									style={{
+										boxShadow: '0 8px 24px rgba(99, 102, 241, 0.4)',
+										border: '1px solid rgba(148, 163, 184, 0.15)',
+										cursor: 'pointer',
+									}}
+								>
+									<Box
+										onClick={() => scrollToSection('#contact')}
+										sx={{
+											width: '100%',
+											height: '100%',
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'center',
+											color: '#ffffff',
+											background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(79, 70, 229, 0.9))',
+											borderRadius: '50%',
+											transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+											'&:hover': {
+												background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.95), rgba(99, 102, 241, 0.95))',
+												transform: 'translateY(-2px)',
+											},
+										}}
+									>
+										<ContactMail />
+									</Box>
+								</GlassSurface>
+							);
+
+							if (magnificationDisabled) {
+								return fabContent;
+							}
+
+							return (
+								<MagnifiedInteractive
+									mouseX={fabMagnifyMouseX}
+									magnification={1.16}
+									distance={160}
+									spring={sharedMagnifySpring}
+									style={{ display: 'inline-flex' }}
+								>
+									{fabContent}
+								</MagnifiedInteractive>
+							);
+						})()}
+					</motion.div>
+				</Zoom>
+			)}
+		</>
+	);
+};
+
+const ModernNavbar = memo(ModernNavbarComponent);
+ModernNavbar.displayName = 'ModernNavbar';
+
+export default ModernNavbar;

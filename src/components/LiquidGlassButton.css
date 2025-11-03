@@ -1,0 +1,26 @@
+w/* Liquid Glass Button Wrapper */
+.liquid-glass-button-wrapper {
+  position: relative;
+  display: inline-block;
+  border-radius: 999px;
+  overflow: visible;
+}
+
+.liquid-glass-button-glass {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  overflow: visible;
+}
+
+.liquid-glass-button-wrapper.active {
+  filter: drop-shadow(0 8px 24px rgba(99, 102, 241, 0.38));
+}
+
+.liquid-glass-button-wrapper:hover {
+  filter: drop-shadow(0 12px 32px rgba(99, 102, 241, 0.28));
+}
+
+.liquid-glass-button-wrapper.active:hover {
+  filter: drop-shadow(0 16px 42px rgba(99, 102, 241, 0.48));
+}

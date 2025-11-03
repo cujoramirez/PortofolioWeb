@@ -1,0 +1,264 @@
+/* Modern Navbar - Optimized for 60fps Performance */
+
+/* Hardware Acceleration & Performance Optimizations */
+* {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Navbar Glass with GPU Acceleration */
+.navbar-glass-surface,
+.navbar-mobile-menu-glass,
+.navbar-fab-glass,
+.navbar-menu-toggle-glass {
+	position: relative;
+	transform: translateZ(0);
+	backface-visibility: hidden;
+	perspective: 1000px;
+	contain: layout style paint;
+	content-visibility: auto;
+}
+
+.navbar-menu-toggle-glass::before,
+.navbar-menu-toggle-glass::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	pointer-events: none;
+	opacity: 0.78;
+	transition: opacity 0.35s ease, filter 0.35s ease;
+	will-change: opacity, filter;
+	transform: translateZ(0);
+}
+
+.navbar-menu-toggle-glass::before {
+	background: radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.45), transparent 56%),
+		linear-gradient(135deg, rgba(248, 250, 252, 0.35), rgba(15, 23, 42, 0.45));
+	mix-blend-mode: screen;
+}
+
+.navbar-menu-toggle-glass::after {
+	inset: -0.5px;
+	border: 1px solid rgba(255, 255, 255, 0.38);
+	box-shadow: inset 0 0 18px rgba(148, 163, 184, 0.35);
+}
+
+.navbar-menu-toggle-glass:hover::before,
+.navbar-menu-toggle-glass:hover::after,
+.navbar-menu-toggle-glass:focus-within::before,
+.navbar-menu-toggle-glass:focus-within::after,
+.navbar-menu-toggle-glass.navbar-menu-toggle-glass--open::before,
+.navbar-menu-toggle-glass.navbar-menu-toggle-glass--open::after {
+	opacity: 1;
+	filter: brightness(1.05);
+}
+
+.navbar-glass-surface > div,
+.navbar-mobile-menu-glass > div,
+.navbar-fab-glass > div,
+.navbar-menu-toggle-glass > div {
+	padding: 0;
+}
+
+/* Optimized Glass Refraction */
+.MuiChip-root {
+	position: relative;
+	will-change: auto;
+	transform: translateZ(0);
+	backface-visibility: hidden;
+	contain: layout style paint;
+}
+
+.MuiChip-root::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.06) 0%,
+		rgba(255, 255, 255, 0.02) 50%,
+		transparent 100%
+	);
+	opacity: 0.5;
+	pointer-events: none;
+	transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+	transform: translateZ(0);
+	backface-visibility: hidden;
+	will-change: opacity;
+}
+
+.MuiChip-root:hover::before {
+	opacity: 0.85;
+}
+
+/* Subtle Edge Glow - Optimized */
+.MuiChip-root::after {
+	content: '';
+	position: absolute;
+	inset: -1px;
+	border-radius: inherit;
+	padding: 1px;
+	background: linear-gradient(
+		135deg,
+		rgba(99, 102, 241, 0.2),
+		rgba(139, 92, 246, 0.15),
+		rgba(34, 211, 238, 0.2)
+	);
+	-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	-webkit-mask-composite: xor;
+	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	mask-composite: exclude;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+	transform: translateZ(0);
+	will-change: opacity;
+}
+
+.MuiChip-root:hover::after {
+	opacity: 0.8;
+}
+
+/* Optimized Shimmer Animation with GPU Acceleration */
+@keyframes shimmer {
+	0% {
+		transform: translateX(-100%) translateZ(0);
+	}
+	100% {
+		transform: translateX(100%) translateZ(0);
+	}
+}
+
+.navbar-glass-shimmer {
+	position: relative;
+	overflow: hidden;
+	contain: layout style paint;
+}
+
+.navbar-glass-shimmer::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		rgba(255, 255, 255, 0.06) 50%,
+		transparent 100%
+	);
+	animation: shimmer 4s ease-in-out infinite;
+	pointer-events: none;
+	will-change: transform;
+	transform: translateZ(0);
+}
+
+/* Optimized FAB Button Glass Enhancement */
+.MuiFab-root {
+	position: relative;
+	overflow: visible;
+	transform: translateZ(0);
+	backface-visibility: hidden;
+	contain: layout style paint;
+}
+
+.MuiFab-root::before {
+	content: '';
+	position: absolute;
+	inset: -2px;
+	border-radius: inherit;
+	background: linear-gradient(
+		135deg,
+		rgba(99, 102, 241, 0.25),
+		rgba(139, 92, 246, 0.2),
+		rgba(34, 211, 238, 0.25)
+	);
+	filter: blur(6px);
+	opacity: 0;
+	transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+	z-index: -1;
+	pointer-events: none;
+	will-change: opacity;
+	transform: translateZ(0);
+}
+
+.MuiFab-root:hover::before {
+	opacity: 1;
+}
+
+/* Backdrop Blur Enhancement */
+@supports (backdrop-filter: blur(20px)) or (-webkit-backdrop-filter: blur(20px)) {
+	.glass-backdrop {
+		backdrop-filter: blur(24px) saturate(180%);
+		-webkit-backdrop-filter: blur(24px) saturate(180%);
+	}
+}
+
+/* Optimized Pill Navigation Effects */
+.pill-label {
+	display: inline-block;
+	line-height: 1;
+	transform: translateZ(0);
+	backface-visibility: hidden;
+}
+
+.pill-label-hover {
+	will-change: transform, opacity;
+	display: inline-block;
+	line-height: 1;
+	transform: translateZ(0);
+	backface-visibility: hidden;
+}
+
+/* Optimized pill animations with GPU acceleration */
+.hover-circle {
+	transition: none; /* GSAP handles all transitions */
+	transform: translateZ(0);
+	backface-visibility: hidden;
+}
+
+/* Responsive Adjustments - Optimized for Mobile Performance */
+@media (max-width: 768px) {
+	.navbar-glass-surface,
+	.navbar-mobile-menu-glass,
+	.navbar-fab-glass,
+	.navbar-menu-toggle-glass {
+		/* Reduce complexity on mobile for 60fps */
+		contain: layout style paint;
+		will-change: transform;
+	}
+
+	.navbar-glass-surface::before {
+		filter: blur(0.3px);
+		opacity: 0.15;
+	}
+	
+	.MuiChip-root::after {
+		display: none;
+	}
+	
+	.navbar-glass-shimmer::after {
+		animation-duration: 5s; /* Slower on mobile */
+	}
+}
+
+/* Accessibility - Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+	.navbar-glass-shimmer::after {
+		animation: none;
+	}
+	
+	.MuiChip-root::after,
+	.MuiFab-root::before {
+		transition: none;
+	}
+	
+	.pill-label,
+	.pill-label-hover,
+	.hover-circle {
+		transition: none !important;
+	}
+}

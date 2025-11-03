@@ -1,0 +1,231 @@
+/* ===================================================================
+   PERFORMANCE-OPTIMIZED STYLES
+   Enterprise-grade CSS optimizations for 60fps smooth animations
+   ================================================================ */
+
+/* === GPU ACCELERATION === */
+.gpu-accelerated {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    perspective: 1000px;
+    -webkit-perspective: 1000px;
+}
+
+/* === OPTIMIZED HOVER STATES === */
+.hover-lift {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+}
+
+.hover-scale {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+}
+
+.hover-scale:hover {
+    transform: scale(1.02);
+}
+
+.hover-glow {
+    transition: box-shadow 0.2s ease;
+    will-change: box-shadow;
+}
+
+.hover-glow:hover {
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+}
+
+/* === SMOOTH TRANSITIONS === */
+.transition-colors {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.transition-opacity {
+    transition: opacity 0.2s ease;
+    will-change: opacity;
+}
+
+.transition-transform {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+}
+
+/* === CONTAINMENT FOR LAYOUT PERFORMANCE === */
+.contain-layout {
+    contain: layout;
+}
+
+.contain-paint {
+    contain: paint;
+}
+
+.contain-strict {
+    contain: strict;
+}
+
+.contain-content {
+    contain: content;
+}
+
+/* === OPTIMIZED CARD STYLES === */
+.card-interactive {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.2s ease, 
+                border-color 0.2s ease;
+    will-change: transform;
+}
+
+.card-interactive:hover {
+    transform: translateY(-4px) translateZ(0);
+}
+
+/* === BUTTON OPTIMIZATIONS === */
+.btn-optimized {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.2s ease,
+                box-shadow 0.2s ease;
+    will-change: transform;
+}
+
+.btn-optimized:hover {
+    transform: translateY(-2px) translateZ(0);
+}
+
+.btn-optimized:active {
+    transform: translateY(0) translateZ(0);
+}
+
+/* === ICON OPTIMIZATIONS === */
+.icon-interactive {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease;
+    will-change: transform;
+}
+
+.icon-interactive:hover {
+    transform: scale(1.1);
+}
+
+/* === CHIP/TAG OPTIMIZATIONS === */
+.chip-interactive {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.2s ease,
+                border-color 0.2s ease;
+    will-change: transform;
+}
+
+.chip-interactive:hover {
+    transform: scale(1.05);
+}
+
+/* === DISABLE ANIMATIONS FOR REDUCED MOTION === */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        will-change: auto !important;
+    }
+}
+
+/* === PERFORMANCE HINTS === */
+.perf-critical {
+    contain: layout style paint;
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+.perf-scroll-container {
+    contain: layout style;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* === TEXT OPTIMIZATIONS === */
+.text-optimized {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* === LOADING STATES === */
+.skeleton-loading {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.05) 25%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0.05) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* === OPTIMIZED FADE ANIMATIONS === */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateZ(0);
+    }
+    to {
+        opacity: 1;
+        transform: translateZ(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 20px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+/* === FORCE HARDWARE ACCELERATION === */
+.force-hw-accel {
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+}
+
+/* === ENTERPRISE FOCUS STATES (OPTIMIZED) === */
+.focus-optimized:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2), 
+                0 0 0 4px rgba(99, 102, 241, 0.1);
+    transition: box-shadow 0.15s ease;
+}
+
+.focus-optimized:focus:not(:focus-visible) {
+    box-shadow: none;
+}
