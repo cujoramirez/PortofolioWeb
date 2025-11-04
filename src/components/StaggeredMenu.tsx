@@ -33,6 +33,8 @@ export interface StaggeredMenuProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   zIndex?: number;
+  toolbarHeight?: number;
+  toolbarPadding?: number;
 }
 
 export const StaggeredMenu: FC<StaggeredMenuProps> = ({
@@ -51,11 +53,16 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
   onItemClick,
   open,
   onOpenChange,
-  zIndex
+  zIndex,
+  toolbarHeight,
+  toolbarPadding
 }) => {
-  const { performanceTier } = useSystemProfile();
-  const prefersLightweightMenu = performanceTier === 'low' || performanceTier === 'mid';
+  const { performanceTier, deviceType } = useSystemProfile();
+  const prefersLightweightMenu = performanceTier === 'low' && deviceType !== 'mobile';
   const enablePreLayers = performanceTier === 'high';
+
+  const resolvedToolbarHeight = toolbarHeight ?? 66;
+  const resolvedToolbarPadding = toolbarPadding ?? 16;
   
   const isControlled = typeof open === 'boolean';
   const [internalOpen, setInternalOpen] = useState(open ?? false);
@@ -72,14 +79,11 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
   const plusVRef = useRef<HTMLSpanElement | null>(null);
   const iconRef = useRef<HTMLSpanElement | null>(null);
 
-  const textInnerRef = useRef<HTMLSpanElement | null>(null);
-  const textWrapRef = useRef<HTMLSpanElement | null>(null);
-  const [textLines, setTextLines] = useState<string[]>(['Menu', 'Close']);
+
 
   const openTlRef = useRef<gsap.core.Timeline | null>(null);
   const closeTweenRef = useRef<gsap.core.Tween | null>(null);
   const spinTweenRef = useRef<gsap.core.Timeline | null>(null);
-  const textCycleAnimRef = useRef<gsap.core.Tween | null>(null);
   const colorTweenRef = useRef<gsap.core.Tween | null>(null);
 
   const toggleBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -106,9 +110,8 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
       const plusH = plusHRef.current;
       const plusV = plusVRef.current;
       const icon = iconRef.current;
-      const textInner = textInnerRef.current;
 
-      if (!panel || !plusH || !plusV || !icon || !textInner) return;
+      if (!panel || !plusH || !plusV || !icon) return;
 
       let preLayers: HTMLElement[] = [];
       if (preContainer && enablePreLayers) {
@@ -131,16 +134,17 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
         });
       }
 
-      gsap.set(plusH, { transformOrigin: '50% 50%', rotate: 0 });
-      gsap.set(plusV, { transformOrigin: '50% 50%', rotate: 90 });
+      gsap.set(plusH, { transformOrigin: '50% 50%', rotate: menuOpen ? 45 : 0 });
+      gsap.set(plusV, { transformOrigin: '50% 50%', rotate: menuOpen ? -45 : 90 });
       gsap.set(icon, { rotate: 0, transformOrigin: '50% 50%' });
 
-      gsap.set(textInner, { yPercent: 0 });
-
-      if (toggleBtnRef.current) gsap.set(toggleBtnRef.current, { color: menuButtonColor });
+      if (toggleBtnRef.current) {
+        const color = menuOpen && changeMenuColorOnOpen ? openMenuButtonColor : menuButtonColor;
+        gsap.set(toggleBtnRef.current, { color });
+      }
     });
     return () => ctx.revert();
-  }, [menuButtonColor, position, enablePreLayers, panelRendered]);
+  }, [menuButtonColor, openMenuButtonColor, changeMenuColorOnOpen, position, enablePreLayers, panelRendered, menuOpen]);
 
   const buildOpenTimeline = useCallback(() => {
     const panel = panelRef.current;
@@ -324,39 +328,10 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
     [openMenuButtonColor, menuButtonColor, changeMenuColorOnOpen]
   );
 
-  const animateText = useCallback((opening: boolean) => {
-    const inner = textInnerRef.current;
-    if (!inner) return;
-
-    textCycleAnimRef.current?.kill();
-
-    const currentLabel = opening ? 'Menu' : 'Close';
-    const targetLabel = opening ? 'Close' : 'Menu';
-    const cycles = prefersLightweightMenu ? 2 : 3;
-
-    const seq: string[] = [currentLabel];
-    let last = currentLabel;
-    for (let i = 0; i < cycles; i++) {
-      last = last === 'Menu' ? 'Close' : 'Menu';
-      seq.push(last);
-    }
-    if (last !== targetLabel) seq.push(targetLabel);
-    seq.push(targetLabel);
-
-    setTextLines(seq);
-    gsap.set(inner, { yPercent: 0 });
-
-    const lineCount = seq.length;
-    const finalShift = ((lineCount - 1) / lineCount) * 100;
-    const cycleSpeed = prefersLightweightMenu ? 0.05 : 0.07;
-    const baseDuration = prefersLightweightMenu ? 0.35 : 0.5;
-
-    textCycleAnimRef.current = gsap.to(inner, {
-      yPercent: -finalShift,
-      duration: baseDuration + lineCount * cycleSpeed,
-      ease: prefersLightweightMenu ? 'power2.out' : 'power4.out'
-    });
-  }, [prefersLightweightMenu]);
+  // No text animation needed - we just use the icon
+  const animateText = useCallback((_opening: boolean) => {
+    // Removed text animation
+  }, []);
 
   const toggleMenu = useCallback(() => {
     if (menuOpen) {
@@ -455,13 +430,24 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
         )}
 
         <header
-          className="staggered-menu-header fixed top-0 right-0 p-[1.5em] bg-transparent pointer-events-none z-[9999]"
+          className="staggered-menu-header fixed top-0 left-0 right-0 bg-transparent pointer-events-none z-[9999]"
           aria-label="Main navigation header"
-          style={{ mixBlendMode: menuOpen ? 'normal' : 'difference' }}
+          style={{
+            height: `${resolvedToolbarHeight}px`,
+            padding: `0 ${resolvedToolbarPadding}px`,
+            mixBlendMode: 'normal'
+          }}
         >
           <button
             ref={toggleBtnRef}
-              className="sm-toggle relative inline-flex items-center gap-[0.4rem] bg-transparent border-0 cursor-pointer font-semibold text-[0.95rem] leading-none overflow-visible pointer-events-auto transition-colors duration-300 text-white"
+            className="sm-toggle relative inline-flex items-center justify-center bg-transparent border-0 cursor-pointer overflow-visible pointer-events-auto transition-all duration-300 text-white w-[48px] h-[48px]"
+            style={{
+              background: menuOpen ? 'linear-gradient(135deg, rgba(99,102,241,0.22), rgba(139,92,246,0.18))' : 'rgba(255,255,255,0.04)',
+              borderRadius: 12,
+              border: '1.5px solid rgba(148, 163, 184, 0.15)',
+              padding: 8,
+              boxShadow: menuOpen ? '0 8px 24px rgba(99,102,241,0.12)' : '0 2px 8px rgba(0,0,0,0.08)'
+            }}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
             aria-controls="staggered-menu-panel"
@@ -469,31 +455,17 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
             type="button"
           >
             <span
-              ref={textWrapRef}
-              className="sm-toggle-textWrap relative inline-block h-[1em] overflow-hidden whitespace-nowrap w-[var(--sm-toggle-width,auto)] min-w-[var(--sm-toggle-width,auto)]"
-              aria-hidden="true"
-            >
-              <span ref={textInnerRef} className="sm-toggle-textInner flex flex-col leading-none">
-                {textLines.map((l, i) => (
-                  <span className="sm-toggle-line block h-[1em] leading-none" key={i}>
-                    {l}
-                  </span>
-                ))}
-              </span>
-            </span>
-
-            <span
               ref={iconRef}
-              className="sm-icon relative w-[14px] h-[14px] shrink-0 inline-flex items-center justify-center [will-change:transform]"
+              className="sm-icon relative w-[24px] h-[24px] shrink-0 inline-flex items-center justify-center [will-change:transform]"
               aria-hidden="true"
             >
               <span
                 ref={plusHRef}
-                className="sm-icon-line absolute left-1/2 top-1/2 w-full h-[2px] bg-current rounded-[2px] -translate-x-1/2 -translate-y-1/2 [will-change:transform]"
+                className="sm-icon-line absolute left-1/2 top-1/2 w-full h-[2.5px] bg-current rounded-[2px] -translate-x-1/2 -translate-y-1/2 [will-change:transform]"
               />
               <span
                 ref={plusVRef}
-                className="sm-icon-line sm-icon-line-v absolute left-1/2 top-1/2 w-full h-[2px] bg-current rounded-[2px] -translate-x-1/2 -translate-y-1/2 [will-change:transform]"
+                className="sm-icon-line sm-icon-line-v absolute left-1/2 top-1/2 w-full h-[2.5px] bg-current rounded-[2px] -translate-x-1/2 -translate-y-1/2 [will-change:transform]"
               />
             </span>
           </button>
@@ -562,7 +534,7 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
 
       <style>{`
 .sm-scope .staggered-menu-wrapper { position: relative; width: 100%; height: 100%; z-index: 40; }
-.sm-scope .staggered-menu-header { position: absolute; top: 0; right: 0; padding: 2em; background: transparent; pointer-events: none; z-index: 20; }
+.sm-scope .staggered-menu-header { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: flex-end; gap: 0.65rem; background: transparent; pointer-events: none; z-index: 9999; }
 .sm-scope .staggered-menu-header > * { pointer-events: auto; }
 .sm-scope .sm-toggle { position: relative; display: inline-flex; align-items: center; gap: 0.3rem; background: transparent; border: none; cursor: pointer; font-weight: 500; line-height: 1; overflow: visible; font-size: 0.95rem; }
 .sm-scope .sm-toggle:focus-visible { outline: 2px solid rgba(99, 102, 241, 0.6); outline-offset: 4px; border-radius: 4px; }

@@ -228,7 +228,7 @@ const ModernNavbarComponent = () => {
 
 	const isMobile = deviceType === 'mobile';
 	const isTablet = deviceType === 'tablet';
-	const shouldReduceMotion = performanceTier === 'low' || isMobile;
+	const shouldReduceMotion = performanceTier === 'low';
 	const sharedMagnifySpring = useMemo<SpringOptions>(() => ({ stiffness: 280, damping: 26, mass: 0.42 }), []);
 
 	useEffect(() => {
@@ -273,8 +273,8 @@ const ModernNavbarComponent = () => {
 			windowWidth < 1024 &&
 			(isMobile || isMobileCSS));
 
-	const magnificationDisabled = shouldReduceMotion || isMobileDevice || isTabletDevice;
-	const prefersLightweightMenu = isTabletDevice || performanceTier === 'low';
+	const magnificationDisabled = shouldReduceMotion;
+	const prefersLightweightMenu = isTabletDevice || shouldReduceMotion;
 
 	const navItems = useMemo<NavItem[]>(
 		() => [
@@ -1204,6 +1204,8 @@ const ModernNavbarComponent = () => {
 						setIsMenuOpen(false);
 					}}
 					zIndex={1350}
+					toolbarHeight={isTabletDevice ? 76 : 66}
+					toolbarPadding={isTabletDevice ? 32 : 16}
 				/>
 			)}
 

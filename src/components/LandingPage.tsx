@@ -61,8 +61,7 @@ const LandingPage = ({
   const shouldRunSplashCursor =
     showLanding &&
     !prefersReducedMotion &&
-    performanceTier === 'high' &&
-    !isMobile;
+    performanceTier === 'high';
   const [showSplashCursor, setShowSplashCursor] = useState(false);
 
   const splashCursorProps = useMemo(() => {
