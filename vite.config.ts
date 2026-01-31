@@ -47,14 +47,11 @@ export default defineConfig({
                         return 'react-core';
                     }
 
-                    // Emotion - must be separate and loaded before MUI
-                    if (normalizedId.includes('/node_modules/@emotion/')) {
-                        return 'emotion-vendors';
-                    }
-
-                    // MUI - depends on Emotion
-                    if (normalizedId.includes('/node_modules/@mui/')) {
-                        return 'mui-vendors';
+                    // Let Rollup handle MUI and Emotion automatically to preserve initialization order
+                    // Do NOT manually chunk @mui or @emotion - they have complex interdependencies
+                    if (normalizedId.includes('/node_modules/@mui/') ||
+                        normalizedId.includes('/node_modules/@emotion/')) {
+                        return undefined;
                     }
 
                     // Animation libraries
