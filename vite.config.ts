@@ -47,9 +47,13 @@ export default defineConfig({
                         return 'react-core';
                     }
 
-                    // MUI - large UI library
-                    if (normalizedId.includes('/node_modules/@mui/') ||
-                        normalizedId.includes('/node_modules/@emotion/')) {
+                    // Emotion - must be separate and loaded before MUI
+                    if (normalizedId.includes('/node_modules/@emotion/')) {
+                        return 'emotion-vendors';
+                    }
+
+                    // MUI - depends on Emotion
+                    if (normalizedId.includes('/node_modules/@mui/')) {
                         return 'mui-vendors';
                     }
 
