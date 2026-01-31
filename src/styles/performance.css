@@ -39,7 +39,7 @@
 }
 
 .hover-glow:hover {
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
 }
 
 /* === SMOOTH TRANSITIONS === */
@@ -221,8 +221,8 @@
 /* === ENTERPRISE FOCUS STATES (OPTIMIZED) === */
 .focus-optimized:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2), 
-                0 0 0 4px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2), 
+                0 0 0 4px rgba(59, 130, 246, 0.1);
     transition: box-shadow 0.15s ease;
 }
 

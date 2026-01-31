@@ -1,200 +1,193 @@
-import { useState, Suspense, useMemo, lazy } from 'react';
-import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
+import { Suspense, lazy, memo } from 'react';
+import { motion, MotionConfig } from 'framer-motion';
 import { ThemeProvider, CssBaseline, Box, CircularProgress } from '@mui/material';
 import { muiTheme } from './theme/muiTheme.js';
-import { useSystemProfile } from './components/useSystemProfile';
-import { getPerformanceProfile } from './utils/performanceOptimizations.js';
 import LandingPage from './components/LandingPage';
-import WebGLErrorBoundary from './components/WebGLErrorBoundary';
 import AboutErrorBoundary from './components/AboutErrorBoundary';
 import ModernNavbar from './components/ModernNavbar';
-import ModernAbout from './components/ModernAbout';
-import Technologies from './components/Technologies';
-import ModernExperience from './components/ModernExperience';
-import OptimizedModernContact from './components/OptimizedModernContact';
-import ModernProjects from './components/ModernProjects';
-import OptimizedCertifications from './components/OptimizedCertifications';
 import GradualBlur from './components/GradualBlur';
 import { LenisProvider } from './components/LenisProvider';
+import ScrollProgress from './components/ScrollProgress';
+import BackToTop from './components/BackToTop';
+import SectionDivider from './components/SectionDivider';
 
-const LoadingScreen = lazy(() => import('./components/LoadingScreen'));
-const IntroAnimation = lazy(() => import('./components/IntroAnimationOverhauled'));
+// Lazy load all heavy components for better initial load performance
+const ModernAbout = lazy(() => import('./components/ModernAbout'));
+const Technologies = lazy(() => import('./components/Technologies'));
+const ModernExperience = lazy(() => import('./components/ModernExperience'));
 const ModernResearch = lazy(() => import('./components/ModernResearch'));
+const ModernProjects = lazy(() => import('./components/ModernProjects'));
+const OptimizedCertifications = lazy(() => import('./components/OptimizedCertifications'));
+const OptimizedModernContact = lazy(() => import('./components/OptimizedModernContact'));
+
+// Lightweight loading fallback
+const SectionLoader = memo(() => (
+  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8, minHeight: '200px' }}>
+    <CircularProgress size={32} sx={{ color: 'primary.main' }} />
+  </Box>
+));
+SectionLoader.displayName = 'SectionLoader';
 
 const ModernApp = () => {
-  // Performance-aware state management
-  const performanceProfile = useMemo(() => getPerformanceProfile(), []);
-  const disableLoadingSequences = true;
-  const skipIntroAnimations = disableLoadingSequences || performanceProfile.isLowEnd || performanceProfile.reducedMotion;
-  
-  // State management for loading sequence
-  const [showLoading, setShowLoading] = useState(!skipIntroAnimations);
-  const [showIntro, setShowIntro] = useState(false);
-  const [introComplete, setIntroComplete] = useState(skipIntroAnimations);
-  const [showNavbar, setShowNavbar] = useState(skipIntroAnimations);
-  const [landingComplete, setLandingComplete] = useState(skipIntroAnimations);
-
-  const { performanceTier: _performanceTier, deviceType: _deviceType } = useSystemProfile();
-
-  // Handle loading sequence - skip on low-end devices
-  const handleLoadingComplete = () => {
-    setShowLoading(false);
-    if (skipIntroAnimations) {
-      setIntroComplete(true);
-      setShowNavbar(true);
-      setLandingComplete(true);
-    } else {
-      setTimeout(() => {
-        setShowIntro(true);
-      }, 500);
-    }
-  };
-
-  const handleIntroComplete = () => {
-    setShowIntro(false);
-    setTimeout(() => {
-      setIntroComplete(true);
-    }, 1000);
-  };
-
   return (
     <LenisProvider>
       <ThemeProvider theme={muiTheme}>
         <CssBaseline />
         <MotionConfig 
-          reducedMotion="never"
+          reducedMotion="user"
           transition={{
             type: "spring",
             stiffness: 400,
             damping: 30,
           }}
         >
-        {/* Loading Screen */}
-        {/* LoadingScreen with WebGL Protection */}
-        <AnimatePresence mode="wait">
-          {showLoading && (
-            <WebGLErrorBoundary>
-              <Suspense fallback={null}>
-                <LoadingScreen onLoadingComplete={handleLoadingComplete} />
-              </Suspense>
-            </WebGLErrorBoundary>
-          )}
-        </AnimatePresence>
+          {/* Skip to main content link for accessibility */}
+          <Box
+            component="a"
+            href="#about"
+            sx={{
+              position: 'absolute',
+              left: '-9999px',
+              zIndex: 9999,
+              padding: '1rem',
+              background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+              color: 'white',
+              textDecoration: 'none',
+              fontWeight: 600,
+              borderRadius: '0 0 8px 0',
+              '&:focus': {
+                left: 0,
+                top: 0,
+              },
+            }}
+          >
+            Skip to main content
+          </Box>
 
-        {/* Intro Animation with WebGL Protection */}
-        <AnimatePresence mode="wait">
-          {showIntro && (
-            <WebGLErrorBoundary>
-              <Suspense fallback={null}>
-                <IntroAnimation onComplete={handleIntroComplete} />
-              </Suspense>
-            </WebGLErrorBoundary>
-          )}
-        </AnimatePresence>
+          {/* Main App Content - No loading screens */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+          >
+            {/* Scroll Progress Indicator */}
+            <ScrollProgress />
+            
+            {/* Back to Top Button */}
+            <BackToTop />
 
-        {/* Main App Content */}
-        <AnimatePresence>
-          {introComplete && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.5 }}
+            {/* Background Gradient */}
+            <Box
+              sx={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: -2,
+                background: 'radial-gradient(125% 125% at 50% 10%, #000 40%, #1e293b 70%, #334155 100%)',
+              }}
+            />
+
+            {/* Main Container */}
+            <Box
+              component="main"
+              role="main"
+              aria-label="Main content"
+              sx={{
+                position: 'relative',
+                zIndex: 1,
+                minHeight: '100vh',
+              }}
             >
-              {/* Background Gradient */}
-              <Box
-                sx={{
-                  position: 'fixed',
-                  inset: 0,
-                  zIndex: -2,
-                  background: 'radial-gradient(125% 125% at 50% 10%, #000 40%, #1e293b 70%, #334155 100%)',
-                }}
-              />
+              {/* Navigation */}
+              <ModernNavbar />
 
-              {/* Main Container */}
-              <Box
-                sx={{
-                  position: 'relative',
-                  zIndex: 1,
-                  minHeight: '100vh',
-                }}
-              >
-                {/* Navigation - Only show when not in landing mode */}
-                {showNavbar && <ModernNavbar />}
-
-                {/* Landing Page with 3D Hero + Original Hero */}
-                <section id="hero">
-                  <LandingPage
-                    introComplete={introComplete}
-                    onNavbarVisibilityChange={setShowNavbar}
-                    onLandingComplete={setLandingComplete}
-                  />
-                </section>
-                
-                {/* About Section */}
-                <section id="about">
-                  <AboutErrorBoundary>
-                    <Suspense fallback={
-                      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                        <CircularProgress />
-                      </Box>
-                    }>
-                      <ModernAbout landingComplete={landingComplete} />
-                    </Suspense>
-                  </AboutErrorBoundary>
-                </section>
-                
-                {/* Technologies Section */}
-                <section id="technologies">
-                  <Technologies />
-                </section>
-                
-                {/* Experience Section */}
-                <section id="experience">
-                  <ModernExperience />
-                </section>
-                
-                {/* Research Section */}
-                <section id="research">
-                  <Suspense fallback={
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                      <CircularProgress />
-                    </Box>
-                  }>
-                    <ModernResearch />
+              {/* Landing Page with Hero */}
+              <section id="hero" aria-label="Introduction">
+                <LandingPage
+                  introComplete={true}
+                  onNavbarVisibilityChange={() => {}}
+                  onLandingComplete={() => {}}
+                />
+              </section>
+              
+              <SectionDivider variant="gradient" />
+              
+              {/* About Section */}
+              <section id="about" aria-label="About me">
+                <AboutErrorBoundary>
+                  <Suspense fallback={<SectionLoader />}>
+                    <ModernAbout landingComplete={true} />
                   </Suspense>
-                </section>
-                
-                {/* Projects Section */}
-                <section id="projects">
+                </AboutErrorBoundary>
+              </section>
+              
+              <SectionDivider variant="dots" />
+              
+              {/* Technologies Section */}
+              <section id="technologies" aria-label="Technologies and skills">
+                <Suspense fallback={<SectionLoader />}>
+                  <Technologies />
+                </Suspense>
+              </section>
+              
+              <SectionDivider variant="line" />
+              
+              {/* Experience Section */}
+              <section id="experience" aria-label="Work experience">
+                <Suspense fallback={<SectionLoader />}>
+                  <ModernExperience />
+                </Suspense>
+              </section>
+              
+              <SectionDivider variant="gradient" />
+              
+              {/* Research Section */}
+              <section id="research" aria-label="Research and publications">
+                <Suspense fallback={<SectionLoader />}>
+                  <ModernResearch />
+                </Suspense>
+              </section>
+              
+              <SectionDivider variant="dots" />
+              
+              {/* Projects Section */}
+              <section id="projects" aria-label="Featured projects">
+                <Suspense fallback={<SectionLoader />}>
                   <ModernProjects />
-                </section>
-                
-                {/* Certifications Section */}
-                <section id="certifications">
+                </Suspense>
+              </section>
+              
+              <SectionDivider variant="line" />
+              
+              {/* Certifications Section */}
+              <section id="certifications" aria-label="Certifications and credentials">
+                <Suspense fallback={<SectionLoader />}>
                   <OptimizedCertifications />
-                </section>
+                </Suspense>
+              </section>
 
-                {/* Contact Section */}
-                <section id="contact">
+              <SectionDivider variant="gradient" />
+
+              {/* Contact Section */}
+              <section id="contact" aria-label="Contact information">
+                <Suspense fallback={<SectionLoader />}>
                   <OptimizedModernContact />
-                </section>
-              </Box>
+                </Suspense>
+              </section>
+            </Box>
 
-              <GradualBlur
-                target="page"
-                position="bottom"
-                height="7rem"
-                strength={0.25}
-                divCount={6}
-                curve="bezier"
-                exponential
-                opacity={0.95}
-                zIndex={1500}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </MotionConfig>
+            <GradualBlur
+              target="page"
+              position="bottom"
+              height="7rem"
+              strength={0.25}
+              divCount={6}
+              curve="bezier"
+              exponential
+              opacity={0.95}
+              zIndex={1500}
+            />
+          </motion.div>
+        </MotionConfig>
       </ThemeProvider>
     </LenisProvider>
   );

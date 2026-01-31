@@ -133,7 +133,7 @@ const EnhancedHero = memo(({ introComplete }: EnhancedHeroProps) => {
                     label={tag}
                     variant="outlined"
                     sx={{
-                      borderColor: alpha('#a855f7', 0.35),
+                      borderColor: alpha('#3b82f6', 0.35),
                       color: alpha('#e0f2fe', 0.9),
                       fontWeight: 600,
                       letterSpacing: '0.04em',
@@ -159,10 +159,10 @@ const EnhancedHero = memo(({ introComplete }: EnhancedHeroProps) => {
                 fontWeight: 800,
                 lineHeight: 1.05,
                 letterSpacing: '-0.035em',
-                background: 'linear-gradient(90deg, #6366f1 0%, #a855f7 45%, #22d3ee 100%)',
+                background: 'linear-gradient(90deg, #1e40af 0%, #3b82f6 45%, #22d3ee 100%)',
                 WebkitBackgroundClip: 'text',
                 color: 'transparent',
-                textShadow: prefersReducedMotion ? 'none' : '0 24px 60px rgba(79, 70, 229, 0.35)',
+                textShadow: prefersReducedMotion ? 'none' : '0 24px 60px rgba(30, 64, 175, 0.35)',
               }}
             >
               Gading Aditya Perdana
@@ -213,14 +213,14 @@ const EnhancedHero = memo(({ introComplete }: EnhancedHeroProps) => {
                     fontWeight: 700,
                     textTransform: 'none',
                     letterSpacing: '0.015em',
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 45%, #22d3ee 100%)',
+                    background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 45%, #22d3ee 100%)',
                     boxShadow: prefersReducedMotion
-                      ? '0 12px 30px rgba(99,102,241,0.35)'
-                      : '0 18px 48px rgba(99,102,241,0.45)',
+                      ? '0 12px 30px rgba(59,130,246,0.35)'
+                      : '0 18px 48px rgba(59,130,246,0.45)',
                     transition: 'box-shadow 0.35s ease, transform 0.35s ease',
                     '&:hover': {
-                      background: 'linear-gradient(135deg, #7c3aed 0%, #22d3ee 55%, #14b8a6 100%)',
-                      boxShadow: '0 24px 70px rgba(99,102,241,0.55)',
+                      background: 'linear-gradient(135deg, #2563eb 0%, #22d3ee 55%, #14b8a6 100%)',
+                      boxShadow: '0 24px 70px rgba(59,130,246,0.55)',
                     },
                     '&::before': {
                       content: '""',
@@ -242,7 +242,7 @@ const EnhancedHero = memo(({ introComplete }: EnhancedHeroProps) => {
                       position: 'absolute',
                       inset: '-1px',
                       borderRadius: '999px',
-                      background: 'linear-gradient(120deg, rgba(99,102,241,0.55), rgba(34,211,238,0.35))',
+                      background: 'linear-gradient(120deg, rgba(59,130,246,0.55), rgba(34,211,238,0.35))',
                       zIndex: -1,
                       filter: 'blur(18px)',
                       opacity: prefersReducedMotion ? 0.45 : 0.65,

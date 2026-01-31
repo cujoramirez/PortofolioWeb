@@ -594,7 +594,7 @@ export const enterpriseVariants = {
 
   hoverGlow: {
     whileHover: {
-      filter: "brightness(1.1) drop-shadow(0 0 20px rgba(99, 102, 241, 0.5))",
+      filter: "brightness(1.1) drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))",
       transition: {
         duration: 0.3
       }

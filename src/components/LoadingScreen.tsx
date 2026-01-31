@@ -22,19 +22,19 @@ const GlowProgress = styled(LinearProgress)(() => ({
   width: "60%",
   height: 8,
   borderRadius: 4,
-  backgroundColor: "rgba(99, 102, 241, 0.2)",
+  backgroundColor: "rgba(59, 130, 246, 0.2)",
   "& .MuiLinearProgress-bar": {
-    background: "linear-gradient(90deg, #6366f1, #8b5cf6, #22d3ee)",
+    background: "linear-gradient(90deg, #1e40af, #3b82f6, #60a5fa)",
     borderRadius: 4,
-    boxShadow: "0 0 20px rgba(99, 102, 241, 0.6)",
+    boxShadow: "0 0 20px rgba(59, 130, 246, 0.5)",
     animation: "glow 2s ease-in-out infinite alternate",
   },
   "@keyframes glow": {
     "0%": {
-      boxShadow: "0 0 20px rgba(99, 102, 241, 0.6)",
+      boxShadow: "0 0 20px rgba(59, 130, 246, 0.5)",
     },
     "100%": {
-      boxShadow: "0 0 30px rgba(99, 102, 241, 0.9), 0 0 40px rgba(139, 92, 246, 0.4)",
+      boxShadow: "0 0 30px rgba(59, 130, 246, 0.7), 0 0 40px rgba(30, 64, 175, 0.3)",
     },
   },
 }));
@@ -43,7 +43,7 @@ interface LoadingParticleProps {
   index: number;
 }
 
-const colorPalette = ["#6366f1", "#8b5cf6", "#22d3ee", "#10b981"] as const;
+const colorPalette = ["#1e40af", "#3b82f6", "#60a5fa", "#38bdf8"] as const;
 
 const LoadingParticle = ({ index }: LoadingParticleProps): JSX.Element => {
   const randomDelay = useMemo(() => Math.random() * 2, []);
@@ -137,9 +137,9 @@ const NeuralNetwork = (): JSX.Element => {
 
       <defs>
         <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#6366f1" stopOpacity={0.6} />
-          <stop offset="50%" stopColor="#8b5cf6" stopOpacity={0.4} />
-          <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.6} />
+          <stop offset="0%" stopColor="#1e40af" stopOpacity={0.6} />
+          <stop offset="50%" stopColor="#3b82f6" stopOpacity={0.4} />
+          <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.6} />
         </linearGradient>
       </defs>
     </svg>
@@ -171,7 +171,7 @@ const EnhancedGLogo = (): JSX.Element => (
         inset: -20,
         border: "2px solid transparent",
         borderRadius: "50%",
-        background: "linear-gradient(45deg, #6366f1, #8b5cf6, #22d3ee, #10b981) border-box",
+        background: "linear-gradient(45deg, #1e40af, #3b82f6, #60a5fa, #38bdf8) border-box",
         WebkitMask: "linear-gradient(white 0 0) padding-box, linear-gradient(white 0 0)",
         WebkitMaskComposite: "subtract",
         opacity: 0.6,
@@ -187,9 +187,9 @@ const EnhancedGLogo = (): JSX.Element => (
       style={{
         position: "absolute",
         inset: -10,
-        border: "1px solid rgba(99, 102, 241, 0.4)",
+        border: "1px solid rgba(59, 130, 246, 0.4)",
         borderRadius: "50%",
-        boxShadow: "0 0 30px rgba(99, 102, 241, 0.3)",
+        boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)",
       }}
     />
 
@@ -200,10 +200,10 @@ const EnhancedGLogo = (): JSX.Element => (
         fontSize: "120px",
         fontWeight: 900,
         background:
-          "linear-gradient(135deg, #6366f1 0%, #8b5cf6 25%, #22d3ee 50%, #10b981 75%, #f59e0b 100%)",
+          "linear-gradient(135deg, #1e40af 0%, #3b82f6 35%, #60a5fa 65%, #38bdf8 100%)",
         WebkitBackgroundClip: "text",
         WebkitTextFillColor: "transparent",
-        textShadow: "0 0 50px rgba(99, 102, 241, 0.5)",
+        textShadow: "0 0 50px rgba(59, 130, 246, 0.5)",
         fontFamily: "Arial, sans-serif",
         position: "relative",
         zIndex: 2,
@@ -246,7 +246,7 @@ const EnhancedGLogo = (): JSX.Element => (
         position: "absolute",
         inset: 0,
         borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(99, 102, 241, 0.2), transparent)",
+        background: "radial-gradient(circle, rgba(59, 130, 246, 0.2), transparent)",
       }}
     />
 

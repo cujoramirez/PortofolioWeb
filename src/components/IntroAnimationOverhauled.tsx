@@ -907,10 +907,10 @@ const ProgressIndicator = ({ progress, isOutro }) => {
         <motion.div
           animate={{ 
             textShadow: [
-              '0 0 30px rgba(99, 102, 241, 0.8)', 
-              '0 0 60px rgba(139, 92, 246, 1)', 
+              '0 0 30px rgba(30, 64, 175, 0.8)', 
+              '0 0 60px rgba(59, 130, 246, 1)', 
               '0 0 90px rgba(34, 211, 238, 0.8)', 
-              '0 0 30px rgba(99, 102, 241, 0.8)'
+              '0 0 30px rgba(30, 64, 175, 0.8)'
             ] 
           }}
           transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
@@ -941,8 +941,8 @@ const ProgressIndicator = ({ progress, isOutro }) => {
               backgroundColor: 'rgba(255, 255, 255, 0.08)',
               '& .MuiLinearProgress-bar': {
                 borderRadius: 3,
-                background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 25%, #22d3ee 50%, #f59e0b 75%, #ffffff 100%)',
-                boxShadow: '0 0 40px rgba(99, 102, 241, 1)',
+                background: 'linear-gradient(90deg, #1e40af 0%, #3b82f6 25%, #22d3ee 50%, #f59e0b 75%, #ffffff 100%)',
+                boxShadow: '0 0 40px rgba(59, 130, 246, 1)',
                 transition: 'all 0.1s ease'
               }
             }}
@@ -958,7 +958,7 @@ const ProgressIndicator = ({ progress, isOutro }) => {
               bottom: 0,
               borderRadius: 3,
               filter: 'blur(8px)',
-              background: 'linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.6) 50%, transparent 100%)',
+              background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.6) 50%, transparent 100%)',
               backgroundSize: '200% 100%',
             }}
             animate={{

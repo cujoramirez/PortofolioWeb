@@ -111,8 +111,8 @@ class WebGLErrorBoundary extends Component<
               position: 'absolute',
               inset: 0,
               background: `
-                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 20% 50%, rgba(30, 64, 175, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
                 radial-gradient(circle at 40% 80%, rgba(34, 211, 238, 0.1) 0%, transparent 50%)
               `,
             }}
@@ -141,9 +141,9 @@ class WebGLErrorBoundary extends Component<
                 variant="contained"
                 onClick={this.handleRetry}
                 sx={{
-                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
                   '&:hover': {
-                    background: 'linear-gradient(135deg, #5145cd, #7c3aed)',
+                    background: 'linear-gradient(135deg, #1e3a8a, #2563eb)',
                   },
                 }}
               >
@@ -173,7 +173,7 @@ class WebGLErrorBoundary extends Component<
                 width: 40,
                 height: 40,
                 border: '2px solid transparent',
-                borderTop: '2px solid #6366f1',
+                borderTop: '2px solid #3b82f6',
                 borderRadius: '50%',
                 margin: '20px auto 0',
               }}

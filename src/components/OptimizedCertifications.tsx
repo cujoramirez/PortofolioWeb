@@ -1,232 +1,87 @@
-import {
-  memo,
-  useState,
-  useCallback,
-  useRef,
-  useMemo,
-  type RefObject,
-} from 'react';
-import { motion, useInView } from 'framer-motion';
+import React, { memo, useState, useCallback, useRef, useMemo, RefObject } from 'react';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
   Box,
   Container,
   Typography,
   Chip,
-  Card,
-  CardContent,
-  CardActionArea,
   useTheme,
-  useMediaQuery,
+  alpha,
 } from '@mui/material';
-import { alpha, type Theme } from '@mui/material/styles';
-import { EmojiEvents, Verified, LaunchOutlined } from '@mui/icons-material';
+import {
+  Verified as VerifiedIcon,
+  OpenInNew as OpenInNewIcon,
+} from '@mui/icons-material';
 import { CERTIFICATIONS } from '../constants';
 import { useSystemProfile } from './useSystemProfile';
-import ScrollFloat from './ScrollFloat';
+import ImageSkeleton from './ImageSkeleton';
 
-type Certification = {
+interface Certification {
   title: string;
   issuer: string;
   image: string;
   link?: string | null;
-  date?: string | null;
-};
+}
 
-type OptimizedBackgroundProps = {
-  theme: Theme;
-  shouldAnimate: boolean;
-};
-
-const OptimizedBackground = memo(({ theme, shouldAnimate }: OptimizedBackgroundProps) => (
-  <Box
-    sx={{
-      position: 'absolute',
-      inset: 0,
-      background: `
-        radial-gradient(circle at 25% 25%, ${alpha(theme.palette.primary.main, 0.03)} 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, ${alpha(theme.palette.secondary.main, 0.03)} 0%, transparent 50%)
-      `,
-      '&::before': shouldAnimate
-        ? {
-            content: '""',
-            position: 'absolute',
-            top: '15%',
-            left: '10%',
-            width: '3px',
-            height: '3px',
-            borderRadius: '50%',
-            background: theme.palette.primary.main,
-            opacity: 0.4,
-            animation: 'certFloat 10s ease-in-out infinite',
-            '@keyframes certFloat': {
-              '0%, 100%': { transform: 'translate(0, 0) scale(0.8)', opacity: 0.2 },
-              '50%': { transform: 'translate(40px, -40px) scale(1.2)', opacity: 0.6 },
-            },
-          }
-        : {},
-    }}
-  />
-));
-OptimizedBackground.displayName = 'OptimizedBackground';
-
-type OptimizedFilterButtonProps = {
-  issuer: string;
+// Filter Chip Component
+const FilterChip = memo(({
+  label,
+  isActive,
+  onClick,
+}: {
+  label: string;
   isActive: boolean;
   onClick: () => void;
-  shouldAnimate: boolean;
-};
-
-const OptimizedFilterButton = memo(({ issuer, isActive, onClick, shouldAnimate }: OptimizedFilterButtonProps) => {
+}) => {
   const theme = useTheme();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 30, mass: 0.5 }}
-      whileHover={shouldAnimate ? { 
-        scale: 1.03,
-        transition: { type: 'spring', stiffness: 600, damping: 25, mass: 0.4 }
-      } : undefined}
-      whileTap={shouldAnimate ? { scale: 0.98 } : undefined}
-      style={{ 
-        backfaceVisibility: 'hidden',
-        transform: 'translateZ(0)',
+    <Chip
+      label={label}
+      onClick={onClick}
+      size="small"
+      sx={{
+        height: 32,
+        fontSize: '0.8rem',
+        fontWeight: isActive ? 600 : 500,
+        background: isActive 
+          ? alpha(theme.palette.primary.main, 0.12) 
+          : 'transparent',
+        color: isActive 
+          ? theme.palette.primary.main 
+          : theme.palette.text.secondary,
+        border: `1px solid ${isActive 
+          ? alpha(theme.palette.primary.main, 0.3) 
+          : alpha(theme.palette.divider, 0.15)}`,
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        '&:hover': {
+          background: alpha(theme.palette.primary.main, isActive ? 0.15 : 0.05),
+          borderColor: alpha(theme.palette.primary.main, 0.3),
+        },
       }}
-    >
-      <Chip
-        label={issuer}
-        onClick={onClick}
-        variant={isActive ? 'filled' : 'outlined'}
-        sx={{
-          borderColor: isActive ? theme.palette.primary.main : alpha(theme.palette.primary.main, 0.3),
-          backgroundColor: isActive ? alpha(theme.palette.primary.main, 0.15) : 'transparent',
-          color: isActive ? theme.palette.primary.main : theme.palette.text.secondary,
-          fontWeight: isActive ? 600 : 500,
-          fontSize: '0.875rem',
-          height: 36,
-          cursor: 'pointer',
-          transition: 'border-color 0.2s ease, background-color 0.2s ease',
-          willChange: 'border-color, background-color',
-          '&:hover': {
-            borderColor: theme.palette.primary.main,
-            backgroundColor: alpha(theme.palette.primary.main, isActive ? 0.2 : 0.05),
-          },
-        }}
-      />
-    </motion.div>
+    />
   );
 });
-OptimizedFilterButton.displayName = 'OptimizedFilterButton';
 
-type OptimizedCertificationImageProps = {
-  src: string;
-  alt: string;
-  onError?: (alt: string) => void;
-};
+FilterChip.displayName = 'FilterChip';
 
-const OptimizedCertificationImage = memo(({ src, alt, onError }: OptimizedCertificationImageProps) => {
+// Certification Card Component
+const CertificationCard = memo(({
+  cert,
+  index,
+}: {
+  cert: Certification;
+  index: number;
+}) => {
+  const theme = useTheme();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(cardRef as RefObject<Element>, { once: true, margin: '-30px' });
+  const { performanceTier } = useSystemProfile();
+  const shouldReduceMotion = performanceTier === 'low';
+
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const imageRef = useRef<HTMLDivElement | null>(null);
-  const inViewRef = imageRef as unknown as RefObject<Element>;
-  const isInView = useInView(inViewRef, { once: true, margin: '50px' });
-
-  const handleError = useCallback(() => {
-    setImageError(true);
-    onError?.(alt);
-  }, [alt, onError]);
-
-  const handleLoad = useCallback(() => {
-    setImageLoaded(true);
-  }, []);
-
-  return (
-    <Box
-      ref={imageRef}
-      sx={{
-        position: 'relative',
-        width: '100%',
-        height: '160px',
-        backgroundColor: alpha('#1e293b', 0.8),
-        overflow: 'hidden',
-        borderRadius: 1,
-      }}
-    >
-      {isInView && !imageError && (
-        <img
-          src={src}
-          alt={alt}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            opacity: imageLoaded ? 1 : 0,
-            transition: 'opacity 0.3s ease-in-out',
-          }}
-          loading="lazy"
-          decoding="async"
-          onLoad={handleLoad}
-          onError={handleError}
-        />
-      )}
-
-      {!imageError && (!isInView || !imageLoaded) && (
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: alpha('#374151', 0.8),
-          }}
-        >
-          <Box
-            sx={{
-              width: 24,
-              height: 24,
-              border: '2px solid transparent',
-              borderTop: '2px solid #8b5cf6',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              '@keyframes spin': {
-                '0%': { transform: 'rotate(0deg)' },
-                '100%': { transform: 'rotate(360deg)' },
-              },
-            }}
-          />
-        </Box>
-      )}
-
-      {imageError && (
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: alpha('#374151', 0.8),
-            color: '#d1d5db',
-            fontSize: '0.875rem',
-          }}
-        >
-          Certificate Image
-        </Box>
-      )}
-    </Box>
-  );
-});
-OptimizedCertificationImage.displayName = 'OptimizedCertificationImage';
-
-type OptimizedCertificationCardProps = {
-  cert: Certification;
-  shouldAnimate: boolean;
-};
-
-const OptimizedCertificationCard = memo(({ cert, shouldAnimate }: OptimizedCertificationCardProps) => {
-  const theme = useTheme();
 
   const handleClick = useCallback(() => {
     if (cert.link) {
@@ -236,267 +91,384 @@ const OptimizedCertificationCard = memo(({ cert, shouldAnimate }: OptimizedCerti
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 30, mass: 0.5 }}
-      whileHover={
-        shouldAnimate
-          ? {
-              y: -3,
-              scale: 1.01,
-              transition: { type: 'spring', stiffness: 600, damping: 25, mass: 0.4 },
-            }
-          : undefined
-      }
-      style={{
-        backfaceVisibility: 'hidden',
-        transform: 'translateZ(0)',
+      ref={cardRef}
+      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{
+        duration: shouldReduceMotion ? 0.2 : 0.4,
+        delay: shouldReduceMotion ? 0 : Math.min(index * 0.03, 0.3),
+        ease: [0.25, 0.1, 0.25, 1],
       }}
     >
-      <Card
-        elevation={2}
+      <Box
+        onClick={handleClick}
         sx={{
-          height: '100%',
-          background: alpha(theme.palette.background.paper, 0.9),
-          border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+          position: 'relative',
           borderRadius: 2,
+          overflow: 'hidden',
+          background: alpha(theme.palette.background.paper, 0.5),
+          backdropFilter: 'blur(12px)',
+          border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
           cursor: cert.link ? 'pointer' : 'default',
-          transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-          willChange: 'border-color, box-shadow',
-          '&:hover':
-            cert.link
-              ? {
-                  borderColor: alpha(theme.palette.primary.main, 0.3),
-                  boxShadow: theme.shadows[4],
-                  '& .cert-badge': {
-                    opacity: 1,
-                    transform: 'translateY(0)',
-                  },
-                }
-              : {},
+          transition: 'all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1)',
+          '&:hover': cert.link ? {
+            transform: 'translateY(-6px)',
+            boxShadow: `0 20px 40px ${alpha(theme.palette.common.black, 0.12)}, 0 0 30px ${alpha(theme.palette.primary.main, 0.08)}`,
+            borderColor: alpha(theme.palette.primary.main, 0.25),
+            '& .cert-overlay': {
+              opacity: 1,
+            },
+            '& .cert-image': {
+              transform: 'scale(1.05)',
+            },
+          } : {},
         }}
       >
-        <CardActionArea onClick={handleClick} disabled={!cert.link}>
-          <Box sx={{ position: 'relative' }}>
-            <OptimizedCertificationImage src={cert.image} alt={cert.title} />
+        {/* Image Container */}
+        <Box
+          sx={{
+            position: 'relative',
+            aspectRatio: '4/3',
+            overflow: 'hidden',
+            background: alpha(theme.palette.text.primary, 0.03),
+          }}
+        >
+          {!imageError && (
+            <Box
+              component="img"
+              className="cert-image"
+              src={cert.image}
+              alt={cert.title}
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageError(true)}
+              sx={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: imageLoaded ? 1 : 0,
+                transition: 'all 0.3s ease',
+              }}
+            />
+          )}
 
-            {cert.link && (
+          {/* Loading state */}
+          {!imageLoaded && !imageError && (
+            <Box
+              sx={{
+                position: 'absolute',
+                inset: 0,
+              }}
+            >
+              <ImageSkeleton aspectRatio="4/3" borderRadius={0} />
+            </Box>
+          )}
+
+          {/* Error state */}
+          {imageError && (
+            <Box
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: theme.palette.text.secondary,
+                fontSize: '0.75rem',
+              }}
+            >
+              <VerifiedIcon sx={{ fontSize: 32, opacity: 0.3 }} />
+            </Box>
+          )}
+
+          {/* Hover Overlay */}
+          {cert.link && (
+            <Box
+              className="cert-overlay"
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                background: `linear-gradient(180deg, transparent 40%, ${alpha(theme.palette.common.black, 0.7)} 100%)`,
+                display: 'flex',
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                pb: 2,
+                opacity: 0,
+                transition: 'opacity 0.25s ease',
+              }}
+            >
               <Box
-                className="cert-badge"
                 sx={{
-                  position: 'absolute',
-                  bottom: 8,
-                  left: 8,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 0.5,
-                  px: 1.5,
-                  py: 0.5,
-                  backgroundColor: alpha(theme.palette.primary.main, 0.9),
                   color: 'white',
-                  borderRadius: 1,
                   fontSize: '0.75rem',
                   fontWeight: 500,
-                  opacity: 0,
-                  transform: 'translateY(8px)',
-                  transition: 'opacity 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                  willChange: 'opacity, transform',
                 }}
               >
-                <LaunchOutlined sx={{ fontSize: 14 }} />
+                <OpenInNewIcon sx={{ fontSize: 14 }} />
                 View Certificate
               </Box>
-            )}
-          </Box>
+            </Box>
+          )}
+        </Box>
 
-          <CardContent sx={{ p: 2 }}>
+        {/* Content */}
+        <Box sx={{ p: 2 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              fontSize: '0.85rem',
+              color: theme.palette.text.primary,
+              lineHeight: 1.3,
+              mb: 0.75,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+          >
+            {cert.title}
+          </Typography>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <VerifiedIcon 
+              sx={{ 
+                fontSize: 14, 
+                color: theme.palette.primary.main,
+                opacity: 0.8,
+              }} 
+            />
             <Typography
-              variant="h6"
-              component="h3"
+              variant="caption"
               sx={{
-                fontWeight: 600,
-                mb: 1,
-                fontSize: '0.95rem',
-                lineHeight: 1.3,
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
+                color: theme.palette.text.secondary,
+                fontSize: '0.75rem',
+                fontWeight: 500,
               }}
             >
-              {cert.title}
+              {cert.issuer}
             </Typography>
-
-            <Box display="flex" alignItems="center" mb={1}>
-              <Verified sx={{ fontSize: 16, color: theme.palette.primary.main, mr: 0.5 }} />
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', fontWeight: 500 }}>
-                {cert.issuer}
-              </Typography>
-            </Box>
-
-            {cert.date && (
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                {cert.date}
-              </Typography>
-            )}
-          </CardContent>
-        </CardActionArea>
-      </Card>
+          </Box>
+        </Box>
+      </Box>
     </motion.div>
   );
 });
-OptimizedCertificationCard.displayName = 'OptimizedCertificationCard';
 
-const certifications = CERTIFICATIONS as Certification[];
+CertificationCard.displayName = 'CertificationCard';
 
-const OptimizedCertifications = memo(() => {
+// Main Component
+const OptimizedCertificationsComponent = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef as RefObject<Element>, { once: true, margin: '-100px' });
   const { performanceTier } = useSystemProfile();
+  const shouldReduceMotion = performanceTier === 'low';
 
   const [selectedIssuer, setSelectedIssuer] = useState<string>('All');
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const containerInViewRef = containerRef as unknown as RefObject<Element>;
-  const isInView = useInView(containerInViewRef, { once: true, amount: 0.1 });
 
-  const shouldAnimate = performanceTier !== 'low' && !isMobile;
+  // Use constant directly - no need for useMemo since CERTIFICATIONS never changes
+  const certifications = CERTIFICATIONS as Certification[];
 
-  const issuers = useMemo(() => ['All', ...new Set(certifications.map((cert) => cert.issuer))], []);
+  const issuers = useMemo(() => {
+    const uniqueIssuers = [...new Set(certifications.map((cert) => cert.issuer))];
+    return ['All', ...uniqueIssuers];
+  }, [certifications]);
 
-  const filteredCertifications = useMemo(
-    () =>
-      selectedIssuer === 'All'
-        ? certifications
-        : certifications.filter((cert) => cert.issuer === selectedIssuer),
-    [selectedIssuer],
-  );
+  const filteredCertifications = useMemo(() => {
+    if (selectedIssuer === 'All') return certifications;
+    return certifications.filter((cert) => cert.issuer === selectedIssuer);
+  }, [certifications, selectedIssuer]);
 
-  const handleIssuerChange = useCallback((issuer: string) => {
+  const handleFilterChange = useCallback((issuer: string) => {
     setSelectedIssuer(issuer);
   }, []);
 
+  // Group by issuer for stats
+  const stats = useMemo(() => {
+    const groups: Record<string, number> = {};
+    certifications.forEach((cert) => {
+      groups[cert.issuer] = (groups[cert.issuer] || 0) + 1;
+    });
+    return groups;
+  }, [certifications]);
+
   return (
     <Box
-      ref={containerRef}
       component="section"
       id="certifications"
+      ref={sectionRef}
       sx={{
-        py: { xs: 6, md: 10 },
         position: 'relative',
+        py: { xs: 10, md: 16 },
+        background: theme.palette.background.default,
         overflow: 'hidden',
-        background: `linear-gradient(135deg,
-          ${theme.palette.background.default} 0%,
-          ${alpha(theme.palette.primary.main, 0.01)} 50%,
-          ${alpha(theme.palette.secondary.main, 0.01)} 100%)`,
-        color: 'white',
       }}
     >
-      <OptimizedBackground theme={theme} shouldAnimate={shouldAnimate} />
+      {/* Subtle background */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '100%',
+          height: '100%',
+          background: `radial-gradient(ellipse at center, ${alpha(theme.palette.primary.main, 0.02)} 0%, transparent 60%)`,
+          pointerEvents: 'none',
+        }}
+      />
 
-      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
-        {isInView && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: shouldReduceMotion ? 0.3 : 0.6 }}
+        >
+          <Box sx={{ textAlign: 'center', mb: { xs: 5, md: 8 } }}>
+            <Typography
+              variant="overline"
+              sx={{
+                fontWeight: 600,
+                letterSpacing: 3,
+                color: theme.palette.primary.main,
+                fontSize: '0.8rem',
+                mb: 2,
+                display: 'block',
+              }}
+            >
+              Professional Development
+            </Typography>
+            <Typography
+              variant="h2"
+              component="h2"
+              sx={{
+                fontWeight: 800,
+                fontSize: { xs: '2.25rem', md: '3rem' },
+                background: `linear-gradient(135deg, ${theme.palette.text.primary} 0%, ${theme.palette.primary.main} 100%)`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                mb: 2,
+              }}
+            >
+              Certifications
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: theme.palette.text.secondary,
+                maxWidth: 520,
+                mx: 'auto',
+                fontSize: { xs: '0.95rem', md: '1.05rem' },
+                lineHeight: 1.6,
+              }}
+            >
+              {certifications.length} certifications from {Object.keys(stats).length} platforms including Kaggle, FreeCodeCamp, and NVIDIA
+            </Typography>
+
+            {/* Decorative line */}
+            <Box
+              sx={{
+                width: 48,
+                height: 2,
+                mx: 'auto',
+                mt: 3,
+                borderRadius: 1,
+                background: theme.palette.primary.main,
+              }}
+            />
+          </Box>
+        </motion.div>
+
+        {/* Filter Chips */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: 1,
+              mb: { xs: 4, md: 6 },
+              maxWidth: 600,
+              mx: 'auto',
+            }}
           >
-            <Box textAlign="center" mb={{ xs: 4, md: 6 }}>
-              <Chip
-                icon={<EmojiEvents />}
-                label="Professional Certifications"
-                sx={{
-                  mb: 3,
-                  background: `linear-gradient(135deg,
-                    ${alpha(theme.palette.primary.main, 0.1)},
-                    ${alpha(theme.palette.secondary.main, 0.1)})`,
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
-                  color: theme.palette.primary.main,
-                  fontWeight: 600,
-                  fontSize: '1rem',
-                  py: 1,
-                  px: 2,
-                }}
-              />
-
-              <ScrollFloat
-                as="h2"
-                containerClassName="my-0"
-                containerStyle={{ marginBottom: theme.spacing(2) }}
-                textClassName="font-extrabold"
-                textStyle={{
-                  fontSize: 'clamp(2.4rem, 6vw, 3.6rem)',
-                  background: 'linear-gradient(135deg, #6b7cff 0%, #a855f7 50%, #38bdf8 100%)',
-                  WebkitBackgroundClip: 'text',
-                  color: 'transparent',
-                  lineHeight: 1.2,
-                  display: 'inline-block',
-                }}
-              >
-                Certifications
-              </ScrollFloat>
-
-              <Box
-                sx={{
-                  height: 4,
-                  width: 120,
-                  background: `linear-gradient(90deg,
-                    ${theme.palette.primary.main},
-                    ${theme.palette.secondary.main})`,
-                  borderRadius: 2,
-                  margin: '0 auto',
-                }}
-              />
-            </Box>
-          </motion.div>
-        )}
-
-        <Box mb={{ xs: 4, md: 6 }}>
-          <Box display="flex" flexWrap="wrap" justifyContent="center" gap={1.5} sx={{ maxWidth: 800, mx: 'auto' }}>
             {issuers.map((issuer) => (
-              <OptimizedFilterButton
+              <FilterChip
                 key={issuer}
-                issuer={issuer}
+                label={issuer === 'All' ? `All (${certifications.length})` : `${issuer} (${stats[issuer] || 0})`}
                 isActive={selectedIssuer === issuer}
-                onClick={() => handleIssuerChange(issuer)}
-                shouldAnimate={shouldAnimate}
+                onClick={() => handleFilterChange(issuer)}
               />
             ))}
           </Box>
-        </Box>
+        </motion.div>
 
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: 'repeat(2, minmax(0, 1fr))',
-              sm: 'repeat(3, minmax(0, 1fr))',
-              md: 'repeat(4, minmax(0, 1fr))',
-              lg: 'repeat(6, minmax(0, 1fr))',
-            },
-            gap: { xs: 2, sm: 2.5, md: 3 },
-            justifyItems: 'center',
-          }}
-        >
-          {filteredCertifications.map((cert) => (
-            <Box key={cert.title} sx={{ width: '100%', maxWidth: 260 }}>
-              <OptimizedCertificationCard cert={cert} shouldAnimate={shouldAnimate} />
+        {/* Certifications Grid */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={selectedIssuer}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: 'repeat(2, 1fr)',
+                  sm: 'repeat(3, 1fr)',
+                  md: 'repeat(4, 1fr)',
+                  lg: 'repeat(5, 1fr)',
+                },
+                gap: { xs: 2, md: 2.5 },
+              }}
+            >
+              {filteredCertifications.map((cert, index) => (
+                <CertificationCard
+                  key={cert.title}
+                  cert={cert}
+                  index={index}
+                />
+              ))}
             </Box>
-          ))}
-        </Box>
-
-        {filteredCertifications.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.3 }}>
-            <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mt: 4, fontSize: '0.875rem' }}>
-              Showing {filteredCertifications.length} certification
-              {filteredCertifications.length !== 1 ? 's' : ''}
-              {selectedIssuer !== 'All' && ` from ${selectedIssuer}`}
-            </Typography>
           </motion.div>
-        )}
+        </AnimatePresence>
+
+        {/* Results count */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: 'center',
+              color: alpha(theme.palette.text.secondary, 0.7),
+              fontSize: '0.8rem',
+              mt: 4,
+            }}
+          >
+            Showing {filteredCertifications.length} certification{filteredCertifications.length !== 1 ? 's' : ''}
+            {selectedIssuer !== 'All' && ` from ${selectedIssuer}`}
+          </Typography>
+        </motion.div>
       </Container>
     </Box>
   );
-});
+};
+
+const OptimizedCertifications = memo(OptimizedCertificationsComponent);
 OptimizedCertifications.displayName = 'OptimizedCertifications';
 
 export default OptimizedCertifications;

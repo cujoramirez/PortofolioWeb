@@ -39,14 +39,14 @@ export interface StaggeredMenuProps {
 
 export const StaggeredMenu: FC<StaggeredMenuProps> = ({
   position = 'right',
-  colors = ['#B19EEF', '#5227FF'],
+  colors = ['#60a5fa', '#1e40af'],
   items = [],
   displayItemNumbering = true,
   className,
   menuButtonColor = '#fff',
   openMenuButtonColor = '#fff',
   changeMenuColorOnOpen = true,
-  accentColor = '#5227FF',
+  accentColor = '#3b82f6',
   isFixed = false,
   onMenuOpen,
   onMenuClose,
@@ -442,11 +442,11 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
             ref={toggleBtnRef}
             className="sm-toggle relative inline-flex items-center justify-center bg-transparent border-0 cursor-pointer overflow-visible pointer-events-auto transition-all duration-300 text-white w-[48px] h-[48px]"
             style={{
-              background: menuOpen ? 'linear-gradient(135deg, rgba(99,102,241,0.22), rgba(139,92,246,0.18))' : 'rgba(255,255,255,0.04)',
+              background: menuOpen ? 'linear-gradient(135deg, rgba(30,64,175,0.22), rgba(59,130,246,0.18))' : 'rgba(255,255,255,0.04)',
               borderRadius: 12,
               border: '1.5px solid rgba(148, 163, 184, 0.15)',
               padding: 8,
-              boxShadow: menuOpen ? '0 8px 24px rgba(99,102,241,0.12)' : '0 2px 8px rgba(0,0,0,0.08)'
+              boxShadow: menuOpen ? '0 8px 24px rgba(59,130,246,0.12)' : '0 2px 8px rgba(0,0,0,0.08)'
             }}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
@@ -492,7 +492,7 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
                     items.map((it, idx) => (
                       <li className="sm-panel-itemWrap relative overflow-hidden leading-none" key={it.label + idx}>
                         <a
-                          className="sm-panel-item relative text-white font-semibold text-[3.5rem] cursor-pointer leading-[0.95] tracking-[-1.5px] uppercase transition-[color] duration-200 ease-out inline-block no-underline pr-[1.2em] hover:text-[var(--sm-accent,#6366f1)]"
+                          className="sm-panel-item relative text-white font-semibold text-[3.5rem] cursor-pointer leading-[0.95] tracking-[-1.5px] uppercase transition-[color] duration-200 ease-out inline-block no-underline pr-[1.2em] hover:text-[var(--sm-accent,#3b82f6)]"
                           href={it.link}
                           aria-label={it.ariaLabel}
                           data-index={idx + 1}
@@ -537,7 +537,7 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
 .sm-scope .staggered-menu-header { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: flex-end; gap: 0.65rem; background: transparent; pointer-events: none; z-index: 9999; }
 .sm-scope .staggered-menu-header > * { pointer-events: auto; }
 .sm-scope .sm-toggle { position: relative; display: inline-flex; align-items: center; gap: 0.3rem; background: transparent; border: none; cursor: pointer; font-weight: 500; line-height: 1; overflow: visible; font-size: 0.95rem; }
-.sm-scope .sm-toggle:focus-visible { outline: 2px solid rgba(99, 102, 241, 0.6); outline-offset: 4px; border-radius: 4px; }
+.sm-scope .sm-toggle:focus-visible { outline: 2px solid rgba(59, 130, 246, 0.6); outline-offset: 4px; border-radius: 4px; }
 .sm-scope .sm-toggle-textWrap { position: relative; margin-right: 0.5em; display: inline-block; height: 1em; overflow: hidden; white-space: nowrap; width: var(--sm-toggle-width, auto); min-width: var(--sm-toggle-width, auto); }
 .sm-scope .sm-toggle-textInner { display: flex; flex-direction: column; line-height: 1; }
 .sm-scope .sm-toggle-line { display: block; height: 1em; line-height: 1; }
@@ -553,9 +553,9 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
 .sm-scope .sm-panel-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
 .sm-scope .sm-panel-itemLabel { display: inline-block; will-change: transform; transform-origin: 50% 100%; }
 .sm-scope .sm-panel-list[data-numbering] { counter-reset: smItem; }
-.sm-scope .sm-panel-list[data-numbering] .sm-panel-item::after { counter-increment: smItem; content: counter(smItem, decimal-leading-zero); position: absolute; top: 0.15em; right: 0; font-size: 1rem; font-weight: 400; color: rgba(99, 102, 241, 0.7); letter-spacing: 0; pointer-events: none; user-select: none; opacity: var(--sm-num-opacity, 0); transition: opacity 0.3s ease; }
+.sm-scope .sm-panel-list[data-numbering] .sm-panel-item::after { counter-increment: smItem; content: counter(smItem, decimal-leading-zero); position: absolute; top: 0.15em; right: 0; font-size: 1rem; font-weight: 400; color: rgba(59, 130, 246, 0.7); letter-spacing: 0; pointer-events: none; user-select: none; opacity: var(--sm-num-opacity, 0); transition: opacity 0.3s ease; }
 .sm-panel-surface { position: relative; width: 100%; height: 100%; border-radius: 0; overflow: hidden; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(148, 163, 184, 0.16); box-shadow: 0 18px 48px rgba(15, 23, 42, 0.3); background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.82)); }
-.sm-panel-surface::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.28), transparent 55%), radial-gradient(circle at 80% 10%, rgba(59, 130, 246, 0.2), transparent 60%); opacity: 0.85; pointer-events: none; }
+.sm-panel-surface::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 20% 20%, rgba(30, 64, 175, 0.28), transparent 55%), radial-gradient(circle at 80% 10%, rgba(59, 130, 246, 0.2), transparent 60%); opacity: 0.85; pointer-events: none; }
 .sm-panel-surface::after { content: ''; position: absolute; inset: 0; background: linear-gradient(160deg, rgba(148, 163, 184, 0.12), rgba(15, 23, 42, 0.65)); mix-blend-mode: lighten; pointer-events: none; }
 .sm-panel-surface--light { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 64, 175, 0.75)); box-shadow: 0 12px 32px rgba(15, 23, 42, 0.24); }
 .sm-panel-surface--light::before { opacity: 0.7; }

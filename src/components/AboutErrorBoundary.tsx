@@ -84,17 +84,17 @@ class AboutErrorBoundary extends Component<PropsWithChildren<unknown>, AboutErro
                         startIcon={<Refresh />}
                         onClick={this.handleRetry}
                         sx={{
-                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                            background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
                             color: 'white',
                             px: 4,
                             py: 1.5,
                             borderRadius: '12px',
                             fontWeight: 600,
                             textTransform: 'none',
-                            boxShadow: '0 10px 25px rgba(99, 102, 241, 0.3)',
+                            boxShadow: '0 10px 25px rgba(59, 130, 246, 0.3)',
                             '&:hover': {
-                                background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-                                boxShadow: '0 15px 35px rgba(99, 102, 241, 0.4)',
+                                background: 'linear-gradient(135deg, #1e3a8a, #2563eb)',
+                                boxShadow: '0 15px 35px rgba(59, 130, 246, 0.4)',
                                 transform: 'translateY(-2px)'
                             },
                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'

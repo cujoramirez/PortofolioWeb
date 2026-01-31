@@ -1,58 +1,30 @@
-import {
-  memo,
-  useRef,
-  useMemo,
-  useCallback,
-  type RefObject,
-} from 'react';
-import { motion, useInView, type Variants } from 'framer-motion';
+import React, { memo, useRef, useMemo, useCallback, RefObject } from 'react';
+import { motion, useInView } from 'framer-motion';
 import {
   Box,
   Container,
   Typography,
-  Card,
-  Avatar,
-  Chip,
   useTheme,
-  useMediaQuery,
+  alpha,
 } from '@mui/material';
-import { alpha, type Theme } from '@mui/material/styles';
-import type { SvgIconComponent } from '@mui/icons-material';
 import {
   Email as EmailIcon,
   LinkedIn as LinkedInIcon,
   GitHub as GitHubIcon,
   LocationOn as LocationIcon,
-  ContactMail as ContactIcon,
-  Work as WorkIcon,
-  Business as BusinessIcon,
-  Analytics as AnalyticsIcon,
-  Science as ScienceIcon,
+  OpenInNew as OpenInNewIcon,
+  School as SchoolIcon,
 } from '@mui/icons-material';
+import type { SvgIconComponent } from '@mui/icons-material';
 import { useSystemProfile } from './useSystemProfile';
-import { useReducedMotionOverride } from '../hooks/useReducedMotionOverride';
-import ScrollFloat from './ScrollFloat';
-import Orb from './Orb';
 
-type ContactMethod = {
+interface ContactMethod {
   icon: SvgIconComponent;
   label: string;
   value: string;
   href?: string | null;
-  color: string;
-  description: string;
-};
-
-type Stat = {
-  icon: SvgIconComponent;
-  value: string;
-  label: string;
-};
-
-type Expertise = {
-  label: string;
-  color: string;
-};
+  isExternal?: boolean;
+}
 
 const contactMethods: ContactMethod[] = [
   {
@@ -60,568 +32,369 @@ const contactMethods: ContactMethod[] = [
     label: 'Email',
     value: 'gadingadityaperdana@gmail.com',
     href: 'mailto:gadingadityaperdana@gmail.com',
-    color: '#6366f1',
-    description: 'Best for detailed inquiries',
+    isExternal: false,
   },
   {
     icon: LinkedInIcon,
     label: 'LinkedIn',
     value: 'gadingadityaperdana',
     href: 'https://www.linkedin.com/in/gadingadityaperdana/',
-    color: '#0077b5',
-    description: 'Professional networking',
+    isExternal: true,
   },
   {
     icon: GitHubIcon,
     label: 'GitHub',
     value: 'cujoramirez',
     href: 'https://github.com/cujoramirez',
-    color: '#333',
-    description: 'View my code repositories',
+    isExternal: true,
+  },
+  {
+    icon: SchoolIcon,
+    label: 'Google Scholar',
+    value: 'Gading Aditya Perdana',
+    href: 'https://scholar.google.com/citations?user=hwbWuI0AAAAJ',
+    isExternal: true,
   },
   {
     icon: LocationIcon,
     label: 'Location',
     value: 'Central Jakarta, Indonesia',
     href: null,
-    color: '#10b981',
-    description: 'Available globally for remote work',
   },
 ];
 
-const stats: Stat[] = [
-  { icon: WorkIcon, value: '3', label: 'Years Experience' },
-  { icon: BusinessIcon, value: '14', label: 'Projects Completed' },
-  { icon: AnalyticsIcon, value: '24/7', label: 'Availability' },
-  { icon: ScienceIcon, value: 'AI/ML', label: 'Specialization' },
-];
-
-const expertise: Expertise[] = [
-  { label: 'AI Strategy', color: '#6366f1' },
-  { label: 'Machine Learning', color: '#8b5cf6' },
-  { label: 'Full-Stack Development', color: '#f59e0b' },
-  { label: 'Data Analytics', color: '#ef4444' },
-];
-
-const itemVariants: Variants = {
-  hover: { scale: 1.02 },
-};
-
-type OptimizedBackgroundProps = {
-  theme: Theme;
-  shouldAnimate: boolean;
-};
-
-const OptimizedBackground = memo(({ theme, shouldAnimate }: OptimizedBackgroundProps) => (
-  <Box
-    sx={{
-      position: 'absolute',
-      inset: 0,
-      overflow: 'hidden',
-    }}
-  >
-    {/* Orb Background */}
-    <Box
-      sx={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: { xs: '500px', md: '700px', lg: '900px' },
-        height: { xs: '500px', md: '700px', lg: '900px' },
-        opacity: 1,
-        filter: 'blur(40px)',
-        pointerEvents: 'none',
-      }}
-    >
-      <Orb
-        hue={240}
-        hoverIntensity={0.3}
-        rotateOnHover={shouldAnimate}
-        forceHoverState={false}
-      />
-    </Box>
-    
-    {/* Gradient Overlays */}
-    <Box
-      sx={{
-        position: 'absolute',
-        inset: 0,
-        background: `
-          radial-gradient(circle at 30% 20%, ${alpha(theme.palette.primary.main, 0.03)} 0%, transparent 50%),
-          radial-gradient(circle at 70% 80%, ${alpha(theme.palette.secondary.main, 0.03)} 0%, transparent 50%)
-        `,
-      }}
-    />
-  </Box>
-));
-OptimizedBackground.displayName = 'OptimizedBackground';
-
-type ContactMethodCardProps = {
+// Contact Link Component
+const ContactLink = memo(({
+  method,
+  index,
+}: {
   method: ContactMethod;
   index: number;
-  theme: Theme;
-  shouldAnimate: boolean;
-};
+}) => {
+  const theme = useTheme();
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref as RefObject<Element>, { once: true, margin: '-30px' });
+  const { performanceTier } = useSystemProfile();
+  const shouldReduceMotion = performanceTier === 'low';
 
-const ContactMethodCard = memo(({ method, index, theme, shouldAnimate }: ContactMethodCardProps) => {
   const IconComponent = method.icon;
 
   const handleClick = useCallback(() => {
     if (method.href) {
-      window.open(method.href, '_blank', 'noopener,noreferrer');
+      window.open(method.href, method.isExternal ? '_blank' : '_self', 'noopener,noreferrer');
     }
-  }, [method.href]);
+  }, [method.href, method.isExternal]);
 
   return (
     <motion.div
-      key={method.label}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={shouldAnimate ? { 
-        scale: 1.02, 
-        y: -2,
-        transition: { type: 'spring', stiffness: 500, damping: 30, mass: 0.5 }
-      } : undefined}
-      transition={{ 
-        type: 'spring', 
-        stiffness: 450, 
-        damping: 30, 
-        mass: 0.5,
-        opacity: { duration: 0.3, delay: index * 0.08 },
-        y: { duration: 0.3, delay: index * 0.08 }
+      ref={ref}
+      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{
+        duration: shouldReduceMotion ? 0.2 : 0.4,
+        delay: shouldReduceMotion ? 0 : index * 0.08,
+        ease: [0.25, 0.1, 0.25, 1],
       }}
-      style={{ 
-        display: 'flex', 
-        width: '100%', 
-        backfaceVisibility: 'hidden',
-        WebkitBackfaceVisibility: 'hidden',
-        transform: 'translateZ(0)',
-      }}
-    >
-      <Card
-        elevation={3}
-        sx={{
-          p: 3,
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 1.5,
-          background: alpha(theme.palette.background.paper, 0.78),
-          border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-          backdropFilter: 'blur(14px)',
-          cursor: method.href ? 'pointer' : 'default',
-          borderRadius: 3,
-          boxShadow: '0 24px 40px rgba(15, 23, 42, 0.18)',
-          '&:hover': method.href
-            ? {
-                borderColor: alpha(method.color, 0.4),
-                boxShadow: '0 28px 50px rgba(99, 102, 241, 0.25)',
-                transform: 'translateY(-4px) scale(1.01)',
-                '& .contact-icon': {
-                  color: method.color,
-                  transform: 'scale(1.12)',
-                },
-              }
-            : {},
-        }}
-        onClick={handleClick}
-      >
-        <Box display="flex" alignItems="center" gap={2}>
-          <Avatar
-            sx={{
-              bgcolor: alpha(method.color, 0.15),
-              color: method.color,
-              width: 52,
-              height: 52,
-              boxShadow: `0 12px 24px ${alpha(method.color, 0.25)}`,
-            }}
-          >
-            <IconComponent
-              className="contact-icon"
-              sx={{
-                fontSize: 26,
-                transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                willChange: 'transform',
-              }}
-            />
-          </Avatar>
-          <Box>
-            <Typography variant="h6" fontWeight={700} sx={{ letterSpacing: 0.2 }}>
-              {method.label}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {method.description}
-            </Typography>
-          </Box>
-        </Box>
-
-        <Typography
-          variant="body1"
-          color="text.primary"
-          fontWeight={600}
-          sx={{ wordBreak: 'break-word', fontSize: '1.05rem' }}
-        >
-          {method.value}
-        </Typography>
-      </Card>
-    </motion.div>
-  );
-});
-ContactMethodCard.displayName = 'ContactMethodCard';
-
-type StatCardProps = {
-  stat: Stat;
-  index: number;
-  theme: Theme;
-  shouldAnimate: boolean;
-};
-
-const StatCard = memo(({ stat, index: _index, theme, shouldAnimate }: StatCardProps) => {
-  const IconComponent = stat.icon;
-
-  return (
-    <motion.div
-      key={stat.label}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 30, mass: 0.5 }}
-      style={{ width: '100%' }}
     >
       <Box
-        textAlign="center"
+        onClick={method.href ? handleClick : undefined}
         sx={{
-          p: { xs: 2.5, sm: 3 },
-          background: alpha(theme.palette.background.paper, 0.08),
-          borderRadius: 3,
-          border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
-          transition: shouldAnimate ? 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease, box-shadow 0.2s ease' : 'none',
-          willChange: shouldAnimate ? 'transform, border-color, box-shadow' : 'auto',
-          boxShadow: '0 20px 30px rgba(15, 23, 42, 0.16)',
-          '&:hover': shouldAnimate
-            ? {
-                borderColor: alpha(theme.palette.primary.main, 0.35),
-                transform: 'translateY(-3px)',
-                boxShadow: '0 26px 36px rgba(99, 102, 241, 0.22)',
-              }
-            : {},
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          p: 2,
+          borderRadius: 2,
+          background: alpha(theme.palette.background.paper, 0.4),
+          backdropFilter: 'blur(12px)',
+          border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+          cursor: method.href ? 'pointer' : 'default',
+          transition: 'all 0.25s ease',
+          '&:hover': method.href ? {
+            background: alpha(theme.palette.background.paper, 0.6),
+            borderColor: alpha(theme.palette.primary.main, 0.2),
+            transform: 'translateX(4px)',
+            '& .contact-icon': {
+              color: theme.palette.primary.main,
+            },
+          } : {},
         }}
       >
-        <IconComponent
+        <Box
+          className="contact-icon"
           sx={{
-            fontSize: { xs: 28, sm: 34 },
-            color: theme.palette.primary.main,
-            mb: 1,
-          }}
-        />
-        <Typography
-          variant="h4"
-          fontWeight={700}
-          sx={{
-            fontSize: { xs: '1.6rem', sm: '2.1rem' },
-            color: theme.palette.primary.main,
-            mb: 0.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 40,
+            height: 40,
+            borderRadius: 1.5,
+            background: alpha(theme.palette.primary.main, 0.08),
+            color: theme.palette.text.secondary,
+            transition: 'color 0.25s ease',
           }}
         >
-          {stat.value}
-        </Typography>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ fontSize: { xs: '0.8rem', sm: '0.9rem' } }}
-        >
-          {stat.label}
-        </Typography>
+          <IconComponent sx={{ fontSize: 20 }} />
+        </Box>
+
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              display: 'block',
+              color: theme.palette.text.secondary,
+              fontSize: '0.7rem',
+              fontWeight: 500,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              mb: 0.25,
+            }}
+          >
+            {method.label}
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: theme.palette.text.primary,
+              fontWeight: 500,
+              fontSize: '0.9rem',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {method.value}
+          </Typography>
+        </Box>
+
+        {method.href && method.isExternal && (
+          <OpenInNewIcon 
+            sx={{ 
+              fontSize: 16, 
+              color: theme.palette.text.secondary,
+              opacity: 0.5,
+            }} 
+          />
+        )}
       </Box>
     </motion.div>
   );
 });
-StatCard.displayName = 'StatCard';
 
-type ExpertiseChipProps = {
-  item: Expertise;
-  index: number;
-  shouldAnimate: boolean;
-};
+ContactLink.displayName = 'ContactLink';
 
-const ExpertiseChip = memo(({ item, index: _index, shouldAnimate }: ExpertiseChipProps) => (
-  <motion.div
-    key={item.label}
-    initial={{ opacity: 0, x: -10 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ type: 'spring', stiffness: 500, damping: 30, mass: 0.5 }}
-    style={{ 
-      backfaceVisibility: 'hidden',
-      transform: 'translateZ(0)',
-    }}
-  >
-    <Chip
-      label={item.label}
-      variant="outlined"
-      sx={{
-        borderColor: alpha(item.color, 0.3),
-        color: item.color,
-        backgroundColor: alpha(item.color, 0.05),
-        fontWeight: 600,
-        fontSize: '0.875rem',
-        height: 40,
-        px: 2,
-        transition: shouldAnimate ? 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, border-color 0.2s ease' : 'none',
-        willChange: shouldAnimate ? 'transform' : 'auto',
-        '&:hover': shouldAnimate
-          ? {
-              backgroundColor: alpha(item.color, 0.12),
-              borderColor: alpha(item.color, 0.5),
-              transform: 'scale(1.05)',
-            }
-          : {},
-      }}
-    />
-  </motion.div>
-));
-ExpertiseChip.displayName = 'ExpertiseChip';
-
-const OptimizedModernContact = memo(() => {
+// Main Component
+const OptimizedModernContactComponent = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const prefersReducedMotion = useReducedMotionOverride();
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef as RefObject<Element>, { once: true, margin: '-100px' });
   const { performanceTier } = useSystemProfile();
+  const shouldReduceMotion = performanceTier === 'low';
 
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const containerRefForInView = containerRef as RefObject<Element>;
-  const isInView = useInView(containerRefForInView, { once: true, amount: 0.1 });
-
-  const shouldAnimate = !prefersReducedMotion && performanceTier !== 'low' && !isMobile;
   const currentYear = useMemo(() => new Date().getFullYear(), []);
-
-  const memoizedContactMethods = useMemo(() => contactMethods, []);
-  const memoizedStats = useMemo(() => stats, []);
-  const memoizedExpertise = useMemo(() => expertise, []);
 
   return (
     <Box
-      ref={containerRef}
       component="section"
       id="contact"
+      ref={sectionRef}
       sx={{
-        py: { xs: 6, md: 10 },
         position: 'relative',
+        py: { xs: 10, md: 16 },
+        background: theme.palette.background.default,
         overflow: 'hidden',
-        background: `linear-gradient(135deg,
-          ${theme.palette.background.default} 0%,
-          ${alpha(theme.palette.primary.main, 0.02)} 50%,
-          ${alpha(theme.palette.secondary.main, 0.02)} 100%)`,
-        color: 'white',
       }}
     >
-      <OptimizedBackground theme={theme} shouldAnimate={shouldAnimate} />
-
-      <Container
-        maxWidth="lg"
+      {/* Subtle background gradient */}
+      <Box
         sx={{
-          position: 'relative',
-          zIndex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          textAlign: 'center',
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '60%',
+          background: `linear-gradient(0deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, transparent 100%)`,
+          pointerEvents: 'none',
         }}
-      >
-        {isInView && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Box textAlign="center" mb={{ xs: 4, md: 6 }}>
-              <Chip
-                icon={<ContactIcon />}
-                label="Get In Touch"
-                sx={{
-                  mb: 3,
-                  background: `linear-gradient(135deg,
-                    ${alpha(theme.palette.primary.main, 0.1)},
-                    ${alpha(theme.palette.secondary.main, 0.1)})`,
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
-                  color: theme.palette.primary.main,
-                  fontWeight: 600,
-                  fontSize: '1rem',
-                  py: 1,
-                  px: 2,
-                }}
-              />
+      />
 
-              <ScrollFloat
-                as="h2"
-                containerClassName="my-0"
-                containerStyle={{ marginBottom: theme.spacing(2) }}
-                textClassName="font-extrabold"
-                textStyle={{
-                  fontSize: 'clamp(2.4rem, 6vw, 3.6rem)',
-                  background: 'linear-gradient(135deg, #6b7cff 0%, #a855f7 50%, #38bdf8 100%)',
-                  WebkitBackgroundClip: 'text',
-                  color: 'transparent',
-                  lineHeight: 1.2,
-                  display: 'inline-block',
-                }}
-              >
-                {"Let's Work\nTogether"}
-              </ScrollFloat>
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: shouldReduceMotion ? 0.3 : 0.6 }}
+        >
+          <Box sx={{ textAlign: 'center', mb: { xs: 5, md: 8 } }}>
+            <Typography
+              variant="overline"
+              sx={{
+                fontWeight: 600,
+                letterSpacing: 3,
+                color: theme.palette.primary.main,
+                fontSize: '0.8rem',
+                mb: 2,
+                display: 'block',
+              }}
+            >
+              Get In Touch
+            </Typography>
+            <Typography
+              variant="h2"
+              component="h2"
+              sx={{
+                fontWeight: 800,
+                fontSize: { xs: '2.25rem', md: '3rem' },
+                background: `linear-gradient(135deg, ${theme.palette.text.primary} 0%, ${theme.palette.primary.main} 100%)`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                mb: 2,
+              }}
+            >
+              Let's Connect
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: theme.palette.text.secondary,
+                maxWidth: 520,
+                mx: 'auto',
+                fontSize: { xs: '0.95rem', md: '1.05rem' },
+                lineHeight: 1.6,
+              }}
+            >
+              Open to research collaborations, AI/ML projects, and full-stack development opportunities
+            </Typography>
 
-              <Typography
-                variant="h6"
-                color="text.secondary"
-                sx={{
-                  maxWidth: 600,
-                  mx: 'auto',
-                  fontSize: { xs: '1rem', md: '1.1rem' },
-                  lineHeight: 1.6,
-                }}
-              >
-                Ready to bring your ideas to life with cutting-edge AI and development solutions
-              </Typography>
-            </Box>
-          </motion.div>
-        )}
-
-        <Box mb={{ xs: 6, md: 8 }} sx={{ width: '100%' }}>
-          <Typography
-            variant="h4"
-            fontWeight={700}
-            sx={{ mb: 4, color: theme.palette.text.primary }}
-          >
-            Contact Methods
-          </Typography>
-
-          <Box
-            sx={{
-              maxWidth: 1080,
-              mx: 'auto',
-              display: 'grid',
-              gap: { xs: 2.5, md: 3 },
-              gridTemplateColumns: {
-                xs: 'repeat(1, minmax(0, 1fr))',
-                sm: 'repeat(2, minmax(0, 1fr))',
-                lg: 'repeat(3, minmax(0, 1fr))',
-              },
-              justifyItems: 'stretch',
-            }}
-          >
-            {memoizedContactMethods.map((method, index) => {
-              const isLocation = method.label === 'Location';
-
-              return (
-                <Box
-                  key={method.label}
-                  sx={{
-                    display: 'flex',
-                    gridColumn: isLocation
-                      ? {
-                          xs: 'auto',
-                          sm: '1 / span 2',
-                          lg: '2 / span 1',
-                        }
-                      : 'auto',
-                    justifySelf: isLocation ? 'center' : 'stretch',
-                    maxWidth: isLocation ? { xs: '100%', sm: 420, lg: '100%' } : '100%',
-                  }}
-                >
-                  <ContactMethodCard
-                    method={method}
-                    index={index}
-                    theme={theme}
-                    shouldAnimate={shouldAnimate}
-                  />
-                </Box>
-              );
-            })}
+            {/* Decorative line */}
+            <Box
+              sx={{
+                width: 48,
+                height: 2,
+                mx: 'auto',
+                mt: 3,
+                borderRadius: 1,
+                background: theme.palette.primary.main,
+              }}
+            />
           </Box>
-        </Box>
+        </motion.div>
 
-        <Box mb={{ xs: 6, md: 8 }} sx={{ width: '100%' }}>
-          <Typography
-            variant="h4"
-            fontWeight={700}
-            sx={{ mb: 4, color: theme.palette.text.primary }}
-          >
-            Quick Stats
-          </Typography>
-
-          <Box
-            sx={{
-              maxWidth: 960,
-              mx: 'auto',
-              display: 'grid',
-              gap: { xs: 2, sm: 2.5 },
-              gridTemplateColumns: {
-                xs: 'repeat(2, minmax(0, 1fr))',
-                sm: 'repeat(3, minmax(0, 180px))',
-                md: 'repeat(4, minmax(0, 200px))',
-              },
-              justifyContent: 'center',
-              justifyItems: 'center',
-            }}
-          >
-            {memoizedStats.map((stat, index) => (
-              <StatCard
-                key={stat.label}
-                stat={stat}
-                index={index}
-                theme={theme}
-                shouldAnimate={shouldAnimate}
-              />
-            ))}
-          </Box>
-        </Box>
-
-        <Box textAlign="center" sx={{ width: '100%' }}>
-          <Typography
-            variant="h4"
-            fontWeight={600}
-            sx={{ mb: 4, color: theme.palette.text.primary }}
-          >
-            Areas of Expertise
-          </Typography>
-
-          <Box
-            display="flex"
-            flexWrap="wrap"
-            justifyContent="center"
-            gap={1.5}
-            sx={{ maxWidth: 800, mx: 'auto' }}
-          >
-            {memoizedExpertise.map((item, index) => (
-              <ExpertiseChip
-                key={item.label}
-                item={item}
-                index={index}
-                shouldAnimate={shouldAnimate}
-              />
-            ))}
-          </Box>
-        </Box>
-
+        {/* Contact Grid */}
         <Box
-          component={motion.div}
-          variants={itemVariants}
-          whileHover={prefersReducedMotion ? undefined : 'hover'}
           sx={{
-            textAlign: 'center',
-            mt: { xs: 6, md: 8 },
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(3, 1fr)',
+            },
+            gap: 2,
+            maxWidth: 900,
+            mx: 'auto',
+            mb: { xs: 6, md: 10 },
           }}
+        >
+          {contactMethods.map((method, index) => (
+            <ContactLink
+              key={method.label}
+              method={method}
+              index={index}
+            />
+          ))}
+        </Box>
+
+        {/* CTA Section */}
+        <motion.div
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Box
+            sx={{
+              textAlign: 'center',
+              p: { xs: 4, md: 6 },
+              maxWidth: 700,
+              mx: 'auto',
+              borderRadius: 3,
+              background: alpha(theme.palette.background.paper, 0.4),
+              backdropFilter: 'blur(12px)',
+              border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+            }}
+          >
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 700,
+                color: theme.palette.text.primary,
+                mb: 2,
+              }}
+            >
+              Available for Opportunities
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: theme.palette.text.secondary,
+                mb: 3,
+                lineHeight: 1.7,
+              }}
+            >
+              Currently seeking research positions, internships, and collaborative projects 
+              in AI/ML and computer vision. Self-funded researcher with 5 peer-reviewed publications.
+            </Typography>
+            <Box
+              component="a"
+              href="mailto:gadingadityaperdana@gmail.com"
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 3,
+                py: 1.5,
+                borderRadius: 2,
+                background: theme.palette.primary.main,
+                color: theme.palette.primary.contrastText,
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                transition: 'all 0.25s ease',
+                '&:hover': {
+                  background: theme.palette.primary.dark,
+                  transform: 'translateY(-2px)',
+                },
+              }}
+            >
+              <EmailIcon sx={{ fontSize: 18 }} />
+              Send Email
+            </Box>
+          </Box>
+        </motion.div>
+
+        {/* Footer */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.6 }}
         >
           <Typography
             variant="body2"
-            color="text.secondary"
-            sx={{ fontSize: '0.95rem' }}
+            sx={{
+              textAlign: 'center',
+              color: alpha(theme.palette.text.secondary, 0.6),
+              fontSize: '0.8rem',
+              mt: { xs: 6, md: 10 },
+            }}
           >
             © {currentYear} Gading Aditya Perdana. All rights reserved.
           </Typography>
-        </Box>
+        </motion.div>
       </Container>
     </Box>
   );
-});
+};
+
+const OptimizedModernContact = memo(OptimizedModernContactComponent);
 OptimizedModernContact.displayName = 'OptimizedModernContact';
 
 export default OptimizedModernContact;

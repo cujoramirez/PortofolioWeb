@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useId, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useId, useCallback, useMemo } from 'react';
 
 export interface GlassSurfaceProps {
   children?: React.ReactNode;
@@ -96,12 +96,21 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
 
   const isDarkMode = useDarkMode();
 
-  // Performance detection
-  const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  const isLowEndDevice = typeof navigator !== 'undefined' && (
-    navigator.hardwareConcurrency <= 4 ||
-    /Android 4|Android 5|iPhone [1-8]/i.test(navigator.userAgent)
-  );
+  // Performance detection - memoized to avoid repeated regex tests
+  const [deviceProfile] = useState(() => {
+    if (typeof navigator === 'undefined') {
+      return { isMobile: false, isLowEndDevice: false };
+    }
+    const ua = navigator.userAgent;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const isLowEndDevice = (
+      navigator.hardwareConcurrency <= 4 ||
+      /Android 4|Android 5|iPhone [1-8]/i.test(ua)
+    );
+    return { isMobile, isLowEndDevice };
+  });
+  
+  const { isMobile, isLowEndDevice } = deviceProfile;
 
   const generateDisplacementMap = useCallback(() => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -109,13 +118,31 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     const actualHeight = rect?.height ?? 200;
     const edgeSize = Math.min(actualWidth, actualHeight) * (borderWidth * 0.5);
 
-    const optimizedBlur = isMobile && isLowEndDevice ? Math.min(blur, 12) : blur;
+    // More aggressive optimization for mobile/low-end devices
+    const optimizedBlur = isMobile || isLowEndDevice ? Math.min(blur, 8) : blur;
 
     const highlightTopOpacity = opacity;
     const highlightMidOpacity = Math.min(1, Math.max(0, opacity * 0.45));
     const highlightBottomOpacity = 0;
 
-    const svgContent = `
+    // Simplified SVG for mobile - fewer gradients and effects
+    const svgContent = isMobile || isLowEndDevice ? `
+      <svg viewBox="0 0 ${actualWidth} ${actualHeight}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="${redGradId}" x1="100%" y1="0%" x2="0%" y2="0%">
+            <stop offset="0%" stop-color="#0000"/>
+            <stop offset="100%" stop-color="red"/>
+          </linearGradient>
+          <linearGradient id="${highlightGradId}" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="hsl(0 0% ${brightness}% / ${highlightTopOpacity})"/>
+            <stop offset="100%" stop-color="hsl(0 0% ${brightness}% / ${highlightBottomOpacity})"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" fill="black" />
+        <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" rx="${borderRadius}" fill="url(#${redGradId})" />
+        <rect x="${edgeSize}" y="${edgeSize}" width="${actualWidth - edgeSize * 2}" height="${actualHeight - edgeSize * 2}" rx="${borderRadius}" fill="url(#${highlightGradId})" style="filter: blur(${optimizedBlur}px);" />
+      </svg>
+    ` : `
       <svg viewBox="0 0 ${actualWidth} ${actualHeight}" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="${redGradId}" x1="100%" y1="0%" x2="0%" y2="0%">
@@ -287,8 +314,8 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
         };
       }
 
-      // Optimize blur for low-end devices
-      const optimizedBlur = isLowEndDevice ? Math.min(blur, 12) : blur;
+      // Optimize blur for mobile and low-end devices
+      const optimizedBlur = isMobile ? Math.min(blur, 8) : (isLowEndDevice ? Math.min(blur, 12) : blur);
 
       return {
         ...dimensions,
@@ -316,8 +343,8 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       };
     }
 
-    // Optimize blur for low-end devices
-    const optimizedBlur = isLowEndDevice ? Math.min(blur, 12) : blur;
+    // Optimize blur for mobile and low-end devices
+    const optimizedBlur = isMobile ? Math.min(blur, 8) : (isLowEndDevice ? Math.min(blur, 12) : blur);
 
     return {
       ...dimensions,

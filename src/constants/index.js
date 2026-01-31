@@ -19,6 +19,7 @@ import certificate12 from "../assets/certificates/certificate12.png";
 import certificate13 from "../assets/certificates/certificate13.png";
 import certificate14 from "../assets/certificates/certificate14.png";
 import certificate15 from "../assets/certificates/certificate15.png";
+import certificate16 from "../assets/certificates/certificate16.png";
 
 export const HERO_CONTENT = `
 I'm a passionate AI/ML Engineer and Computer Science specialist with deep expertise in artificial intelligence, machine learning, and computer vision. I excel at transforming complex research concepts into scalable, production-ready solutions. From developing advanced Diabetic Retinopathy Detection systems to implementing sophisticated facial recognition architectures, I deliver innovative AI solutions that drive meaningful business impact and technological advancement.
@@ -31,62 +32,50 @@ I thrive at the intersection of research and impact: curating complex datasets, 
 `;
 
 export const EXPERIENCES = [{
-        year: "Jan 2025 – Present",
+        year: "Jan 2025 – Dec 2025",
         role: "Undergraduate Research Assistant",
-        company: "Binus University - Binus Research Center",
-        description: `Under the Penelitian Pemula Binus (PPB) program, I collaborated and with Maulin Nasari, S.T., M.Kom. and Supervised under her leadership to develop an automated bone‐fracture diagnosis system using deep learning. I curated and validated a high‐quality X-ray dataset, conducted thorough cleaning and exploratory analyses to uncover and address class imbalances, and advised on dataset augmentation strategies. I then devised and executed comparative experiments on Vision Transformer and CNN architectures. Both standalone and within bagging, boosting, stacking, and majority‐voting ensembles, and distilled the findings into a concise report to guide subsequent model optimization.`,
-        technologies: ["Python", "PyTorch", "TensorFlow", "NumPy", "Pandas"],
+        company: "Binus University",
+        description: `Led experimental design and implementation for bone fracture detection research, progressing from assistant to first authorship on IEEE publication. Curated FracAtlas X-ray dataset with COCO annotations and designed preprocessing pipeline addressing severe class imbalance in medical imaging. Implemented Faster R-CNN with EfficientNetV2-S backbone, benchmarking FPN vs. PAFPN architectures and cost-sensitive loss functions.`,
+        technologies: ["Python", "PyTorch", "Faster R-CNN", "EfficientNetV2", "OpenCV"],
         achievements: [
-            "Curated high-quality X-ray dataset with 95% accuracy validation",
-            "Achieved 15% performance improvement through ensemble methods",
-            "Published comprehensive research findings report"
+            "Achieved 21.6% mAP improvement through optimized training pipeline",
+            "Progressed from research assistant to first author on IEEE ISRITI publication",
+            "Engineered complete pipeline with AdamW, mixed precision, gradual unfreezing, and EMA"
         ]
     }, {
-        year: "Jul 2024 - Aug 2024",
+        year: "Jul 2024 – Aug 2024",
         role: "Application Developer Intern",
         company: "Otoritas Jasa Keuangan (OJK)",
-        description: `Assisted in banking supervision app development using C# .NET, focusing on regulatory compliance, performance, and user experience. Collaborated with senior developers on QA, conducting code reviews, debugging, and testing the SIP BPR/BPRS system. Updated data tables, authored user manuals, and contributed to project planning. Completed a comprehensive internship report summarizing key outcomes.`,
-        technologies: ["C#", ".NET", "SQL", "QA", "Documentation"],
+        description: `Developed banking supervision features ensuring regulatory compliance for Indonesia's Financial Services Authority. Collaborated with senior engineers on code review and production reliability. Optimized PostgreSQL queries and authored technical documentation, reducing onboarding time and support tickets.`,
+        technologies: ["C#", ".NET", "PostgreSQL", "SQL", "Documentation"],
         achievements: [
-            "Improved system performance by 20% through code optimization",
-            "Authored comprehensive user manuals for SIP BPR/BPRS system",
-            "Contributed to regulatory compliance improvements"
+            "Developed banking supervision features for regulatory compliance",
+            "Optimized database queries improving system performance",
+            "Contributed scalability recommendations for government systems"
         ]
     },
     {
-        year: "October 2023 - December 2024",
-        role: "Peer Tutor & Bootcamp Instructor",
-        company: "Binus University",
-        description: `Independently organized tutoring initiatives. Conducted a bootcamp with a nominal fee (IDR 50K) for over 12 participants covering Algorithms & Programming, Discrete Math, and Linear Algebra. Additionally, offered a free Statistics session open to all classmates. Delivered comprehensive lectures in Computational Physics to more than 150 Computer Science students via Discord and video, enhancing their practical understanding of complex topics.`,
-        technologies: ["Python", "Mathematics", "Discord", "Online Teaching"],
-        achievements: [
-            "Successfully tutored 150+ Computer Science students",
-            "Organized bootcamp with 12+ participants and positive feedback",
-            "Delivered engaging online lectures via Discord platform"
-        ]
-    },
-    {
-        year: "Feb 2024 - Present",
-        role: "Chairperson (Secretary-Treasurer)",
-        company: "BagiDunia",
-        description: `Spearheaded social initiatives, organized successful fundraising campaigns, developed SOPs, and managed event budgeting. Attended charity events, handled logistics for food distribution and nursing home visits, and provided educational sessions for children in underserved communities. Fostered empathy and community engagement through collaborative team efforts.`,
+        year: "Feb 2024 – Present",
+        role: "Chairperson of Secretary",
+        company: "Bagi Dunia (NGO)",
+        description: `Managed financial operations and fundraising for non-profit organization focused on community service. Recruited and onboarded 30+ volunteers, developed SOPs reducing coordination overhead by 25%. Coordinated multi-site food distribution delivering 500+ aid packages to 100+ beneficiaries across Jakarta.`,
         technologies: ["Project Management", "Fundraising", "Team Leadership", "Logistics"],
         achievements: [
-            "Led 10+ successful fundraising campaigns",
-            "Developed comprehensive SOPs for organizational efficiency",
-            "Managed logistics for 50+ community service events"
+            "Raised Rp13.5M+ (~$800 USD), exceeding fundraising targets by 25%",
+            "Expanded partnerships by 4 entities, increased community engagement by 40%",
+            "Delivered 500+ aid packages to 100+ beneficiaries across Jakarta"
         ]
     },
     {
-        year: "2024 - Present",
-        role: "AI & Computer Vision Researcher (Personal Projects)",
+        year: "Nov 2023 – Present",
+        role: "Peer Tutor & Educational Content Creator",
         company: "Independent",
-        description: `Developed a Diabetic Retinopathy Detection system (88% accuracy on unseen data) using CNN and GradCAM. Built a real-time Facial Recognition system for airport security and a Skin Type Detection app leveraging CNN with webcam input. Currently researching an ensemble approach integrating multiple models (InceptionV3, ViT_B16, DenseNet121, ResNet50, EfficientNetB0, MobileNetV3) to compare ensemble distillation vs. mutual learning.`,
-        technologies: ["Python", "TensorFlow", "Keras", "OpenCV", "CNN", "GradCAM", "PyTorch", "Deep Learning"],
+        description: `Provided weekly tutoring in Statistics, Discrete Mathematics, and Linear Algebra to 15-20 students while maintaining full academic load. Designed and delivered technical bootcamps and free lecture series in Statistics and Computational Physics reaching 150+ students. Managed video production for educational content.`,
+        technologies: ["Python", "Mathematics", "Statistics", "Video Production", "Teaching"],
         achievements: [
-            "Achieved 88% accuracy on Diabetic Retinopathy Detection system",
-            "Built real-time facial recognition system for security applications",
-            "Research on ensemble methods with 6+ different model architectures"
+            "Tutored 15-20 students weekly in advanced mathematics courses",
+            "Reached 150+ students through technical bootcamps and free lectures",
+            "Delivered Computational Physics lectures via Discord to CS students"
         ]
     },
 ];
@@ -282,43 +271,77 @@ export const CERTIFICATIONS = [{
         link: "https://www.freecodecamp.org/certification/Gading_Aditya/college-algebra-with-python-v8",
         image: certificate15,
     },
+    {
+        title: "Building LLM Applications With Prompt Engineering",
+        issuer: "NVIDIA",
+        link: "https://learn.nvidia.com/certificates?id=bVGETzzZQWGRtbGc-yU-vA",
+        image: certificate16,
+    },
 ];
 
-export const RESEARCH_PAPERS = [{
+export const RESEARCH_PAPERS = [
+    {
+        year: "2025",
+        title: "Enhancing Bone Fracture Detection in X-ray Images Using Faster R-CNN with EfficientNetV2",
+        authors: "Perdana, G. A., Nasari, M., Saputra, M.A., Halim, R., Minor, K.A.",
+        venue: "IEEE ISRITI 2025",
+        venueType: "Conference",
+        description: "Led experimental design and implementation for bone fracture detection using Faster R-CNN with EfficientNetV2-S backbone. Curated FracAtlas X-ray dataset with COCO annotations and designed preprocessing pipeline addressing severe class imbalance. Achieved 21.6% mAP improvement through optimized training pipeline with AdamW, mixed precision, gradual unfreezing, and EMA.",
+        keywords: ["Object Detection", "Faster R-CNN", "EfficientNetV2", "Medical Imaging", "X-ray Analysis"],
+        isFirstAuthor: true,
+        citations: 0,
+    },
+    {
         year: "2025",
         title: "CALM: Calibrated Adaptive Learning via Mutual-Ensemble Fusion",
-        authors: "Gading Aditya Perdana (First Author), Muhammad Alif Ghazali (Co-author)",
-        conference: "Procedia Computer Science, ICCSCI 2025 (Accepted)",
-        description: "This research introduces CALM (Calibrated Adaptive Learning via Mutual-Ensemble Fusion), a novel multi-stage framework designed to create vision models that are both highly accurate and reliably calibrated, meaning their confidence scores genuinely reflect their predictive correctness. CALM uniquely integrates ensemble distillation and mutual learning, employing an Adaptive Curriculum Protocol (ACP) to dynamically balance diverse training objectives. A key innovation, Heterogeneous Feature Integration (HFI), facilitates effective knowledge transfer from varied teacher architectures. The framework culminates in a 'meta-student' model that demonstrates strong performance, significantly improved calibration, and robust generalization to new datasets, offering a systematic approach to developing more trustworthy and uncertainty-aware AI systems.",
-        keywords: ["Uncertainty Calibration", "Mutual-Ensemble Fusion", "Adaptive Curriculum Protocol (ACP)", "Heterogeneous Feature Integration (HFI)", "Deep Learning"],
-        // pdfLink: "./assets/CALM.pdf",
+        authors: "Perdana, G. A., Ghazali, M.A., Iswanto, I.A., Joddy, S.",
+        venue: "Procedia Computer Science (ICCSCI 2025)",
+        venueType: "Journal",
+        scopusIndexed: "Q2",
+        doi: "10.1016/j.procs.2025.09.034",
+        description: "Developed ensemble learning framework integrating knowledge distillation, mutual learning, and calibration for improved model confidence. Implemented adaptive curriculum protocol to dynamically schedule training objectives. Achieved 97.16% accuracy on CIFAR-10 with 20% reduction in Expected Calibration Error.",
+        keywords: ["Ensemble Learning", "Model Calibration", "Knowledge Distillation", "Mutual Learning", "Deep Learning"],
+        isFirstAuthor: true,
+        citations: 1,
     },
     {
         year: "2025",
         title: "Analytical Analysis of Cryptocurrency Regulation and Adoption: A Machine Learning-Driven Ablation Study",
-        authors: "M.I.A. Kisdi (First Author), Gading Aditya Perdana (Co-author)",
-        conference: "Procedia Computer Science, ICCSCI 2025 (Accepted)",
-        description: "A novel machine learning framework to quantify the effects of regulatory policies on GDP normalized Bitcoin trading volume in the United States, Russia, and Indonesia. Using XGBoost regression and SHAP analysis on panel data integrating Bitcoin price series, adoption rates, and policy variables, this study conducts policy ablation simulations. Results reveal jurisdiction-specific sensitivities: removing AML enforcement increases US volume by +71.45%, while eliminating taxation reduces Indonesian volume by -46.90%, providing quantitative insights for cryptocurrency regulation design.",
-        keywords: ["Cryptocurrency Regulation", "Machine Learning", "XGBoost", "SHAP Analysis", "Policy Ablation", "Economic Analysis"],
-        // pdfLink: "./assets/crypto-regulation.pdf",
+        authors: "Perdana, G. A., Kisdi, M.I.A., Wairooy, I.K., Makalew, B.A.",
+        venue: "Procedia Computer Science (ICCSCI 2025)",
+        venueType: "Journal",
+        scopusIndexed: "Q2",
+        doi: "10.1016/j.procs.2025.09.108",
+        description: "Novel machine learning framework using XGBoost regression and SHAP analysis to quantify regulatory policy effects on cryptocurrency trading volume across the United States, Russia, and Indonesia. Policy ablation simulations revealed jurisdiction-specific sensitivities providing quantitative insights for regulation design.",
+        keywords: ["Cryptocurrency", "Machine Learning", "XGBoost", "SHAP Analysis", "Policy Analysis", "Economic Modeling"],
+        isFirstAuthor: true,
+        citations: 2,
     },
     {
         year: "2025",
         title: "Tiny vs. Tinier: Baseline ViT-Tiny vs. Ensemble-Distilled Student on Imbalanced Fracture Detection",
-        authors: "Nathen, A. (First Author), Gading Aditya Perdana (Co-author)",
-        conference: "Procedia Computer Science, ICCSCI 2025 (Accepted)",
-        description: "This study compares baseline Vision Transformer (ViT-Tiny) performance against an ensemble-distilled student model for bone fracture X-ray classification on highly imbalanced datasets (1:5 fracture:non-fracture ratio). Incorporating Stratified k-fold cross-validation with inline SMOTE, class-weighted losses, extensive data augmentation, and advanced training techniques, the distilled student achieved superior performance with 0.7033 F1-score and 0.6433 MCC, surpassing both CNN teachers and baseline while maintaining ViT-Tiny's compact footprint.",
-        keywords: ["Vision Transformer", "Medical Imaging", "Imbalanced Learning", "Knowledge Distillation", "Fracture Detection", "SMOTE"],
-        // pdfLink: "./assets/vit-fracture.pdf",
+        authors: "Nathen, A., Perdana, G. A., Jefferson, G., Hasani, M.F., Maulina, A., Tjahyadi, B.G.",
+        venue: "Procedia Computer Science (ICCSCI 2025)",
+        venueType: "Journal",
+        scopusIndexed: "Q2",
+        doi: "10.1016/j.procs.2025.09.099",
+        description: "Comparative study of Vision Transformer (ViT-Tiny) against ensemble-distilled student model for bone fracture X-ray classification on highly imbalanced datasets. The distilled student achieved 0.7033 F1-score and 0.6433 MCC while maintaining ViT-Tiny's compact footprint.",
+        keywords: ["Vision Transformer", "Medical Imaging", "Knowledge Distillation", "Imbalanced Learning", "Fracture Detection"],
+        isFirstAuthor: false,
+        citations: 0,
     },
     {
         year: "2025",
         title: "Ablation Study: Calibrated Adaptive Learning Ensemble Methodology",
-        authors: "Gading Aditya Perdana (First Author), Research Team (Co-authors)",
-        conference: "Procedia Computer Science, ICCSCI 2025 (Accepted)",
-        description: "A systematic ablation study of the CALM framework examining how teacher ensemble size influences student accuracy, calibration, and computational cost. Using ensembles of 2-5 teachers from diverse convolutional architectures on CIFAR-10, this study evaluates four CALM configurations. Results demonstrate that calibration-aware training yields lowest expected calibration error, while adaptive curriculum pacing delivers exceptional calibration in small ensembles, with diminishing returns beyond three teachers.",
-        keywords: ["Ablation Study", "Ensemble Learning", "Model Calibration", "Computational Efficiency", "CIFAR-10", "Teacher-Student Networks"],
-        // pdfLink: "./assets/calm-ablation.pdf",
+        authors: "Perdana, G. A., Wijaya, I.I., Fahreza, K.A., Tarigan, G.A.",
+        venue: "Procedia Computer Science (ICCSCI 2025)",
+        venueType: "Journal",
+        scopusIndexed: "Q2",
+        doi: "10.1016/j.procs.2025.09.041",
+        description: "Systematic ablation study examining how teacher ensemble size influences student accuracy, calibration, and computational cost in the CALM framework. Results demonstrate that calibration-aware training yields lowest expected calibration error with diminishing returns beyond three teachers.",
+        keywords: ["Ablation Study", "Ensemble Learning", "Model Calibration", "CIFAR-10", "Teacher-Student Networks"],
+        isFirstAuthor: true,
+        citations: 0,
     }
 ];
 

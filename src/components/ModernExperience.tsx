@@ -1,33 +1,22 @@
-import React, { memo, useMemo, useCallback, type ElementType } from 'react';
-import { motion } from 'framer-motion';
+import { memo, useRef, type RefObject } from 'react';
+import { motion, useInView } from 'framer-motion';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Chip,
   Container,
   useTheme,
   alpha,
-  useMediaQuery,
   IconButton,
   Tooltip,
-  Stack,
-  Divider,
 } from '@mui/material';
 import {
   Work as WorkIcon,
-  BusinessCenter as BusinessIcon,
-  School as SchoolIcon,
-  Star as StarIcon,
   OpenInNew as OpenIcon,
-  TrendingUp as TrendingUpIcon,
-  EmojiEvents as AwardIcon,
+  CheckCircleOutline as CheckIcon,
 } from '@mui/icons-material';
 import { EXPERIENCES } from '../constants';
 import { useSystemProfile } from './useSystemProfile';
-import ScrollStack, { ScrollStackItem } from './ScrollStack';
-import ScrollFloat from './ScrollFloat';
 
 type Experience = {
   year: string;
@@ -39,143 +28,178 @@ type Experience = {
   link?: string | null;
 };
 
-type EnhancedExperience = Experience & {
-  id: number;
-  icon: ElementType;
-  color: 'primary' | 'secondary' | 'info' | 'success';
-  achievements: string[];
-  link: string | null;
+// Timeline connector line component - uses CSS variables to avoid useTheme overhead
+const TimelineConnector = ({ isLast }: { isLast: boolean }) => {
+  if (isLast) return null;
+  
+  return (
+    <Box
+      sx={{
+        position: 'absolute',
+        left: { xs: 20, md: 28 },
+        top: 56,
+        bottom: -32,
+        width: 2,
+        background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0.1) 100%)',
+      }}
+    />
+  );
 };
 
-const ModernExperienceComponent = () => {
+// Timeline dot component - static colors for performance
+const TimelineDot = ({ index }: { index: number }) => (
+  <Box
+    sx={{
+      position: 'relative',
+      width: { xs: 40, md: 56 },
+      height: { xs: 40, md: 56 },
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #3b82f6 0%, rgba(59, 130, 246, 0.7) 100%)',
+      boxShadow: '0 4px 20px rgba(59, 130, 246, 0.3)',
+      flexShrink: 0,
+      zIndex: 2,
+    }}
+  >
+    <WorkIcon sx={{ fontSize: { xs: 18, md: 24 }, color: 'white' }} />
+    {/* Pulse ring */}
+    <Box
+      sx={{
+        position: 'absolute',
+        inset: -4,
+        borderRadius: '50%',
+        border: '2px solid rgba(59, 130, 246, 0.3)',
+        animation: 'pulse 2s ease-in-out infinite',
+        animationDelay: `${index * 0.2}s`,
+        '@keyframes pulse': {
+          '0%, 100%': { opacity: 0.3, transform: 'scale(1)' },
+          '50%': { opacity: 0.6, transform: 'scale(1.1)' },
+        },
+      }}
+    />
+  </Box>
+);
+
+// Individual experience card
+const ExperienceCard = ({ 
+  experience, 
+  index, 
+  isLast 
+}: { 
+  experience: Experience; 
+  index: number; 
+  isLast: boolean;
+}) => {
   const theme = useTheme();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(cardRef as RefObject<Element>, { once: true, margin: '-100px' });
   const { performanceTier } = useSystemProfile();
-
-  const experienceData = useMemo<Experience[]>(() => EXPERIENCES as Experience[], []);
-
-  const enhancedExperiences = useMemo<EnhancedExperience[]>(
-    () =>
-      experienceData.map((experience, index) => ({
-        ...experience,
-        id: index,
-        icon: index % 3 === 0 ? WorkIcon : index % 3 === 1 ? BusinessIcon : SchoolIcon,
-        color: (['primary', 'secondary', 'info', 'success'] as const)[index % 4],
-        achievements: experience.achievements ?? [],
-        link: experience.link ?? null,
-        technologies: experience.technologies ?? [],
-      })),
-    [experienceData],
-  );
-
   const shouldReduceMotion = performanceTier === 'low';
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'), { noSsr: true });
-  const isTabletViewport = useMediaQuery(theme.breakpoints.between('md', 'lg'), {
-    noSsr: true,
-  });
-  const useScrollStack = !shouldReduceMotion && !isMobile;
-  const scrollSectionMinHeight = useScrollStack
-    ? `${Math.max(320, 200 + enhancedExperiences.length * 90)}vh`
-    : 'auto';
-  const stackPositionValue = isTabletViewport ? '7%' : '10%';
-  const scaleEndPositionValue = isTabletViewport ? '4%' : '6%';
 
-  const renderExperienceCard = useCallback(
-    (experience: EnhancedExperience) => {
-      const IconComponent = experience.icon;
-      const accentColor = theme.palette[experience.color].main;
-      const hasAchievements = experience.achievements.length > 0;
+  const hasAchievements = experience.achievements && experience.achievements.length > 0;
 
-      return (
-        <Card
-          component="article"
-          elevation={0}
-          sx={{
-            position: 'relative',
-            overflow: 'hidden',
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            borderRadius: 4,
-            bgcolor: alpha(theme.palette.background.paper, 0.94),
-            backdropFilter: 'blur(18px) saturate(160%)',
-            border: `1.5px solid ${alpha(theme.palette.divider, 0.18)}`,
-            boxShadow: `0 16px 48px ${alpha(accentColor, 0.2)}, 0 6px 24px ${alpha(theme.palette.common.black, 0.08)}`,
-          }}
-        >
+  return (
+    <motion.div
+      ref={cardRef}
+      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 40 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ 
+        duration: shouldReduceMotion ? 0.3 : 0.7, 
+        delay: shouldReduceMotion ? 0 : index * 0.15,
+        ease: [0.22, 1, 0.36, 1]
+      }}
+      style={{ position: 'relative' }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          gap: { xs: 2, md: 4 },
+          pb: { xs: 4, md: 6 },
+          position: 'relative',
+          width: '100%',
+        }}
+      >
+        {/* Timeline column */}
+        <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <TimelineDot index={index} />
+          <TimelineConnector isLast={isLast} />
+        </Box>
+
+        {/* Content column */}
+        <Box sx={{ flex: 1, minWidth: 0, pt: { xs: 0, md: 0.5 } }}>
+          {/* Year badge */}
           <Box
             sx={{
-              position: 'absolute',
-              inset: 0,
-              borderRadius: 'inherit',
-              background: `
-                radial-gradient(circle at 20% 20%, ${alpha(accentColor, 0.12)} 0%, transparent 55%),
-                radial-gradient(circle at 80% 80%, ${alpha(theme.palette.secondary.main, 0.08)} 0%, transparent 55%)
-              `,
-              opacity: 0.85,
-              pointerEvents: 'none',
-            }}
-          />
-
-          <CardContent
-            sx={{
-              position: 'relative',
-              zIndex: 1,
-              p: { xs: 3, md: 4 },
-              display: 'flex',
-              flexDirection: 'column',
-              gap: { xs: 2.5, md: 3 },
+              display: 'inline-flex',
+              alignItems: 'center',
+              px: 2,
+              py: 0.5,
+              mb: 2,
+              borderRadius: 2,
+              background: alpha(theme.palette.primary.main, 0.1),
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
             }}
           >
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              alignItems={{ xs: 'flex-start', sm: 'center' }}
-              justifyContent="space-between"
-              spacing={2}
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 700,
+                letterSpacing: 0.5,
+                color: theme.palette.primary.main,
+                fontSize: '0.75rem',
+              }}
             >
-              <Stack direction="row" spacing={1.5} alignItems="center">
-                <Box
+              {experience.year}
+            </Typography>
+          </Box>
+
+          {/* Card */}
+          <Box
+            sx={{
+              position: 'relative',
+              p: { xs: 3, md: 4 },
+              borderRadius: 3,
+              background: alpha(theme.palette.background.paper, 0.6),
+              backdropFilter: 'blur(20px)',
+              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                background: alpha(theme.palette.background.paper, 0.8),
+                borderColor: alpha(theme.palette.primary.main, 0.2),
+                boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.12)}`,
+                transform: shouldReduceMotion ? 'none' : 'translateY(-2px)',
+              },
+            }}
+          >
+            {/* Header */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+              <Box>
+                <Typography
+                  variant="h5"
+                  component="h3"
                   sx={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 2.5,
-                    display: 'grid',
-                    placeItems: 'center',
-                    background: `linear-gradient(135deg, ${alpha(accentColor, 0.18)}, ${alpha(accentColor, 0.05)})`,
-                    border: `1.5px solid ${alpha(accentColor, 0.22)}`,
-                    boxShadow: `0 12px 32px ${alpha(accentColor, 0.22)}`,
+                    fontWeight: 700,
+                    fontSize: { xs: '1.25rem', md: '1.5rem' },
+                    color: theme.palette.text.primary,
+                    lineHeight: 1.3,
+                    mb: 0.5,
                   }}
                 >
-                  <IconComponent sx={{ fontSize: 28, color: accentColor }} />
-                </Box>
-
-                <Box>
-                  <Typography
-                    variant="overline"
-                    sx={{
-                      fontWeight: 700,
-                      letterSpacing: 1,
-                      color: accentColor,
-                      fontSize: '0.75rem',
-                      display: 'block',
-                    }}
-                  >
-                    {experience.year}
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    component="h3"
-                    sx={{
-                      fontWeight: 800,
-                      fontSize: { xs: '1.35rem', md: '1.6rem' },
-                      color: theme.palette.text.primary,
-                      lineHeight: 1.2,
-                      mt: 0.5,
-                    }}
-                  >
-                    {experience.role}
-                  </Typography>
-                </Box>
-              </Stack>
+                  {experience.role}
+                </Typography>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 500,
+                    color: theme.palette.text.secondary,
+                    fontSize: { xs: '0.9rem', md: '1rem' },
+                  }}
+                >
+                  {experience.company}
+                </Typography>
+              </Box>
 
               {experience.link && (
                 <Tooltip title="View Details" placement="top">
@@ -184,24 +208,12 @@ const ModernExperienceComponent = () => {
                     href={experience.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    size="medium"
+                    size="small"
                     sx={{
-                      color: accentColor,
-                      bgcolor: alpha(accentColor, 0.12),
-                      border: `1.5px solid ${alpha(accentColor, 0.22)}`,
-                      transition: 'transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                      transform: 'translateZ(0)',
+                      color: theme.palette.primary.main,
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
                       '&:hover': {
-                        willChange: 'transform',
-                        bgcolor: alpha(accentColor, 0.2),
-                        borderColor: accentColor,
-                        transform: 'translateZ(0) translateY(-2px) scale(1.02)',
-                        boxShadow: `0 8px 18px ${alpha(accentColor, 0.32)}`,
-                      },
-                      '&:not(:hover)': {
-                        willChange: 'auto',
+                        bgcolor: alpha(theme.palette.primary.main, 0.2),
                       },
                     }}
                   >
@@ -209,269 +221,262 @@ const ModernExperienceComponent = () => {
                   </IconButton>
                 </Tooltip>
               )}
-            </Stack>
+            </Box>
 
-            <Stack direction="row" alignItems="center" spacing={1.25}>
-              <TrendingUpIcon sx={{ fontSize: 18, color: theme.palette.text.secondary }} />
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  fontWeight: 600,
-                  color: theme.palette.text.primary,
-                  fontSize: '1rem',
-                }}
-              >
-                {experience.company}
-              </Typography>
-            </Stack>
-
-            <Divider sx={{ borderColor: alpha(accentColor, 0.12) }} />
-
+            {/* Description */}
             <Typography
-              variant="body1"
+              variant="body2"
               sx={{
-                lineHeight: 1.75,
-                fontSize: { xs: '0.95rem', md: '1rem' },
-                color: theme.palette.text.primary,
-                fontWeight: 400,
+                lineHeight: 1.8,
+                fontSize: { xs: '0.875rem', md: '0.95rem' },
+                color: theme.palette.text.secondary,
+                mb: 3,
               }}
             >
               {experience.description}
             </Typography>
 
-            {experience.technologies.length > 0 && (
-              <Box>
+            {/* Technologies */}
+            {experience.technologies && experience.technologies.length > 0 && (
+              <Box sx={{ mb: hasAchievements ? 3 : 0 }}>
                 <Typography
-                  variant="caption"
+                  variant="overline"
                   sx={{
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.8,
+                    fontWeight: 600,
+                    letterSpacing: 1,
                     color: theme.palette.text.secondary,
+                    fontSize: '0.65rem',
                     mb: 1.5,
                     display: 'block',
-                    fontSize: '0.7rem',
                   }}
                 >
-                  Tech Stack
+                  Technologies
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {experience.technologies.map((tech) => (
-                    <Chip
-                      key={`${experience.id}-tech-${tech}`}
-                      label={tech}
-                      size="small"
-                      sx={{
-                        bgcolor: alpha(theme.palette.secondary.main, 0.12),
-                        color: theme.palette.secondary.dark,
-                        fontWeight: 600,
-                        fontSize: '0.7rem',
-                        borderRadius: 1.5,
-                        border: `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
+                  {experience.technologies.map((tech, techIdx) => (
+                    <motion.div
+                      key={tech}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                      transition={{
+                        duration: 0.3,
+                        delay: shouldReduceMotion ? 0 : (index * 0.15) + (techIdx * 0.03),
+                        ease: [0.22, 1, 0.36, 1]
                       }}
-                    />
+                    >
+                      <Chip
+                        label={tech}
+                        size="small"
+                        sx={{
+                          height: 26,
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          bgcolor: alpha(theme.palette.secondary.main, 0.08),
+                          color: theme.palette.secondary.main,
+                          border: `1px solid ${alpha(theme.palette.secondary.main, 0.15)}`,
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            bgcolor: alpha(theme.palette.secondary.main, 0.12),
+                            transform: 'translateY(-1px)',
+                          },
+                        }}
+                      />
+                    </motion.div>
                   ))}
                 </Box>
               </Box>
             )}
 
+            {/* Achievements */}
             {hasAchievements && (
               <Box>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <AwardIcon sx={{ fontSize: 18, color: theme.palette.warning.main }} />
-                  <Typography
-                    variant="subtitle2"
-                    sx={{
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: 0.5,
-                      fontSize: '0.8rem',
-                    }}
-                  >
-                    Key Achievements
-                  </Typography>
-                </Stack>
-                <Stack spacing={1.25} sx={{ mt: 1.5 }}>
-                  {experience.achievements.map((achievement, idx) => (
-                    <Stack
-                      key={`${experience.id}-achievement-${idx}`}
-                      direction="row"
-                      spacing={1.5}
-                      alignItems="flex-start"
+                <Typography
+                  variant="overline"
+                  sx={{
+                    fontWeight: 600,
+                    letterSpacing: 1,
+                    color: theme.palette.text.secondary,
+                    fontSize: '0.65rem',
+                    mb: 1.5,
+                    display: 'block',
+                  }}
+                >
+                  Key Achievements
+                </Typography>
+                <Box component="ul" sx={{ m: 0, pl: 0, listStyle: 'none' }}>
+                  {experience.achievements!.map((achievement, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={isInView ? { opacity: 1, x: 0 } : {}}
+                      transition={{
+                        duration: 0.4,
+                        delay: shouldReduceMotion ? 0 : (index * 0.15) + (idx * 0.08),
+                        ease: [0.22, 1, 0.36, 1]
+                      }}
                     >
-                      <StarIcon
+                      <Box
+                        component="li"
                         sx={{
-                          fontSize: 16,
-                          color: theme.palette.warning.main,
-                          mt: 0.3,
-                          flexShrink: 0,
-                        }}
-                      />
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          lineHeight: 1.6,
-                          fontSize: '0.9rem',
-                          color: theme.palette.text.secondary,
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 1.5,
+                          mb: 1.5,
+                          '&:last-child': { mb: 0 },
                         }}
                       >
-                        {achievement}
-                      </Typography>
-                    </Stack>
+                        <Box
+                          sx={{
+                            width: 18,
+                            height: 18,
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            bgcolor: alpha(theme.palette.success.main, 0.1),
+                            border: `1px solid ${alpha(theme.palette.success.main, 0.3)}`,
+                            mt: 0.2,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <CheckIcon
+                            sx={{
+                              fontSize: 12,
+                              color: theme.palette.success.main,
+                            }}
+                          />
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: '0.85rem',
+                            color: theme.palette.text.secondary,
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          {achievement}
+                        </Typography>
+                      </Box>
+                    </motion.div>
                   ))}
-                </Stack>
+                </Box>
               </Box>
             )}
-          </CardContent>
-        </Card>
-      );
-    },
-    [theme],
+          </Box>
+        </Box>
+      </Box>
+    </motion.div>
   );
+};
+
+const ModernExperienceComponent = () => {
+  const theme = useTheme();
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef as RefObject<Element>, { once: true, margin: '-100px' });
+  const { performanceTier } = useSystemProfile();
+  const shouldReduceMotion = performanceTier === 'low';
+
+  const experienceData = EXPERIENCES as Experience[];
 
   return (
     <Box
       component="section"
       id="experience"
+      ref={sectionRef}
       sx={{
         position: 'relative',
-        py: { xs: 6, md: 10 },
-        overflow: 'visible',
-        minHeight: scrollSectionMinHeight,
-        background: alpha(theme.palette.background.default, 0.98),
+        py: { xs: 10, md: 16 },
+        background: theme.palette.background.default,
+        overflow: 'hidden',
       }}
     >
+      {/* Subtle background gradient */}
       <Box
         sx={{
           position: 'absolute',
-          inset: 0,
-          opacity: 0.3,
-          background: `
-            radial-gradient(circle at 15% 25%, ${alpha(theme.palette.primary.main, 0.06)} 0%, transparent 40%),
-            radial-gradient(circle at 85% 75%, ${alpha(theme.palette.secondary.main, 0.04)} 0%, transparent 40%)
-          `,
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '50%',
+          background: `linear-gradient(180deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, transparent 100%)`,
           pointerEvents: 'none',
-          zIndex: 0,
         }}
       />
 
-      <Container
-        maxWidth="lg"
-        sx={{
-          position: 'relative',
-          zIndex: 1,
-          px: { xs: 2, sm: 3, md: 4 },
-        }}
-      >
-        <Box textAlign="center" mb={{ xs: 6, md: 10 }} sx={{ position: 'relative' }}>
-          <Typography
-            variant="overline"
-            sx={{
-              fontWeight: 700,
-              letterSpacing: 2,
-              color: theme.palette.primary.main,
-              fontSize: '0.9rem',
-              mb: 2,
-              display: 'block',
-            }}
-          >
-            Career Journey
-          </Typography>
-          <ScrollFloat
-            as="h2"
-            containerClassName="my-0"
-            containerStyle={{ marginBottom: theme.spacing(2) }}
-            textClassName="font-black tracking-tight"
-            textStyle={{
-              fontSize: 'clamp(2.8rem, 6.5vw, 4.6rem)',
-              background: 'linear-gradient(135deg, #6b7cff 0%, #a855f7 50%, #38bdf8 100%)',
-              WebkitBackgroundClip: 'text',
-              color: 'transparent',
-              lineHeight: 1.1,
-              display: 'inline-block',
-            }}
-          >
-            Professional Experience
-          </ScrollFloat>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{
-              maxWidth: 700,
-              mx: 'auto',
-              fontSize: { xs: '1rem', md: '1.25rem' },
-              fontWeight: 400,
-              lineHeight: 1.6,
-            }}
-          >
-            A comprehensive journey through transformative roles, innovative projects, and measurable
-            impact across diverse industries
-          </Typography>
-
-          <Box
-            sx={{
-              width: 80,
-              height: 4,
-              mx: 'auto',
-              mt: 4,
-              borderRadius: 2,
-              background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-            }}
-          />
-        </Box>
-
-        {useScrollStack ? (
-          <ScrollStack
-            className="experience-scroll-stack"
-            itemDistance={640}
-            itemStackDistance={28}
-            baseScale={0.88}
-            itemScale={0.025}
-            blurAmount={0.5}
-            stackPosition={stackPositionValue}
-            scaleEndPosition={scaleEndPositionValue}
-            rotationAmount={0}
-            useWindowScroll={true}
-          >
-            {enhancedExperiences.map((experience) => (
-              <ScrollStackItem key={experience.id}>{renderExperienceCard(experience)}</ScrollStackItem>
-            ))}
-          </ScrollStack>
-        ) : (
-          <Stack spacing={3.5}>
-            {enhancedExperiences.map((experience, index) => (
-              <motion.div
-                key={experience.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-80px' }}
-                transition={{ duration: 0.4, delay: index * 0.08, ease: [0.4, 0, 0.2, 1] }}
-              >
-                {renderExperienceCard(experience)}
-              </motion.div>
-            ))}
-          </Stack>
-        )}
-
-        <Box
-          textAlign="center"
-          mt={{ xs: 8, md: 12 }}
-          sx={{
-            opacity: 0.8,
-          }}
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: shouldReduceMotion ? 0.3 : 0.6 }}
         >
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              fontSize: '0.9rem',
-              fontStyle: 'italic',
-            }}
-          >
-            {useScrollStack
-              ? 'Scroll to explore each experience in detail'
-              : 'Swipe through each role to explore the journey'}
-          </Typography>
+          <Box sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
+            <Typography
+              variant="overline"
+              sx={{
+                fontWeight: 600,
+                letterSpacing: 3,
+                color: theme.palette.primary.main,
+                fontSize: '0.8rem',
+                mb: 2,
+                display: 'block',
+              }}
+            >
+              Career Journey
+            </Typography>
+            <Typography
+              variant="h2"
+              component="h2"
+              sx={{
+                fontWeight: 800,
+                fontSize: { xs: '2.5rem', md: '3.5rem' },
+                background: `linear-gradient(135deg, ${theme.palette.text.primary} 0%, ${theme.palette.primary.main} 100%)`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                mb: 2,
+              }}
+            >
+              Professional Experience
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 400,
+                color: theme.palette.text.secondary,
+                maxWidth: 600,
+                mx: 'auto',
+                fontSize: { xs: '1rem', md: '1.1rem' },
+                lineHeight: 1.6,
+              }}
+            >
+              Building impactful solutions through research, development, and innovation
+            </Typography>
+
+            {/* Decorative line */}
+            <Box
+              sx={{
+                width: 60,
+                height: 3,
+                mx: 'auto',
+                mt: 4,
+                borderRadius: 2,
+                background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              }}
+            />
+          </Box>
+        </motion.div>
+
+        {/* Timeline */}
+        <Box sx={{ maxWidth: 800, mx: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {experienceData.map((experience, index) => (
+            <ExperienceCard
+              key={`${experience.role}-${index}`}
+              experience={experience}
+              index={index}
+              isLast={index === experienceData.length - 1}
+            />
+          ))}
         </Box>
       </Container>
     </Box>
@@ -479,7 +484,6 @@ const ModernExperienceComponent = () => {
 };
 
 const ModernExperience = memo(ModernExperienceComponent);
-
 ModernExperience.displayName = 'ModernExperience';
 
 export default ModernExperience;

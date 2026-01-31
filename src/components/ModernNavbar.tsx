@@ -149,6 +149,18 @@ type NavItemPosition = {
 	height: number;
 };
 
+// Static nav items - defined outside component to avoid recreation
+const NAV_ITEMS: NavItem[] = [
+	{ name: 'Home', href: '#hero', icon: Home },
+	{ name: 'About', href: '#about', icon: Person },
+	{ name: 'Tech', href: '#technologies', icon: Code },
+	{ name: 'Experience', href: '#experience', icon: Work },
+	{ name: 'Research', href: '#research', icon: Science },
+	{ name: 'Projects', href: '#projects', icon: School },
+	{ name: 'Certificates', href: '#certifications', icon: School },
+	{ name: 'Contact', href: '#contact', icon: ContactMail },
+];
+
 type NavItemPositions = Record<string, NavItemPosition>;
 
 type InterpolationDatum = {
@@ -276,19 +288,8 @@ const ModernNavbarComponent = () => {
 	const magnificationDisabled = shouldReduceMotion;
 	const prefersLightweightMenu = isTabletDevice || shouldReduceMotion;
 
-	const navItems = useMemo<NavItem[]>(
-		() => [
-			{ name: 'Home', href: '#hero', icon: Home },
-			{ name: 'About', href: '#about', icon: Person },
-			{ name: 'Tech', href: '#technologies', icon: Code },
-			{ name: 'Experience', href: '#experience', icon: Work },
-			{ name: 'Research', href: '#research', icon: Science },
-			{ name: 'Projects', href: '#projects', icon: School },
-			{ name: 'Certificates', href: '#certifications', icon: School },
-			{ name: 'Contact', href: '#contact', icon: ContactMail },
-		],
-		[],
-	);
+	// Use constant nav items
+	const navItems = NAV_ITEMS;
 
 	// GSAP Pill Animation Setup
 	useEffect(() => {
@@ -745,6 +746,8 @@ const ModernNavbarComponent = () => {
 				position="fixed"
 				elevation={0}
 				id="main-navbar"
+				component="nav"
+				aria-label="Main navigation"
 				sx={{
 					background: 'transparent',
 					backdropFilter: 'none',
@@ -816,18 +819,18 @@ const ModernNavbarComponent = () => {
 										width: 44,
 										height: 44,
 										borderRadius: '12px',
-										background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+										background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
 										display: 'flex',
 										alignItems: 'center',
 										justifyContent: 'center',
 										fontSize: '1.25rem',
 										fontWeight: 700,
 										color: '#ffffff',
-										boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+										boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)',
 										transition: 'box-shadow 0.2s ease',
 										willChange: 'box-shadow',
 										'&:hover': {
-											boxShadow: '0 6px 20px rgba(99, 102, 241, 0.4)',
+											boxShadow: '0 6px 20px rgba(30, 64, 175, 0.4)',
 										},
 									}}
 								>
@@ -841,12 +844,13 @@ const ModernNavbarComponent = () => {
 												fontSize: '1.125rem',
 												color: '#f1f5f9',
 												letterSpacing: '-0.02em',
+												whiteSpace: 'nowrap',
 											}}
 										>
-											Gading Aditya Perdana
+											{isTabletDevice ? 'Gading Aditya' : 'Gading Aditya Perdana'}
 										</Box>
-										<Box sx={{ fontSize: '0.8125rem', color: '#94a3b8', fontWeight: 500 }}>
-											AI Researcher & Engineer
+										<Box sx={{ fontSize: '0.8125rem', color: '#94a3b8', fontWeight: 500, whiteSpace: 'nowrap' }}>
+											{isTabletDevice ? 'AI Engineer' : 'AI Researcher & Engineer'}
 										</Box>
 									</Box>
 								)}
@@ -874,17 +878,17 @@ const ModernNavbarComponent = () => {
 											width: 44,
 											height: 44,
 											borderRadius: '12px',
-											background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+											background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
 											display: 'flex',
 											alignItems: 'center',
 											justifyContent: 'center',
 											fontSize: '1.25rem',
 											fontWeight: 700,
 											color: '#ffffff',
-											boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+											boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)',
 											transition: 'all 0.3s ease',
 											'&:hover': {
-												boxShadow: '0 6px 20px rgba(99, 102, 241, 0.4)',
+												boxShadow: '0 6px 20px rgba(30, 64, 175, 0.4)',
 											},
 										}}
 									>
@@ -898,12 +902,13 @@ const ModernNavbarComponent = () => {
 													fontSize: '1.125rem',
 													color: '#f1f5f9',
 													letterSpacing: '-0.02em',
+													whiteSpace: 'nowrap',
 												}}
 											>
-												Gading Aditya Perdana
+												{isTabletDevice ? 'Gading Aditya' : 'Gading Aditya Perdana'}
 											</Box>
-											<Box sx={{ fontSize: '0.8125rem', color: '#94a3b8', fontWeight: 500 }}>
-												AI Researcher & Engineer
+											<Box sx={{ fontSize: '0.8125rem', color: '#94a3b8', fontWeight: 500, whiteSpace: 'nowrap' }}>
+												{isTabletDevice ? 'AI Engineer' : 'AI Researcher & Engineer'}
 											</Box>
 										</Box>
 									)}
@@ -929,12 +934,12 @@ const ModernNavbarComponent = () => {
 										width: springWidth,
 										height: '42px',
 										transform: 'translateY(-50%)',
-										background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.1))',
+										background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.15), rgba(59, 130, 246, 0.12))',
 										borderRadius: '11px',
 										opacity: springOpacity,
 										zIndex: 0,
-										boxShadow: '0 0 24px rgba(99, 102, 241, 0.18), inset 0 0 20px rgba(255, 255, 255, 0.03)',
-										border: '1px solid rgba(99, 102, 241, 0.15)',
+										boxShadow: '0 0 30px rgba(59, 130, 246, 0.25), 0 0 60px rgba(59, 130, 246, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.05)',
+										border: '1px solid rgba(59, 130, 246, 0.2)',
 									}}
 									transition={{ type: 'spring', stiffness: 260, damping: 32 }}
 								/>
@@ -970,45 +975,50 @@ const ModernNavbarComponent = () => {
 										<Box sx={{ position: 'relative', zIndex: 1, overflow: 'visible' }}>
 											<StarBorder
 												as="div"
-												color={isHovered ? '#9f12db' : '#6366f1'}
-												speed="4s"
+												color={isActive ? '#60a5fa' : isHovered ? '#93c5fd' : '#3b82f6'}
+												speed={isActive ? '3s' : '5s'}
 												className="cursor-pointer"
 												onClick={() => scrollToSection(item.href)}
-												style={{ padding: 0, margin: 0 }}
+												style={{ padding: 0, margin: 0, display: 'block' }}
 											>
 												<Box
 													sx={{
 														display: 'inline-flex',
 														alignItems: 'center',
-														gap: 0.5,
-														px: 1.5,
+														gap: 0.75,
+														px: 1.75,
 														py: 0.75,
 														height: 40,
 														background: isActive
-															? 'rgba(99, 102, 241, 0.9)'
+															? 'linear-gradient(135deg, rgba(30, 58, 138, 0.95) 0%, rgba(37, 99, 235, 0.9) 100%)'
 															: isHovered
-																? 'rgba(159, 18, 219, 0.18)'
-																: 'transparent',
+																? 'rgba(59, 130, 246, 0.12)'
+																: 'rgba(15, 23, 42, 0.6)',
 														borderRadius: '10px',
-														border: isActive || isHovered ? 'none' : '1px solid rgba(148, 163, 184, 0.2)',
-														transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+														border: 'none',
+														boxShadow: isActive 
+															? '0 2px 8px rgba(30, 64, 175, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08)' 
+															: isHovered 
+																? '0 1px 4px rgba(59, 130, 246, 0.1)' 
+																: 'none',
+														transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
 													}}
 												>
 													<Icon
 														sx={{
 															fontSize: '1.125rem',
-															color: isActive ? '#ffffff' : isHovered ? '#9f12db' : '#94a3b8',
-															transition: 'color 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+															color: isActive ? '#ffffff' : isHovered ? '#60a5fa' : '#94a3b8',
+															transition: 'color 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
 														}}
 													/>
 													<Box
 														component="span"
 														sx={{
 															fontSize: '0.875rem',
-															fontWeight: 600,
-															color: isActive ? '#ffffff' : isHovered ? '#9f12db' : '#cbd5e1',
+															fontWeight: isActive ? 600 : 500,
+															color: isActive ? '#ffffff' : isHovered ? '#60a5fa' : '#cbd5e1',
 															lineHeight: 1,
-															transition: 'color 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+															transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
 														}}
 													>
 														{item.name}
@@ -1026,19 +1036,31 @@ const ModernNavbarComponent = () => {
 												display: 'inline-flex',
 												alignItems: 'center',
 												justifyContent: 'center',
-												px: 1.5,
+												px: 1.75,
 												height: 40,
 												borderRadius: '10px',
 												cursor: 'pointer',
 												border: isActive
-													? 'none'
-													: `1px solid ${isHovered ? 'rgba(159, 18, 219, 0.4)' : 'rgba(148, 163, 184, 0.2)'}`,
-												backgroundColor: isActive
-													? 'rgba(99, 102, 241, 0.9)'
+													? '1px solid rgba(96, 165, 250, 0.35)'
 													: isHovered
-														? 'rgba(159, 18, 219, 0.18)'
+														? '1px solid rgba(59, 130, 246, 0.2)'
+														: '1px solid rgba(148, 163, 184, 0.12)',
+												backgroundColor: isActive
+													? 'transparent'
+													: isHovered
+														? 'rgba(59, 130, 246, 0.06)'
 														: 'transparent',
-												transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+												background: isActive
+													? 'linear-gradient(135deg, rgba(30, 58, 138, 0.95) 0%, rgba(37, 99, 235, 0.9) 100%)'
+													: isHovered
+														? 'rgba(59, 130, 246, 0.06)'
+														: 'transparent',
+												boxShadow: isActive 
+													? '0 2px 8px rgba(30, 64, 175, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08)' 
+													: isHovered 
+														? '0 1px 4px rgba(59, 130, 246, 0.08)' 
+														: 'none',
+												transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
 											}}
 										>
 											<Box
@@ -1053,7 +1075,7 @@ const ModernNavbarComponent = () => {
 													left: '50%',
 													bottom: 0,
 													borderRadius: '50%',
-													background: isHovered ? 'rgba(159, 18, 219, 0.25)' : 'rgba(99, 102, 241, 0.25)',
+													background: isHovered ? 'rgba(59, 130, 246, 0.15)' : 'rgba(37, 99, 235, 0.15)',
 													pointerEvents: 'none',
 													zIndex: 1,
 											}}
@@ -1068,15 +1090,20 @@ const ModernNavbarComponent = () => {
 													zIndex: 2,
 											}}
 											>
-												<Icon sx={{ fontSize: '1.125rem', color: isActive ? '#ffffff' : isHovered ? '#9f12db' : '#94a3b8', transition: 'color 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+												<Icon sx={{ 
+													fontSize: '1.125rem', 
+													color: isActive ? '#ffffff' : isHovered ? '#60a5fa' : '#94a3b8', 
+													transition: 'color 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+												}} />
 												<Box
 													component="span"
 													className="pill-label"
 													sx={{
 														fontSize: '0.875rem',
-														fontWeight: 600,
-														color: isActive ? '#ffffff' : isHovered ? '#9f12db' : '#cbd5e1',
+														fontWeight: isActive ? 600 : 500,
+														color: isActive ? '#ffffff' : isHovered ? '#60a5fa' : '#cbd5e1',
 														lineHeight: 1,
+														transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
 													}}
 												>
 													{item.name}
@@ -1089,8 +1116,8 @@ const ModernNavbarComponent = () => {
 														left: '20px',
 														top: 0,
 														fontSize: '0.875rem',
-														fontWeight: 600,
-														color: isActive ? '#ffffff' : '#9f12db',
+														fontWeight: 500,
+														color: isActive ? '#ffffff' : '#60a5fa',
 														lineHeight: 1,
 														pointerEvents: 'none',
 													}}
@@ -1106,10 +1133,11 @@ const ModernNavbarComponent = () => {
 														left: '50%',
 														bottom: -6,
 														transform: 'translateX(-50%)',
-														width: 12,
-														height: 12,
+														width: 4,
+														height: 4,
 														borderRadius: '50%',
-														background: 'rgba(99, 102, 241, 0.9)',
+														background: '#60a5fa',
+														boxShadow: '0 0 6px rgba(96, 165, 250, 0.5)',
 														zIndex: 4,
 													}}
 												/>
@@ -1171,7 +1199,7 @@ const ModernNavbarComponent = () => {
 						left: 0,
 						right: 0,
 						height: 2,
-						background: 'linear-gradient(90deg, #6b7cff 0%, #a855f7 50%, #38bdf8 100%)',
+						background: 'linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%)',
 						transformOrigin: 'left',
 						scaleX: shouldReduceMotion ? 0 : scrollYProgress,
 						opacity: 0.8,
@@ -1184,7 +1212,7 @@ const ModernNavbarComponent = () => {
 			{navbarReady && (isMobileDevice || isTabletDevice) && (
 				<StaggeredMenu
 					position="right"
-					colors={['#6366f1', '#8b5cf6']}
+					colors={['#1e40af', '#3b82f6']}
 					items={navItems.map((item) => ({
 						label: item.name,
 						ariaLabel: `Navigate to ${item.name}`,
@@ -1194,7 +1222,7 @@ const ModernNavbarComponent = () => {
 					displayItemNumbering={false}
 					menuButtonColor="#e2e8f0"
 					openMenuButtonColor="#ffffff"
-					accentColor="#6366f1"
+					accentColor="#3b82f6"
 					isFixed={true}
 					changeMenuColorOnOpen={true}
 					open={isMenuOpen}
@@ -1207,85 +1235,6 @@ const ModernNavbarComponent = () => {
 					toolbarHeight={isTabletDevice ? 76 : 66}
 					toolbarPadding={isTabletDevice ? 32 : 16}
 				/>
-			)}
-
-			{!isMenuOpen && (
-				<Zoom in={trigger}>
-					<motion.div
-						whileHover={shouldReduceMotion ? undefined : { scale: 1.1, rotate: 5 }}
-						whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
-						style={{
-							position: 'fixed',
-							bottom: 32,
-							right: 32,
-							zIndex: 1000,
-						}}
-					>
-						{(() => {
-							const fabContent = (
-								<GlassSurface
-									width={56}
-									height={56}
-									borderRadius={28}
-									brightness={15}
-									opacity={0.9}
-									blur={16}
-									displace={2}
-									backgroundOpacity={0.25}
-									saturation={1.8}
-									distortionScale={-180}
-									redOffset={4}
-									greenOffset={10}
-									blueOffset={18}
-									mixBlendMode="screen"
-									className="navbar-fab-glass"
-									style={{
-										boxShadow: '0 8px 24px rgba(99, 102, 241, 0.4)',
-										border: '1px solid rgba(148, 163, 184, 0.15)',
-										cursor: 'pointer',
-									}}
-								>
-									<Box
-										onClick={() => scrollToSection('#contact')}
-										sx={{
-											width: '100%',
-											height: '100%',
-											display: 'flex',
-											alignItems: 'center',
-											justifyContent: 'center',
-											color: '#ffffff',
-											background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(79, 70, 229, 0.9))',
-											borderRadius: '50%',
-											transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-											'&:hover': {
-												background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.95), rgba(99, 102, 241, 0.95))',
-												transform: 'translateY(-2px)',
-											},
-										}}
-									>
-										<ContactMail />
-									</Box>
-								</GlassSurface>
-							);
-
-							if (magnificationDisabled) {
-								return fabContent;
-							}
-
-							return (
-								<MagnifiedInteractive
-									mouseX={fabMagnifyMouseX}
-									magnification={1.16}
-									distance={160}
-									spring={sharedMagnifySpring}
-									style={{ display: 'inline-flex' }}
-								>
-									{fabContent}
-								</MagnifiedInteractive>
-							);
-						})()}
-					</motion.div>
-				</Zoom>
 			)}
 		</>
 	);

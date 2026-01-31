@@ -15,7 +15,7 @@ type StarBorderProps<T extends React.ElementType> = Omit<
 const StarBorder = <T extends React.ElementType = 'button'>({
   as,
   className = '',
-  color = '#a855f7',
+  color = '#3b82f6',
   speed = '6s',
   thickness: _thickness = 1,
   style,

@@ -1,0 +1,28 @@
+# robots.txt for Gading Aditya Perdana Portfolio
+# https://gadingadityaperdana.vercel.app/
+
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://gadingadityaperdana.vercel.app/sitemap.xml
+
+# Block access to source files (security)
+Disallow: /src/
+Disallow: /*.map$
+
+# Allow all major crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
