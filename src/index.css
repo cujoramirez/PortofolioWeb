@@ -1264,6 +1264,23 @@ html.lenis {
         position: static !important;
         touch-action: pan-y !important;
     }
+    
+    /* Ensure all sections allow touch scrolling */
+    section,
+    main,
+    article,
+    [role="main"] {
+        touch-action: pan-y !important;
+    }
+    
+    /* Allow scrolling through cards and interactive elements */
+    .pc-card-wrapper,
+    .MuiCard-root,
+    .MuiPaper-root,
+    [class*="card"],
+    [class*="Card"] {
+        touch-action: pan-y !important;
+    }
 }
 
 /* Landing overlay scroll prevention - pure CSS approach */

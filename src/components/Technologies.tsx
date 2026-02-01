@@ -366,6 +366,7 @@ const TechCard = memo(({ tech, index, cardSize }: TechCardProps): JSX.Element =>
             background: `radial-gradient(circle at center, ${tech.color} 0%, transparent 70%)`,
             opacity: 0,
             transition: "opacity 0.3s ease",
+            pointerEvents: "none",
           }}
         />
 

@@ -20,7 +20,7 @@
   width: min(320px, 72vw);
   margin: 0 auto;
   perspective: 700px;
-  touch-action: manipulation;
+  touch-action: pan-y pan-x;
 }
 
 .pc-card-wrapper::before {
