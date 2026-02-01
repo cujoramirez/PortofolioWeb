@@ -244,6 +244,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
             ? `blur(${blur * 0.3}px) saturate(${saturation * 100}%)`
             : `blur(${blur}px) saturate(${saturation * 100}%)`,
           zIndex: 0,
+          pointerEvents: 'none',
         }}
       />
 
@@ -255,6 +256,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
           borderRadius: `${borderRadius}px`,
           backgroundColor: bgColor,
           zIndex: 1,
+          pointerEvents: 'none',
         }}
       />
 

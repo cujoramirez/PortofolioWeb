@@ -78,7 +78,8 @@ const ModernHero = () => {
             gridTemplateColumns: { xs: '1fr', lg: '1fr 400px' },
             gap: { xs: 6, lg: 10 },
             alignItems: 'center',
-            py: { xs: 8, md: 0 },
+            pt: { xs: 12, md: 10 },
+            pb: { xs: 8, md: 0 },
           }}
         >
           {/* Left Column - Content */}
