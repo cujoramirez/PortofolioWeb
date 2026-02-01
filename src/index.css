@@ -1,23 +1,9 @@
 /* Font imports removed - loaded via HTML head for better performance */
-@import 'lenis/dist/lenis.css';
+/* Lenis CSS removed - was causing touch scroll issues on mobile */
 @import './styles/performance.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Override Lenis CSS that blocks scrolling */
-.lenis.lenis-stopped,
-.lenis:not(.lenis-autoToggle).lenis-stopped {
-    overflow: auto !important;
-}
-
-/* Extra safety for touch devices */
-@media (hover: none) and (pointer: coarse) {
-    html, body {
-        overflow-y: auto !important;
-        touch-action: pan-y !important;
-    }
-}
 
 :root {
     font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -71,7 +57,6 @@ html {
     /* Fix for iOS Safari scrolling issues */
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
-    touch-action: pan-y;
     height: 100%;
 }
 
@@ -88,7 +73,6 @@ body {
     /* Enhanced mobile compatibility */
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
-    touch-action: pan-y pan-x;
     height: 100%;
     position: relative;
 }
@@ -1248,38 +1232,16 @@ html.lenis {
     pointer-events: none;
 }
 
-/* Mobile: Force native scrolling - override any Lenis issues */
+/* Mobile: Force native scrolling */
 @media (pointer: coarse), (hover: none) {
-    html, html.lenis, html.lenis-smooth {
+    html, html.lenis, html.lenis-smooth, html.lenis-stopped {
         overflow-y: auto !important;
         overflow-x: hidden !important;
-        height: auto !important;
-        position: static !important;
     }
     
     body {
         overflow-y: auto !important;
         overflow-x: hidden !important;
-        height: auto !important;
-        position: static !important;
-        touch-action: pan-y !important;
-    }
-    
-    /* Ensure all sections allow touch scrolling */
-    section,
-    main,
-    article,
-    [role="main"] {
-        touch-action: pan-y !important;
-    }
-    
-    /* Allow scrolling through cards and interactive elements */
-    .pc-card-wrapper,
-    .MuiCard-root,
-    .MuiPaper-root,
-    [class*="card"],
-    [class*="Card"] {
-        touch-action: pan-y !important;
     }
 }
 
