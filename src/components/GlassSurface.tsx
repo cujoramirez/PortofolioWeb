@@ -235,8 +235,8 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     ? `rgba(${Math.round(187 * (brightness / 100))}, ${Math.round(187 * (brightness / 100))}, ${Math.round(188 * (brightness / 100))}, ${isMobile ? backgroundOpacity * 1.3 : backgroundOpacity})`
     : `rgba(255, 255, 255, ${isMobile ? backgroundOpacity * 1.3 : backgroundOpacity})`;
 
-  // Effective blur and saturation - stronger on mobile for visibility
-  const effectiveBlur = isMobile ? blur * 1.5 : blur;
+  // Effective blur and saturation - reduced on mobile for clearer view
+  const effectiveBlur = isMobile ? blur * 0.5 : blur;
   const effectiveSaturation = isMobile ? saturation * 1.3 : saturation;
 
   return (
