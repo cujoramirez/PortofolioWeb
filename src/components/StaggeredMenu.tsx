@@ -396,7 +396,7 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
       className={`sm-scope ${isFixed ? 'fixed top-0 left-0 w-screen h-screen' : 'w-full h-full'}`}
       style={{ 
         zIndex: zIndex ?? 1400,
-        pointerEvents: 'auto',
+        pointerEvents: menuOpen ? 'auto' : 'none',
         overflow: menuOpen ? 'hidden' : 'visible'
       }}
     >

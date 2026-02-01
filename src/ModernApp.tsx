@@ -184,7 +184,7 @@ const ModernApp = () => {
               curve="bezier"
               exponential
               opacity={0.95}
-              zIndex={1500}
+              zIndex={50}
             />
           </motion.div>
         </MotionConfig>

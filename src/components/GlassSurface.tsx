@@ -181,6 +181,9 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   }, [generateDisplacementMap]);
 
   useEffect(() => {
+    // Skip SVG filter updates entirely on mobile - use CSS fallback instead
+    if (isMobile) return;
+    
     updateDisplacementMap();
 
     const displacementTargets = [
@@ -210,7 +213,8 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   ]);
 
   useEffect(() => {
-    if (!containerRef.current || typeof ResizeObserver === 'undefined') return;
+    // Skip ResizeObserver entirely on mobile for better performance
+    if (!containerRef.current || typeof ResizeObserver === 'undefined' || isMobile) return;
 
     // Throttle resize updates for better performance
     let resizeTimeout: number | undefined;
@@ -222,8 +226,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
         window.clearTimeout(resizeTimeout);
       }
 
-      // Use longer delay for mobile devices
-      resizeTimeout = window.setTimeout(updateDisplacementMap, isMobile ? 150 : 100);
+      resizeTimeout = window.setTimeout(updateDisplacementMap, isLowEndDevice ? 150 : 100);
     });
 
     resizeObserver.observe(containerRef.current);
@@ -237,7 +240,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
         cancelAnimationFrame(rafIdRef.current);
       }
     };
-  }, [updateDisplacementMap, isMobile]);
+  }, [updateDisplacementMap, isMobile, isLowEndDevice]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -246,6 +249,9 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
 
   const supportsSVGFilters = () => {
     if (typeof navigator === 'undefined' || typeof document === 'undefined') return false;
+
+    // Disable SVG filters on mobile for performance
+    if (isMobile) return false;
 
     // Firefox doesn't support SVG filters in backdrop-filter
     const isFirefox = /Firefox/.test(navigator.userAgent);
