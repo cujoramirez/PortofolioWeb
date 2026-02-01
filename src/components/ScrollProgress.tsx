@@ -1,15 +1,36 @@
-import { memo } from 'react';
-import { motion, useScroll, useSpring } from 'framer-motion';
+import { memo, useEffect, useState } from 'react';
+import { motion, useSpring, useMotionValue } from 'framer-motion';
 import { Box, alpha, useTheme } from '@mui/material';
 
 const ScrollProgress = memo(() => {
   const theme = useTheme();
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
+  const scrollProgress = useMotionValue(0);
+  const scaleX = useSpring(scrollProgress, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001,
   });
+
+  useEffect(() => {
+    const updateProgress = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+      scrollProgress.set(progress);
+    };
+
+    // Initial update
+    updateProgress();
+
+    // Listen to scroll events
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    window.addEventListener('resize', updateProgress, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', updateProgress);
+      window.removeEventListener('resize', updateProgress);
+    };
+  }, [scrollProgress]);
 
   return (
     <Box
