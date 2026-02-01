@@ -22,6 +22,7 @@ const ScrollProgress = memo(() => {
         zIndex: 9999,
         background: alpha(theme.palette.background.default, 0.5),
         backdropFilter: 'blur(4px)',
+        pointerEvents: 'none',
       }}
     >
       <motion.div

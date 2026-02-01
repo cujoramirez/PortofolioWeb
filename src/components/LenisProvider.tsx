@@ -24,12 +24,15 @@ export const LenisProvider = ({ children }: LenisProviderProps) => {
       duration: 1.0,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
-      smoothTouch: false,
+      smoothTouch: false, // Let native touch scrolling work
       touchMultiplier: 2,
       infinite: false,
       wheelMultiplier: 1.1,
       lerp: 0.12,
       autoResize: true,
+      syncTouch: false, // Don't sync touch - let browser handle it
+      syncTouchLerp: 0.1,
+      touchInertiaMultiplier: 0,
       prevent: (node: HTMLElement) => node?.hasAttribute('data-lenis-prevent') ?? false,
     });
 

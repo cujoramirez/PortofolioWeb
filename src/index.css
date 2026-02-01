@@ -4,6 +4,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Override Lenis CSS that blocks scrolling */
+.lenis.lenis-stopped,
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+    overflow: auto !important;
+}
+
+/* Extra safety for touch devices */
+@media (hover: none) and (pointer: coarse) {
+    html, body {
+        overflow-y: auto !important;
+        touch-action: pan-y !important;
+    }
+}
+
 :root {
     font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     font-synthesis: none;
@@ -73,7 +88,7 @@ body {
     /* Enhanced mobile compatibility */
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
-    touch-action: manipulation;
+    touch-action: pan-y pan-x;
     height: 100%;
     position: relative;
 }
@@ -384,22 +399,15 @@ html {
 @supports (-webkit-touch-callout: none) {
     html,
     body {
-        height: 100%;
+        height: auto !important;
         -webkit-text-size-adjust: 100%;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: auto;
+        overflow-y: auto !important;
     }
     body {
         position: static !important;
-        height: auto !important;
-        overflow-y: auto !important;
         touch-action: pan-y !important;
-    }
-    .ios-safari * {
-        transform: none !important;
-        transition: none !important;
-        animation: none !important;
-        will-change: auto !important;
     }
 }
 
@@ -1233,11 +1241,29 @@ html.lenis {
 }
 
 .lenis.lenis-stopped {
-    overflow: hidden;
+    /* Removed overflow:hidden - was blocking all scrolling */
 }
 
 .lenis.lenis-scrolling iframe {
     pointer-events: none;
+}
+
+/* Mobile: Force native scrolling - override any Lenis issues */
+@media (pointer: coarse), (hover: none) {
+    html, html.lenis, html.lenis-smooth {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: auto !important;
+        position: static !important;
+    }
+    
+    body {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: auto !important;
+        position: static !important;
+        touch-action: pan-y !important;
+    }
 }
 
 /* Landing overlay scroll prevention - pure CSS approach */

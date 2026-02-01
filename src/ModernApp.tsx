@@ -83,6 +83,7 @@ const ModernApp = () => {
                 inset: 0,
                 zIndex: -2,
                 background: 'radial-gradient(125% 125% at 50% 10%, #000 40%, #1e293b 70%, #334155 100%)',
+                pointerEvents: 'none',
               }}
             />
 
