@@ -43,8 +43,6 @@ import StarBorder from './StarBorder';
 import GlassSurface from './GlassSurface';
 import { useLenis } from '../hooks/useLenis';
 
-const MotionBox = motion(Box);
-
 type MagnifiedInteractiveProps = {
 	children: ReactNode;
 	mouseX: MotionValue<number>;
@@ -768,14 +766,11 @@ const ModernNavbarComponent = () => {
 					brightness={8}
 					opacity={0.9}
 					blur={14}
-					displace={1.6}
 					backgroundOpacity={0.12}
 					saturation={1.4}
-					distortionScale={-140}
-					redOffset={2}
-					greenOffset={10}
-					blueOffset={18}
-					mixBlendMode="screen"
+					liquidEffect={true}
+					displacementScale={0.5}
+					specularIntensity={0.4}
 					className="navbar-glass-surface"
 					style={{
 						borderBottom: '1px solid rgba(148, 163, 184, 0.15)',
