@@ -382,6 +382,7 @@ const ModernHero = () => {
                 showDetails={false}
                 enableTilt={!shouldReduceMotion}
                 enableMobileTilt={!shouldReduceMotion}
+                priority={true}
               />
             </motion.div>
           </Box>

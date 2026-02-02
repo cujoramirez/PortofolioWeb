@@ -21,6 +21,7 @@ interface ProfileCardProps {
   showUserInfo?: boolean;
   showDetails?: boolean;
   onContactClick?: () => void;
+  priority?: boolean;
 }
 
 const DEFAULT_BEHIND_GRADIENT =
@@ -65,7 +66,8 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
   contactText = 'Contact',
   showUserInfo = true,
   showDetails = true,
-  onContactClick
+  onContactClick,
+  priority = false
 }) => {
   const wrapRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -291,7 +293,9 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
               className="avatar"
               src={avatarUrl}
               alt={`${name || 'User'} avatar`}
-              loading="lazy"
+              loading={priority ? 'eager' : 'lazy'}
+              fetchPriority={priority ? 'high' : 'auto'}
+              decoding={priority ? 'sync' : 'async'}
               onError={e => {
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
