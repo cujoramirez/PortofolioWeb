@@ -22,13 +22,21 @@ import certificate15 from "../assets/certificates/certificate15.png";
 import certificate16 from "../assets/certificates/certificate16.png";
 
 export const HERO_CONTENT = 
-`I am currently an `;
+`I am currently an Undergraduate majoring in Computer Science at Binus University, with a keen interest in Artificial Intelligence and Machine Learning. I enjoy working on projects that involve computer vision and knowledge distillation.`;
 
-export const ABOUT_TEXT = `
-I'm an award-winning AI researcher and engineer who designs calibrated, production-ready deep learning systems. My CALM framework earned Best Presenter at ICCSCI 2025 and is part of a portfolio of four peer-reviewed publications that push adaptive curriculum, ensemble learning, and model calibration forward. Beyond the lab, I translate theory into shipped products, delivering intelligent computer vision and NLP solutions, architecting full-stack applications in React and C#/.NET, and scaling data pipelines that meet enterprise standards.
+export const ABOUT_TEXT = `I grew up in Jakarta, Indonesia. Before I chose to pursue Computer Science at BINUS University, I developed a strong interest in physics, statistics, and mathematics. I enjoy learning across disciplines, from medicine and physics to economics. My deepest passion lies in physics, particularly astrophysics, because I am drawn to understanding the unknown aspects of the universe. However, I chose computer science because I believe it allows me to integrate my interests in physics, mathematics, and statistics into developing innovative solutions through Artificial Intelligence and Machine Learning.
 
-I thrive at the intersection of research and impact: curating complex datasets, leading cross-functional teams, and mentoring developers so breakthrough ideas become reliable tools. Whether I'm optimizing PyTorch/TensorFlow training loops, automating compliance workflows, or mobilizing 30 dedicated volunteers for community programs, I stay focused on building AI that is rigorous, transparent, and genuinely useful.
-`;
+I believe that technology, especially AI, has the potential to revolutionize various industries and improve people’s lives. I am motivated to contribute to its growth and development. I enjoy research because it allows me to explore new ideas, push the boundaries of what is possible with technology, experiment with different techniques, learn from existing work, and contribute to the advancement of knowledge in the field.
+
+I am a fast learner, driven by the belief that there are no inherent limits to knowledge, only limits to our willingness to learn and explore. I continuously seek new challenges that foster both personal and professional growth. My adaptability enables me to quickly grasp complex algorithms, leadership responsibilities, and soft skills, which is why I am also willing to study frontend development while specializing in AI/ML.`;
+
+export const ABOUT_QUOTES = [
+  { text: "I was born not knowing and have had only a little time to change that here and there.", author: "Richard Feynman" },
+  { text: "There is no sense in being precise when you do not even know what you are talking about.", author: "John von Neumann" },
+  { text: "The impossible experiment is the one not attempted.", author: "François Jacob" },
+  { text: "What we cannot speak about we must pass over in silence.", author: "Ludwig Wittgenstein" },
+];
+
 
 export const EXPERIENCES = [{
         year: "Jan 2025 – Dec 2025",

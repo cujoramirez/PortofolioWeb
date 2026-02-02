@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 
 import { useSystemProfile } from './useSystemProfile';
-import { ABOUT_TEXT } from '../constants/index';
+import { ABOUT_TEXT, ABOUT_QUOTES } from '../constants/index';
 import aboutImg from '../assets/GadingAdityaPerdana2.jpg';
 
 // Stats data
@@ -153,19 +153,6 @@ const ModernAbout = () => {
                   },
                 }}
               >
-                <Box
-                  component="img"
-                  src={aboutImg}
-                  alt="Gading Aditya Perdana - AI/ML Researcher"
-                  sx={{
-                    width: '100%',
-                    height: 'auto',
-                    aspectRatio: '4/5',
-                    objectFit: 'cover',
-                    display: 'block',
-                  }}
-                />
-
                 {/* Gradient Overlay */}
                 <Box
                   sx={{
@@ -265,41 +252,9 @@ const ModernAbout = () => {
                     </motion.div>
                   ))}
               </Box>
-            </Box>
-          </motion.div>
 
-          {/* Right Column - Text Content */}
-          <motion.div
-            initial={{ opacity: 0, x: shouldReduceMotion ? 0 : 30 }}
-            animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: shouldReduceMotion ? 0.3 : 0.7, delay: 0.2 }}
-          >
-            <Box>
-              {/* Bio Card */}
-              <Box
-                sx={{
-                  p: { xs: 3, md: 4 },
-                  borderRadius: 3,
-                  bgcolor: alpha(theme.palette.background.paper, 0.5),
-                  backdropFilter: 'blur(12px)',
-                  border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                  mb: 4,
-                }}
-              >
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontSize: { xs: '1rem', md: '1.1rem' },
-                    lineHeight: 1.9,
-                    color: 'text.secondary',
-                  }}
-                >
-                  {ABOUT_TEXT}
-                </Typography>
-              </Box>
-
-              {/* Research Interests */}
-              <Box>
+              {/* Research Interests - Now in left column */}
+              <Box sx={{ mt: 4 }}>
                 <Typography
                   variant="h6"
                   sx={{
@@ -360,7 +315,7 @@ const ModernAbout = () => {
                 </Box>
               </Box>
 
-              {/* Education Highlight */}
+              {/* Education Highlight - Now in left column */}
               <Box
                 sx={{
                   mt: 4,
@@ -418,6 +373,92 @@ const ModernAbout = () => {
                 >
                   Accelerated 3.5-year program • Apple Developer Academy Scholar (2026)
                 </Typography>
+              </Box>
+            </Box>
+          </motion.div>
+
+          {/* Right Column - Text Content */}
+          <motion.div
+            initial={{ opacity: 0, x: shouldReduceMotion ? 0 : 30 }}
+            animate={isInView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: shouldReduceMotion ? 0.3 : 0.7, delay: 0.2 }}
+          >
+            <Box>
+              {/* Bio Card */}
+              <Box
+                sx={{
+                  p: { xs: 3, md: 4 },
+                  borderRadius: 3,
+                  bgcolor: alpha(theme.palette.background.paper, 0.5),
+                  backdropFilter: 'blur(12px)',
+                  border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                  mb: 4,
+                }}
+              >
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontSize: { xs: '1rem', md: '1.1rem' },
+                    lineHeight: 1.9,
+                    color: 'text.secondary',
+                    whiteSpace: 'pre-line',
+                  }}
+                >
+                  {ABOUT_TEXT}
+                </Typography>
+              </Box>
+
+              {/* Inspirational Quotes */}
+              <Box
+                sx={{
+                  p: { xs: 3, md: 4 },
+                  borderRadius: 3,
+                  bgcolor: alpha(theme.palette.primary.main, 0.03),
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+                }}
+              >
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                  {ABOUT_QUOTES.map((quote, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={isInView ? { opacity: 1, x: 0 } : {}}
+                      transition={{
+                        duration: 0.4,
+                        delay: shouldReduceMotion ? 0 : 0.5 + index * 0.1,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          pl: 3,
+                          borderLeft: `3px solid ${alpha(theme.palette.primary.main, 0.4)}`,
+                        }}
+                      >
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontStyle: 'italic',
+                            color: 'text.secondary',
+                            lineHeight: 1.7,
+                            mb: 0.5,
+                            fontSize: { xs: '0.95rem', md: '1.05rem' },
+                          }}
+                        >
+                          "{quote.text}"
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: 'primary.main',
+                            fontWeight: 600,
+                          }}
+                        >
+                          — {quote.author}
+                        </Typography>
+                      </Box>
+                    </motion.div>
+                  ))}
+                </Box>
               </Box>
             </Box>
           </motion.div>
