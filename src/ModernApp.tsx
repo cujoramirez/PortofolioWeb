@@ -118,7 +118,7 @@ const ModernApp = () => {
               <section id="about" aria-label="About me">
                 <AboutErrorBoundary>
                   <Suspense fallback={<SectionLoader />}>
-                    <ModernAbout landingComplete={true} />
+                    <ModernAbout />
                   </Suspense>
                 </AboutErrorBoundary>
               </section>
