@@ -21,7 +21,8 @@ import certificate14 from "../assets/certificates/certificate14.png";
 import certificate15 from "../assets/certificates/certificate15.png";
 import certificate16 from "../assets/certificates/certificate16.png";
 
-export const HERO_CONTENT = `First-generation undergraduate researcher with five published papers in ensemble learning, model calibration, and computer vision. Passionate about advancing AI through innovative research and practical applications.`;
+export const HERO_CONTENT = 
+`I am currently an `;
 
 export const ABOUT_TEXT = `
 I'm an award-winning AI researcher and engineer who designs calibrated, production-ready deep learning systems. My CALM framework earned Best Presenter at ICCSCI 2025 and is part of a portfolio of four peer-reviewed publications that push adaptive curriculum, ensemble learning, and model calibration forward. Beyond the lab, I translate theory into shipped products, delivering intelligent computer vision and NLP solutions, architecting full-stack applications in React and C#/.NET, and scaling data pipelines that meet enterprise standards.
