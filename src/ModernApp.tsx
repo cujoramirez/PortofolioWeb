@@ -1,6 +1,7 @@
 import { Suspense, lazy, memo } from 'react';
 import { motion, MotionConfig } from 'framer-motion';
 import { ThemeProvider, CssBaseline, Box, CircularProgress } from '@mui/material';
+import { Analytics } from '@vercel/analytics/react';
 import { muiTheme } from './theme/muiTheme.js';
 import LandingPage from './components/LandingPage';
 import AboutErrorBoundary from './components/AboutErrorBoundary';
@@ -189,6 +190,9 @@ const ModernApp = () => {
             />
           </motion.div>
         </MotionConfig>
+        
+        {/* Vercel Analytics */}
+        <Analytics />
       </ThemeProvider>
     </LenisProvider>
   );
