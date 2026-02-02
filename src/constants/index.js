@@ -21,9 +21,7 @@ import certificate14 from "../assets/certificates/certificate14.png";
 import certificate15 from "../assets/certificates/certificate15.png";
 import certificate16 from "../assets/certificates/certificate16.png";
 
-export const HERO_CONTENT = `
-I'm a passionate AI/ML Engineer and Computer Science specialist with deep expertise in artificial intelligence, machine learning, and computer vision. I excel at transforming complex research concepts into scalable, production-ready solutions. From developing advanced Diabetic Retinopathy Detection systems to implementing sophisticated facial recognition architectures, I deliver innovative AI solutions that drive meaningful business impact and technological advancement.
-`;
+export const HERO_CONTENT = `First-generation undergraduate researcher with five published papers in ensemble learning, model calibration, and computer visi on. Passionate about advancing AI through innovative research and practical applications.`;
 
 export const ABOUT_TEXT = `
 I'm an award-winning AI researcher and engineer who designs calibrated, production-ready deep learning systems. My CALM framework earned Best Presenter at ICCSCI 2025 and is part of a portfolio of four peer-reviewed publications that push adaptive curriculum, ensemble learning, and model calibration forward. Beyond the lab, I translate theory into shipped products, delivering intelligent computer vision and NLP solutions, architecting full-stack applications in React and C#/.NET, and scaling data pipelines that meet enterprise standards.

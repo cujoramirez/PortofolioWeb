@@ -19,6 +19,7 @@ import heroImg from '../assets/GadingAdityaPerdana.webp';
 import resumePDF from '../assets/Gading_Resume.pdf';
 import { useLenis } from '../hooks/useLenis';
 import ProfileCard from './ProfileCard';
+import { HERO_CONTENT } from '../constants/index';
 
 // Custom Google Scholar icon
 const GoogleScholarIcon = (props: React.ComponentProps<typeof SvgIcon>) => (
@@ -196,9 +197,7 @@ const ModernHero = () => {
                   maxWidth: 550,
                 }}
               >
-                First-generation undergraduate researcher with five published papers in 
-                ensemble learning, model calibration, and computer vision. Passionate about 
-                advancing AI through innovative research and practical applications.
+                {HERO_CONTENT}
               </Typography>
             </motion.div>
 
@@ -336,10 +335,7 @@ const ModernHero = () => {
                       delay: shouldReduceMotion ? 0 : 0.6 + index * 0.05,
                       ease: [0.25, 0.1, 0.25, 1]
                     }}
-                    whileHover={shouldReduceMotion ? {} : { 
-                      scale: 1.08,
-                      transition: { duration: 0.2 }
-                    }}
+                    whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}
                   >
                     <Chip
                       label={skill}
