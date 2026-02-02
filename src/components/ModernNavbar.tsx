@@ -215,7 +215,6 @@ const ModernNavbarComponent = () => {
 	const liquidOpacity = useMotionValue(0);
 	const navMagnifyMouseX = useMotionValue(Number.POSITIVE_INFINITY);
 	const brandMagnifyMouseX = useMotionValue(Number.POSITIVE_INFINITY);
-	const fabMagnifyMouseX = useMotionValue(Number.POSITIVE_INFINITY);
 
 	const springX = useSpring(liquidX, {
 		stiffness: 260,
