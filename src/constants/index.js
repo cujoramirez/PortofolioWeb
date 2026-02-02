@@ -34,7 +34,7 @@ export const ABOUT_QUOTES = [
   { text: "I was born not knowing and have had only a little time to change that here and there.", author: "Richard Feynman" },
   { text: "There is no sense in being precise when you do not even know what you are talking about.", author: "John von Neumann" },
   { text: "The impossible experiment is the one not attempted.", author: "François Jacob" },
-  { text: "What we cannot speak about we must pass over in silence.", author: "Ludwig Wittgenstein" },
+  { text: "Whereof one cannot speak, thereof one must be silent.", author: "Ludwig Wittgenstein" },
 ];
 
 
