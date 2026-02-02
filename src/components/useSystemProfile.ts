@@ -8,18 +8,28 @@ interface SystemProfile {
     deviceType: DeviceType;
 }
 
+// Default to high performance to avoid blocking animations on first render
 const DEFAULT_PROFILE: SystemProfile = {
-    performanceTier: 'mid',
+    performanceTier: 'high',
     deviceType: 'desktop'
 };
 
 const getNavigator = () => (typeof navigator !== 'undefined' ? navigator : undefined);
 const getWindow = () => (typeof window !== 'undefined' ? window : undefined);
 
+// Cache the profile to avoid recalculating
+let cachedProfile: SystemProfile | null = null;
+
 export function useSystemProfile(): SystemProfile {
-    const [profile, setProfile] = useState<SystemProfile>(DEFAULT_PROFILE);
+    const [profile, setProfile] = useState<SystemProfile>(() => cachedProfile || DEFAULT_PROFILE);
 
     useEffect(() => {
+        // If already cached, skip calculation
+        if (cachedProfile) {
+            setProfile(cachedProfile);
+            return;
+        }
+
         const nav = getNavigator();
         const win = getWindow();
 
@@ -58,7 +68,9 @@ export function useSystemProfile(): SystemProfile {
                 deviceType = 'tablet';
             }
 
-            setProfile({ performanceTier, deviceType });
+            const newProfile = { performanceTier, deviceType };
+            cachedProfile = newProfile;
+            setProfile(newProfile);
         };
 
         updateProfile();
