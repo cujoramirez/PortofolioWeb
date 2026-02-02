@@ -15,7 +15,7 @@ import {
 import { Download, GitHub, LinkedIn, Email } from '@mui/icons-material';
 import { useSystemProfile } from './useSystemProfile';
 import RotatingText from './RotatingText';
-import heroImg from '../assets/GadingAdityaPerdana.jpg';
+import heroImg from '../assets/GadingAdityaPerdana.webp';
 import resumePDF from '../assets/Gading_Resume.pdf';
 import { useLenis } from '../hooks/useLenis';
 import ProfileCard from './ProfileCard';
