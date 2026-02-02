@@ -296,7 +296,8 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
               width={320}
               height={471}
               loading={priority ? 'eager' : 'lazy'}
-              fetchPriority={priority ? 'high' : 'auto'}
+              // @ts-expect-error - React uses fetchPriority but DOM expects fetchpriority
+              fetchpriority={priority ? 'high' : 'auto'}
               decoding={priority ? 'sync' : 'async'}
               onError={e => {
                 const target = e.target as HTMLImageElement;
