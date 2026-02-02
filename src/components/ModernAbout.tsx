@@ -153,44 +153,18 @@ const ModernAbout = () => {
                   },
                 }}
               >
-                {/* Gradient Overlay */}
                 <Box
+                  component="img"
+                  src={aboutImg}
+                  alt="Gading Aditya Perdana - AI/ML Researcher"
                   sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: '40%',
-                    background: `linear-gradient(to top, ${alpha(theme.palette.background.default, 0.9)}, transparent)`,
+                    width: '100%',
+                    height: 'auto',
+                    aspectRatio: '4/5',
+                    objectFit: 'cover',
+                    display: 'block',
                   }}
                 />
-
-                {/* Name Tag */}
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: 20,
-                    left: 20,
-                    right: 20,
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      color: 'text.primary',
-                      mb: 0.5,
-                    }}
-                  >
-                    Gading Aditya Perdana
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: 'primary.main', fontWeight: 500 }}
-                  >
-                    AI/ML Researcher & Engineer
-                  </Typography>
-                </Box>
               </Box>
 
               {/* Stats Grid - Below Photo */}
