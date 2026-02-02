@@ -35,6 +35,7 @@ import {
 	Science,
 	School,
 	ContactMail,
+	KeyboardArrowUp,
 } from '@mui/icons-material';
 import { useSystemProfile } from './useSystemProfile';
 import { gsap } from 'gsap';
@@ -1235,6 +1236,35 @@ const ModernNavbarComponent = () => {
 					toolbarHeight={isTabletDevice ? 76 : 66}
 					toolbarPadding={isTabletDevice ? 32 : 16}
 				/>
+			)}
+
+			{/* Scroll to top FAB for mobile/tablet */}
+			{(isMobileDevice || isTabletDevice) && (
+				<Zoom in={trigger}>
+					<Fab
+						onClick={() => scrollToSection('#hero')}
+						size="medium"
+						aria-label="Scroll to top"
+						sx={{
+							position: 'fixed',
+							bottom: 24,
+							left: 24,
+							zIndex: 1200,
+							background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+							color: '#ffffff',
+							boxShadow: '0 4px 20px rgba(30, 64, 175, 0.4)',
+							'&:hover': {
+								background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)',
+								boxShadow: '0 6px 24px rgba(30, 64, 175, 0.5)',
+							},
+							'&:active': {
+								transform: 'scale(0.95)',
+							},
+						}}
+					>
+						<KeyboardArrowUp />
+					</Fab>
+				</Zoom>
 			)}
 		</>
 	);
