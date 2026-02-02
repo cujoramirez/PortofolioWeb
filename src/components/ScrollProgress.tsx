@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect } from 'react';
 import { motion, useSpring, useMotionValue } from 'framer-motion';
 import { Box, alpha, useTheme } from '@mui/material';
 

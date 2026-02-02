@@ -1,4 +1,4 @@
-import { useRef, type RefObject } from 'react';
+import React, { useRef, type RefObject } from 'react';
 import { motion, useInView } from 'framer-motion';
 import {
   Box,

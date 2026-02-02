@@ -141,6 +141,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   height = 80,
   borderRadius = 20,
   brightness = 50,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   opacity = 0.93,
   blur = 20,
   backgroundOpacity = 0.12,
