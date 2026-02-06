@@ -28,7 +28,7 @@ export const ABOUT_TEXT = `I grew up in Jakarta, Indonesia. Before I chose to pu
 
 I believe that technology, especially AI, has the potential to revolutionize various industries and improve people’s lives. I am motivated to contribute to its growth and development. I enjoy research because it allows me to explore new ideas, push the boundaries of what is possible with technology, experiment with different techniques, learn from existing work, and contribute to the advancement of knowledge in the field.
 
-I am a fast learner, driven by the belief that there are no inherent limits to knowledge, only limits to our willingness to learn and explore. I continuously seek new challenges that foster both personal and professional growth. As a first-generation undergraduate researcher, I self-fund my research initiatives through freelance development and teaching — independently driving projects from conception to publication while balancing a full course load.`;
+I am a fast learner, driven by the belief that there are no inherent limits to knowledge, only limits to our willingness to learn and explore. I continuously seek new challenges that foster both personal and professional growth. As a first-generation undergraduate researcher, I self-fund my research initiatives through freelancing as in software development, teaching and research methodology consultation (Computer Vision)`;
 
 export const ABOUT_QUOTES = [
   { text: "I was born not knowing and have had only a little time to change that here and there.", author: "Richard Feynman" },
