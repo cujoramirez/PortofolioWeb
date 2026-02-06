@@ -23,12 +23,12 @@ const statsData = [
 
 // Research interests
 const researchInterests = [
-  "Machine Learning",
-  "Deep Learning",
-  "Natural Language Processing",
   "Computer Vision",
-  "Data Science",
-  "Neural Networks",
+  "Deep Learning",
+  "Vision Transformers",
+  "Ensemble Learning",
+  "Model Calibration",
+  "Medical Imaging",
 ];
 
 const ModernAbout = () => {
@@ -97,7 +97,7 @@ const ModernAbout = () => {
                 lineHeight: 1.7,
               }}
             >
-              AI/ML researcher passionate about building intelligent systems
+              AI Researcher & Apple Developer Academy Scholar passionate about Computer Vision and Deep Learning
             </Typography>
 
             {/* Decorative Line */}
@@ -142,11 +142,10 @@ const ModernAbout = () => {
                   position: 'relative',
                   borderRadius: 4,
                   overflow: 'hidden',
-                  bgcolor: alpha(theme.palette.background.paper, 0.5),
-                  backdropFilter: 'blur(12px)',
+                  bgcolor: alpha(theme.palette.background.paper, 0.88),
                   border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                   boxShadow: `0 20px 60px ${alpha(theme.palette.common.black, 0.1)}`,
-                  transition: 'all 0.3s ease',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                   '&:hover': {
                     transform: 'translateY(-4px)',
                     boxShadow: `0 24px 70px ${alpha(theme.palette.common.black, 0.15)}`,
@@ -156,7 +155,7 @@ const ModernAbout = () => {
                 <Box
                   component="img"
                   src={aboutImg}
-                  alt="Gading Aditya Perdana - AI/ML Researcher"
+                  alt="Gading Aditya Perdana - AI Researcher & Developer"
                   sx={{
                     width: '100%',
                     height: 'auto',
@@ -190,11 +189,10 @@ const ModernAbout = () => {
                         sx={{
                           p: 2.5,
                           borderRadius: 3,
-                          bgcolor: alpha(theme.palette.background.paper, 0.5),
-                          backdropFilter: 'blur(12px)',
+                          bgcolor: alpha(theme.palette.background.paper, 0.88),
                           border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
                           textAlign: 'center',
-                          transition: 'all 0.3s ease',
+                          transition: 'transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease',
                           '&:hover': {
                             bgcolor: alpha(theme.palette.background.paper, 0.8),
                             borderColor: alpha(theme.palette.primary.main, 0.2),
@@ -363,8 +361,7 @@ const ModernAbout = () => {
                 sx={{
                   p: { xs: 3, md: 4 },
                   borderRadius: 3,
-                  bgcolor: alpha(theme.palette.background.paper, 0.5),
-                  backdropFilter: 'blur(12px)',
+                  bgcolor: alpha(theme.palette.background.paper, 0.88),
                   border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
                   mb: 4,
                 }}

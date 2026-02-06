@@ -153,7 +153,6 @@ const Technologies = (): JSX.Element => {
                         ? "transparent"
                         : alpha(theme.palette.divider, 0.1)
                     }`,
-                    backdropFilter: "blur(8px)",
                     transition: "all 0.2s ease",
                     "&:hover": {
                       bgcolor: isActive
@@ -331,8 +330,7 @@ const TechCard = memo(({ tech, index, cardSize }: TechCardProps): JSX.Element =>
           width: "100%",
           aspectRatio: "1",
           borderRadius: 3,
-          bgcolor: alpha(theme.palette.background.paper, 0.5),
-          backdropFilter: "blur(12px)",
+          bgcolor: alpha(theme.palette.background.paper, 0.88),
           border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
           display: "flex",
           flexDirection: "column",
@@ -340,7 +338,7 @@ const TechCard = memo(({ tech, index, cardSize }: TechCardProps): JSX.Element =>
           justifyContent: "center",
           p: 2,
           cursor: "pointer",
-          transition: "all 0.35s ease",
+          transition: "transform 0.35s ease, box-shadow 0.35s ease, background-color 0.35s ease, border-color 0.35s ease",
           position: "relative",
           overflow: "hidden",
           "&:hover": {

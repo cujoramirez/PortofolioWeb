@@ -647,15 +647,6 @@ html {
     }
 }
 
-@keyframes shimmer {
-    0% {
-        background-position: -100% 0;
-    }
-    100% {
-        background-position: 100% 0;
-    }
-}
-
 @keyframes hologram {
     0%,
     100% {
@@ -1150,18 +1141,6 @@ html {
     animation: float 6s ease-in-out infinite;
 }
 
-@keyframes float {
-    0%,
-    100% {
-        transform: translateY(0px) rotate(0deg);
-        opacity: 0;
-    }
-    50% {
-        transform: translateY(-20px) rotate(180deg);
-        opacity: 1;
-    }
-}
-
 
 /* Enhanced Typography Animations */
 
@@ -1173,16 +1152,6 @@ html {
     color: transparent;
     -webkit-text-fill-color: transparent;
     animation: gradientShift 3s ease-in-out infinite;
-}
-
-@keyframes gradientShift {
-    0%,
-    100% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
 }
 
 

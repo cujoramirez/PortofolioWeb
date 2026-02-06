@@ -22,13 +22,13 @@ import certificate15 from "../assets/certificates/certificate15.png";
 import certificate16 from "../assets/certificates/certificate16.png";
 
 export const HERO_CONTENT = 
-`I am currently an Undergraduate majoring in Computer Science at Binus University, with a keen interest in Artificial Intelligence and Machine Learning. I enjoy working on projects that involve computer vision and knowledge distillation.`;
+`First-generation undergraduate AI Researcher specializing in Computer Vision and Deep Learning. Author of five peer-reviewed publications (four first-author) with interest in Vision Transformers, Ensemble Learning, and Model Calibration. Currently an Apple Developer Academy Scholar (Cohort 2026) at BINUS University.`;
 
 export const ABOUT_TEXT = `I grew up in Jakarta, Indonesia. Before I chose to pursue Computer Science at BINUS University, I developed a strong interest in physics, statistics, and mathematics. I enjoy learning across disciplines, from medicine and physics to economics. My deepest passion lies in physics, particularly astrophysics, because I am drawn to understanding the unknown aspects of the universe. However, I chose computer science because I believe it allows me to integrate my interests in physics, mathematics, and statistics into developing innovative solutions through Artificial Intelligence and Machine Learning.
 
 I believe that technology, especially AI, has the potential to revolutionize various industries and improve people’s lives. I am motivated to contribute to its growth and development. I enjoy research because it allows me to explore new ideas, push the boundaries of what is possible with technology, experiment with different techniques, learn from existing work, and contribute to the advancement of knowledge in the field.
 
-I am a fast learner, driven by the belief that there are no inherent limits to knowledge, only limits to our willingness to learn and explore. I continuously seek new challenges that foster both personal and professional growth. My adaptability enables me to quickly grasp complex algorithms, leadership responsibilities, and soft skills, which is why I am also willing to study frontend development while specializing in AI/ML.`;
+I am a fast learner, driven by the belief that there are no inherent limits to knowledge, only limits to our willingness to learn and explore. I continuously seek new challenges that foster both personal and professional growth. As a first-generation undergraduate researcher, I self-fund my research initiatives through freelance development and teaching — independently driving projects from conception to publication while balancing a full course load.`;
 
 export const ABOUT_QUOTES = [
   { text: "I was born not knowing and have had only a little time to change that here and there.", author: "Richard Feynman" },
@@ -39,6 +39,17 @@ export const ABOUT_QUOTES = [
 
 
 export const EXPERIENCES = [{
+        year: "Jan 2026 – Present",
+        role: "SWE Trainee (iOS)",
+        company: "Apple Developer Academy @ BINUS",
+        description: `Selected as an Apple Developer Academy Scholar (Cohort 2026). Training in iOS development with Swift and SwiftUI, focusing on building user-centered applications through Apple's Challenge-Based Learning methodology.`,
+        technologies: ["Swift", "SwiftUI", "Xcode", "UIKit", "iOS Development"],
+        achievements: [
+            "Selected for competitive Apple Developer Academy program",
+            "Training in full-stack iOS application development",
+            "Applying Challenge-Based Learning to real-world projects"
+        ]
+    }, {
         year: "Jan 2025 – Dec 2025",
         role: "Undergraduate Research Assistant",
         company: "Binus University",

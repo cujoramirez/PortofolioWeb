@@ -845,7 +845,7 @@ const ModernNavbarComponent = () => {
 											{isTabletDevice ? 'Gading Aditya' : 'Gading Aditya Perdana'}
 										</Box>
 										<Box sx={{ fontSize: '0.8125rem', color: '#94a3b8', fontWeight: 500, whiteSpace: 'nowrap' }}>
-											{isTabletDevice ? 'AI Engineer' : 'AI Researcher & Engineer'}
+											{isTabletDevice ? 'AI Researcher' : 'AI Researcher & Developer'}
 										</Box>
 									</Box>
 								)}
@@ -903,7 +903,7 @@ const ModernNavbarComponent = () => {
 												{isTabletDevice ? 'Gading Aditya' : 'Gading Aditya Perdana'}
 											</Box>
 											<Box sx={{ fontSize: '0.8125rem', color: '#94a3b8', fontWeight: 500, whiteSpace: 'nowrap' }}>
-												{isTabletDevice ? 'AI Engineer' : 'AI Researcher & Engineer'}
+												{isTabletDevice ? 'AI Researcher' : 'AI Researcher & Developer'}
 											</Box>
 										</Box>
 									)}

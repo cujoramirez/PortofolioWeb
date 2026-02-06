@@ -1,6 +1,5 @@
 import './styles/enterprise.css';
 import './index.css';
-import './gradientStyles.css';
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';

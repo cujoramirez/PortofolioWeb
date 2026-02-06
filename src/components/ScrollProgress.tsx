@@ -41,8 +41,7 @@ const ScrollProgress = memo(() => {
         right: 0,
         height: 3,
         zIndex: 9999,
-        background: alpha(theme.palette.background.default, 0.5),
-        backdropFilter: 'blur(4px)',
+        background: alpha(theme.palette.background.default, 0.85),
         pointerEvents: 'none',
       }}
     >

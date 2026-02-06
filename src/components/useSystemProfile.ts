@@ -24,12 +24,6 @@ export function useSystemProfile(): SystemProfile {
     const [profile, setProfile] = useState<SystemProfile>(() => cachedProfile || DEFAULT_PROFILE);
 
     useEffect(() => {
-        // If already cached, skip calculation
-        if (cachedProfile) {
-            setProfile(cachedProfile);
-            return;
-        }
-
         const nav = getNavigator();
         const win = getWindow();
 
@@ -73,8 +67,12 @@ export function useSystemProfile(): SystemProfile {
             setProfile(newProfile);
         };
 
-        updateProfile();
+        // Only calculate on first run — use cache for subsequent mounts
+        if (!cachedProfile) {
+            updateProfile();
+        }
 
+        // Always attach listeners so resize/orientation changes are detected
         win.addEventListener('resize', updateProfile);
         win.addEventListener('orientationchange', updateProfile);
 

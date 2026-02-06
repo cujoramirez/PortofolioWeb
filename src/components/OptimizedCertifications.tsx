@@ -106,11 +106,10 @@ const CertificationCard = memo(({
           position: 'relative',
           borderRadius: 2,
           overflow: 'hidden',
-          background: alpha(theme.palette.background.paper, 0.5),
-          backdropFilter: 'blur(12px)',
+          background: alpha(theme.palette.background.paper, 0.88),
           border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
           cursor: cert.link ? 'pointer' : 'default',
-          transition: 'all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1)',
+          transition: 'transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.35s cubic-bezier(0.25, 0.1, 0.25, 1), border-color 0.35s cubic-bezier(0.25, 0.1, 0.25, 1)',
           '&:hover': cert.link ? {
             transform: 'translateY(-6px)',
             boxShadow: `0 20px 40px ${alpha(theme.palette.common.black, 0.12)}, 0 0 30px ${alpha(theme.palette.primary.main, 0.08)}`,

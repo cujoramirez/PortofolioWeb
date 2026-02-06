@@ -161,10 +161,9 @@ const ExperienceCard = ({
               position: 'relative',
               p: { xs: 3, md: 4 },
               borderRadius: 3,
-              background: alpha(theme.palette.background.paper, 0.6),
-              backdropFilter: 'blur(20px)',
+              background: alpha(theme.palette.background.paper, 0.92),
               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-              transition: 'all 0.3s ease',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease',
               '&:hover': {
                 background: alpha(theme.palette.background.paper, 0.8),
                 borderColor: alpha(theme.palette.primary.main, 0.2),

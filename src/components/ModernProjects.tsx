@@ -104,11 +104,10 @@ const ProjectCard = memo(({
           height: '100%',
           p: { xs: 2.5, md: 3 },
           borderRadius: 2.5,
-          background: alpha(theme.palette.background.paper, 0.5),
-          backdropFilter: 'blur(16px)',
+          background: alpha(theme.palette.background.paper, 0.92),
           border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
           cursor: 'pointer',
-          transition: 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)',
+          transition: 'transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), border-color 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)',
           display: 'flex',
           flexDirection: 'column',
           '&:hover': {
@@ -295,7 +294,6 @@ const ProjectModal = memo(({
       PaperProps={{
         sx: {
           background: alpha(theme.palette.background.paper, 0.98),
-          backdropFilter: 'blur(20px)',
           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           borderRadius: 3,
         },
@@ -545,7 +543,7 @@ const ModernProjectsComponent = () => {
                 lineHeight: 1.6,
               }}
             >
-              Technical projects showcasing expertise in AI/ML, computer vision, and full-stack development
+              Technical projects showcasing expertise in computer vision, deep learning, and full-stack development
             </Typography>
 
             {/* Decorative line */}

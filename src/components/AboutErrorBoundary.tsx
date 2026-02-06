@@ -74,9 +74,9 @@ class AboutErrorBoundary extends Component<PropsWithChildren<unknown>, AboutErro
                             lineHeight: 1.6
                         }}
                     >
-                        I'm a passionate AI/ML Engineer with 3+ years of experience in developing innovative solutions using machine
-                        learning, deep learning, and computer vision technologies. I specialize in creating intelligent systems that solve
-                        real-world problems.
+                        First-generation undergraduate AI Researcher specializing in Computer Vision and Deep Learning. 
+                        Author of five peer-reviewed publications with expertise in Vision Transformers, Ensemble Learning, 
+                        and Model Calibration. Currently an Apple Developer Academy Scholar.
                     </Typography>
 
                     <Button

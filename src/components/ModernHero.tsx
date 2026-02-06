@@ -29,10 +29,10 @@ const GoogleScholarIcon = (props: React.ComponentProps<typeof SvgIcon>) => (
 );
 
 const TYPING_ROLES = [
-  'AI/ML Engineer',
-  'Machine Learning Researcher',
+  'AI Researcher',
   'Computer Vision Specialist',
-  'Deep Learning Engineer',
+  'Deep Learning Researcher',
+  'Apple Developer Academy Scholar',
 ];
 
 const SOCIAL_LINKS = [
@@ -42,7 +42,7 @@ const SOCIAL_LINKS = [
   { icon: Email, url: 'mailto:gadingadityaperdana@gmail.com', label: 'Email' },
 ];
 
-const SKILLS = ['PyTorch', 'TensorFlow', 'Computer Vision', 'Deep Learning', 'Python', 'React'];
+const SKILLS = ['PyTorch', 'Computer Vision', 'Deep Learning', 'Swift', 'Python', 'Research'];
 
 const ModernHero = () => {
   const { performanceTier } = useSystemProfile();
@@ -369,7 +369,7 @@ const ModernHero = () => {
             >
               <ProfileCard
                 name="Gading Aditya Perdana"
-                title="AI/ML Engineer & Researcher"
+                title="AI Researcher & SWE Trainee"
                 handle="gadingap"
                 status="Available for Projects"
                 contactText="Contact Me"
