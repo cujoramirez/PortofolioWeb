@@ -39,7 +39,7 @@ export const ABOUT_QUOTES = [
 
 
 export const EXPERIENCES = [{
-        year: "Jan 2026 – Present",
+        year: "Mar 2026 – Dec 2026",
         role: "SWE Trainee (iOS)",
         company: "Apple Developer Academy @ BINUS",
         description: `Selected as an Apple Developer Academy Scholar (Cohort 2026). Training in iOS development with Swift and SwiftUI, focusing on building user-centered applications through Apple's Challenge-Based Learning methodology.`,
