@@ -245,8 +245,8 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       className={`relative flex items-center justify-center ${className}`}
       style={containerStyles}
     >
-      {/* SVG Filters (only rendered if liquid effect enabled) */}
-      {liquidEffect && (
+      {/* SVG Filters (only rendered if liquid effect is actually used) */}
+      {useLiquidEffect && (
         <LiquidGlassFilter 
           id={filterId} 
           scale={displacementScale} 

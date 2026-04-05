@@ -28,7 +28,6 @@ interface ResearchPaper {
   citations: number;
 }
 
-// Publication Card Component
 const PublicationCard = memo(({
   paper,
   index,
@@ -45,12 +44,12 @@ const PublicationCard = memo(({
   return (
     <motion.div
       ref={cardRef}
-      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 24 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 24, filter: shouldReduceMotion ? 'none' : 'blur(6px)' }}
+      animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
       transition={{
         duration: shouldReduceMotion ? 0.3 : 0.5,
         delay: shouldReduceMotion ? 0 : index * 0.08,
-        ease: [0.25, 0.1, 0.25, 1],
+        ease: [0.22, 1, 0.36, 1],
       }}
     >
       <Box
@@ -58,18 +57,34 @@ const PublicationCard = memo(({
           position: 'relative',
           p: { xs: 2.5, md: 3.5 },
           mb: 2.5,
-          borderRadius: 2.5,
-          background: alpha(theme.palette.background.paper, 0.9),
-          border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-          transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), border-color 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+          borderRadius: 3,
+          background: alpha(theme.palette.background.paper, 0.5),
+          border: `1px solid ${alpha(theme.palette.divider, 0.06)}`,
+          backdropFilter: 'blur(12px)',
+          transition: 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '3px',
+            height: '0%',
+            background: paper.isFirstAuthor
+              ? `linear-gradient(180deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
+              : alpha(theme.palette.divider, 0.3),
+            borderRadius: '0 2px 2px 0',
+            transition: 'height 0.5s cubic-bezier(0.25, 0.1, 0.25, 1)',
+          },
           '&:hover': {
             transform: 'translateY(-3px)',
-            boxShadow: `0 16px 32px ${alpha(theme.palette.common.black, 0.08)}`,
-            borderColor: alpha(theme.palette.primary.main, 0.15),
+            boxShadow: `0 16px 40px ${alpha(theme.palette.common.black, 0.1)}`,
+            borderColor: alpha(theme.palette.primary.main, 0.1),
+            '&::before': { height: '100%' },
           },
         }}
       >
-        {/* Header Row: Badges + Year */}
+        {/* Header Row */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
           {paper.isFirstAuthor && (
             <Chip
@@ -77,11 +92,12 @@ const PublicationCard = memo(({
               size="small"
               sx={{
                 height: 22,
-                fontSize: '0.7rem',
+                fontSize: '0.68rem',
                 fontWeight: 600,
-                background: alpha(theme.palette.primary.main, 0.12),
-                color: theme.palette.primary.main,
-                border: 'none',
+                fontFamily: '"JetBrains Mono", monospace',
+                background: alpha(theme.palette.primary.main, 0.08),
+                color: alpha(theme.palette.primary.main, 0.85),
+                border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
               }}
             />
           )}
@@ -91,19 +107,21 @@ const PublicationCard = memo(({
               size="small"
               sx={{
                 height: 22,
-                fontSize: '0.7rem',
+                fontSize: '0.68rem',
                 fontWeight: 600,
-                background: alpha(theme.palette.success.main, 0.1),
-                color: theme.palette.success.main,
-                border: 'none',
+                fontFamily: '"JetBrains Mono", monospace',
+                background: alpha(theme.palette.success.main, 0.08),
+                color: alpha(theme.palette.success.main, 0.85),
+                border: `1px solid ${alpha(theme.palette.success.main, 0.15)}`,
               }}
             />
           )}
           <Typography
             variant="caption"
             sx={{
-              color: theme.palette.text.secondary,
-              fontSize: '0.75rem',
+              color: alpha(theme.palette.text.secondary, 0.5),
+              fontSize: '0.72rem',
+              fontFamily: '"JetBrains Mono", monospace',
               ml: 'auto',
             }}
           >
@@ -120,68 +138,36 @@ const PublicationCard = memo(({
           rel={paper.doi ? 'noopener noreferrer' : undefined}
           sx={{
             fontWeight: 600,
-            fontSize: { xs: '1rem', md: '1.1rem' },
+            fontSize: { xs: '0.98rem', md: '1.08rem' },
             color: theme.palette.text.primary,
             mb: 1,
-            lineHeight: 1.4,
+            lineHeight: 1.45,
             display: 'block',
             textDecoration: 'none',
-            transition: 'color 0.2s ease',
+            transition: 'color 0.25s ease',
             ...(paper.doi && {
-              '&:hover': {
-                color: theme.palette.primary.main,
-              },
+              '&:hover': { color: theme.palette.primary.main },
             }),
           }}
         >
           {paper.title}
           {paper.doi && (
-            <OpenInNewIcon 
-              sx={{ 
-                fontSize: 14, 
-                ml: 0.75, 
-                verticalAlign: 'middle',
-                opacity: 0.5,
-              }} 
-            />
+            <OpenInNewIcon sx={{ fontSize: 13, ml: 0.75, verticalAlign: 'middle', opacity: 0.4 }} />
           )}
         </Typography>
 
         {/* Authors */}
-        <Typography
-          variant="body2"
-          sx={{
-            color: theme.palette.text.secondary,
-            fontSize: '0.85rem',
-            mb: 0.75,
-          }}
-        >
+        <Typography variant="body2" sx={{ color: alpha(theme.palette.text.secondary, 0.6), fontSize: '0.83rem', mb: 0.5 }}>
           {paper.authors}
         </Typography>
 
         {/* Venue */}
-        <Typography
-          variant="body2"
-          sx={{
-            color: alpha(theme.palette.text.secondary, 0.8),
-            fontSize: '0.8rem',
-            fontStyle: 'italic',
-            mb: 1.5,
-          }}
-        >
+        <Typography variant="body2" sx={{ color: alpha(theme.palette.text.secondary, 0.5), fontSize: '0.78rem', fontStyle: 'italic', mb: 1.5 }}>
           {paper.venue}
         </Typography>
 
         {/* Description */}
-        <Typography
-          variant="body2"
-          sx={{
-            color: alpha(theme.palette.text.primary, 0.7),
-            fontSize: '0.875rem',
-            lineHeight: 1.65,
-            mb: 2,
-          }}
-        >
+        <Typography variant="body2" sx={{ color: alpha(theme.palette.text.primary, 0.6), fontSize: '0.86rem', lineHeight: 1.7, mb: 2 }}>
           {paper.description}
         </Typography>
 
@@ -195,28 +181,31 @@ const PublicationCard = memo(({
                 size="small"
                 sx={{
                   height: 24,
-                  fontSize: '0.7rem',
-                  background: alpha(theme.palette.text.primary, 0.04),
-                  color: theme.palette.text.secondary,
-                  border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                  fontSize: '0.68rem',
+                  fontFamily: '"JetBrains Mono", monospace',
+                  background: alpha(theme.palette.text.primary, 0.03),
+                  color: alpha(theme.palette.text.secondary, 0.6),
+                  border: `1px solid ${alpha(theme.palette.divider, 0.06)}`,
+                  transition: 'all 0.25s ease',
                   '&:hover': {
-                    background: alpha(theme.palette.primary.main, 0.08),
+                    background: alpha(theme.palette.primary.main, 0.06),
+                    borderColor: alpha(theme.palette.primary.main, 0.15),
                   },
-                  transition: 'all 0.2s ease',
                 }}
               />
             ))}
           </Box>
-          
+
           {paper.citations > 0 && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <FormatQuoteIcon sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
+              <FormatQuoteIcon sx={{ fontSize: 13, color: alpha(theme.palette.text.secondary, 0.4) }} />
               <Typography
                 variant="caption"
                 sx={{
-                  color: theme.palette.text.secondary,
-                  fontSize: '0.75rem',
+                  color: alpha(theme.palette.text.secondary, 0.5),
+                  fontSize: '0.72rem',
                   fontWeight: 500,
+                  fontFamily: '"JetBrains Mono", monospace',
                 }}
               >
                 {paper.citations} {paper.citations === 1 ? 'citation' : 'citations'}
@@ -231,7 +220,6 @@ const PublicationCard = memo(({
 
 PublicationCard.displayName = 'PublicationCard';
 
-// Main Component
 const ModernResearchComponent = () => {
   const theme = useTheme();
   const sectionRef = useRef<HTMLElement>(null);
@@ -241,16 +229,10 @@ const ModernResearchComponent = () => {
 
   const papers = useMemo<ResearchPaper[]>(() => RESEARCH_PAPERS as ResearchPaper[], []);
 
-  // Calculate stats
   const stats = useMemo(() => {
     const firstAuthorCount = papers.filter(p => p.isFirstAuthor).length;
     const totalCitations = papers.reduce((sum, p) => sum + p.citations, 0);
-    
-    return {
-      total: papers.length,
-      firstAuthor: firstAuthorCount,
-      citations: totalCitations,
-    };
+    return { total: papers.length, firstAuthor: firstAuthorCount, citations: totalCitations };
   }, [papers]);
 
   return (
@@ -265,7 +247,6 @@ const ModernResearchComponent = () => {
         overflow: 'hidden',
       }}
     >
-      {/* Subtle background */}
       <Box
         sx={{
           position: 'absolute',
@@ -273,7 +254,7 @@ const ModernResearchComponent = () => {
           left: 0,
           right: 0,
           height: '40%',
-          background: `linear-gradient(180deg, ${alpha(theme.palette.primary.main, 0.015)} 0%, transparent 100%)`,
+          background: `linear-gradient(180deg, ${alpha(theme.palette.primary.main, 0.012)} 0%, transparent 100%)`,
           pointerEvents: 'none',
         }}
       />
@@ -289,12 +270,20 @@ const ModernResearchComponent = () => {
             <Typography
               variant="overline"
               sx={{
-                fontWeight: 600,
-                letterSpacing: 3,
+                fontWeight: 500,
+                letterSpacing: 4,
                 color: theme.palette.primary.main,
-                fontSize: '0.8rem',
-                mb: 2,
-                display: 'block',
+                mb: 2.5,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1.5,
+                '&::before, &::after': {
+                  content: '""',
+                  display: 'inline-block',
+                  width: 24,
+                  height: 1,
+                  bgcolor: alpha(theme.palette.primary.main, 0.3),
+                },
               }}
             >
               Academic Research
@@ -303,7 +292,7 @@ const ModernResearchComponent = () => {
               variant="h2"
               component="h2"
               sx={{
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: { xs: '2.25rem', md: '3rem' },
                 background: `linear-gradient(135deg, ${theme.palette.text.primary} 0%, ${theme.palette.primary.main} 100%)`,
                 WebkitBackgroundClip: 'text',
@@ -317,28 +306,16 @@ const ModernResearchComponent = () => {
             <Typography
               variant="body1"
               sx={{
-                color: theme.palette.text.secondary,
+                color: alpha(theme.palette.text.secondary, 0.6),
                 maxWidth: 520,
                 mx: 'auto',
-                fontSize: { xs: '0.95rem', md: '1.05rem' },
-                lineHeight: 1.6,
+                fontSize: { xs: '0.95rem', md: '1.02rem' },
+                lineHeight: 1.7,
               }}
             >
               {stats.total} peer-reviewed publications · {stats.firstAuthor} first-author papers
               {stats.citations > 0 && ` · ${stats.citations} citations`}
             </Typography>
-
-            {/* Decorative line */}
-            <Box
-              sx={{
-                width: 48,
-                height: 2,
-                mx: 'auto',
-                mt: 3,
-                borderRadius: 1,
-                background: theme.palette.primary.main,
-              }}
-            />
           </Box>
         </motion.div>
 
@@ -361,24 +338,26 @@ const ModernResearchComponent = () => {
                 px: 2.5,
                 py: 1,
                 borderRadius: 2,
-                background: alpha(theme.palette.background.paper, 0.88),
-                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                background: alpha(theme.palette.background.paper, 0.5),
+                border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
                 textDecoration: 'none',
-                color: theme.palette.text.primary,
-                fontSize: '0.875rem',
+                color: alpha(theme.palette.text.primary, 0.7),
+                fontSize: '0.85rem',
                 fontWeight: 500,
-                transition: 'all 0.25s ease',
+                backdropFilter: 'blur(8px)',
+                transition: 'all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1)',
                 '&:hover': {
                   transform: 'translateY(-2px)',
-                  background: alpha(theme.palette.primary.main, 0.08),
-                  borderColor: alpha(theme.palette.primary.main, 0.2),
+                  background: alpha(theme.palette.primary.main, 0.06),
+                  borderColor: alpha(theme.palette.primary.main, 0.15),
                   color: theme.palette.primary.main,
+                  boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.08)}`,
                 },
               }}
             >
               <SchoolIcon sx={{ fontSize: 18 }} />
               Google Scholar
-              <OpenInNewIcon sx={{ fontSize: 14, opacity: 0.6 }} />
+              <OpenInNewIcon sx={{ fontSize: 13, opacity: 0.5 }} />
             </Box>
           </Box>
         </motion.div>
@@ -386,11 +365,7 @@ const ModernResearchComponent = () => {
         {/* Publications List */}
         <Box sx={{ maxWidth: 800, mx: 'auto' }}>
           {papers.map((paper, index) => (
-            <PublicationCard
-              key={`${paper.title}-${index}`}
-              paper={paper}
-              index={index}
-            />
+            <PublicationCard key={`${paper.title}-${index}`} paper={paper} index={index} />
           ))}
         </Box>
 
@@ -404,8 +379,8 @@ const ModernResearchComponent = () => {
             variant="body2"
             sx={{
               textAlign: 'center',
-              color: alpha(theme.palette.text.secondary, 0.7),
-              fontSize: '0.8rem',
+              color: alpha(theme.palette.text.secondary, 0.4),
+              fontSize: '0.78rem',
               fontStyle: 'italic',
               mt: 4,
               maxWidth: 600,

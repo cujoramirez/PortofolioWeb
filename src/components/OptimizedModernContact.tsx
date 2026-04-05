@@ -19,8 +19,6 @@ import {
 import type { SvgIconComponent } from '@mui/icons-material';
 import { useSystemProfile } from './useSystemProfile';
 
-// ── Data ──────────────────────────────────────────────────────────────────────
-
 interface ContactMethod {
   icon: SvgIconComponent;
   label: string;
@@ -31,48 +29,12 @@ interface ContactMethod {
 }
 
 const contactMethods: ContactMethod[] = [
-  {
-    icon: EmailIcon,
-    label: 'Email',
-    value: 'gadingadityaperdana@gmail.com',
-    href: 'mailto:gadingadityaperdana@gmail.com',
-    isExternal: false,
-    color: '#3b82f6',
-  },
-  {
-    icon: LinkedInIcon,
-    label: 'LinkedIn',
-    value: 'gadingadityaperdana',
-    href: 'https://www.linkedin.com/in/gadingadityaperdana/',
-    isExternal: true,
-    color: '#0a66c2',
-  },
-  {
-    icon: GitHubIcon,
-    label: 'GitHub',
-    value: 'cujoramirez',
-    href: 'https://github.com/cujoramirez',
-    isExternal: true,
-    color: '#e6edf3',
-  },
-  {
-    icon: SchoolIcon,
-    label: 'Google Scholar',
-    value: 'Gading Aditya Perdana',
-    href: 'https://scholar.google.com/citations?user=hwbWuI0AAAAJ',
-    isExternal: true,
-    color: '#4285f4',
-  },
-  {
-    icon: LocationIcon,
-    label: 'Location',
-    value: 'Central Jakarta',
-    href: null,
-    color: '#22d3ee',
-  },
+  { icon: EmailIcon, label: 'Email', value: 'gadingadityaperdana@gmail.com', href: 'mailto:gadingadityaperdana@gmail.com', isExternal: false, color: '#3b82f6' },
+  { icon: LinkedInIcon, label: 'LinkedIn', value: 'gadingadityaperdana', href: 'https://www.linkedin.com/in/gadingadityaperdana/', isExternal: true, color: '#0a66c2' },
+  { icon: GitHubIcon, label: 'GitHub', value: 'cujoramirez', href: 'https://github.com/cujoramirez', isExternal: true, color: '#e6edf3' },
+  { icon: SchoolIcon, label: 'Google Scholar', value: 'Gading Aditya Perdana', href: 'https://scholar.google.com/citations?user=hwbWuI0AAAAJ', isExternal: true, color: '#4285f4' },
+  { icon: LocationIcon, label: 'Location', value: 'Central Jakarta', href: null, color: '#22d3ee' },
 ];
-
-// ── Contact Card ──────────────────────────────────────────────────────────────
 
 const ContactCard = memo(({
   method,
@@ -90,21 +52,15 @@ const ContactCard = memo(({
   const IconComponent = method.icon;
 
   const handleClick = useCallback(() => {
-    if (method.href) {
-      window.open(method.href, method.isExternal ? '_blank' : '_self', 'noopener,noreferrer');
-    }
+    if (method.href) window.open(method.href, method.isExternal ? '_blank' : '_self', 'noopener,noreferrer');
   }, [method.href, method.isExternal]);
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{
-        duration: shouldReduceMotion ? 0.2 : 0.45,
-        delay: shouldReduceMotion ? 0 : index * 0.07,
-        ease: [0.25, 0.1, 0.25, 1],
-      }}
+      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20, filter: shouldReduceMotion ? 'none' : 'blur(6px)' }}
+      animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+      transition={{ duration: shouldReduceMotion ? 0.2 : 0.45, delay: shouldReduceMotion ? 0 : index * 0.07, ease: [0.22, 1, 0.36, 1] }}
       style={{ height: '100%' }}
     >
       <Box
@@ -123,12 +79,12 @@ const ContactCard = memo(({
           p: { xs: 2.5, md: 3 },
           borderRadius: 3,
           height: '100%',
-          background: alpha(theme.palette.background.paper, 0.35),
-          border: `1px solid ${alpha(theme.palette.divider, 0.06)}`,
+          background: alpha(theme.palette.background.paper, 0.3),
+          border: `1px solid ${alpha(theme.palette.divider, 0.04)}`,
           cursor: method.href ? 'pointer' : 'default',
-          transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), background-color 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), border-color 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+          backdropFilter: 'blur(12px)',
+          transition: 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)',
           overflow: 'hidden',
-          // Subtle top accent line
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -138,34 +94,26 @@ const ContactCard = memo(({
             width: '0%',
             height: '2px',
             background: `linear-gradient(90deg, transparent, ${method.color}, transparent)`,
-            transition: 'width 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)',
+            transition: 'width 0.5s cubic-bezier(0.25, 0.1, 0.25, 1)',
             borderRadius: '0 0 4px 4px',
           },
           '&:hover': method.href ? {
-            background: alpha(theme.palette.background.paper, 0.55),
-            borderColor: alpha(method.color, 0.2),
-            transform: 'translateY(-4px)',
-            boxShadow: `0 12px 40px ${alpha(method.color, 0.08)}, 0 4px 12px ${alpha(theme.palette.common.black, 0.2)}`,
-            '&::before': {
-              width: '80%',
-            },
+            background: alpha(theme.palette.background.paper, 0.5),
+            borderColor: alpha(method.color, 0.15),
+            transform: 'translateY(-5px)',
+            boxShadow: `0 16px 48px ${alpha(method.color, 0.08)}, 0 0 0 1px ${alpha(method.color, 0.05)}`,
+            '&::before': { width: '80%' },
             '& .contact-card-icon': {
-              background: alpha(method.color, 0.15),
+              background: alpha(method.color, 0.12),
               color: method.color,
-              boxShadow: `0 0 20px ${alpha(method.color, 0.15)}`,
+              boxShadow: `0 0 24px ${alpha(method.color, 0.12)}`,
+              transform: 'scale(1.08)',
             },
-            '& .contact-card-arrow': {
-              opacity: 1,
-              transform: 'translateX(0)',
-            },
+            '& .contact-card-arrow': { opacity: 1, transform: 'translateX(0)' },
           } : {},
-          '&:focus-visible': {
-            outline: `2px solid ${theme.palette.primary.main}`,
-            outlineOffset: 2,
-          },
+          '&:focus-visible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: 2 },
         }}
       >
-        {/* Icon */}
         <Box
           className="contact-card-icon"
           sx={{
@@ -175,34 +123,33 @@ const ContactCard = memo(({
             width: 48,
             height: 48,
             borderRadius: 2,
-            background: alpha(method.color, 0.08),
-            color: alpha(method.color, 0.7),
-            transition: 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+            background: alpha(method.color, 0.06),
+            color: alpha(method.color, 0.6),
+            transition: 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)',
             mb: 0.5,
           }}
         >
           <IconComponent sx={{ fontSize: 22 }} />
         </Box>
 
-        {/* Label */}
         <Typography
           variant="caption"
           sx={{
-            color: theme.palette.text.secondary,
-            fontSize: '0.7rem',
-            fontWeight: 600,
+            color: alpha(theme.palette.text.secondary, 0.45),
+            fontSize: '0.68rem',
+            fontWeight: 500,
+            fontFamily: '"JetBrains Mono", monospace',
             textTransform: 'uppercase',
-            letterSpacing: 1.2,
+            letterSpacing: 1.5,
           }}
         >
           {method.label}
         </Typography>
 
-        {/* Value */}
         <Typography
           variant="body2"
           sx={{
-            color: theme.palette.text.primary,
+            color: alpha(theme.palette.text.primary, 0.8),
             fontWeight: 500,
             fontSize: { xs: '0.82rem', md: '0.88rem' },
             lineHeight: 1.4,
@@ -215,7 +162,6 @@ const ContactCard = memo(({
           {method.value}
         </Typography>
 
-        {/* External link indicator */}
         {method.href && method.isExternal && (
           <Box
             className="contact-card-arrow"
@@ -225,9 +171,9 @@ const ContactCard = memo(({
               gap: 0.5,
               mt: 'auto',
               pt: 0.5,
-              opacity: 0.4,
+              opacity: 0.3,
               transform: 'translateX(-4px)',
-              transition: 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+              transition: 'all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1)',
               color: method.color,
               fontSize: '0.7rem',
               fontWeight: 500,
@@ -243,8 +189,6 @@ const ContactCard = memo(({
 
 ContactCard.displayName = 'ContactCard';
 
-// ── Availability Pulse ────────────────────────────────────────────────────────
-
 const AvailabilityBadge = memo(() => {
   return (
     <Box
@@ -255,39 +199,39 @@ const AvailabilityBadge = memo(() => {
         px: 2,
         py: 0.75,
         borderRadius: 10,
-        background: alpha('#22c55e', 0.08),
-        border: `1px solid ${alpha('#22c55e', 0.15)}`,
+        background: alpha('#22c55e', 0.06),
+        border: `1px solid ${alpha('#22c55e', 0.1)}`,
       }}
     >
       <Box
         sx={{
           position: 'relative',
-          width: 8,
-          height: 8,
+          width: 7,
+          height: 7,
           borderRadius: '50%',
           background: '#22c55e',
-          // Pulse ring via CSS animation (GPU-composited)
           '&::after': {
             content: '""',
             position: 'absolute',
             inset: -3,
             borderRadius: '50%',
-            border: `2px solid ${alpha('#22c55e', 0.4)}`,
-            animation: 'contactPulse 2s ease-in-out infinite',
+            border: `1.5px solid ${alpha('#22c55e', 0.3)}`,
+            animation: 'contactPulse 2.5s ease-in-out infinite',
           },
           '@keyframes contactPulse': {
             '0%, 100%': { opacity: 1, transform: 'scale(1)' },
-            '50%': { opacity: 0.4, transform: 'scale(1.5)' },
+            '50%': { opacity: 0.3, transform: 'scale(1.6)' },
           },
         }}
       />
       <Typography
         variant="caption"
         sx={{
-          color: '#22c55e',
-          fontWeight: 600,
-          fontSize: '0.72rem',
-          letterSpacing: 0.5,
+          color: alpha('#22c55e', 0.8),
+          fontWeight: 500,
+          fontFamily: '"JetBrains Mono", monospace',
+          fontSize: '0.68rem',
+          letterSpacing: 1,
           textTransform: 'uppercase',
           lineHeight: 1,
         }}
@@ -299,8 +243,6 @@ const AvailabilityBadge = memo(() => {
 });
 
 AvailabilityBadge.displayName = 'AvailabilityBadge';
-
-// ── Main Component ────────────────────────────────────────────────────────────
 
 const OptimizedModernContactComponent = () => {
   const theme = useTheme();
@@ -316,15 +258,9 @@ const OptimizedModernContactComponent = () => {
       component="section"
       id="contact"
       ref={sectionRef}
-      sx={{
-        position: 'relative',
-        py: { xs: 10, md: 16 },
-        overflow: 'hidden',
-      }}
+      sx={{ position: 'relative', py: { xs: 10, md: 16 }, overflow: 'hidden' }}
     >
-      {/* ── Background layers ─────────────────────────────────────────── */}
-
-      {/* Radial gradient orbs (pure CSS, GPU-composited) */}
+      {/* Background */}
       <Box
         aria-hidden="true"
         sx={{
@@ -338,7 +274,8 @@ const OptimizedModernContactComponent = () => {
             left: '-10%',
             width: '50%',
             height: '60%',
-            background: `radial-gradient(ellipse at center, ${alpha(theme.palette.primary.main, 0.04)} 0%, transparent 70%)`,
+            background: `radial-gradient(ellipse at center, ${alpha(theme.palette.primary.main, 0.03)} 0%, transparent 70%)`,
+            filter: 'blur(40px)',
           },
           '&::after': {
             content: '""',
@@ -347,20 +284,21 @@ const OptimizedModernContactComponent = () => {
             right: '-5%',
             width: '45%',
             height: '55%',
-            background: `radial-gradient(ellipse at center, ${alpha(theme.palette.secondary.main, 0.03)} 0%, transparent 70%)`,
+            background: `radial-gradient(ellipse at center, ${alpha(theme.palette.secondary.main, 0.02)} 0%, transparent 70%)`,
+            filter: 'blur(40px)',
           },
         }}
       />
 
-      {/* Subtle grid dot pattern */}
+      {/* Subtle grid */}
       <Box
         aria-hidden="true"
         sx={{
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
-          opacity: 0.3,
-          backgroundImage: `radial-gradient(${alpha(theme.palette.divider, 0.15)} 1px, transparent 1px)`,
+          opacity: 0.2,
+          backgroundImage: `radial-gradient(${alpha(theme.palette.divider, 0.1)} 1px, transparent 1px)`,
           backgroundSize: '32px 32px',
           maskImage: 'radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 75%)',
           WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 75%)',
@@ -368,35 +306,39 @@ const OptimizedModernContactComponent = () => {
       />
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-
-        {/* ── Section Header ──────────────────────────────────────────── */}
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 24 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: shouldReduceMotion ? 0.3 : 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+          transition={{ duration: shouldReduceMotion ? 0.3 : 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
           <Box sx={{ textAlign: 'center', mb: { xs: 5, md: 7 } }}>
-            {/* Overline */}
             <Typography
               variant="overline"
               sx={{
-                fontWeight: 600,
-                letterSpacing: 3,
+                fontWeight: 500,
+                letterSpacing: 4,
                 color: theme.palette.primary.main,
-                fontSize: '0.78rem',
                 mb: 2.5,
-                display: 'block',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1.5,
+                '&::before, &::after': {
+                  content: '""',
+                  display: 'inline-block',
+                  width: 24,
+                  height: 1,
+                  bgcolor: alpha(theme.palette.primary.main, 0.3),
+                },
               }}
             >
               Get In Touch
             </Typography>
-
-            {/* Heading */}
             <Typography
               variant="h2"
               component="h2"
               sx={{
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: { xs: '2.25rem', sm: '2.75rem', md: '3.25rem' },
                 background: `linear-gradient(135deg, ${theme.palette.text.primary} 30%, ${theme.palette.primary.main} 100%)`,
                 WebkitBackgroundClip: 'text',
@@ -408,28 +350,24 @@ const OptimizedModernContactComponent = () => {
             >
               Let's Connect
             </Typography>
-
-            {/* Subtitle */}
             <Typography
               variant="body1"
               sx={{
-                color: theme.palette.text.secondary,
+                color: alpha(theme.palette.text.secondary, 0.6),
                 maxWidth: 520,
                 mx: 'auto',
-                fontSize: { xs: '0.95rem', md: '1.05rem' },
+                fontSize: { xs: '0.95rem', md: '1.02rem' },
                 lineHeight: 1.7,
                 mb: 3,
               }}
             >
               Open to research collaborations, AI engineering roles, and software development opportunities
             </Typography>
-
-            {/* Availability badge */}
             <AvailabilityBadge />
           </Box>
         </motion.div>
 
-        {/* ── Contact Cards Grid (flexbox for centered last row) ───── */}
+        {/* Contact Cards */}
         <Box
           sx={{
             display: 'flex',
@@ -442,26 +380,17 @@ const OptimizedModernContactComponent = () => {
           }}
         >
           {contactMethods.map((method, index) => (
-            <Box
-              key={method.label}
-              sx={{
-                width: {
-                  xs: 'calc(50% - 6px)',
-                  sm: 'calc(33.333% - 8px)',
-                  md: 'calc(20% - 12.8px)',
-                },
-              }}
-            >
+            <Box key={method.label} sx={{ width: { xs: 'calc(50% - 6px)', sm: 'calc(33.333% - 8px)', md: 'calc(20% - 12.8px)' } }}>
               <ContactCard method={method} index={index} />
             </Box>
           ))}
         </Box>
 
-        {/* ── CTA Section ─────────────────────────────────────────────── */}
+        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 24 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.55, delay: shouldReduceMotion ? 0 : 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+          transition={{ duration: 0.55, delay: shouldReduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
         >
           <Box
             sx={{
@@ -470,14 +399,13 @@ const OptimizedModernContactComponent = () => {
               mx: 'auto',
               borderRadius: 4,
               overflow: 'hidden',
-              // Gradient border via mask trick
               '&::before': {
                 content: '""',
                 position: 'absolute',
                 inset: 0,
                 borderRadius: 'inherit',
                 padding: '1px',
-                background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.3)}, ${alpha(theme.palette.secondary.main, 0.15)}, ${alpha(theme.palette.primary.main, 0.08)})`,
+                background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.2)}, ${alpha(theme.palette.secondary.main, 0.1)}, ${alpha(theme.palette.primary.main, 0.05)})`,
                 WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
                 WebkitMaskComposite: 'xor',
                 maskComposite: 'exclude',
@@ -493,11 +421,11 @@ const OptimizedModernContactComponent = () => {
                 alignItems: 'center',
                 gap: { xs: 3, md: 4 },
                 p: { xs: 4, md: 5 },
-                background: alpha(theme.palette.background.paper, 0.3),
+                background: alpha(theme.palette.background.paper, 0.25),
+                backdropFilter: 'blur(16px)',
                 textAlign: { xs: 'center', md: 'left' },
               }}
             >
-              {/* Left: text content */}
               <Box sx={{ flex: 1 }}>
                 <Typography
                   variant="h5"
@@ -505,7 +433,7 @@ const OptimizedModernContactComponent = () => {
                     fontWeight: 700,
                     color: theme.palette.text.primary,
                     mb: 1.5,
-                    fontSize: { xs: '1.25rem', md: '1.4rem' },
+                    fontSize: { xs: '1.2rem', md: '1.35rem' },
                     letterSpacing: '-0.01em',
                   }}
                 >
@@ -514,8 +442,8 @@ const OptimizedModernContactComponent = () => {
                 <Typography
                   variant="body2"
                   sx={{
-                    color: alpha(theme.palette.text.secondary, 0.85),
-                    lineHeight: 1.7,
+                    color: alpha(theme.palette.text.secondary, 0.6),
+                    lineHeight: 1.75,
                     fontSize: { xs: '0.88rem', md: '0.92rem' },
                   }}
                 >
@@ -524,7 +452,6 @@ const OptimizedModernContactComponent = () => {
                 </Typography>
               </Box>
 
-              {/* Right: CTA button */}
               <Box sx={{ flexShrink: 0 }}>
                 <Box
                   component="a"
@@ -541,33 +468,30 @@ const OptimizedModernContactComponent = () => {
                     color: theme.palette.primary.contrastText,
                     textDecoration: 'none',
                     fontWeight: 600,
-                    fontSize: '0.92rem',
-                    letterSpacing: '0.01em',
-                    transition: 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
-                    boxShadow: `0 4px 16px ${alpha(theme.palette.primary.main, 0.25)}`,
+                    fontFamily: '"Sora", system-ui, sans-serif',
+                    fontSize: '0.9rem',
+                    letterSpacing: '0.02em',
+                    transition: 'all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                    boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.25)}`,
                     whiteSpace: 'nowrap',
                     '&:hover': {
                       transform: 'translateY(-2px)',
-                      boxShadow: `0 8px 28px ${alpha(theme.palette.primary.main, 0.35)}`,
-                      '& .cta-arrow': {
-                        transform: 'translateX(3px)',
-                      },
+                      boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.35)}, 0 0 60px ${alpha(theme.palette.primary.main, 0.1)}`,
+                      '& .cta-arrow': { transform: 'translateX(4px)' },
                     },
-                    '&:active': {
-                      transform: 'translateY(0)',
-                    },
+                    '&:active': { transform: 'translateY(0)' },
                   }}
                 >
                   <EmailIcon sx={{ fontSize: 18 }} />
                   Send Email
-                  <ArrowForwardIcon className="cta-arrow" sx={{ fontSize: 16, transition: 'transform 0.25s ease', ml: -0.5 }} />
+                  <ArrowForwardIcon className="cta-arrow" sx={{ fontSize: 16, transition: 'transform 0.3s ease', ml: -0.5 }} />
                 </Box>
               </Box>
             </Box>
           </Box>
         </motion.div>
 
-        {/* ── Footer ──────────────────────────────────────────────────── */}
+        {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
@@ -577,7 +501,7 @@ const OptimizedModernContactComponent = () => {
             sx={{
               mt: { xs: 8, md: 12 },
               pt: 4,
-              borderTop: `1px solid ${alpha(theme.palette.divider, 0.06)}`,
+              borderTop: `1px solid ${alpha(theme.palette.divider, 0.04)}`,
               display: 'flex',
               flexDirection: { xs: 'column', sm: 'row' },
               alignItems: 'center',
@@ -588,15 +512,15 @@ const OptimizedModernContactComponent = () => {
             <Typography
               variant="body2"
               sx={{
-                color: alpha(theme.palette.text.secondary, 0.5),
-                fontSize: '0.78rem',
-                letterSpacing: 0.2,
+                color: alpha(theme.palette.text.secondary, 0.35),
+                fontSize: '0.76rem',
+                letterSpacing: 0.3,
+                fontFamily: '"JetBrains Mono", monospace',
               }}
             >
               © {currentYear} Gading Aditya Perdana
             </Typography>
 
-            {/* Inline social links in footer */}
             <Box sx={{ display: 'flex', gap: 0.5 }}>
               {contactMethods
                 .filter(m => m.href && m.isExternal)
@@ -617,22 +541,22 @@ const OptimizedModernContactComponent = () => {
                         width: 32,
                         height: 32,
                         borderRadius: 1.5,
-                        color: alpha(theme.palette.text.secondary, 0.4),
-                        transition: 'all 0.25s ease',
+                        color: alpha(theme.palette.text.secondary, 0.3),
+                        transition: 'all 0.3s ease',
                         '&:hover': {
                           color: m.color,
-                          background: alpha(m.color, 0.08),
+                          background: alpha(m.color, 0.06),
+                          transform: 'translateY(-2px)',
                         },
                       }}
                     >
-                      <Icon sx={{ fontSize: 16 }} />
+                      <Icon sx={{ fontSize: 15 }} />
                     </Box>
                   );
                 })}
             </Box>
           </Box>
         </motion.div>
-
       </Container>
     </Box>
   );

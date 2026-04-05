@@ -38,8 +38,6 @@ import {
 	KeyboardArrowUp,
 } from '@mui/icons-material';
 import { useSystemProfile } from './useSystemProfile';
-import { gsap } from 'gsap';
-import StarBorder from './StarBorder';
 import GlassSurface from './GlassSurface';
 import { useLenis } from '../hooks/useLenis';
 
@@ -181,16 +179,12 @@ const ModernNavbarComponent = () => {
 	const [activeSection, setActiveSection] = useState('hero');
 	const [navItemPositions, setNavItemPositions] = useState<NavItemPositions>({});
 	const [isMobileCSS, setIsMobileCSS] = useState(false);
-	const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
 	const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 	const [navbarReady, setNavbarReady] = useState(() => typeof window === 'undefined');
 
 	const navRef = useRef<HTMLDivElement | null>(null);
 	const logoBoxRef = useRef<HTMLDivElement | null>(null);
 	const desktopNavRef = useRef<HTMLDivElement | null>(null);
-	const circleRefs = useRef<Array<HTMLSpanElement | null>>([]);
-	const tlRefs = useRef<Array<gsap.core.Timeline | null>>([]);
-	const activeTweenRefs = useRef<Array<gsap.core.Tween | null>>([]);
 	const activeSectionRef = useRef('hero');
 	const evaluationFrameRef = useRef<number | null>(null);
 	const evaluationScrollRef = useRef(0);
@@ -239,7 +233,7 @@ const ModernNavbarComponent = () => {
 	const isMobile = deviceType === 'mobile';
 	const isTablet = deviceType === 'tablet';
 	const shouldReduceMotion = performanceTier === 'low';
-	const sharedMagnifySpring = useMemo<SpringOptions>(() => ({ stiffness: 280, damping: 26, mass: 0.42 }), []);
+	const sharedMagnifySpring = useMemo<SpringOptions>(() => ({ stiffness: 320, damping: 28, mass: 0.35 }), []);
 
 	useEffect(() => {
 		activeSectionRef.current = activeSection;
@@ -288,166 +282,6 @@ const ModernNavbarComponent = () => {
 
 	// Use constant nav items
 	const navItems = NAV_ITEMS;
-
-	// GSAP Pill Animation Setup
-	useEffect(() => {
-		if (shouldReduceMotion || prefersLightweightMenu) return;
-
-		const layoutPills = () => {
-			circleRefs.current.forEach((circle, index) => {
-				if (!circle?.parentElement) return;
-
-				const pill = circle.parentElement as HTMLElement;
-				const rect = pill.getBoundingClientRect();
-				const { width: w, height: h } = rect;
-				
-				// Calculate circle dimensions for pill effect
-				const R = ((w * w) / 4 + h * h) / (2 * h);
-				const D = Math.ceil(2 * R) + 2;
-				const delta = Math.ceil(R - Math.sqrt(Math.max(0, R * R - (w * w) / 4))) + 1;
-				const originY = D - delta;
-
-				circle.style.width = `${D}px`;
-				circle.style.height = `${D}px`;
-				circle.style.bottom = `-${delta}px`;
-
-				gsap.set(circle, {
-					xPercent: -50,
-					scale: 0,
-					transformOrigin: `50% ${originY}px`,
-				});
-
-				const label = pill.querySelector<HTMLElement>('.pill-label');
-				const labelHover = pill.querySelector<HTMLElement>('.pill-label-hover');
-
-				if (label) gsap.set(label, { y: 0 });
-				if (labelHover) {
-					gsap.set(labelHover, { y: h + 12, opacity: 0 });
-				}
-
-				// Create GPU-accelerated timeline for hover animation
-				tlRefs.current[index]?.kill();
-				const tl = gsap.timeline({ paused: true });
-
-				tl.to(
-					circle,
-					{ scale: 1.15, xPercent: -50, duration: 0.5, ease: 'power2.out', overwrite: 'auto', force3D: true },
-					0
-				);
-
-				if (label) {
-					tl.to(label, { y: -(h + 8), duration: 0.5, ease: 'power2.out', overwrite: 'auto', force3D: true }, 0);
-				}
-
-				if (labelHover) {
-					gsap.set(labelHover, { y: Math.ceil(h + 100), opacity: 0, force3D: true });
-					tl.to(labelHover, { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out', overwrite: 'auto', force3D: true }, 0);
-				}
-
-				tlRefs.current[index] = tl;
-			});
-		};
-
-		layoutPills();
-
-		const handleResize = () => layoutPills();
-		window.addEventListener('resize', handleResize);
-
-		if (document.fonts) {
-			document.fonts.ready.then(layoutPills).catch(() => {});
-		}
-
-		// Dramatic Enterprise-Level Initial Load Animation
-		if (!hasInitialLoaded) {
-			const logo = logoBoxRef.current;
-			const navContainer = desktopNavRef.current;
-
-			if (logo) {
-				gsap.fromTo(
-					logo,
-					{ opacity: 0, y: -18, filter: 'blur(8px)', force3D: true },
-					{
-						opacity: 1,
-						y: 0,
-						filter: 'blur(0px)',
-						duration: 0.9,
-						ease: 'expo.out',
-						force3D: true,
-					},
-				);
-			}
-
-			if (navContainer) {
-				const pillElements = Array.from(
-					navContainer.querySelectorAll<HTMLElement>('[data-nav-item]'),
-				);
-
-				gsap.fromTo(
-					navContainer,
-					{ opacity: 0, y: 24, filter: 'blur(12px)', force3D: true },
-					{
-						opacity: 1,
-						y: 0,
-						filter: 'blur(0px)',
-						duration: 1,
-						ease: 'expo.out',
-						force3D: true,
-					},
-				);
-
-				if (pillElements.length > 0) {
-					gsap.fromTo(
-						pillElements,
-						{ opacity: 0, y: 16, scale: 0.92, force3D: true },
-						{
-							opacity: 1,
-							y: 0,
-							scale: 1,
-							duration: 0.7,
-							ease: 'power3.out',
-							stagger: 0.06,
-							force3D: true,
-						},
-					);
-				}
-			}
-
-			setHasInitialLoaded(true);
-		}
-
-		return () => window.removeEventListener('resize', handleResize);
-		}, [shouldReduceMotion, prefersLightweightMenu, navItems, hasInitialLoaded]);
-
-	// Pill hover handlers
-	const handlePillEnter = useCallback(
-		(index: number) => {
-			if (shouldReduceMotion || prefersLightweightMenu) return;
-			const tl = tlRefs.current[index];
-			if (!tl) return;
-			activeTweenRefs.current[index]?.kill();
-			activeTweenRefs.current[index] = tl.tweenTo(tl.duration(), {
-				duration: 0.4,
-				ease: 'power2.out',
-				overwrite: 'auto',
-			});
-		},
-		[shouldReduceMotion, prefersLightweightMenu]
-	);
-
-	const handlePillLeave = useCallback(
-		(index: number) => {
-			if (shouldReduceMotion || prefersLightweightMenu) return;
-			const tl = tlRefs.current[index];
-			if (!tl) return;
-			activeTweenRefs.current[index]?.kill();
-			activeTweenRefs.current[index] = tl.tweenTo(0, {
-				duration: 0.3,
-				ease: 'power2.out',
-				overwrite: 'auto',
-			});
-		},
-		[shouldReduceMotion, prefersLightweightMenu]
-	);
 
 	const scrollToSection = useCallback(
 		(sectionId: string) => {
@@ -844,7 +678,7 @@ const ModernNavbarComponent = () => {
 										>
 											{isTabletDevice ? 'Gading Aditya' : 'Gading Aditya Perdana'}
 										</Box>
-										<Box sx={{ fontSize: '0.8125rem', color: '#94a3b8', fontWeight: 500, whiteSpace: 'nowrap' }}>
+										<Box sx={{ fontSize: '0.8125rem', fontFamily: '"DM Sans", sans-serif', color: '#94a3b8', fontWeight: 500, whiteSpace: 'nowrap' }}>
 											{isTabletDevice ? 'AI Researcher' : 'AI Researcher & Developer'}
 										</Box>
 									</Box>
@@ -878,6 +712,7 @@ const ModernNavbarComponent = () => {
 											alignItems: 'center',
 											justifyContent: 'center',
 											fontSize: '1.25rem',
+											fontFamily: '"Sora", sans-serif',
 											fontWeight: 700,
 											color: '#ffffff',
 											boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)',
@@ -895,6 +730,7 @@ const ModernNavbarComponent = () => {
 												sx={{
 													fontWeight: 700,
 													fontSize: '1.125rem',
+													fontFamily: '"Sora", sans-serif',
 													color: '#f1f5f9',
 													letterSpacing: '-0.02em',
 													whiteSpace: 'nowrap',
@@ -902,7 +738,7 @@ const ModernNavbarComponent = () => {
 											>
 												{isTabletDevice ? 'Gading Aditya' : 'Gading Aditya Perdana'}
 											</Box>
-											<Box sx={{ fontSize: '0.8125rem', color: '#94a3b8', fontWeight: 500, whiteSpace: 'nowrap' }}>
+											<Box sx={{ fontSize: '0.8125rem', fontFamily: '"DM Sans", sans-serif', color: '#94a3b8', fontWeight: 500, whiteSpace: 'nowrap' }}>
 												{isTabletDevice ? 'AI Researcher' : 'AI Researcher & Developer'}
 											</Box>
 										</Box>
@@ -933,8 +769,9 @@ const ModernNavbarComponent = () => {
 										borderRadius: '11px',
 										opacity: springOpacity,
 										zIndex: 0,
-										boxShadow: '0 0 30px rgba(59, 130, 246, 0.25), 0 0 60px rgba(59, 130, 246, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.05)',
-										border: '1px solid rgba(59, 130, 246, 0.2)',
+										backdropFilter: 'blur(4px)',
+										boxShadow: '0 0 16px rgba(59, 130, 246, 0.2), inset 0 0 12px rgba(255, 255, 255, 0.04)',
+										border: '1px solid rgba(59, 130, 246, 0.18)',
 									}}
 									transition={{ type: 'spring', stiffness: 260, damping: 32 }}
 								/>
@@ -950,175 +787,73 @@ const ModernNavbarComponent = () => {
 									const sectionKey = item.href.replace('#', '');
 									const isActive = activeSection === sectionKey;
 									const Icon = item.icon;
-									const isHomeButton = index === 0;
 									const isHovered = hoveredIndex === index;
 
 									const handleMouseEnter = () => {
-										handlePillEnter(index);
 										setHoveredIndex(index);
 									};
 
 									const handleMouseLeave = () => {
-										handlePillLeave(index);
-										setHoveredIndex((prev) => (prev === index ? null : prev));
-										if (!magnificationDisabled) {
-											navMagnifyMouseX.set(Number.POSITIVE_INFINITY);
-										}
+										setHoveredIndex(null);
 									};
 
-									const homeButtonContent = (
-										<Box sx={{ position: 'relative', zIndex: 1, overflow: 'visible' }}>
-											<StarBorder
-												as="div"
-												color={isActive ? '#60a5fa' : isHovered ? '#93c5fd' : '#3b82f6'}
-												speed={isActive ? '3s' : '5s'}
-												className="cursor-pointer"
-												onClick={() => scrollToSection(item.href)}
-												style={{ padding: 0, margin: 0, display: 'block' }}
-											>
-												<Box
-													sx={{
-														display: 'inline-flex',
-														alignItems: 'center',
-														gap: 0.75,
-														px: 1.75,
-														py: 0.75,
-														height: 40,
-														background: isActive
-															? 'linear-gradient(135deg, rgba(30, 58, 138, 0.95) 0%, rgba(37, 99, 235, 0.9) 100%)'
-															: isHovered
-																? 'rgba(59, 130, 246, 0.12)'
-																: 'rgba(15, 23, 42, 0.6)',
-														borderRadius: '10px',
-														border: 'none',
-														boxShadow: isActive 
-															? '0 2px 8px rgba(30, 64, 175, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08)' 
-															: isHovered 
-																? '0 1px 4px rgba(59, 130, 246, 0.1)' 
-																: 'none',
-														transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-													}}
-												>
-													<Icon
-														sx={{
-															fontSize: '1.125rem',
-															color: isActive ? '#ffffff' : isHovered ? '#60a5fa' : '#94a3b8',
-															transition: 'color 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-														}}
-													/>
-													<Box
-														component="span"
-														sx={{
-															fontSize: '0.875rem',
-															fontWeight: isActive ? 600 : 500,
-															color: isActive ? '#ffffff' : isHovered ? '#60a5fa' : '#cbd5e1',
-															lineHeight: 1,
-															transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-														}}
-													>
-														{item.name}
-													</Box>
-												</Box>
-											</StarBorder>
-										</Box>
-									);
-
-									const regularButtonContent = (
+									const content = (
 										<Box
+											className="nav-btn"
 											sx={{
 												position: 'relative',
-												overflow: 'hidden',
+												overflow: 'visible',
 												display: 'inline-flex',
 												alignItems: 'center',
 												justifyContent: 'center',
+												gap: 0.5,
 												px: 1.75,
 												height: 40,
 												borderRadius: '10px',
 												cursor: 'pointer',
-												border: isActive
-													? '1px solid rgba(96, 165, 250, 0.35)'
-													: isHovered
-														? '1px solid rgba(59, 130, 246, 0.2)'
-														: '1px solid rgba(148, 163, 184, 0.12)',
-												backgroundColor: isActive
-													? 'transparent'
-													: isHovered
-														? 'rgba(59, 130, 246, 0.06)'
-														: 'transparent',
-												background: isActive
-													? 'linear-gradient(135deg, rgba(30, 58, 138, 0.95) 0%, rgba(37, 99, 235, 0.9) 100%)'
-													: isHovered
-														? 'rgba(59, 130, 246, 0.06)'
-														: 'transparent',
-												boxShadow: isActive 
-													? '0 2px 8px rgba(30, 64, 175, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08)' 
-													: isHovered 
-														? '0 1px 4px rgba(59, 130, 246, 0.08)' 
-														: 'none',
-												transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+												border: isHovered
+													? '1px solid rgba(59, 130, 246, 0.15)'
+													: '1px solid rgba(148, 163, 184, 0.08)',
+												background: isHovered
+													? 'rgba(59, 130, 246, 0.06)'
+													: 'transparent',
+												boxShadow: isHovered
+													? '0 1px 4px rgba(59, 130, 246, 0.08)'
+													: 'none',
+												transition: 'all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
+												'&::after': {
+													content: '""',
+													position: 'absolute',
+													bottom: 0,
+													left: '20%',
+													width: '60%',
+													height: '2px',
+													borderRadius: '1px',
+													background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.8), rgba(96, 165, 250, 0.8))',
+													transform: isHovered ? 'scaleX(1)' : 'scaleX(0)',
+													transformOrigin: 'center',
+													transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+												},
 											}}
 										>
+											<Icon sx={{
+												fontSize: '1rem',
+												color: isActive ? '#ffffff' : isHovered ? '#60a5fa' : '#94a3b8',
+												transition: 'color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
+											}} />
 											<Box
 												component="span"
-												ref={(el) => {
-													if (el instanceof HTMLSpanElement) {
-														circleRefs.current[index] = el;
-													}
+												sx={{
+													fontSize: '0.8125rem',
+													fontFamily: '"DM Sans", sans-serif',
+													fontWeight: isActive ? 600 : 500,
+													color: isActive ? '#ffffff' : isHovered ? '#60a5fa' : '#cbd5e1',
+													lineHeight: 1,
+													letterSpacing: '0.01em',
+													transition: 'all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
 												}}
-												sx={{
-													position: 'absolute',
-													left: '50%',
-													bottom: 0,
-													borderRadius: '50%',
-													background: isHovered ? 'rgba(59, 130, 246, 0.15)' : 'rgba(37, 99, 235, 0.15)',
-													pointerEvents: 'none',
-													zIndex: 1,
-											}}
-											/>
-
-											<Box
-												sx={{
-													position: 'relative',
-													display: 'inline-flex',
-													alignItems: 'center',
-													gap: 0.5,
-													zIndex: 2,
-											}}
 											>
-												<Icon sx={{ 
-													fontSize: '1.125rem', 
-													color: isActive ? '#ffffff' : isHovered ? '#60a5fa' : '#94a3b8', 
-													transition: 'color 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-												}} />
-												<Box
-													component="span"
-													className="pill-label"
-													sx={{
-														fontSize: '0.875rem',
-														fontWeight: isActive ? 600 : 500,
-														color: isActive ? '#ffffff' : isHovered ? '#60a5fa' : '#cbd5e1',
-														lineHeight: 1,
-														transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-													}}
-												>
-													{item.name}
-												</Box>
-												<Box
-													component="span"
-													className="pill-label-hover"
-													sx={{
-														position: 'absolute',
-														left: '20px',
-														top: 0,
-														fontSize: '0.875rem',
-														fontWeight: 500,
-														color: isActive ? '#ffffff' : '#60a5fa',
-														lineHeight: 1,
-														pointerEvents: 'none',
-													}}
-												>
-													{item.name}
-												</Box>
+												{item.name}
 											</Box>
 
 											{isActive && (
@@ -1132,15 +867,13 @@ const ModernNavbarComponent = () => {
 														height: 4,
 														borderRadius: '50%',
 														background: '#60a5fa',
-														boxShadow: '0 0 6px rgba(96, 165, 250, 0.5)',
+														boxShadow: '0 0 8px rgba(96, 165, 250, 0.6)',
 														zIndex: 4,
 													}}
 												/>
 											)}
 										</Box>
 									);
-
-									const content = isHomeButton ? homeButtonContent : regularButtonContent;
 
 									if (magnificationDisabled) {
 										return (
@@ -1168,8 +901,8 @@ const ModernNavbarComponent = () => {
 											key={item.name}
 											data-nav-item={sectionKey}
 											mouseX={navMagnifyMouseX}
-											magnification={isHomeButton ? 1.22 : 1.16}
-											distance={190}
+											magnification={1.10}
+											distance={150}
 											spring={sharedMagnifySpring}
 											onPointerEnter={handleMouseEnter}
 											onPointerLeave={handleMouseLeave}

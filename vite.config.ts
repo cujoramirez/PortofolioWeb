@@ -56,14 +56,12 @@ export default defineConfig({
 
                     // Animation libraries
                     if (normalizedId.includes('/node_modules/framer-motion/') ||
-                        normalizedId.includes('/node_modules/gsap/') ||
-                        normalizedId.includes('/node_modules/@use-gesture/')) {
+                        normalizedId.includes('/node_modules/gsap/')) {
                         return 'animation-vendors';
                     }
 
                     // Icons - can be large
-                    if (normalizedId.includes('/node_modules/react-icons/') ||
-                        normalizedId.includes('/node_modules/lucide-react/')) {
+                    if (normalizedId.includes('/node_modules/react-icons/')) {
                         return 'icon-vendors';
                     }
 

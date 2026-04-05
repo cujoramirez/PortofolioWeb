@@ -1,5 +1,5 @@
-import { memo, useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { memo, useState } from 'react';
+import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
 import { Fab, alpha, useTheme } from '@mui/material';
 import { KeyboardArrowUp } from '@mui/icons-material';
 import { useLenis } from '../hooks/useLenis';
@@ -8,15 +8,11 @@ const BackToTop = memo(() => {
   const theme = useTheme();
   const { lenis } = useLenis();
   const [isVisible, setIsVisible] = useState(false);
+  const { scrollY } = useScroll();
 
-  useEffect(() => {
-    const toggleVisibility = () => {
-      setIsVisible(window.scrollY > 500);
-    };
-
-    window.addEventListener('scroll', toggleVisibility, { passive: true });
-    return () => window.removeEventListener('scroll', toggleVisibility);
-  }, []);
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    setIsVisible(latest > 500);
+  });
 
   const scrollToTop = () => {
     if (lenis) {
@@ -46,15 +42,17 @@ const BackToTop = memo(() => {
             size="medium"
             aria-label="Scroll to top"
             sx={{
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.dark, 0.9)} 100%)`,
-              color: '#fff',
-              boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
-              border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
-              transition: 'all 0.3s ease',
+              background: alpha(theme.palette.background.paper, 0.6),
+              color: alpha(theme.palette.text.primary, 0.6),
+              backdropFilter: 'blur(16px)',
+              boxShadow: `0 4px 24px ${alpha(theme.palette.common.black, 0.15)}, 0 0 0 1px ${alpha(theme.palette.divider, 0.08)}`,
+              border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+              transition: 'all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1)',
               '&:hover': {
-                background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
-                boxShadow: `0 6px 30px ${alpha(theme.palette.primary.main, 0.5)}`,
-                transform: 'translateY(-2px)',
+                background: alpha(theme.palette.primary.main, 0.12),
+                color: theme.palette.primary.main,
+                boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.15)}, 0 0 0 1px ${alpha(theme.palette.primary.main, 0.15)}`,
+                transform: 'translateY(-3px)',
               },
               '&:active': {
                 transform: 'translateY(0)',

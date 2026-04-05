@@ -15,7 +15,7 @@ const SectionDivider = memo(({ variant = 'gradient' }: SectionDividerProps) => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          gap: 2,
+          gap: 2.5,
           py: 6,
         }}
       >
@@ -23,15 +23,13 @@ const SectionDivider = memo(({ variant = 'gradient' }: SectionDividerProps) => {
           <Box
             key={i}
             sx={{
-              width: 6,
-              height: 6,
+              width: i === 1 ? 5 : 3,
+              height: i === 1 ? 5 : 3,
               borderRadius: '50%',
-              background: i === 1 
-                ? theme.palette.primary.main 
-                : alpha(theme.palette.primary.main, 0.3),
-              boxShadow: i === 1 
-                ? `0 0 10px ${alpha(theme.palette.primary.main, 0.5)}` 
-                : 'none',
+              background: i === 1
+                ? alpha(theme.palette.primary.main, 0.5)
+                : alpha(theme.palette.primary.main, 0.15),
+              transition: 'all 0.3s ease',
             }}
           />
         ))}
@@ -41,26 +39,20 @@ const SectionDivider = memo(({ variant = 'gradient' }: SectionDividerProps) => {
 
   if (variant === 'line') {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          py: 6,
-        }}
-      >
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
         <Box
           sx={{
-            width: 80,
-            height: 2,
+            width: 60,
+            height: 1,
             borderRadius: 1,
-            background: `linear-gradient(90deg, transparent 0%, ${theme.palette.primary.main} 50%, transparent 100%)`,
+            background: `linear-gradient(90deg, transparent 0%, ${alpha(theme.palette.primary.main, 0.2)} 50%, transparent 100%)`,
           }}
         />
       </Box>
     );
   }
 
-  // Default: gradient
+  // Default: gradient - more subtle
   return (
     <Box
       sx={{
@@ -69,11 +61,11 @@ const SectionDivider = memo(({ variant = 'gradient' }: SectionDividerProps) => {
         my: 4,
         mx: 'auto',
         maxWidth: 'lg',
-        background: `linear-gradient(90deg, 
-          transparent 0%, 
-          ${alpha(theme.palette.primary.main, 0.1)} 20%, 
-          ${alpha(theme.palette.primary.main, 0.3)} 50%, 
-          ${alpha(theme.palette.primary.main, 0.1)} 80%, 
+        background: `linear-gradient(90deg,
+          transparent 0%,
+          ${alpha(theme.palette.primary.main, 0.06)} 20%,
+          ${alpha(theme.palette.primary.main, 0.12)} 50%,
+          ${alpha(theme.palette.primary.main, 0.06)} 80%,
           transparent 100%)`,
         '&::before': {
           content: '""',
@@ -81,11 +73,11 @@ const SectionDivider = memo(({ variant = 'gradient' }: SectionDividerProps) => {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: 8,
-          height: 8,
+          width: 4,
+          height: 4,
           borderRadius: '50%',
-          background: theme.palette.primary.main,
-          boxShadow: `0 0 15px ${alpha(theme.palette.primary.main, 0.6)}, 0 0 30px ${alpha(theme.palette.primary.main, 0.3)}`,
+          background: alpha(theme.palette.primary.main, 0.4),
+          boxShadow: `0 0 12px ${alpha(theme.palette.primary.main, 0.3)}`,
         },
       }}
     />

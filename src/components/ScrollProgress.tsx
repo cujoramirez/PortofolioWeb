@@ -39,9 +39,9 @@ const ScrollProgress = memo(() => {
         top: 0,
         left: 0,
         right: 0,
-        height: 3,
+        height: 2,
         zIndex: 9999,
-        background: alpha(theme.palette.background.default, 0.85),
+        background: 'transparent',
         pointerEvents: 'none',
       }}
     >
@@ -49,9 +49,9 @@ const ScrollProgress = memo(() => {
         style={{
           scaleX,
           height: '100%',
-          background: `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.light, 0.8)} 50%, ${theme.palette.primary.main} 100%)`,
+          background: `linear-gradient(90deg, ${alpha(theme.palette.primary.main, 0.8)} 0%, ${theme.palette.primary.main} 50%, ${alpha(theme.palette.secondary.main, 0.8)} 100%)`,
           transformOrigin: '0%',
-          boxShadow: `0 0 10px ${alpha(theme.palette.primary.main, 0.5)}, 0 0 20px ${alpha(theme.palette.primary.main, 0.3)}`,
+          boxShadow: `0 0 8px ${alpha(theme.palette.primary.main, 0.3)}, 0 0 20px ${alpha(theme.palette.primary.main, 0.15)}`,
         }}
       />
     </Box>

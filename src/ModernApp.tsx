@@ -9,7 +9,6 @@ import AboutErrorBoundary from './components/AboutErrorBoundary';
 import ModernNavbar from './components/ModernNavbar';
 import GradualBlur from './components/GradualBlur';
 import { LenisProvider } from './components/LenisProvider';
-import ScrollProgress from './components/ScrollProgress';
 import BackToTop from './components/BackToTop';
 import SectionDivider from './components/SectionDivider';
 
@@ -72,9 +71,6 @@ const ModernApp = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
           >
-            {/* Scroll Progress Indicator */}
-            <ScrollProgress />
-            
             {/* Back to Top Button */}
             <BackToTop />
 
@@ -86,6 +82,21 @@ const ModernApp = () => {
                 zIndex: -2,
                 background: 'radial-gradient(125% 125% at 50% 10%, #000 40%, #1e293b 70%, #334155 100%)',
                 pointerEvents: 'none',
+              }}
+            />
+
+            {/* Noise Texture Overlay */}
+            <Box
+              sx={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: -1,
+                opacity: 0.035,
+                pointerEvents: 'none',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'repeat',
+                backgroundSize: '128px 128px',
+                mixBlendMode: 'overlay',
               }}
             />
 

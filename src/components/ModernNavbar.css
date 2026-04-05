@@ -197,25 +197,8 @@
 	}
 }
 
-/* Optimized Pill Navigation Effects */
-.pill-label {
-	display: inline-block;
-	line-height: 1;
-	transform: translateZ(0);
-	backface-visibility: hidden;
-}
-
-.pill-label-hover {
-	will-change: transform, opacity;
-	display: inline-block;
-	line-height: 1;
-	transform: translateZ(0);
-	backface-visibility: hidden;
-}
-
-/* Optimized pill animations with GPU acceleration */
-.hover-circle {
-	transition: none; /* GSAP handles all transitions */
+/* Nav button hover underline - GPU accelerated */
+.nav-btn {
 	transform: translateZ(0);
 	backface-visibility: hidden;
 }
@@ -256,9 +239,8 @@
 		transition: none;
 	}
 	
-	.pill-label,
-	.pill-label-hover,
-	.hover-circle {
+	.nav-btn,
+	.nav-btn::after {
 		transition: none !important;
 	}
 }

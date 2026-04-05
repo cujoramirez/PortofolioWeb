@@ -70,20 +70,30 @@ const Technologies = (): JSX.Element => {
             variant="overline"
             sx={{
               color: "primary.main",
-              fontWeight: 600,
-              letterSpacing: 3,
-              mb: 2,
-              display: "block",
+              fontWeight: 500,
+              letterSpacing: 4,
+              mb: 2.5,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 1.5,
+              "&::before, &::after": {
+                content: '""',
+                display: "inline-block",
+                width: 24,
+                height: 1,
+                bgcolor: alpha(theme.palette.primary.main, 0.3),
+              },
             }}
           >
             Tech Stack
           </Typography>
-          
+
           <Typography
             variant="h2"
             sx={{
               fontWeight: 700,
               mb: 2,
+              fontSize: { xs: "2.25rem", md: "3rem" },
               background: `linear-gradient(135deg, ${theme.palette.text.primary} 0%, ${theme.palette.primary.main} 100%)`,
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
@@ -92,31 +102,19 @@ const Technologies = (): JSX.Element => {
           >
             Skills & Technologies
           </Typography>
-          
+
           <Typography
             variant="body1"
             sx={{
-              color: "text.secondary",
-              maxWidth: 600,
+              color: alpha(theme.palette.text.secondary, 0.6),
+              maxWidth: 560,
               mx: "auto",
-              mb: 4,
+              mb: 5,
               lineHeight: 1.7,
             }}
           >
             The tools and technologies I use to build intelligent systems and applications
           </Typography>
-
-          {/* Decorative Line */}
-          <Box
-            sx={{
-              width: 48,
-              height: 2,
-              bgcolor: "primary.main",
-              mx: "auto",
-              mb: 6,
-              borderRadius: 1,
-            }}
-          />
 
           {/* Category Filters */}
           <Box
@@ -141,23 +139,25 @@ const Technologies = (): JSX.Element => {
                   sx={{
                     px: 1.5,
                     py: 2.5,
-                    fontSize: "0.875rem",
-                    fontWeight: 500,
+                    fontSize: "0.78rem",
+                    fontWeight: isActive ? 600 : 500,
+                    fontFamily: '"JetBrains Mono", monospace',
                     borderRadius: 2,
                     bgcolor: isActive
-                      ? "primary.main"
-                      : alpha(theme.palette.background.paper, 0.6),
-                    color: isActive ? "primary.contrastText" : "text.primary",
+                      ? alpha(theme.palette.primary.main, 0.12)
+                      : alpha(theme.palette.background.paper, 0.4),
+                    color: isActive ? "primary.main" : alpha(theme.palette.text.primary, 0.6),
                     border: `1px solid ${
                       isActive
-                        ? "transparent"
-                        : alpha(theme.palette.divider, 0.1)
+                        ? alpha(theme.palette.primary.main, 0.25)
+                        : alpha(theme.palette.divider, 0.06)
                     }`,
-                    transition: "all 0.2s ease",
+                    transition: "all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
                     "&:hover": {
                       bgcolor: isActive
-                        ? "primary.dark"
-                        : alpha(theme.palette.primary.main, 0.1),
+                        ? alpha(theme.palette.primary.main, 0.15)
+                        : alpha(theme.palette.primary.main, 0.06),
+                      borderColor: alpha(theme.palette.primary.main, 0.2),
                       transform: "translateY(-2px)",
                     },
                   }}
@@ -330,21 +330,22 @@ const TechCard = memo(({ tech, index, cardSize }: TechCardProps): JSX.Element =>
           width: "100%",
           aspectRatio: "1",
           borderRadius: 3,
-          bgcolor: alpha(theme.palette.background.paper, 0.88),
-          border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+          bgcolor: alpha(theme.palette.background.paper, 0.5),
+          border: `1px solid ${alpha(theme.palette.divider, 0.06)}`,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
           p: 2,
           cursor: "pointer",
-          transition: "transform 0.35s ease, box-shadow 0.35s ease, background-color 0.35s ease, border-color 0.35s ease",
+          backdropFilter: "blur(8px)",
+          transition: "all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)",
           position: "relative",
           overflow: "hidden",
           "&:hover": {
-            bgcolor: alpha(theme.palette.background.paper, 0.85),
-            borderColor: alpha(tech.color, 0.4),
-            boxShadow: `0 15px 40px ${alpha(tech.color, 0.2)}, 0 0 20px ${alpha(tech.color, 0.1)}`,
+            bgcolor: alpha(theme.palette.background.paper, 0.7),
+            borderColor: alpha(tech.color, 0.25),
+            boxShadow: `0 16px 40px ${alpha(tech.color, 0.12)}, 0 0 0 1px ${alpha(tech.color, 0.08)}`,
             "& .tech-icon": {
               transform: "scale(1.15)",
               filter: `drop-shadow(0 0 12px ${tech.color})`,
@@ -387,12 +388,14 @@ const TechCard = memo(({ tech, index, cardSize }: TechCardProps): JSX.Element =>
         <Typography
           variant="caption"
           sx={{
-            fontWeight: 600,
-            color: "text.primary",
+            fontWeight: 500,
+            fontFamily: '"JetBrains Mono", monospace',
+            color: alpha(theme.palette.text.primary, 0.75),
             textAlign: "center",
             position: "relative",
             zIndex: 1,
-            fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.8rem" },
+            fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.72rem" },
+            letterSpacing: "0.02em",
           }}
         >
           {tech.name}

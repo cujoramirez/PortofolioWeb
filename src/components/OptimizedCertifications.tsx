@@ -106,14 +106,15 @@ const CertificationCard = memo(({
           position: 'relative',
           borderRadius: 2,
           overflow: 'hidden',
-          background: alpha(theme.palette.background.paper, 0.88),
-          border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+          background: alpha(theme.palette.background.paper, 0.5),
+          border: `1px solid ${alpha(theme.palette.divider, 0.06)}`,
           cursor: cert.link ? 'pointer' : 'default',
-          transition: 'transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.35s cubic-bezier(0.25, 0.1, 0.25, 1), border-color 0.35s cubic-bezier(0.25, 0.1, 0.25, 1)',
+          backdropFilter: 'blur(8px)',
+          transition: 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)',
           '&:hover': cert.link ? {
-            transform: 'translateY(-6px)',
-            boxShadow: `0 20px 40px ${alpha(theme.palette.common.black, 0.12)}, 0 0 30px ${alpha(theme.palette.primary.main, 0.08)}`,
-            borderColor: alpha(theme.palette.primary.main, 0.25),
+            transform: 'translateY(-5px)',
+            boxShadow: `0 20px 48px ${alpha(theme.palette.common.black, 0.12)}, 0 0 0 1px ${alpha(theme.palette.primary.main, 0.06)}`,
+            borderColor: alpha(theme.palette.primary.main, 0.15),
             '& .cert-overlay': {
               opacity: 1,
             },
@@ -331,12 +332,20 @@ const OptimizedCertificationsComponent = () => {
             <Typography
               variant="overline"
               sx={{
-                fontWeight: 600,
-                letterSpacing: 3,
+                fontWeight: 500,
+                letterSpacing: 4,
                 color: theme.palette.primary.main,
-                fontSize: '0.8rem',
-                mb: 2,
-                display: 'block',
+                mb: 2.5,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1.5,
+                '&::before, &::after': {
+                  content: '""',
+                  display: 'inline-block',
+                  width: 24,
+                  height: 1,
+                  bgcolor: alpha(theme.palette.primary.main, 0.3),
+                },
               }}
             >
               Professional Development
@@ -345,7 +354,7 @@ const OptimizedCertificationsComponent = () => {
               variant="h2"
               component="h2"
               sx={{
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: { xs: '2.25rem', md: '3rem' },
                 background: `linear-gradient(135deg, ${theme.palette.text.primary} 0%, ${theme.palette.primary.main} 100%)`,
                 WebkitBackgroundClip: 'text',
@@ -359,27 +368,15 @@ const OptimizedCertificationsComponent = () => {
             <Typography
               variant="body1"
               sx={{
-                color: theme.palette.text.secondary,
+                color: alpha(theme.palette.text.secondary, 0.6),
                 maxWidth: 520,
                 mx: 'auto',
-                fontSize: { xs: '0.95rem', md: '1.05rem' },
-                lineHeight: 1.6,
+                fontSize: { xs: '0.95rem', md: '1.02rem' },
+                lineHeight: 1.7,
               }}
             >
               {certifications.length} certifications from {Object.keys(stats).length} platforms including Kaggle, FreeCodeCamp, and NVIDIA
             </Typography>
-
-            {/* Decorative line */}
-            <Box
-              sx={{
-                width: 48,
-                height: 2,
-                mx: 'auto',
-                mt: 3,
-                borderRadius: 1,
-                background: theme.palette.primary.main,
-              }}
-            />
           </Box>
         </motion.div>
 
