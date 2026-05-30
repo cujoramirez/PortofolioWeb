@@ -1,77 +1,70 @@
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
+import { Box, Typography, Button, useTheme } from '@mui/material';
 import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  useTheme,
-} from '@mui/material';
-import { Send as SendIcon } from '@mui/icons-material';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import emailjs from '@emailjs/browser';
+  Email as EmailIcon,
+  LinkedIn as LinkedInIcon,
+  GitHub as GitHubIcon,
+  School as SchoolIcon,
+  LocationOn as LocationOnIcon,
+} from '@mui/icons-material';
+import type { SvgIconComponent } from '@mui/icons-material';
 import { CONTACT } from '../constants';
 
-// ---------------------------------------------------------------------------
-// Validation schema — DO NOT change field names: they map to the EmailJS
-// template params (from_name, reply_to, message).
-// ---------------------------------------------------------------------------
-const contactSchema = z.object({
-  name: z.string().trim().min(2, 'Please enter your name'),
-  email: z.string().trim().email('Please enter a valid email address'),
-  message: z.string().trim().min(10, 'Message must be at least 10 characters'),
-});
-
-type ContactFormValues = z.infer<typeof contactSchema>;
-
-type SubmitState = 'idle' | 'success' | 'error';
-
-const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID as string | undefined;
-const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID as string | undefined;
-const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY as string | undefined;
-
 const REVEAL_EASE = [0.22, 1, 0.36, 1] as const;
+
+type ContactMethod = {
+  key: string;
+  label: string;
+  value: string;
+  icon: SvgIconComponent;
+  href?: string;
+  external?: boolean;
+};
+
+const CONTACT_METHODS: ContactMethod[] = [
+  {
+    key: 'email',
+    label: 'Email',
+    value: CONTACT.email,
+    icon: EmailIcon,
+    href: `mailto:${CONTACT.email}`,
+  },
+  {
+    key: 'linkedin',
+    label: 'LinkedIn',
+    value: 'gadingadityaperdana',
+    icon: LinkedInIcon,
+    href: 'https://www.linkedin.com/in/gadingadityaperdana/',
+    external: true,
+  },
+  {
+    key: 'github',
+    label: 'GitHub',
+    value: 'cujoramirez',
+    icon: GitHubIcon,
+    href: 'https://github.com/cujoramirez',
+    external: true,
+  },
+  {
+    key: 'scholar',
+    label: 'Google Scholar',
+    value: 'Gading Aditya Perdana',
+    icon: SchoolIcon,
+    href: 'https://scholar.google.com/citations?user=hwbWuI0AAAAJ',
+    external: true,
+  },
+  {
+    key: 'location',
+    label: 'Location',
+    value: 'Central Jakarta',
+    icon: LocationOnIcon,
+  },
+];
 
 const OptimizedModernContactComponent = () => {
   const theme = useTheme();
   const prefersReducedMotion = useReducedMotion();
-  const [submitState, setSubmitState] = useState<SubmitState>('idle');
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<ContactFormValues>({
-    resolver: zodResolver(contactSchema),
-    defaultValues: { name: '', email: '', message: '' },
-  });
-
-  const onSubmit = async (data: ContactFormValues) => {
-    setSubmitState('idle');
-    try {
-      if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
-        throw new Error('EmailJS environment variables are not configured');
-      }
-      await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        {
-          from_name: data.name,
-          reply_to: data.email,
-          message: data.message,
-        },
-        { publicKey: EMAILJS_PUBLIC_KEY },
-      );
-      setSubmitState('success');
-      reset();
-    } catch {
-      setSubmitState('error');
-    }
-  };
 
   const reveal = prefersReducedMotion
     ? {}
@@ -111,103 +104,143 @@ const OptimizedModernContactComponent = () => {
         >
           Get in touch
         </Typography>
-        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, maxWidth: 540, mx: 'auto' }}>
-          Open to research collaborations, AI engineering roles, and software opportunities. Reach me
-          directly at{' '}
-          <Box
-            component="a"
-            href={`mailto:${CONTACT.email}`}
-            sx={{
-              color: theme.palette.primary.main,
-              textDecoration: 'none',
-              fontWeight: 600,
-              borderBottom: '1px solid transparent',
-              transition: 'border-color 0.2s ease',
-              '&:hover': { borderBottomColor: theme.palette.primary.main },
-              '&:focus-visible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: 2 },
-            }}
-          >
-            {CONTACT.email}
-          </Box>
-          {' '}or send a message below.
+        <Typography
+          variant="body1"
+          sx={{ color: theme.palette.text.secondary, maxWidth: 540, mx: 'auto' }}
+        >
+          Open to research collaborations, AI engineering roles, and software opportunities.
+          The quickest way to reach me is the channels below.
         </Typography>
       </Box>
 
-      {/* Form card */}
+      {/* Contact methods grid */}
       <Box
         component={motion.div}
         {...reveal}
         sx={{
-          maxWidth: 600,
+          maxWidth: 640,
           mx: 'auto',
-          p: { xs: 2.5, md: 3.5 },
-          borderRadius: 3,
-          backgroundColor: 'var(--app-palette-bg-elevated)',
-          border: `1px solid ${theme.palette.divider}`,
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+          gap: { xs: 1.5, sm: 2 },
         }}
       >
-        <Box
-          component="form"
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-          sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}
-        >
-          <TextField
-            label="Name"
-            fullWidth
-            autoComplete="name"
-            error={Boolean(errors.name)}
-            helperText={errors.name?.message ?? ' '}
-            slotProps={{ formHelperText: { role: 'alert' } }}
-            {...register('name')}
-          />
-          <TextField
-            label="Email"
-            type="email"
-            fullWidth
-            autoComplete="email"
-            error={Boolean(errors.email)}
-            helperText={errors.email?.message ?? ' '}
-            slotProps={{ formHelperText: { role: 'alert' } }}
-            {...register('email')}
-          />
-          <TextField
-            label="Message"
-            fullWidth
-            multiline
-            minRows={4}
-            error={Boolean(errors.message)}
-            helperText={errors.message?.message ?? ' '}
-            slotProps={{ formHelperText: { role: 'alert' } }}
-            {...register('message')}
-          />
+        {CONTACT_METHODS.map((method) => {
+          const Icon = method.icon;
+          const isLink = Boolean(method.href);
 
-          {submitState === 'success' && (
-            <Alert severity="success" role="status">
-              Thanks for reaching out — I&apos;ll get back to you soon.
-            </Alert>
-          )}
-          {submitState === 'error' && (
-            <Alert severity="error" role="alert">
-              Something went wrong sending your message. Please email me directly at{' '}
-              <Box component="a" href={`mailto:${CONTACT.email}`} sx={{ color: 'inherit', fontWeight: 600 }}>
-                {CONTACT.email}
+          const content = (
+            <>
+              <Box
+                aria-hidden="true"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 2,
+                  color: theme.palette.primary.main,
+                  backgroundColor: 'var(--app-palette-action-hover)',
+                }}
+              >
+                <Icon sx={{ fontSize: 22 }} />
               </Box>
-              .
-            </Alert>
-          )}
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  variant="overline"
+                  component="span"
+                  sx={{
+                    display: 'block',
+                    fontFamily: 'var(--font-mono)',
+                    letterSpacing: 1.5,
+                    lineHeight: 1.4,
+                    color: theme.palette.text.secondary,
+                  }}
+                >
+                  {method.label}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  component="span"
+                  sx={{
+                    display: 'block',
+                    fontWeight: 600,
+                    color: theme.palette.text.primary,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {method.value}
+                </Typography>
+              </Box>
+            </>
+          );
 
-          <Button
-            type="submit"
-            variant="contained"
-            size="large"
-            disabled={isSubmitting}
-            startIcon={<SendIcon sx={{ fontSize: 18 }} />}
-            sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' }, px: 3 }}
-          >
-            {isSubmitting ? 'Sending…' : 'Send message'}
-          </Button>
-        </Box>
+          const baseSx = {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            p: { xs: 1.75, sm: 2 },
+            borderRadius: 3,
+            backgroundColor: 'var(--app-palette-bg-elevated)',
+            border: `1px solid ${theme.palette.divider}`,
+          } as const;
+
+          if (!isLink) {
+            return (
+              <Box key={method.key} sx={baseSx}>
+                {content}
+              </Box>
+            );
+          }
+
+          return (
+            <Box
+              key={method.key}
+              component="a"
+              href={method.href}
+              {...(method.external
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
+              aria-label={`Open ${method.label}: ${method.value}`}
+              sx={{
+                ...baseSx,
+                textDecoration: 'none',
+                transition: 'border-color 0.2s ease, transform 0.2s ease',
+                '&:hover': {
+                  borderColor: theme.palette.primary.main,
+                  transform: prefersReducedMotion ? 'none' : 'translateY(-2px)',
+                },
+                '&:focus-visible': {
+                  outline: `2px solid ${theme.palette.primary.main}`,
+                  outlineOffset: 2,
+                },
+              }}
+            >
+              {content}
+            </Box>
+          );
+        })}
+      </Box>
+
+      {/* Primary action */}
+      <Box
+        component={motion.div}
+        {...reveal}
+        sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 3, md: 4 } }}
+      >
+        <Button
+          variant="contained"
+          size="large"
+          href={`mailto:${CONTACT.email}`}
+          startIcon={<EmailIcon sx={{ fontSize: 18 }} />}
+          sx={{ px: 3 }}
+        >
+          Email me
+        </Button>
       </Box>
     </Box>
   );
