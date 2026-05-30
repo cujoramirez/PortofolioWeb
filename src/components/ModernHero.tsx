@@ -15,7 +15,6 @@ import { useSystemProfile } from './useSystemProfile';
 import RotatingText from './RotatingText';
 import heroImg from '../assets/GadingAdityaPerdana.webp';
 import { HERO_CONTENT } from '../constants/index';
-import ProfileCard from './ProfileCard';
 
 // Custom Google Scholar icon
 const GoogleScholarIcon = (props: ComponentProps<typeof SvgIcon>) => (
@@ -241,19 +240,50 @@ const ModernHero = () => {
             variants={itemVariants}
             sx={{ order: { xs: 1, md: 2 }, display: 'flex', justifyContent: 'center' }}
           >
-            <ProfileCard
-              name="Gading Aditya Perdana"
-              title="AI Researcher"
-              handle="gadingap"
-              status="Apple Developer Academy Scholar"
-              contactText="Contact Me"
-              avatarUrl={heroImg}
-              showUserInfo={false}
-              showDetails={false}
-              enableTilt={!shouldReduceMotion}
-              enableMobileTilt={false}
-              priority={true}
-            />
+            <Box
+              sx={{
+                position: 'relative',
+                width: { xs: 'min(280px, 72vw)', md: 'min(360px, 32vw)' },
+                aspectRatio: '4 / 5',
+                borderRadius: 4,
+                overflow: 'hidden',
+                border: '1px solid',
+                borderColor: 'divider',
+                backgroundColor: 'var(--app-palette-bg-elevated)',
+                boxShadow: 4,
+              }}
+            >
+              <Box
+                component="img"
+                src={heroImg}
+                alt="Gading Aditya Perdana"
+                loading="eager"
+                fetchPriority="high"
+                sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: 12,
+                  right: 12,
+                  bottom: 12,
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  backgroundColor: 'var(--app-palette-bg-elevated)',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              >
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main', flexShrink: 0 }} />
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500, lineHeight: 1.3 }}>
+                  Apple Developer Academy Scholar
+                </Typography>
+              </Box>
+            </Box>
           </Box>
         </Box>
       </Container>
