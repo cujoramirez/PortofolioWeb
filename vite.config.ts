@@ -79,11 +79,6 @@ export default defineConfig({
                         return 'utils-vendors';
                     }
 
-                    // OGL for orb effect
-                    if (normalizedId.includes('/node_modules/ogl/')) {
-                        return 'ogl-vendors';
-                    }
-
                     return undefined;
                 },
                 // Asset file naming for better caching
