@@ -1,7 +1,6 @@
 import { memo } from 'react';
 import { Box } from '@mui/material';
 import ModernHero from './ModernHero';
-import WebGLErrorBoundary from './WebGLErrorBoundary';
 
 // Props kept for API compatibility but no longer used internally
 interface LandingPageProps {
@@ -11,8 +10,8 @@ interface LandingPageProps {
 }
 
 /**
- * Simplified LandingPage - removed scroll lock and complex landing sequence
- * for better mobile performance and user experience
+ * Simplified LandingPage - renders the lightweight, token-based hero.
+ * The previous WebGL/OGL orb (and its error boundary) have been retired.
  */
 const LandingPage = memo((_props: LandingPageProps) => {
   return (
@@ -24,9 +23,7 @@ const LandingPage = memo((_props: LandingPageProps) => {
         zIndex: 1,
       }}
     >
-      <WebGLErrorBoundary>
-        <ModernHero />
-      </WebGLErrorBoundary>
+      <ModernHero />
     </Box>
   );
 });
