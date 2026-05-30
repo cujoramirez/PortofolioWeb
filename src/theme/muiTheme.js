@@ -8,6 +8,7 @@ const fonts = {
 
 export const muiTheme = createTheme({
   cssVariables: { colorSchemeSelector: 'data', cssVarPrefix: 'app' },
+  defaultColorScheme: 'dark',
   colorSchemes: {
     dark: {
       palette: {
@@ -30,7 +31,7 @@ export const muiTheme = createTheme({
         text: { primary: 'rgba(0,0,0,0.92)', secondary: 'rgba(0,0,0,0.58)', disabled: 'rgba(0,0,0,0.30)' },
         divider: 'rgba(0,0,0,0.10)',
         bg: { base: '#fbfbfd', elevated: '#ffffff', sunken: '#f1f1f4' },
-        label: { primary: 'rgba(0,0,0,0.92)', secondary: 'rgba(0,0,0,0.58)', tertiary: 'rgba(0,0,0,0.40)', quaternary: 'rgba(0,0,0,0.22)' },
+        label: { primary: 'rgba(0,0,0,0.92)', secondary: 'rgba(0,0,0,0.58)', tertiary: 'rgba(0,0,0,0.48)', quaternary: 'rgba(0,0,0,0.22)' },
       },
     },
   },
