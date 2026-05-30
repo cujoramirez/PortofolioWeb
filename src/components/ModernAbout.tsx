@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Box, Chip, Typography, useTheme, alpha } from '@mui/material';
 
 import { ABOUT_TEXT, ABOUT_QUOTES } from '../constants/index';
@@ -31,15 +31,17 @@ const ModernAbout = () => {
     })).filter((g) => g.items.length > 0);
   }, []);
 
-  // Lightweight rotating quote (single quote visible at a time)
+  // Lightweight rotating quote (single quote visible at a time).
+  // Pause rotation for users who prefer reduced motion (WCAG 2.2.2).
+  const prefersReducedMotion = useReducedMotion();
   const [quoteIndex, setQuoteIndex] = useState(0);
   useEffect(() => {
-    if (ABOUT_QUOTES.length <= 1) return;
+    if (prefersReducedMotion || ABOUT_QUOTES.length <= 1) return;
     const id = setInterval(() => {
       setQuoteIndex((i) => (i + 1) % ABOUT_QUOTES.length);
     }, 6000);
     return () => clearInterval(id);
-  }, []);
+  }, [prefersReducedMotion]);
   const quote = ABOUT_QUOTES[quoteIndex];
 
   return (
