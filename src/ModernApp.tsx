@@ -1,4 +1,5 @@
 import { Suspense, lazy, memo } from 'react';
+import type { ReactNode } from 'react';
 import { motion, MotionConfig } from 'framer-motion';
 import { ThemeProvider, CssBaseline, Box, CircularProgress } from '@mui/material';
 import { Analytics } from '@vercel/analytics/react';
@@ -7,18 +8,14 @@ import { muiTheme } from './theme/muiTheme.js';
 import LandingPage from './components/LandingPage';
 import AboutErrorBoundary from './components/AboutErrorBoundary';
 import ModernNavbar from './components/ModernNavbar';
-import GradualBlur from './components/GradualBlur';
 import { LenisProvider } from './components/LenisProvider';
 import BackToTop from './components/BackToTop';
-import SectionDivider from './components/SectionDivider';
 
 // Lazy load all heavy components for better initial load performance
 const ModernAbout = lazy(() => import('./components/ModernAbout'));
-const Technologies = lazy(() => import('./components/Technologies'));
 const ModernExperience = lazy(() => import('./components/ModernExperience'));
 const ModernResearch = lazy(() => import('./components/ModernResearch'));
 const ModernProjects = lazy(() => import('./components/ModernProjects'));
-const OptimizedCertifications = lazy(() => import('./components/OptimizedCertifications'));
 const OptimizedModernContact = lazy(() => import('./components/OptimizedModernContact'));
 
 // Lightweight loading fallback
@@ -29,12 +26,19 @@ const SectionLoader = memo(() => (
 ));
 SectionLoader.displayName = 'SectionLoader';
 
+// Centered content column capped to the design content width with consistent gutters.
+const ContentColumn = ({ children }: { children: ReactNode }) => (
+  <Box sx={{ maxWidth: 'var(--content-max)', mx: 'auto', px: 'var(--gutter)', width: '100%' }}>
+    {children}
+  </Box>
+);
+
 const ModernApp = () => {
   return (
     <LenisProvider>
       <ThemeProvider theme={muiTheme}>
         <CssBaseline />
-        <MotionConfig 
+        <MotionConfig
           reducedMotion="user"
           transition={{
             type: "spring",
@@ -74,32 +78,6 @@ const ModernApp = () => {
             {/* Back to Top Button */}
             <BackToTop />
 
-            {/* Background Gradient */}
-            <Box
-              sx={{
-                position: 'fixed',
-                inset: 0,
-                zIndex: -2,
-                background: 'radial-gradient(125% 125% at 50% 10%, #000 40%, #1e293b 70%, #334155 100%)',
-                pointerEvents: 'none',
-              }}
-            />
-
-            {/* Noise Texture Overlay */}
-            <Box
-              sx={{
-                position: 'fixed',
-                inset: 0,
-                zIndex: -1,
-                opacity: 0.035,
-                pointerEvents: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'repeat',
-                backgroundSize: '128px 128px',
-                mixBlendMode: 'overlay',
-              }}
-            />
-
             {/* Main Container */}
             <Box
               component="main"
@@ -114,95 +92,65 @@ const ModernApp = () => {
               {/* Navigation */}
               <ModernNavbar />
 
-              {/* Landing Page with Hero */}
-              <section id="hero" aria-label="Introduction">
+              {/* 1. Landing Page with Hero (full-bleed, manages own width) */}
+              <Box component="section" id="hero" aria-label="Introduction" sx={{ py: 'var(--section-py)' }}>
                 <LandingPage
                   introComplete={true}
                   onNavbarVisibilityChange={() => {}}
                   onLandingComplete={() => {}}
                 />
-              </section>
-              
-              <SectionDivider variant="gradient" />
-              
-              {/* About Section */}
-              <section id="about" aria-label="About me">
-                <AboutErrorBoundary>
+              </Box>
+
+              {/* 2. About Section */}
+              <Box component="section" id="about" aria-label="About me" sx={{ py: 'var(--section-py)' }}>
+                <ContentColumn>
+                  <AboutErrorBoundary>
+                    <Suspense fallback={<SectionLoader />}>
+                      <ModernAbout />
+                    </Suspense>
+                  </AboutErrorBoundary>
+                </ContentColumn>
+              </Box>
+
+              {/* 3. Research Section */}
+              <Box component="section" id="research" aria-label="Research and publications" sx={{ py: 'var(--section-py)' }}>
+                <ContentColumn>
                   <Suspense fallback={<SectionLoader />}>
-                    <ModernAbout />
+                    <ModernResearch />
                   </Suspense>
-                </AboutErrorBoundary>
-              </section>
-              
-              <SectionDivider variant="dots" />
-              
-              {/* Technologies Section */}
-              <section id="technologies" aria-label="Technologies and skills">
-                <Suspense fallback={<SectionLoader />}>
-                  <Technologies />
-                </Suspense>
-              </section>
-              
-              <SectionDivider variant="line" />
-              
-              {/* Experience Section */}
-              <section id="experience" aria-label="Work experience">
-                <Suspense fallback={<SectionLoader />}>
-                  <ModernExperience />
-                </Suspense>
-              </section>
-              
-              <SectionDivider variant="gradient" />
-              
-              {/* Research Section */}
-              <section id="research" aria-label="Research and publications">
-                <Suspense fallback={<SectionLoader />}>
-                  <ModernResearch />
-                </Suspense>
-              </section>
-              
-              <SectionDivider variant="dots" />
-              
-              {/* Projects Section */}
-              <section id="projects" aria-label="Featured projects">
-                <Suspense fallback={<SectionLoader />}>
-                  <ModernProjects />
-                </Suspense>
-              </section>
-              
-              <SectionDivider variant="line" />
-              
-              {/* Certifications Section */}
-              <section id="certifications" aria-label="Certifications and credentials">
-                <Suspense fallback={<SectionLoader />}>
-                  <OptimizedCertifications />
-                </Suspense>
-              </section>
+                </ContentColumn>
+              </Box>
 
-              <SectionDivider variant="gradient" />
+              {/* 4. Projects Section */}
+              <Box component="section" id="projects" aria-label="Featured projects" sx={{ py: 'var(--section-py)' }}>
+                <ContentColumn>
+                  <Suspense fallback={<SectionLoader />}>
+                    <ModernProjects />
+                  </Suspense>
+                </ContentColumn>
+              </Box>
 
-              {/* Contact Section */}
-              <section id="contact" aria-label="Contact information">
-                <Suspense fallback={<SectionLoader />}>
-                  <OptimizedModernContact />
-                </Suspense>
-              </section>
+              {/* 5. Experience Section */}
+              <Box component="section" id="experience" aria-label="Work experience" sx={{ py: 'var(--section-py)' }}>
+                <ContentColumn>
+                  <Suspense fallback={<SectionLoader />}>
+                    <ModernExperience />
+                  </Suspense>
+                </ContentColumn>
+              </Box>
+
+              {/* 6. Contact Section */}
+              <Box component="section" id="contact" aria-label="Contact information" sx={{ py: 'var(--section-py)' }}>
+                <ContentColumn>
+                  <Suspense fallback={<SectionLoader />}>
+                    <OptimizedModernContact />
+                  </Suspense>
+                </ContentColumn>
+              </Box>
             </Box>
-
-            <GradualBlur
-              target="page"
-              position="bottom"
-              height="7rem"
-              strength={0.25}
-              divCount={6}
-              curve="bezier"
-              exponential
-              opacity={0.95}
-              zIndex={50}
-            />
           </motion.div>
         </MotionConfig>
-        
+
         {/* Vercel Analytics & Speed Insights */}
         <Analytics />
         <SpeedInsights />
