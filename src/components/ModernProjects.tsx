@@ -1,31 +1,23 @@
-import React, { memo, useState, useRef, useMemo, useCallback, RefObject } from 'react';
-import { motion, useInView, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { memo, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Box,
   Typography,
   Chip,
-  Container,
-  IconButton,
-  Dialog,
-  DialogContent,
+  Card,
+  CardContent,
+  Button,
+  Stack,
   useTheme,
   alpha,
-  useMediaQuery,
 } from '@mui/material';
 import {
   GitHub as GitHubIcon,
   OpenInNew as OpenInNewIcon,
-  Close as CloseIcon,
-  Code as CodeIcon,
-  Psychology as AIIcon,
-  Science as ScienceIcon,
-  Web as WebIcon,
-  Security as SecurityIcon,
-  CameraAlt as VisionIcon,
+  Launch as LaunchIcon,
 } from '@mui/icons-material';
-import type { ElementType } from 'react';
 import { PROJECTS } from '../constants';
-import { useSystemProfile } from './useSystemProfile';
+import OptimizedImage from './OptimizedImage';
 
 interface Project {
   title: string;
@@ -37,548 +29,285 @@ interface Project {
   links: string[];
 }
 
-const getProjectIcon = (title: string, technologies?: string[]): ElementType => {
-  const titleLower = title.toLowerCase();
-  const techString = technologies?.join(' ').toLowerCase() ?? '';
+const MAX_CHIPS = 4;
+const INITIAL_VISIBLE = 6;
 
-  if (titleLower.includes('detection') || titleLower.includes('cnn') || techString.includes('tensorflow') || techString.includes('pytorch') || titleLower.includes('diabetic') || titleLower.includes('calm')) return AIIcon;
-  if (titleLower.includes('facial') || titleLower.includes('recognition') || titleLower.includes('security')) return SecurityIcon;
-  if (titleLower.includes('web') || titleLower.includes('website') || titleLower.includes('tailor')) return WebIcon;
-  if (titleLower.includes('research') || titleLower.includes('vision') || titleLower.includes('ensemble')) return ScienceIcon;
-  if (titleLower.includes('waste') || titleLower.includes('retinopathy')) return VisionIcon;
-  return CodeIcon;
-};
-
-// 3D tilt card wrapper
-const TiltCard = ({ children, disabled }: { children: React.ReactNode; disabled: boolean }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [6, -6]), { stiffness: 300, damping: 30 });
-  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-6, 6]), { stiffness: 300, damping: 30 });
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (disabled || !ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    x.set((e.clientX - rect.left) / rect.width - 0.5);
-    y.set((e.clientY - rect.top) / rect.height - 0.5);
-  };
-
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  if (disabled) return <>{children}</>;
-
-  return (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        rotateX,
-        rotateY,
-        transformStyle: 'preserve-3d',
-        perspective: 800,
-        height: '100%',
-      }}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-// Project Card
-const ProjectCard = memo(({
-  project,
-  index,
-  onSelect,
-}: {
-  project: Project;
-  index: number;
-  onSelect: (project: Project) => void;
-}) => {
+const ProjectCard = memo(({ project }: { project: Project }) => {
   const theme = useTheme();
-  const cardRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(cardRef as RefObject<Element>, { once: true, margin: '-50px' });
-  const { performanceTier } = useSystemProfile();
-  const shouldReduceMotion = performanceTier === 'low';
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const techs = project.technologies ?? [];
+  const visibleTechs = techs.slice(0, MAX_CHIPS);
+  const extraTech = techs.length - visibleTechs.length;
 
-  const IconComponent = getProjectIcon(project.title, project.technologies);
-  const isFeatured = index === 0;
+  // Link logic: prefer explicit demo/github; fall back to a generic view link.
+  const demoHref = project.demo;
+  const githubHref = project.github;
+  const fallbackHref =
+    !demoHref && !githubHref && project.links.length > 0 ? project.links[0] : null;
+
+  const hasActions = Boolean(demoHref || githubHref || fallbackHref);
 
   return (
-    <motion.div
-      ref={cardRef}
-      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 24, filter: shouldReduceMotion ? 'none' : 'blur(6px)' }}
-      animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-      transition={{
-        duration: shouldReduceMotion ? 0.3 : 0.5,
-        delay: shouldReduceMotion ? 0 : index * 0.06,
-        ease: [0.22, 1, 0.36, 1],
+    <Card
+      elevation={0}
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: 3,
+        bgcolor: alpha(theme.palette.background.paper, 0.6),
+        border: `1px solid ${theme.palette.divider}`,
+        overflow: 'hidden',
+        transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), border-color 0.3s ease',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          borderColor: alpha(theme.palette.primary.main, 0.4),
+          boxShadow: `0 16px 40px ${alpha(theme.palette.common.black, 0.18)}`,
+        },
+        '@media (prefers-reduced-motion: reduce)': {
+          '&:hover': { transform: 'none' },
+        },
       }}
-      style={{ height: '100%' }}
     >
-      <TiltCard disabled={shouldReduceMotion || isMobile}>
-        <Box
-          onClick={() => onSelect(project)}
+      {/* Image */}
+      <Box
+        sx={{
+          position: 'relative',
+          width: '100%',
+          aspectRatio: '16 / 9',
+          overflow: 'hidden',
+          bgcolor: alpha(theme.palette.text.primary, 0.04),
+        }}
+      >
+        <OptimizedImage
+          src={project.image}
+          alt={project.title}
+          width="100%"
+          height="100%"
+          objectFit="cover"
+          style={{ display: 'block', width: '100%', height: '100%' }}
+        />
+      </Box>
+
+      <CardContent
+        sx={{
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          p: { xs: 2, md: 2.5 },
+          '&:last-child': { pb: { xs: 2, md: 2.5 } },
+        }}
+      >
+        <Typography
+          variant="subtitle1"
+          component="h3"
           sx={{
-            position: 'relative',
-            height: '100%',
-            p: { xs: 2.5, md: 3 },
-            borderRadius: 3,
-            background: alpha(theme.palette.background.paper, 0.5),
-            border: `1px solid ${alpha(theme.palette.divider, 0.06)}`,
-            cursor: 'pointer',
-            backdropFilter: 'blur(12px)',
-            transition: 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '0%',
-              height: '2px',
-              background: `linear-gradient(90deg, transparent, ${theme.palette.primary.main}, transparent)`,
-              transition: 'width 0.5s cubic-bezier(0.25, 0.1, 0.25, 1)',
-            },
-            '&:hover': {
-              transform: isMobile ? 'none' : 'translateY(-6px)',
-              boxShadow: `0 24px 48px ${alpha(theme.palette.common.black, 0.15)}, 0 0 0 1px ${alpha(theme.palette.primary.main, 0.08)}`,
-              borderColor: alpha(theme.palette.primary.main, 0.15),
-              background: alpha(theme.palette.background.paper, 0.7),
-              '&::before': { width: '60%' },
-              '& .project-icon': {
-                transform: 'scale(1.12) rotate(5deg)',
-                color: theme.palette.primary.main,
-                background: alpha(theme.palette.primary.main, 0.12),
-              },
-            },
+            fontWeight: 600,
+            lineHeight: 1.35,
+            mb: 1,
+            color: 'text.primary',
+            letterSpacing: '-0.01em',
           }}
         >
-          {/* Featured Badge */}
-          {isFeatured && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 12,
-                right: 12,
-                px: 1.5,
-                py: 0.4,
-                borderRadius: 1.5,
-                background: alpha(theme.palette.primary.main, 0.08),
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-              }}
-            >
-              <Typography
-                variant="caption"
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.62rem',
-                  fontFamily: '"JetBrains Mono", monospace',
-                  color: alpha(theme.palette.primary.main, 0.85),
-                  letterSpacing: 1,
-                  textTransform: 'uppercase',
-                }}
-              >
-                Featured
-              </Typography>
-            </Box>
-          )}
+          {project.title}
+        </Typography>
 
-          {/* Icon */}
-          <Box
-            className="project-icon"
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 48,
-              height: 48,
-              borderRadius: 2,
-              background: alpha(theme.palette.primary.main, 0.06),
-              color: alpha(theme.palette.text.secondary, 0.6),
-              mb: 2.5,
-              transition: 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)',
-            }}
-          >
-            <IconComponent sx={{ fontSize: 24 }} />
-          </Box>
+        <Typography
+          variant="body2"
+          title={project.description}
+          sx={{
+            color: 'text.secondary',
+            lineHeight: 1.6,
+            mb: 2,
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
+        >
+          {project.description}
+        </Typography>
 
-          {/* Title */}
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 600,
-              fontSize: { xs: '0.98rem', md: '1.05rem' },
-              color: theme.palette.text.primary,
-              mb: 1.5,
-              lineHeight: 1.35,
-              pr: isFeatured ? 8 : 0,
-              letterSpacing: '-0.01em',
-            }}
-          >
-            {project.title}
-          </Typography>
-
-          {/* Description */}
-          <Typography
-            variant="body2"
-            sx={{
-              color: alpha(theme.palette.text.primary, 0.55),
-              fontSize: '0.84rem',
-              lineHeight: 1.65,
-              mb: 2.5,
-              flexGrow: 1,
-              display: '-webkit-box',
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {project.description}
-          </Typography>
-
-          {/* Technologies */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 'auto' }}>
-            {project.technologies?.slice(0, 4).map((tech) => (
+        {/* Technologies */}
+        {techs.length > 0 && (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: hasActions ? 2 : 0 }}>
+            {visibleTechs.map((tech) => (
               <Chip
                 key={tech}
                 label={tech}
                 size="small"
                 sx={{
-                  height: 24,
+                  height: 22,
                   fontSize: '0.68rem',
-                  fontFamily: '"JetBrains Mono", monospace',
-                  background: alpha(theme.palette.text.primary, 0.03),
-                  color: alpha(theme.palette.text.secondary, 0.6),
-                  border: `1px solid ${alpha(theme.palette.divider, 0.06)}`,
+                  fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
+                  bgcolor: alpha(theme.palette.text.primary, 0.04),
+                  color: 'text.secondary',
+                  border: `1px solid ${theme.palette.divider}`,
                 }}
               />
             ))}
-            {(project.technologies?.length ?? 0) > 4 && (
+            {extraTech > 0 && (
               <Chip
-                label={`+${(project.technologies?.length ?? 0) - 4}`}
+                label={`+${extraTech}`}
                 size="small"
+                aria-label={`${extraTech} more technologies`}
                 sx={{
-                  height: 24,
+                  height: 22,
                   fontSize: '0.68rem',
-                  fontFamily: '"JetBrains Mono", monospace',
-                  background: alpha(theme.palette.primary.main, 0.06),
-                  color: alpha(theme.palette.primary.main, 0.7),
+                  fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  color: 'primary.main',
                   border: 'none',
                 }}
               />
             )}
           </Box>
+        )}
 
-          {/* Links indicator */}
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              mt: 2,
-              pt: 2,
-              borderTop: `1px solid ${alpha(theme.palette.divider, 0.04)}`,
-            }}
-          >
-            {project.github && <GitHubIcon sx={{ fontSize: 15, color: alpha(theme.palette.text.secondary, 0.35) }} />}
-            {project.demo && <OpenInNewIcon sx={{ fontSize: 15, color: alpha(theme.palette.text.secondary, 0.35) }} />}
-            <Typography
-              variant="caption"
-              sx={{
-                color: alpha(theme.palette.text.secondary, 0.4),
-                fontSize: '0.72rem',
-                fontFamily: '"JetBrains Mono", monospace',
-                ml: 'auto',
-                transition: 'color 0.25s ease',
-              }}
-            >
-              View details →
-            </Typography>
-          </Box>
-        </Box>
-      </TiltCard>
-    </motion.div>
+        {/* Actions */}
+        {hasActions && (
+          <Stack direction="row" spacing={1} sx={{ mt: 'auto', flexWrap: 'wrap', gap: 1 }}>
+            {demoHref && (
+              <Button
+                component="a"
+                href={demoHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                size="small"
+                variant="contained"
+                startIcon={<OpenInNewIcon sx={{ fontSize: 16 }} />}
+                aria-label={`Live demo of ${project.title}`}
+                sx={{ textTransform: 'none', fontWeight: 600 }}
+              >
+                Live Demo
+              </Button>
+            )}
+            {githubHref && (
+              <Button
+                component="a"
+                href={githubHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                size="small"
+                variant="outlined"
+                color="inherit"
+                startIcon={<GitHubIcon sx={{ fontSize: 16 }} />}
+                aria-label={`Source code for ${project.title} on GitHub`}
+                sx={{ textTransform: 'none', fontWeight: 600, color: 'text.secondary' }}
+              >
+                Code
+              </Button>
+            )}
+            {fallbackHref && (
+              <Button
+                component="a"
+                href={fallbackHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                size="small"
+                variant="outlined"
+                color="inherit"
+                startIcon={<LaunchIcon sx={{ fontSize: 16 }} />}
+                aria-label={`View ${project.title}`}
+                sx={{ textTransform: 'none', fontWeight: 600, color: 'text.secondary' }}
+              >
+                View
+              </Button>
+            )}
+          </Stack>
+        )}
+      </CardContent>
+    </Card>
   );
 });
 
 ProjectCard.displayName = 'ProjectCard';
 
-// Project Detail Modal
-const ProjectModal = memo(({
-  project,
-  open,
-  onClose,
-}: {
-  project: Project | null;
-  open: boolean;
-  onClose: () => void;
-}) => {
-  const theme = useTheme();
-  if (!project) return null;
-  const IconComponent = getProjectIcon(project.title, project.technologies);
-
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-      PaperProps={{
-        sx: {
-          background: alpha(theme.palette.background.paper, 0.95),
-          border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-          borderRadius: 3,
-          backdropFilter: 'blur(20px)',
-        },
-      }}
-    >
-      <DialogContent sx={{ p: { xs: 3, md: 4 } }}>
-        <IconButton
-          onClick={onClose}
-          sx={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
-            color: alpha(theme.palette.text.secondary, 0.5),
-            transition: 'all 0.25s ease',
-            '&:hover': { color: theme.palette.text.primary, transform: 'rotate(90deg)' },
-          }}
-        >
-          <CloseIcon fontSize="small" />
-        </IconButton>
-
-        <Box
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 56,
-            height: 56,
-            borderRadius: 2.5,
-            background: alpha(theme.palette.primary.main, 0.08),
-            color: theme.palette.primary.main,
-            mb: 3,
-          }}
-        >
-          <IconComponent sx={{ fontSize: 28 }} />
-        </Box>
-
-        <Typography variant="h5" sx={{ fontWeight: 700, color: theme.palette.text.primary, mb: 2, lineHeight: 1.3, letterSpacing: '-0.01em' }}>
-          {project.title}
-        </Typography>
-
-        <Typography variant="body1" sx={{ color: alpha(theme.palette.text.primary, 0.7), lineHeight: 1.75, mb: 3, fontSize: '0.95rem' }}>
-          {project.description}
-        </Typography>
-
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="overline" sx={{ fontWeight: 500, color: alpha(theme.palette.text.secondary, 0.5), mb: 1.5, display: 'block', letterSpacing: 2 }}>
-            Technologies
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {project.technologies?.map((tech) => (
-              <Chip
-                key={tech}
-                label={tech}
-                size="small"
-                sx={{
-                  fontSize: '0.72rem',
-                  fontFamily: '"JetBrains Mono", monospace',
-                  background: alpha(theme.palette.primary.main, 0.06),
-                  color: alpha(theme.palette.primary.main, 0.85),
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
-                }}
-              />
-            ))}
-          </Box>
-        </Box>
-
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          {project.github && (
-            <Box
-              component="a"
-              href={project.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 1,
-                px: 2.5,
-                py: 1,
-                borderRadius: 2,
-                background: alpha(theme.palette.text.primary, 0.04),
-                border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                textDecoration: 'none',
-                color: alpha(theme.palette.text.primary, 0.8),
-                fontSize: '0.85rem',
-                fontWeight: 500,
-                transition: 'all 0.3s ease',
-                '&:hover': { background: alpha(theme.palette.text.primary, 0.08), transform: 'translateY(-1px)' },
-              }}
-            >
-              <GitHubIcon sx={{ fontSize: 18 }} />
-              View Code
-            </Box>
-          )}
-          {project.demo && (
-            <Box
-              component="a"
-              href={project.demo}
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 1,
-                px: 2.5,
-                py: 1,
-                borderRadius: 2,
-                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                textDecoration: 'none',
-                color: theme.palette.primary.contrastText,
-                fontSize: '0.85rem',
-                fontWeight: 500,
-                transition: 'all 0.3s ease',
-                boxShadow: `0 4px 16px ${alpha(theme.palette.primary.main, 0.2)}`,
-                '&:hover': { boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.3)}`, transform: 'translateY(-1px)' },
-              }}
-            >
-              <OpenInNewIcon sx={{ fontSize: 18 }} />
-              Live Demo
-            </Box>
-          )}
-        </Box>
-      </DialogContent>
-    </Dialog>
-  );
-});
-
-ProjectModal.displayName = 'ProjectModal';
-
-// Main Component
 const ModernProjectsComponent = () => {
   const theme = useTheme();
-  const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef as RefObject<Element>, { once: true, margin: '-100px' });
-  const { performanceTier } = useSystemProfile();
-  const shouldReduceMotion = performanceTier === 'low';
+  const prefersReducedMotion = useReducedMotion();
+  const [showAll, setShowAll] = useState(false);
 
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const projects = useMemo<Project[]>(() => PROJECTS as Project[], []);
-
-  const handleProjectSelect = useCallback((project: Project) => setSelectedProject(project), []);
-  const handleCloseModal = useCallback(() => setSelectedProject(null), []);
+  const projects = PROJECTS as Project[];
+  const visibleProjects = showAll ? projects : projects.slice(0, INITIAL_VISIBLE);
+  const hasMore = projects.length > INITIAL_VISIBLE;
 
   return (
-    <Box
-      component="section"
-      id="projects"
-      ref={sectionRef}
-      sx={{
-        position: 'relative',
-        py: { xs: 10, md: 16 },
-        background: theme.palette.background.default,
-        overflow: 'hidden',
-      }}
-    >
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '50%',
-          background: `linear-gradient(0deg, ${alpha(theme.palette.primary.main, 0.012)} 0%, transparent 100%)`,
-          pointerEvents: 'none',
-        }}
-      />
-
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-        {/* Section Header */}
-        <motion.div
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: shouldReduceMotion ? 0.3 : 0.6 }}
-        >
-          <Box sx={{ textAlign: 'center', mb: { xs: 5, md: 8 } }}>
-            <Typography
-              variant="overline"
-              sx={{
-                fontWeight: 500,
-                letterSpacing: 4,
-                color: theme.palette.primary.main,
-                mb: 2.5,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 1.5,
-                '&::before, &::after': {
-                  content: '""',
-                  display: 'inline-block',
-                  width: 24,
-                  height: 1,
-                  bgcolor: alpha(theme.palette.primary.main, 0.3),
-                },
-              }}
-            >
-              Portfolio
-            </Typography>
-            <Typography
-              variant="h2"
-              component="h2"
-              sx={{
-                fontWeight: 700,
-                fontSize: { xs: '2.25rem', md: '3rem' },
-                background: `linear-gradient(135deg, ${theme.palette.text.primary} 0%, ${theme.palette.primary.main} 100%)`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                mb: 2,
-              }}
-            >
-              Selected Projects
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                color: alpha(theme.palette.text.secondary, 0.6),
-                maxWidth: 520,
-                mx: 'auto',
-                fontSize: { xs: '0.95rem', md: '1.02rem' },
-                lineHeight: 1.7,
-              }}
-            >
-              Technical projects showcasing expertise in computer vision, deep learning, and full-stack development
-            </Typography>
-          </Box>
-        </motion.div>
-
-        {/* Projects Grid */}
-        <Box
+    <Box sx={{ position: 'relative' }}>
+      {/* Header */}
+      <Box sx={{ mb: { xs: 4, md: 6 } }}>
+        <Typography
+          variant="overline"
           sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
-            gap: { xs: 2.5, md: 3 },
-            maxWidth: 1100,
-            mx: 'auto',
+            fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
+            fontWeight: 500,
+            letterSpacing: 3,
+            color: 'primary.main',
+            display: 'block',
+            mb: 1.5,
           }}
         >
-          {projects.map((project, index) => (
-            <ProjectCard key={`${project.title}-${index}`} project={project} index={index} onSelect={handleProjectSelect} />
-          ))}
-        </Box>
-      </Container>
+          Portfolio
+        </Typography>
+        <Typography
+          variant="h2"
+          component="h2"
+          sx={{ fontWeight: 700, letterSpacing: '-0.02em', mb: 1.5, color: 'text.primary' }}
+        >
+          Projects
+        </Typography>
+        <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 560, lineHeight: 1.7 }}>
+          {projects.length} projects spanning computer vision, deep learning, and full-stack
+          development.
+        </Typography>
+      </Box>
 
-      <ProjectModal project={selectedProject} open={Boolean(selectedProject)} onClose={handleCloseModal} />
+      {/* Grid */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: 'repeat(3, 1fr)' },
+          gap: { xs: 2.5, md: 3 },
+        }}
+      >
+        {visibleProjects.map((project, index) => (
+          <motion.div
+            key={`${project.title}-${index}`}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+            whileInView={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{
+              duration: 0.45,
+              delay: Math.min(index % INITIAL_VISIBLE, 5) * 0.05,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            style={{ height: '100%' }}
+          >
+            <ProjectCard project={project} />
+          </motion.div>
+        ))}
+      </Box>
+
+      {/* Show more / less */}
+      {hasMore && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 4, md: 5 } }}>
+          <Button
+            onClick={() => setShowAll((prev) => !prev)}
+            aria-expanded={showAll}
+            variant="outlined"
+            color="inherit"
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              borderColor: theme.palette.divider,
+              color: 'text.primary',
+              '&:hover': { borderColor: alpha(theme.palette.primary.main, 0.5) },
+            }}
+          >
+            {showAll ? 'Show less' : `Show all ${projects.length} projects`}
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };
