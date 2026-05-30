@@ -561,6 +561,13 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
 .sm-panel-surface--light::before { opacity: 0.7; }
 .sm-panel-surface--rich { box-shadow: 0 20px 56px rgba(15, 23, 42, 0.38); }
 .sm-panel-surface--rich::before { opacity: 0.95; }
+/* Light-mode mobile menu: light surface + dark text so it adapts with the in-app theme */
+[data-mui-color-scheme="light"] .sm-panel-surface,
+[data-mui-color-scheme="light"] .sm-panel-surface--light,
+[data-mui-color-scheme="light"] .sm-panel-surface--rich { background: linear-gradient(135deg, rgba(255, 255, 255, 0.97), rgba(241, 243, 246, 0.93)); border: 1px solid rgba(0, 0, 0, 0.10); box-shadow: 0 18px 48px rgba(0, 0, 0, 0.16); }
+[data-mui-color-scheme="light"] .sm-panel-surface::before { background: radial-gradient(circle at 20% 20%, rgba(37, 99, 235, 0.10), transparent 55%), radial-gradient(circle at 80% 10%, rgba(8, 145, 178, 0.08), transparent 60%); opacity: 1; }
+[data-mui-color-scheme="light"] .sm-panel-surface::after { background: linear-gradient(160deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06)); mix-blend-mode: normal; }
+[data-mui-color-scheme="light"] .sm-panel-item { color: rgba(0, 0, 0, 0.92); }
 @media (max-width: 1024px) { 
   .sm-scope .staggered-menu-panel { width: 100%; left: 0; right: 0; } 
   .sm-scope .sm-prelayers { width: 100%; } 
