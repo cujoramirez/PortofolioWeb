@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useId, useMemo } from 'react';
+import { useColorScheme } from '@mui/material/styles';
 
 export interface GlassSurfaceProps {
   children?: React.ReactNode;
@@ -152,20 +153,19 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   displacementScale = 0.5,
   specularIntensity = 0.4,
 }) => {
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  // Follow the app's active color scheme (driven by the in-app toggle), not the
+  // OS preference — so the glass treatment matches light/dark when the user toggles.
+  const { mode, systemMode } = useColorScheme();
+  const resolvedMode = mode === 'system' ? systemMode : mode;
+  const isDarkMode = resolvedMode ? resolvedMode === 'dark' : true;
+
   const [isChrome, setIsChrome] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const filterId = useId().replace(/:/g, '');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
-    // Dark mode detection
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setIsDarkMode(mediaQuery.matches);
-    const handler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
-    mediaQuery.addEventListener('change', handler);
-    
+
     // Chrome detection (SVG backdrop-filter only works in Chrome)
     const userAgent = navigator.userAgent.toLowerCase();
     setIsChrome(userAgent.includes('chrome') && !userAgent.includes('edg'));
@@ -177,7 +177,6 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     mobileQuery.addEventListener('change', mobileHandler);
     
     return () => {
-      mediaQuery.removeEventListener('change', handler);
       mobileQuery.removeEventListener('change', mobileHandler);
     };
   }, []);

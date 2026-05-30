@@ -20,6 +20,7 @@
     --content-max: 1180px;
     --gutter: clamp(1rem, 4vw, 2.5rem);
     --vh: 1vh;
+    color-scheme: light dark;
 }
 
 
@@ -37,6 +38,16 @@ html {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
     height: 100%;
+    background-color: var(--app-palette-bg-base);
+    color: var(--app-palette-text-primary);
+}
+
+html[data-mui-color-scheme='light'] {
+    color-scheme: light;
+}
+
+html[data-mui-color-scheme='dark'] {
+    color-scheme: dark;
 }
 
 body {
@@ -44,8 +55,8 @@ body {
     padding: 0;
     overflow-x: hidden;
     font-family: "DM Sans", system-ui, sans-serif;
-    background: radial-gradient(125% 125% at 50% 10%, #000 40%, #1e293b 70%, #334155 100%);
-    color: #ffffff;
+    background-color: var(--app-palette-bg-base);
+    color: var(--app-palette-text-primary);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -73,23 +84,23 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: #1e293b;
+    background: var(--app-palette-bg-sunken);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(45deg, #1e40af, #22d3ee);
+    background: linear-gradient(45deg, var(--app-palette-primary-main), var(--app-palette-secondary-main));
     border-radius: 4px;
     transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(45deg, #1e3a8a, #06b6d4);
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    background: linear-gradient(45deg, var(--app-palette-primary-dark), var(--app-palette-secondary-main));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--app-palette-primary-main) 40%, transparent);
 }
 
 ::-webkit-scrollbar-corner {
-    background: #1e293b;
+    background: var(--app-palette-bg-sunken);
 }
 
 
@@ -97,27 +108,27 @@ body {
 
 html {
     scrollbar-width: thin;
-    scrollbar-color: #3b82f6 #1e293b;
+    scrollbar-color: var(--app-palette-primary-main) var(--app-palette-bg-sunken);
 }
 
 
 /* Selection Styles */
 
 ::selection {
-    background: rgba(59, 130, 246, 0.3);
-    color: #ffffff;
+    background: color-mix(in srgb, var(--app-palette-primary-main) 24%, transparent);
+    color: var(--app-palette-text-primary);
 }
 
 ::-moz-selection {
-    background: rgba(59, 130, 246, 0.3);
-    color: #ffffff;
+    background: color-mix(in srgb, var(--app-palette-primary-main) 24%, transparent);
+    color: var(--app-palette-text-primary);
 }
 
 
 /* Focus Styles */
 
 :focus {
-    outline: 2px solid #3b82f6;
+    outline: 2px solid var(--app-palette-primary-main);
     outline-offset: 2px;
 }
 
@@ -143,13 +154,13 @@ html {
 }
 
 .bg-glass {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--app-palette-bg-elevated) 82%, transparent);
+    border: 1px solid var(--app-palette-divider);
 }
 
 .bg-glass-dark {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--app-palette-bg-sunken) 88%, transparent);
+    border: 1px solid var(--app-palette-divider);
 }
 
 
@@ -385,13 +396,13 @@ html {
         -webkit-background-clip: initial !important;
         background-clip: initial !important;
         -webkit-text-fill-color: initial !important;
-        color: #ffffff !important;
+        color: var(--app-palette-text-primary) !important;
     }
     .bg-glass,
     .bg-glass-dark {
-        background: rgba(255, 255, 255, 0.1) !important;
+        background: color-mix(in srgb, var(--app-palette-bg-elevated) 90%, transparent) !important;
         backdrop-filter: none !important;
-        border: 2px solid #ffffff !important;
+        border: 2px solid var(--app-palette-text-primary) !important;
     }
 }
 
@@ -461,7 +472,12 @@ html {
 /* Loading States */
 
 .skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--app-palette-bg-elevated) 88%, transparent) 25%,
+        color-mix(in srgb, var(--app-palette-divider) 55%, transparent) 50%,
+        color-mix(in srgb, var(--app-palette-bg-elevated) 88%, transparent) 75%
+    );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
 }
@@ -469,8 +485,8 @@ html {
 .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid rgba(59, 130, 246, 0.3);
-    border-left-color: #3b82f6;
+    border: 4px solid color-mix(in srgb, var(--app-palette-primary-main) 30%, transparent);
+    border-left-color: var(--app-palette-primary-main);
     border-radius: 50%;
     animation: rotate 1s linear infinite;
 }
@@ -479,11 +495,11 @@ html {
 /* Typography Utilities */
 
 .font-display {
-    font-family: "Cal Sans", "Inter", system-ui, sans-serif;
+    font-family: var(--font-display);
 }
 
 .font-mono {
-    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-family: var(--font-mono);
 }
 
 .text-balance {
@@ -541,15 +557,6 @@ html {
 
 .interactive:active {
     transform: translateY(0);
-}
-
-
-/* Dark Mode Specifics */
-
-@media (prefers-color-scheme: dark) {
-     :root {
-        color-scheme: dark;
-    }
 }
 
 

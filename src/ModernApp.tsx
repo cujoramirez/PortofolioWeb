@@ -1,7 +1,8 @@
 import { Suspense, lazy, memo } from 'react';
 import type { ReactNode } from 'react';
 import { motion, MotionConfig } from 'framer-motion';
-import { ThemeProvider, CssBaseline, Box, CircularProgress } from '@mui/material';
+import { CssBaseline, Box, CircularProgress } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { muiTheme } from './theme/muiTheme.js';
@@ -36,8 +37,8 @@ const ContentColumn = ({ children }: { children: ReactNode }) => (
 const ModernApp = () => {
   return (
     <LenisProvider>
-      <ThemeProvider theme={muiTheme}>
-        <CssBaseline />
+      <ThemeProvider theme={muiTheme} defaultMode="system" disableTransitionOnChange>
+        <CssBaseline enableColorScheme />
         <MotionConfig
           reducedMotion="user"
           transition={{
@@ -55,8 +56,8 @@ const ModernApp = () => {
               left: '-9999px',
               zIndex: 9999,
               padding: '1rem',
-              background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
-              color: 'white',
+              backgroundColor: 'primary.main',
+              color: 'primary.contrastText',
               textDecoration: 'none',
               fontWeight: 600,
               borderRadius: '0 0 8px 0',

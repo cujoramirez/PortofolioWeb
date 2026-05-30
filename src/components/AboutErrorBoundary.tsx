@@ -43,8 +43,8 @@ class AboutErrorBoundary extends Component<PropsWithChildren<unknown>, AboutErro
                     sx={{
                         py: { xs: 8, md: 12 },
                         pb: { xs: 12, md: 16 },
-                        minHeight: '100vh',
-                        background: 'radial-gradient(125% 125% at 50% 10%, #000 40%, #1e293b 70%, #334155 100%)',
+                        minHeight: '100dvh',
+                        backgroundColor: 'var(--app-palette-bg-base)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -56,7 +56,7 @@ class AboutErrorBoundary extends Component<PropsWithChildren<unknown>, AboutErro
                     <Typography
                         variant="h3"
                         sx={{
-                            color: 'rgba(255, 255, 255, 0.9)',
+                            color: 'var(--app-palette-text-primary)',
                             mb: 3,
                             fontSize: { xs: '1.8rem', md: '2.5rem' },
                             fontWeight: 600
@@ -68,7 +68,7 @@ class AboutErrorBoundary extends Component<PropsWithChildren<unknown>, AboutErro
                     <Typography
                         variant="h6"
                         sx={{
-                            color: 'rgba(255, 255, 255, 0.7)',
+                            color: 'var(--app-palette-text-secondary)',
                             mb: 4,
                             maxWidth: 600,
                             lineHeight: 1.6
@@ -84,17 +84,17 @@ class AboutErrorBoundary extends Component<PropsWithChildren<unknown>, AboutErro
                         startIcon={<Refresh />}
                         onClick={this.handleRetry}
                         sx={{
-                            background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
-                            color: 'white',
+                            backgroundColor: 'primary.main',
+                            color: 'primary.contrastText',
                             px: 4,
                             py: 1.5,
                             borderRadius: '12px',
                             fontWeight: 600,
                             textTransform: 'none',
-                            boxShadow: '0 10px 25px rgba(59, 130, 246, 0.3)',
+                            boxShadow: '0 10px 25px color-mix(in srgb, var(--app-palette-primary-main) 35%, transparent)',
                             '&:hover': {
-                                background: 'linear-gradient(135deg, #1e3a8a, #2563eb)',
-                                boxShadow: '0 15px 35px rgba(59, 130, 246, 0.4)',
+                                backgroundColor: 'primary.dark',
+                                boxShadow: '0 15px 35px color-mix(in srgb, var(--app-palette-primary-main) 45%, transparent)',
                                 transform: 'translateY(-2px)'
                             },
                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -106,7 +106,7 @@ class AboutErrorBoundary extends Component<PropsWithChildren<unknown>, AboutErro
                     <Typography
                         variant="caption"
                         sx={{
-                            color: 'rgba(255, 255, 255, 0.5)',
+                            color: 'var(--app-palette-label-tertiary)',
                             mt: 3,
                             fontSize: '0.9rem'
                         }}
