@@ -73,7 +73,7 @@ const ModernHero = () => {
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        minHeight: { xs: 'auto', md: 'calc(100vh - 5rem)' },
+        minHeight: { xs: 'auto', md: '100svh' },
         overflow: 'hidden',
         // Token-driven background: tint layers over the base surface so it
         // reads intentionally in BOTH light and dark schemes.

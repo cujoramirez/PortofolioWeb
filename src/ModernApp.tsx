@@ -92,8 +92,10 @@ const ModernApp = () => {
               {/* Navigation */}
               <ModernNavbar />
 
-              {/* 1. Landing Page with Hero (full-bleed, manages own width) */}
-              <Box component="section" id="hero" aria-label="Introduction" sx={{ py: 'var(--section-py)' }}>
+              {/* 1. Landing Page with Hero (full-bleed; self-manages height — no
+                  section padding on desktop so it doesn't stack on top of the
+                  hero's own viewport min-height). */}
+              <Box component="section" id="hero" aria-label="Introduction" sx={{ py: { xs: 'var(--section-py)', md: 0 } }}>
                 <LandingPage
                   introComplete={true}
                   onNavbarVisibilityChange={() => {}}
