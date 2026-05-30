@@ -24,18 +24,21 @@ import {
 	Toolbar,
 	Fab,
 	Box,
+	IconButton,
 	useScrollTrigger,
 	Zoom,
 } from '@mui/material';
+import { useColorScheme } from '@mui/material/styles';
 import {
 	Home,
 	Person,
-	Code,
 	Work,
 	Science,
 	School,
 	ContactMail,
 	KeyboardArrowUp,
+	LightMode,
+	DarkMode,
 } from '@mui/icons-material';
 import { useSystemProfile } from './useSystemProfile';
 import GlassSurface from './GlassSurface';
@@ -150,11 +153,9 @@ type NavItemPosition = {
 const NAV_ITEMS: NavItem[] = [
 	{ name: 'Home', href: '#hero', icon: Home },
 	{ name: 'About', href: '#about', icon: Person },
-	{ name: 'Tech', href: '#technologies', icon: Code },
-	{ name: 'Experience', href: '#experience', icon: Work },
 	{ name: 'Research', href: '#research', icon: Science },
 	{ name: 'Projects', href: '#projects', icon: School },
-	{ name: 'Certificates', href: '#certifications', icon: School },
+	{ name: 'Experience', href: '#experience', icon: Work },
 	{ name: 'Contact', href: '#contact', icon: ContactMail },
 ];
 
@@ -190,6 +191,11 @@ const ModernNavbarComponent = () => {
 	const evaluationScrollRef = useRef(0);
 	const reducedEvaluationFrameRef = useRef<number | null>(null);
 	const reducedEvaluationScrollRef = useRef(0);
+
+	const { mode, setMode } = useColorScheme();
+	const toggleColorScheme = useCallback(() => {
+		setMode(mode === 'dark' ? 'light' : 'dark');
+	}, [mode, setMode]);
 
 	const { lenis } = useLenis();
 	const getScrollPosition = useCallback(() => {
@@ -916,6 +922,44 @@ const ModernNavbarComponent = () => {
 							</Box>
 						</motion.div>
 					)}
+
+					<motion.div
+						initial={{ opacity: 0, scale: 0.85 }}
+						animate={{ opacity: 1, scale: 1 }}
+						transition={{ duration: 0.6, delay: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+						style={{
+							display: 'inline-flex',
+							marginRight: (isMobileDevice || isTabletDevice) ? 48 : 0,
+						}}
+					>
+						<IconButton
+							onClick={toggleColorScheme}
+							aria-label="Toggle light/dark theme"
+							sx={{
+								width: 40,
+								height: 40,
+								borderRadius: '10px',
+								color: 'text.secondary',
+								border: '1px solid',
+								borderColor: 'divider',
+								backgroundColor: 'transparent',
+								transition: 'color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1), background-color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1), border-color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
+								'&:hover': {
+									color: 'primary.light',
+									borderColor: 'primary.main',
+									backgroundColor: 'action.hover',
+								},
+							}}
+						>
+							{/* Before hydration `mode` is undefined; render a stable fallback icon
+							    (dark = default scheme) to avoid a flash/crash. */}
+							{mode === 'light' ? (
+								<DarkMode sx={{ fontSize: '1.25rem' }} />
+							) : (
+								<LightMode sx={{ fontSize: '1.25rem' }} />
+							)}
+						</IconButton>
+					</motion.div>
 
 				</Toolbar>
 
