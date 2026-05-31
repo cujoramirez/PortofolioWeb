@@ -79,6 +79,23 @@ const ModernApp = () => {
             {/* Back to Top Button */}
             <BackToTop />
 
+            {/* Subtle global background — one fixed layer behind ALL content so the
+                treatment is identical across every section (no per-section seams).
+                Sits over the body's bg-base; tokens keep it adaptive light/dark. */}
+            <Box
+              aria-hidden
+              sx={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: -1,
+                pointerEvents: 'none',
+                background: `
+                  radial-gradient(55% 45% at 12% 0%, color-mix(in srgb, var(--app-palette-primary-main) 6%, transparent) 0%, transparent 70%),
+                  radial-gradient(50% 50% at 100% 100%, color-mix(in srgb, var(--app-palette-secondary-main) 5%, transparent) 0%, transparent 70%)
+                `,
+              }}
+            />
+
             {/* Main Container */}
             <Box
               component="main"
