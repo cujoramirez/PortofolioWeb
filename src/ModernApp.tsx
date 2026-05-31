@@ -8,6 +8,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { muiTheme } from './theme/muiTheme.js';
 import LandingPage from './components/LandingPage';
 import AboutErrorBoundary from './components/AboutErrorBoundary';
+import ErrorBoundary from './components/ErrorBoundary';
 import ModernNavbar from './components/ModernNavbar';
 import { LenisProvider } from './components/LenisProvider';
 import BackToTop from './components/BackToTop';
@@ -60,39 +61,41 @@ const GlobalBackground = memo(() => {
   if (prefersReducedMotion) return tint;
 
   return (
-    <Suspense fallback={tint}>
-      <Box
-        aria-hidden
-        sx={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: -1,
-          pointerEvents: 'none',
-          opacity: resolved === 'light' ? 0.5 : 0.62,
-          transition: 'opacity 0.6s ease',
-        }}
-      >
-        <ColorBends
-          colors={resolved === 'light' ? LIGHT_BENDS : DARK_BENDS}
-          transparent
-          rotation={90}
-          autoRotate={0}
-          speed={0.15}
-          scale={1.15}
-          frequency={1}
-          warpStrength={1}
-          mouseInfluence={0.5}
-          parallax={0.4}
-          noise={0.05}
-          iterations={1}
-          intensity={1.1}
-          bandWidth={7}
-          colorTransition={0.6}
-          maxPixelRatio={1.5}
-          style={{ width: '100%', height: '100%' }}
-        />
-      </Box>
-    </Suspense>
+    <ErrorBoundary fallback={tint}>
+      <Suspense fallback={tint}>
+        <Box
+          aria-hidden
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: -1,
+            pointerEvents: 'none',
+            opacity: resolved === 'light' ? 0.5 : 0.62,
+            transition: 'opacity 0.6s ease',
+          }}
+        >
+          <ColorBends
+            colors={resolved === 'light' ? LIGHT_BENDS : DARK_BENDS}
+            transparent
+            rotation={90}
+            autoRotate={0}
+            speed={0.15}
+            scale={1.15}
+            frequency={1}
+            warpStrength={1}
+            mouseInfluence={0.5}
+            parallax={0.4}
+            noise={0.05}
+            iterations={1}
+            intensity={1.1}
+            bandWidth={7}
+            colorTransition={0.6}
+            maxPixelRatio={1.5}
+            style={{ width: '100%', height: '100%' }}
+          />
+        </Box>
+      </Suspense>
+    </ErrorBoundary>
   );
 });
 GlobalBackground.displayName = 'GlobalBackground';
