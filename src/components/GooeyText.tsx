@@ -1,37 +1,46 @@
-import { useEffect, useId, useRef, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 
 interface GooeyTextProps {
   texts: string[];
-  morphTime?: number;
-  cooldownTime?: number;
-  /** When true (e.g. prefers-reduced-motion), render a single static phrase. */
+  /** Seconds each phrase rests before morphing. */
+  holdTime?: number;
+  /** Seconds for the morph transition. */
+  transitionTime?: number;
+  /** Force-static (also auto-respects prefers-reduced-motion). */
   disabled?: boolean;
   className?: string;
   style?: CSSProperties;
 }
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+
 /**
- * Gooey morphing text: cross-fades between phrases through an SVG threshold
- * filter so they "melt" into each other. Adapted for this Vite + MUI project
- * (no Next "use client", no Tailwind). Color is inherited (currentColor) so it
- * stays token-driven; the gradient remains headline-only.
+ * Morphing capability line. Each phrase cross-dissolves into the next with a
+ * short blur + vertical drift, animating ONLY opacity/transform (plus a tiny,
+ * transient blur) so it stays on the compositor and never repaints neighbors.
  *
- * Hardening over the reference: cancels its rAF on unmount, pauses while
- * off-screen / tab-hidden, degrades to static under reduced motion, and
- * exposes an accessible sentence for screen readers.
+ * This deliberately avoids the SVG `feColorMatrix` "gooey" technique: that
+ * filter repaints every frame with a blur radius up to 100px, whose filter
+ * region overflows the text and forces re-compositing of nearby layers (it was
+ * disturbing the portrait's drop-shadow). Here the morph runs only during the
+ * transition, pauses off-screen / when the tab is hidden, and degrades to a
+ * single static phrase under reduced motion.
  */
 export function GooeyText({
   texts,
-  morphTime = 1,
-  cooldownTime = 2,
+  holdTime = 2.6,
+  transitionTime = 0.55,
   disabled = false,
   className,
   style,
 }: GooeyTextProps) {
-  const text1Ref = useRef<HTMLSpanElement>(null);
-  const text2Ref = useRef<HTMLSpanElement>(null);
+  const prefersReduced = useReducedMotion();
+  const reduced = disabled || Boolean(prefersReduced) || texts.length <= 1;
+
+  const [index, setIndex] = useState(0);
   const rootRef = useRef<HTMLSpanElement>(null);
-  const filterId = `gooey-${useId().replace(/:/g, '')}`;
+  const visibleRef = useRef(true);
 
   const longest = texts.reduce((a, b) => (b.length > a.length ? b : a), texts[0] ?? '');
   const accessibleSentence =
@@ -40,80 +49,18 @@ export function GooeyText({
       : texts[0] ?? '';
 
   useEffect(() => {
-    if (disabled) return;
-    const t1 = text1Ref.current;
-    const t2 = text2Ref.current;
-    if (!t1 || !t2) return;
+    if (reduced) return;
 
-    let textIndex = texts.length - 1;
-    let time = new Date();
-    let morph = 0;
-    let cooldown = cooldownTime;
-    let rafId = 0;
-    let visible = true;
+    const cycle = (holdTime + transitionTime) * 1000;
+    const id = window.setInterval(() => {
+      if (visibleRef.current) setIndex((i) => (i + 1) % texts.length);
+    }, cycle);
 
-    t1.textContent = texts[textIndex % texts.length] ?? '';
-    t2.textContent = texts[(textIndex + 1) % texts.length] ?? '';
-
-    const setMorph = (fraction: number) => {
-      t2.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
-      t2.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
-      const inv = 1 - fraction;
-      t1.style.filter = `blur(${Math.min(8 / inv - 8, 100)}px)`;
-      t1.style.opacity = `${Math.pow(inv, 0.4) * 100}%`;
-    };
-
-    const doCooldown = () => {
-      morph = 0;
-      t2.style.filter = '';
-      t2.style.opacity = '100%';
-      t1.style.filter = '';
-      t1.style.opacity = '0%';
-    };
-
-    const doMorph = () => {
-      morph -= cooldown;
-      cooldown = 0;
-      let fraction = morph / morphTime;
-      if (fraction > 1) {
-        cooldown = cooldownTime;
-        fraction = 1;
-      }
-      setMorph(fraction);
-    };
-
-    const animate = () => {
-      rafId = requestAnimationFrame(animate);
-      if (!visible) {
-        time = new Date();
-        return;
-      }
-      const newTime = new Date();
-      const shouldIncrementIndex = cooldown > 0;
-      const dt = (newTime.getTime() - time.getTime()) / 1000;
-      time = newTime;
-      cooldown -= dt;
-
-      if (cooldown <= 0) {
-        if (shouldIncrementIndex) {
-          textIndex = (textIndex + 1) % texts.length;
-          t1.textContent = texts[textIndex % texts.length] ?? '';
-          t2.textContent = texts[(textIndex + 1) % texts.length] ?? '';
-        }
-        doMorph();
-      } else {
-        doCooldown();
-      }
-    };
-
-    animate();
-
-    // Pause the loop while the hero is scrolled out of view, to keep it light.
     let observer: IntersectionObserver | null = null;
     if (rootRef.current && typeof IntersectionObserver !== 'undefined') {
       observer = new IntersectionObserver(
         (entries) => {
-          visible = entries[0]?.isIntersecting ?? true;
+          visibleRef.current = entries[0]?.isIntersecting ?? true;
         },
         { threshold: 0 },
       );
@@ -121,18 +68,18 @@ export function GooeyText({
     }
 
     const onVisibility = () => {
-      visible = !document.hidden;
+      visibleRef.current = !document.hidden;
     };
     document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      window.clearInterval(id);
       observer?.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [texts, morphTime, cooldownTime, disabled]);
+  }, [reduced, texts, holdTime, transitionTime]);
 
-  if (disabled) {
+  if (reduced) {
     return (
       <span className={className} style={style}>
         {texts[0] ?? ''}
@@ -146,25 +93,23 @@ export function GooeyText({
       className={className}
       style={{ position: 'relative', display: 'inline-block', ...style }}
     >
-      <svg aria-hidden="true" focusable="false" style={{ position: 'absolute', width: 0, height: 0 }}>
-        <defs>
-          <filter id={filterId}>
-            <feColorMatrix
-              in="SourceGraphic"
-              type="matrix"
-              values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 255 -140"
-            />
-          </filter>
-        </defs>
-      </svg>
-      {/* In-flow sizer establishes the box so the absolute morphing spans have size. */}
+      {/* In-flow sizer reserves the box so the absolute phrases never shift layout. */}
       <span aria-hidden="true" style={{ visibility: 'hidden', whiteSpace: 'nowrap' }}>
         {longest}
       </span>
-      <span aria-hidden="true" style={{ position: 'absolute', inset: 0, filter: `url(#${filterId})` }}>
-        <span ref={text1Ref} style={{ position: 'absolute', inset: 0, whiteSpace: 'nowrap', color: 'inherit' }} />
-        <span ref={text2Ref} style={{ position: 'absolute', inset: 0, whiteSpace: 'nowrap', color: 'inherit' }} />
-      </span>
+      <AnimatePresence initial={false}>
+        <motion.span
+          key={index}
+          aria-hidden="true"
+          initial={{ opacity: 0, y: 8, filter: 'blur(5px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, y: -8, filter: 'blur(5px)' }}
+          transition={{ duration: transitionTime, ease: EASE }}
+          style={{ position: 'absolute', inset: 0, whiteSpace: 'nowrap', color: 'inherit' }}
+        >
+          {texts[index] ?? ''}
+        </motion.span>
+      </AnimatePresence>
       {/* Static, screen-reader-only summary of the rotating phrases. */}
       <span
         style={{
