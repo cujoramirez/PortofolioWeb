@@ -38,8 +38,8 @@ const ContentColumn = ({ children }: { children: ReactNode }) => (
 );
 
 // Blue→cyan token family, tuned per scheme; the shader lerps between these on toggle.
-const DARK_BENDS = ['#1e40af', '#2563eb', '#0891b2'];
-const LIGHT_BENDS = ['#dbeafe', '#bfdbfe', '#cffafe'];
+const DARK_BENDS = ['#3b82f6', '#22d3ee', '#60a5fa'];
+const LIGHT_BENDS = ['#2563eb', '#06b6d4', '#3b82f6'];
 
 // Static token tint — the reduced-motion path AND the Suspense fallback while `three` loads.
 const TINT_BG = `
@@ -55,12 +55,12 @@ const GlobalBackground = memo(() => {
   const resolved: 'light' | 'dark' = (mode === 'system' ? systemMode : mode) === 'light' ? 'light' : 'dark';
 
   const tint = (
-    <Box aria-hidden sx={{ position: 'fixed', inset: 0, zIndex: -1, pointerEvents: 'none', background: TINT_BG }} />
+    <Box aria-hidden sx={{ position: 'fixed', inset: 0, height: '100dvh', zIndex: 0, pointerEvents: 'none', background: TINT_BG }} />
   );
 
-  if (prefersReducedMotion) return tint;
-
-  return (
+  const content = prefersReducedMotion ? (
+    tint
+  ) : (
     <ErrorBoundary fallback={tint}>
       <Suspense fallback={tint}>
         <Box
@@ -68,9 +68,10 @@ const GlobalBackground = memo(() => {
           sx={{
             position: 'fixed',
             inset: 0,
-            zIndex: -1,
+            height: '100dvh',
+            zIndex: 0,
             pointerEvents: 'none',
-            opacity: resolved === 'light' ? 0.5 : 0.62,
+            opacity: resolved === 'light' ? 0.6 : 0.85,
             transition: 'opacity 0.6s ease',
           }}
         >
@@ -87,16 +88,18 @@ const GlobalBackground = memo(() => {
             parallax={0.4}
             noise={0.05}
             iterations={1}
-            intensity={1.1}
+            intensity={1.6}
             bandWidth={7}
             colorTransition={0.6}
             maxPixelRatio={1.5}
-            style={{ width: '100%', height: '100%' }}
+            style={{ width: '100%', height: '100dvh' }}
           />
         </Box>
       </Suspense>
     </ErrorBoundary>
   );
+
+  return content;
 });
 GlobalBackground.displayName = 'GlobalBackground';
 

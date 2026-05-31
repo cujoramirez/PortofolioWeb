@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, memo, type CSSProperties, type ImgHTMLAttributes } from 'react';
+import { useSystemProfile } from './useSystemProfile';
 
 interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'onLoad' | 'onError'> {
   src: string;
@@ -41,6 +42,8 @@ const OptimizedImage = memo(({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+  const { performanceTier } = useSystemProfile();
+  const reduceEffects = performanceTier === 'low';
 
   // Check if image is already loaded (cached)
   useEffect(() => {
@@ -61,10 +64,12 @@ const OptimizedImage = memo(({
 
   // Generate a simple blur placeholder color based on the filename
   const defaultBlurColor = 'rgba(59, 130, 246, 0.1)';
+  const placeholderBlur = reduceEffects ? 10 : 20;
+  const placeholderScale = reduceEffects ? 1.02 : 1.1;
   const placeholderStyle: CSSProperties = placeholder === 'blur' && !isLoaded ? {
     background: blurDataURL || defaultBlurColor,
-    filter: 'blur(20px)',
-    transform: 'scale(1.1)',
+    filter: `blur(${placeholderBlur}px)`,
+    transform: `scale(${placeholderScale})`,
   } : {};
 
   const baseStyle: CSSProperties = {
@@ -130,7 +135,6 @@ const OptimizedImage = memo(({
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
-        fetchPriority={priority ? 'high' : 'auto'}
         onLoad={handleLoad}
         onError={handleError}
         style={imageStyle}

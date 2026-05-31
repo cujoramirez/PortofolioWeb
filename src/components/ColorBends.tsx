@@ -232,7 +232,8 @@ export default function ColorBends({
     renderer.domElement.style.display = 'block';
     container.appendChild(renderer.domElement);
 
-    const clock = new THREE.Clock();
+    let lastTime = performance.now();
+    let elapsed = 0;
 
     const handleResize = () => {
       const w = container.clientWidth || 1;
@@ -251,8 +252,11 @@ export default function ColorBends({
     }
 
     const tick = () => {
-      const dt = clock.getDelta();
-      const elapsed = clock.elapsedTime;
+      const now = performance.now();
+      let dt = (now - lastTime) / 1000;
+      lastTime = now;
+      if (dt > 0.1) dt = 0.1; // clamp after tab/idle so the pattern doesn't jump
+      elapsed += dt;
       material.uniforms.uTime.value = elapsed;
 
       const deg = (rotationRef.current % 360) + autoRotateRef.current * elapsed;
@@ -280,9 +284,8 @@ export default function ColorBends({
           cancelAnimationFrame(rafRef.current);
           rafRef.current = null;
         }
-        clock.stop();
       } else if (rafRef.current === null) {
-        clock.start();
+        lastTime = performance.now();
         rafRef.current = requestAnimationFrame(tick);
       }
     };
@@ -296,7 +299,6 @@ export default function ColorBends({
       geometry.dispose();
       material.dispose();
       renderer.dispose();
-      renderer.forceContextLoss();
       if (renderer.domElement.parentElement === container) {
         container.removeChild(renderer.domElement);
       }

@@ -262,7 +262,6 @@ const ModernHero = () => {
                   src={heroImg}
                   alt="Gading Aditya Perdana"
                   loading="eager"
-                  fetchPriority="high"
                   sx={{
                     width: '100%',
                     height: 'auto',
