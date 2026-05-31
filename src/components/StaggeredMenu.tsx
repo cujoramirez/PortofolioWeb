@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState, useEffect, type FC, type CSSProperties } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState, useEffect, type FC, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { gsap } from 'gsap';
 import { useSystemProfile } from './useSystemProfile';
 
@@ -348,11 +348,29 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
     }
   }, [menuOpen, requestOpenChange]);
 
+  const handlePanelKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLElement>) => {
+      if (event.key !== 'Escape') return;
+      event.stopPropagation();
+      requestOpenChange(false);
+      toggleBtnRef.current?.focus({ preventScroll: true });
+    },
+    [requestOpenChange]
+  );
+
   useEffect(() => {
     if (menuOpen) {
       setPanelRendered(true);
     }
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen || !panelRendered) return;
+    const firstLink = panelRef.current?.querySelector<HTMLAnchorElement>('.sm-panel-item');
+    if (firstLink) {
+      firstLink.focus({ preventScroll: true });
+    }
+  }, [menuOpen, panelRendered]);
 
   useEffect(() => {
     if (menuOpen) {
@@ -451,6 +469,7 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
             aria-controls="staggered-menu-panel"
+            aria-haspopup="menu"
             onClick={toggleMenu}
             type="button"
           >
@@ -477,7 +496,10 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
             ref={panelRef}
             className="staggered-menu-panel absolute top-0 right-0 h-full flex flex-col overflow-y-auto z-10"
             style={{ pointerEvents: menuOpen ? 'auto' : 'none' }}
+            role="navigation"
+            aria-label="Mobile navigation"
             aria-hidden={menuOpen ? undefined : true}
+            onKeyDown={handlePanelKeyDown}
           >
             <div
               className={`sm-panel-surface ${prefersLightweightMenu ? 'sm-panel-surface--light' : 'sm-panel-surface--rich'}`}
@@ -537,12 +559,14 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
 .sm-scope .staggered-menu-header { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: flex-end; gap: 0.65rem; background: transparent; pointer-events: none; z-index: 9999; }
 .sm-scope .staggered-menu-header > * { pointer-events: auto; }
 .sm-scope .sm-toggle { position: relative; display: inline-flex; align-items: center; gap: 0.3rem; background: transparent; border: none; cursor: pointer; font-weight: 500; line-height: 1; overflow: visible; font-size: 0.95rem; }
-.sm-scope .sm-toggle:focus-visible { outline: 2px solid rgba(59, 130, 246, 0.6); outline-offset: 4px; border-radius: 4px; }
+.sm-scope .sm-toggle:focus-visible { outline: 2px solid var(--sm-accent, #3b82f6); outline-offset: 4px; border-radius: 4px; }
 .sm-scope .sm-toggle-textWrap { position: relative; margin-right: 0.5em; display: inline-block; height: 1em; overflow: hidden; white-space: nowrap; width: var(--sm-toggle-width, auto); min-width: var(--sm-toggle-width, auto); }
 .sm-scope .sm-toggle-textInner { display: flex; flex-direction: column; line-height: 1; }
 .sm-scope .sm-toggle-line { display: block; height: 1em; line-height: 1; }
 .sm-scope .sm-icon { position: relative; width: 14px; height: 14px; flex: 0 0 14px; display: inline-flex; align-items: center; justify-content: center; will-change: transform; }
 .sm-scope .sm-panel-itemWrap { position: relative; overflow: hidden; line-height: 1; }
+.sm-scope .sm-panel-item { white-space: normal; overflow-wrap: anywhere; text-wrap: balance; }
+.sm-scope .sm-panel-item:focus-visible { outline: 2px solid var(--sm-accent, #3b82f6); outline-offset: 6px; border-radius: 6px; }
 .sm-scope .sm-icon-line { position: absolute; left: 50%; top: 50%; width: 100%; height: 2px; background: currentColor; border-radius: 2px; transform: translate(-50%, -50%); will-change: transform; }
 .sm-scope .staggered-menu-panel { position: absolute; top: 0; right: 0; width: clamp(280px, 40vw, 450px); height: 100%; display: flex; flex-direction: column; overflow-y: auto; z-index: 10; }
 .sm-scope [data-position='left'] .staggered-menu-panel { right: auto; left: 0; }

@@ -191,9 +191,15 @@ const ModernNavbarComponent = () => {
 	const reducedEvaluationFrameRef = useRef<number | null>(null);
 	const reducedEvaluationScrollRef = useRef(0);
 
-	const { mode, setMode } = useColorScheme();
+	const { mode, systemMode, setMode } = useColorScheme();
 	const theme = useTheme();
-	const resolvedMode = mode ?? theme.palette.mode;
+	// Resolve the ACTIVE scheme's palette so colors adapt to the in-app toggle.
+	// theme.palette is locked to the default scheme and would break light mode.
+	const resolvedMode: 'light' | 'dark' =
+		(mode === 'system' ? systemMode : mode) === 'light' ? 'light' : 'dark';
+	const pal =
+		(theme as unknown as { colorSchemes?: Record<'light' | 'dark', { palette: typeof theme.palette }> })
+			.colorSchemes?.[resolvedMode]?.palette ?? theme.palette;
 	const toggleColorScheme = useCallback(() => {
 		setMode(resolvedMode === 'dark' ? 'light' : 'dark');
 	}, [resolvedMode, setMode]);
@@ -602,11 +608,11 @@ const ModernNavbarComponent = () => {
 				<Box
 					sx={{
 						width: '100%',
-						backgroundColor: alpha(theme.palette.background.paper, trigger ? 0.95 : 0.9),
-						borderBottom: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
+						backgroundColor: alpha(pal.background.paper, trigger ? 0.95 : 0.9),
+						borderBottom: `1px solid ${alpha(pal.divider, 0.8)}`,
 						boxShadow: trigger
-							? `0 8px 24px ${alpha(theme.palette.common.black, 0.12)}`
-							: `0 4px 16px ${alpha(theme.palette.common.black, 0.06)}`,
+							? `0 8px 24px ${alpha(pal.common.black, 0.12)}`
+							: `0 4px 16px ${alpha(pal.common.black, 0.06)}`,
 						transition: 'background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
 					}}
 				>
@@ -633,12 +639,25 @@ const ModernNavbarComponent = () => {
 						{magnificationDisabled ? (
 							<Box
 								ref={logoBoxRef}
-								onClick={() => scrollToSection('#hero')}
+								component="a"
+								href="#hero"
+								aria-label="Back to top"
+								onClick={(event) => {
+									event.preventDefault();
+									scrollToSection('#hero');
+								}}
 								sx={{
 									display: 'flex',
 									alignItems: 'center',
 									gap: 2,
 									cursor: 'pointer',
+									textDecoration: 'none',
+									color: 'inherit',
+									'&:focus-visible': {
+										outline: `2px solid ${pal.primary.main}`,
+										outlineOffset: 3,
+										borderRadius: 12,
+									},
 								}}
 							>
 								<Box
@@ -646,18 +665,18 @@ const ModernNavbarComponent = () => {
 										width: 44,
 										height: 44,
 										borderRadius: '12px',
-										background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+										background: `linear-gradient(135deg, ${pal.primary.dark} 0%, ${pal.primary.main} 100%)`,
 										display: 'flex',
 										alignItems: 'center',
 										justifyContent: 'center',
 										fontSize: '1.25rem',
 										fontWeight: 700,
-										color: theme.palette.primary.contrastText,
-										boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+										color: pal.primary.contrastText,
+										boxShadow: `0 4px 12px ${alpha(pal.primary.main, 0.3)}`,
 										transition: 'box-shadow 0.2s ease',
 										willChange: 'box-shadow',
 										'&:hover': {
-											boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
+											boxShadow: `0 6px 20px ${alpha(pal.primary.main, 0.4)}`,
 										},
 									}}
 								>
@@ -669,14 +688,14 @@ const ModernNavbarComponent = () => {
 											sx={{
 												fontWeight: 700,
 												fontSize: '1.125rem',
-												color: theme.palette.text.primary,
+												color: pal.text.primary,
 												letterSpacing: '-0.02em',
 												whiteSpace: 'nowrap',
 											}}
 										>
 											{isTabletDevice ? 'Gading Aditya' : 'Gading Aditya Perdana'}
 										</Box>
-										<Box sx={{ fontSize: '0.8125rem', fontFamily: '"DM Sans", sans-serif', color: theme.palette.text.secondary, fontWeight: 500, whiteSpace: 'nowrap' }}>
+										<Box sx={{ fontSize: '0.8125rem', fontFamily: '"DM Sans", sans-serif', color: pal.text.secondary, fontWeight: 500, whiteSpace: 'nowrap' }}>
 											{isTabletDevice ? 'AI Researcher' : 'AI Researcher & Developer'}
 										</Box>
 									</Box>
@@ -692,12 +711,25 @@ const ModernNavbarComponent = () => {
 							>
 								<Box
 									ref={logoBoxRef}
-									onClick={() => scrollToSection('#hero')}
+									component="a"
+									href="#hero"
+									aria-label="Back to top"
+									onClick={(event) => {
+										event.preventDefault();
+										scrollToSection('#hero');
+									}}
 									sx={{
 										display: 'flex',
 										alignItems: 'center',
 										gap: 2,
 										cursor: 'pointer',
+									textDecoration: 'none',
+									color: 'inherit',
+									'&:focus-visible': {
+										outline: `2px solid ${pal.primary.main}`,
+										outlineOffset: 3,
+										borderRadius: 12,
+									},
 									}}
 								>
 									<Box
@@ -705,18 +737,18 @@ const ModernNavbarComponent = () => {
 											width: 44,
 											height: 44,
 											borderRadius: '12px',
-											background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+											background: `linear-gradient(135deg, ${pal.primary.dark} 0%, ${pal.primary.main} 100%)`,
 											display: 'flex',
 											alignItems: 'center',
 											justifyContent: 'center',
 											fontSize: '1.25rem',
 											fontFamily: '"Sora", sans-serif',
 											fontWeight: 700,
-											color: theme.palette.primary.contrastText,
-											boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+											color: pal.primary.contrastText,
+											boxShadow: `0 4px 12px ${alpha(pal.primary.main, 0.3)}`,
 											transition: 'all 0.3s ease',
 											'&:hover': {
-												boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
+												boxShadow: `0 6px 20px ${alpha(pal.primary.main, 0.4)}`,
 											},
 										}}
 									>
@@ -729,14 +761,14 @@ const ModernNavbarComponent = () => {
 													fontWeight: 700,
 													fontSize: '1.125rem',
 													fontFamily: '"Sora", sans-serif',
-													color: theme.palette.text.primary,
+													color: pal.text.primary,
 													letterSpacing: '-0.02em',
 													whiteSpace: 'nowrap',
 												}}
 											>
 												{isTabletDevice ? 'Gading Aditya' : 'Gading Aditya Perdana'}
 											</Box>
-											<Box sx={{ fontSize: '0.8125rem', fontFamily: '"DM Sans", sans-serif', color: theme.palette.text.secondary, fontWeight: 500, whiteSpace: 'nowrap' }}>
+											<Box sx={{ fontSize: '0.8125rem', fontFamily: '"DM Sans", sans-serif', color: pal.text.secondary, fontWeight: 500, whiteSpace: 'nowrap' }}>
 												{isTabletDevice ? 'AI Researcher' : 'AI Researcher & Developer'}
 											</Box>
 										</Box>
@@ -763,12 +795,12 @@ const ModernNavbarComponent = () => {
 										width: springWidth,
 										height: '42px',
 										transform: 'translateY(-50%)',
-										background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.16)}, ${alpha(theme.palette.secondary.main, 0.12)})`,
+										background: `linear-gradient(135deg, ${alpha(pal.primary.main, 0.16)}, ${alpha(pal.secondary.main, 0.12)})`,
 										borderRadius: '11px',
 										opacity: springOpacity,
 										zIndex: 0,
-										boxShadow: `0 0 16px ${alpha(theme.palette.primary.main, 0.18)}, inset 0 0 12px ${alpha(theme.palette.primary.main, 0.08)}`,
-										border: `1px solid ${alpha(theme.palette.primary.main, 0.18)}`,
+										boxShadow: `0 0 16px ${alpha(pal.primary.main, 0.18)}, inset 0 0 12px ${alpha(pal.primary.main, 0.08)}`,
+										border: `1px solid ${alpha(pal.primary.main, 0.18)}`,
 									}}
 									transition={{ type: 'spring', stiffness: 260, damping: 32 }}
 								/>
@@ -817,13 +849,13 @@ const ModernNavbarComponent = () => {
 												cursor: 'pointer',
 												textDecoration: 'none',
 												border: isHovered
-													? `1px solid ${alpha(theme.palette.primary.main, 0.18)}`
-													: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+													? `1px solid ${alpha(pal.primary.main, 0.18)}`
+													: `1px solid ${alpha(pal.divider, 0.6)}`,
 												background: isHovered
-													? alpha(theme.palette.primary.main, 0.08)
+													? alpha(pal.primary.main, 0.08)
 													: 'transparent',
 												boxShadow: isHovered
-													? `0 1px 4px ${alpha(theme.palette.primary.main, 0.12)}`
+													? `0 1px 4px ${alpha(pal.primary.main, 0.12)}`
 													: 'none',
 												transition: 'all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
 												'&::after': {
@@ -834,20 +866,20 @@ const ModernNavbarComponent = () => {
 													width: '60%',
 													height: '2px',
 													borderRadius: '1px',
-													background: `linear-gradient(90deg, ${alpha(theme.palette.primary.main, 0.85)}, ${alpha(theme.palette.primary.light, 0.85)})`,
+													background: `linear-gradient(90deg, ${alpha(pal.primary.main, 0.85)}, ${alpha(pal.primary.light, 0.85)})`,
 													transform: isHovered ? 'scaleX(1)' : 'scaleX(0)',
 													transformOrigin: 'center',
 													transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
 												},
 												'&:focus-visible': {
-													outline: `2px solid ${theme.palette.primary.main}`,
+													outline: `2px solid ${pal.primary.main}`,
 													outlineOffset: 2,
 												},
 											}}
 										>
 											<Icon sx={{
 													fontSize: '1rem',
-													color: isActive ? theme.palette.text.primary : isHovered ? theme.palette.primary.main : theme.palette.text.secondary,
+													color: isActive ? pal.text.primary : isHovered ? pal.primary.main : pal.text.secondary,
 													transition: 'color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
 												}} />
 											<Box
@@ -856,7 +888,7 @@ const ModernNavbarComponent = () => {
 														fontSize: '0.8125rem',
 														fontFamily: '"DM Sans", sans-serif',
 														fontWeight: isActive ? 600 : 500,
-														color: isActive ? theme.palette.text.primary : isHovered ? theme.palette.primary.main : theme.palette.text.secondary,
+														color: isActive ? pal.text.primary : isHovered ? pal.primary.main : pal.text.secondary,
 														lineHeight: 1,
 														letterSpacing: '0.01em',
 														transition: 'all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
@@ -875,8 +907,8 @@ const ModernNavbarComponent = () => {
 															width: 4,
 															height: 4,
 															borderRadius: '50%',
-															background: theme.palette.primary.main,
-															boxShadow: `0 0 8px ${alpha(theme.palette.primary.main, 0.5)}`,
+															background: pal.primary.main,
+															boxShadow: `0 0 8px ${alpha(pal.primary.main, 0.5)}`,
 															zIndex: 4,
 														}}
 													/>
@@ -972,7 +1004,7 @@ const ModernNavbarComponent = () => {
 						left: 0,
 						right: 0,
 						height: 2,
-						background: `linear-gradient(90deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 50%, ${theme.palette.primary.light} 100%)`,
+						background: `linear-gradient(90deg, ${pal.primary.dark} 0%, ${pal.primary.main} 50%, ${pal.primary.light} 100%)`,
 						transformOrigin: 'left',
 						scaleX: shouldReduceMotion ? 0 : scrollYProgress,
 						opacity: 0.8,
@@ -985,7 +1017,7 @@ const ModernNavbarComponent = () => {
 			{navbarReady && (isMobileDevice || isTabletDevice) && (
 				<StaggeredMenu
 					position="right"
-					colors={[theme.palette.primary.dark, theme.palette.primary.main]}
+					colors={[pal.primary.dark, pal.primary.main]}
 					items={navItems.map((item) => ({
 						label: item.name,
 						ariaLabel: `Navigate to ${item.name}`,
@@ -993,9 +1025,9 @@ const ModernNavbarComponent = () => {
 					}))}
 					displaySocials={false}
 					displayItemNumbering={false}
-					menuButtonColor={theme.palette.text.primary}
-					openMenuButtonColor={theme.palette.primary.main}
-					accentColor={theme.palette.primary.main}
+					menuButtonColor={pal.text.primary}
+					openMenuButtonColor={pal.primary.main}
+					accentColor={pal.primary.main}
 					isFixed={true}
 					changeMenuColorOnOpen={true}
 					open={isMenuOpen}
@@ -1022,12 +1054,12 @@ const ModernNavbarComponent = () => {
 							bottom: 24,
 							left: 24,
 							zIndex: 1200,
-							background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
-							color: theme.palette.primary.contrastText,
-							boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.35)}`,
+							background: `linear-gradient(135deg, ${pal.primary.dark} 0%, ${pal.primary.main} 100%)`,
+							color: pal.primary.contrastText,
+							boxShadow: `0 4px 20px ${alpha(pal.primary.main, 0.35)}`,
 							'&:hover': {
-								background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-								boxShadow: `0 6px 24px ${alpha(theme.palette.primary.main, 0.45)}`,
+								background: `linear-gradient(135deg, ${pal.primary.main} 0%, ${pal.primary.light} 100%)`,
+								boxShadow: `0 6px 24px ${alpha(pal.primary.main, 0.45)}`,
 							},
 							'&:active': {
 								transform: 'scale(0.95)',

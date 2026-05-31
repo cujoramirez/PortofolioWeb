@@ -10,8 +10,6 @@ import {
   DialogContent,
   IconButton,
   Link as MuiLink,
-  useTheme,
-  alpha,
 } from '@mui/material';
 import {
   CheckCircleOutline as CheckIcon,
@@ -21,6 +19,21 @@ import {
 } from '@mui/icons-material';
 import { EXPERIENCES, CERTIFICATIONS } from '../constants';
 import OptimizedImage from './OptimizedImage';
+
+// Adaptive color tokens (resolve per light/dark scheme via MUI CSS variables).
+// Using var(--app-palette-*) directly keeps these in sync with the active scheme;
+// theme.palette.* would lock to the default (dark) scheme and break light mode.
+const C = {
+  textPrimary: 'var(--app-palette-text-primary)',
+  textSecondary: 'var(--app-palette-text-secondary)',
+  primary: 'var(--app-palette-primary-main)',
+  success: 'var(--app-palette-success-main)',
+  surface: 'var(--app-palette-bg-elevated)',
+} as const;
+const softPrimary = (pct: number) =>
+  `color-mix(in srgb, var(--app-palette-primary-main) ${pct}%, transparent)`;
+const softDivider = (pct: number) =>
+  `color-mix(in srgb, var(--app-palette-divider) ${pct}%, transparent)`;
 
 type Experience = {
   year: string;
@@ -41,24 +54,21 @@ type Certification = {
 // ---------------------------------------------------------------------------
 // Shared eyebrow / overline
 // ---------------------------------------------------------------------------
-const Eyebrow = ({ label }: { label: string }) => {
-  const theme = useTheme();
-  return (
-    <Typography
-      variant="overline"
-      sx={{
-        fontFamily: 'var(--font-mono)',
-        fontWeight: 600,
-        letterSpacing: 3,
-        color: theme.palette.primary.main,
-        display: 'block',
-        mb: 1,
-      }}
-    >
-      {label}
-    </Typography>
-  );
-};
+const Eyebrow = ({ label }: { label: string }) => (
+  <Typography
+    variant="overline"
+    sx={{
+      fontFamily: 'var(--font-mono)',
+      fontWeight: 600,
+      letterSpacing: 3,
+      color: C.primary,
+      display: 'block',
+      mb: 1,
+    }}
+  >
+    {label}
+  </Typography>
+);
 
 // ---------------------------------------------------------------------------
 // Experience timeline entry (compact, with progressive disclosure)
@@ -70,7 +80,6 @@ const TimelineEntry = ({
   experience: Experience;
   isLast: boolean;
 }) => {
-  const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
   const detailsId = useId();
   const hasAchievements = !!experience.achievements?.length;
@@ -95,7 +104,7 @@ const TimelineEntry = ({
             top: 18,
             bottom: 0,
             width: '1px',
-            bgcolor: alpha(theme.palette.divider, 0.5),
+            bgcolor: softDivider(50),
           }}
         />
       )}
@@ -109,8 +118,8 @@ const TimelineEntry = ({
           width: { xs: 11, md: 13 },
           height: { xs: 11, md: 13 },
           borderRadius: '50%',
-          bgcolor: theme.palette.primary.main,
-          boxShadow: `0 0 0 4px ${alpha(theme.palette.primary.main, 0.12)}`,
+          bgcolor: C.primary,
+          boxShadow: `0 0 0 4px ${softPrimary(12)}`,
         }}
       />
 
@@ -121,7 +130,7 @@ const TimelineEntry = ({
           fontFamily: 'var(--font-mono)',
           fontWeight: 600,
           letterSpacing: 1,
-          color: theme.palette.text.secondary,
+          color: C.textSecondary,
           display: 'block',
           lineHeight: 1.4,
         }}
@@ -133,16 +142,13 @@ const TimelineEntry = ({
       <Typography
         variant="subtitle1"
         component="h4"
-        sx={{ fontWeight: 700, color: theme.palette.text.primary, lineHeight: 1.3 }}
+        sx={{ fontWeight: 700, color: C.textPrimary, lineHeight: 1.3 }}
       >
         {experience.role}
       </Typography>
 
       {/* Company */}
-      <Typography
-        variant="body2"
-        sx={{ color: theme.palette.text.secondary, mb: 1 }}
-      >
+      <Typography variant="body2" sx={{ color: C.textSecondary, mb: 1 }}>
         {experience.company}
       </Typography>
 
@@ -150,7 +156,7 @@ const TimelineEntry = ({
       <Typography
         variant="body2"
         sx={{
-          color: theme.palette.text.secondary,
+          color: C.textSecondary,
           lineHeight: 1.65,
           mb: 1.5,
           ...(expanded
@@ -179,9 +185,9 @@ const TimelineEntry = ({
                 fontSize: '0.7rem',
                 fontFamily: 'var(--font-mono)',
                 fontWeight: 500,
-                bgcolor: alpha(theme.palette.primary.main, 0.08),
-                color: theme.palette.primary.main,
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.16)}`,
+                bgcolor: softPrimary(8),
+                color: C.primary,
+                border: `1px solid ${softPrimary(16)}`,
               }}
             />
           ))}
@@ -201,10 +207,8 @@ const TimelineEntry = ({
               component="li"
               sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 0.75 }}
             >
-              <CheckIcon
-                sx={{ fontSize: 16, mt: '2px', color: theme.palette.success.main, flexShrink: 0 }}
-              />
-              <Typography variant="body2" sx={{ color: theme.palette.text.secondary, lineHeight: 1.55 }}>
+              <CheckIcon sx={{ fontSize: 16, mt: '2px', color: C.success, flexShrink: 0 }} />
+              <Typography variant="body2" sx={{ color: C.textSecondary, lineHeight: 1.55 }}>
                 {achievement}
               </Typography>
             </Box>
@@ -228,7 +232,7 @@ const TimelineEntry = ({
             fontSize: '0.72rem',
             fontWeight: 600,
             letterSpacing: 0.5,
-            color: theme.palette.primary.main,
+            color: C.primary,
             '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' },
           }}
         >
@@ -249,7 +253,6 @@ const CertCard = ({
   cert: Certification;
   onOpen: (cert: Certification) => void;
 }) => {
-  const theme = useTheme();
   return (
     <Box
       role="button"
@@ -270,15 +273,15 @@ const CertCard = ({
         height: '100%',
         borderRadius: 2,
         cursor: 'pointer',
-        bgcolor: alpha(theme.palette.background.paper, 0.6),
-        border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+        bgcolor: C.surface,
+        border: `1px solid ${softDivider(60)}`,
         transition: 'border-color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1), background-color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
         '&:hover, &:focus-visible': {
-          borderColor: alpha(theme.palette.primary.main, 0.4),
-          bgcolor: alpha(theme.palette.primary.main, 0.04),
+          borderColor: softPrimary(40),
+          bgcolor: softPrimary(4),
         },
         '&:focus-visible': {
-          outline: `2px solid ${theme.palette.primary.main}`,
+          outline: `2px solid ${C.primary}`,
           outlineOffset: 2,
         },
       }}
@@ -294,16 +297,16 @@ const CertCard = ({
           fontFamily: 'var(--font-mono)',
           fontWeight: 600,
           letterSpacing: 0.3,
-          bgcolor: alpha(theme.palette.primary.main, 0.08),
-          color: theme.palette.primary.main,
-          '& .MuiChip-icon': { color: theme.palette.primary.main, ml: '6px' },
+          bgcolor: softPrimary(8),
+          color: C.primary,
+          '& .MuiChip-icon': { color: C.primary, ml: '6px' },
         }}
       />
       <Typography
         variant="body2"
         sx={{
           fontWeight: 600,
-          color: theme.palette.text.primary,
+          color: C.textPrimary,
           lineHeight: 1.35,
           display: '-webkit-box',
           WebkitLineClamp: 2,
@@ -323,7 +326,6 @@ const CertCard = ({
 const INITIAL_CERT_COUNT = 8;
 
 const ModernExperienceComponent = () => {
-  const theme = useTheme();
   const prefersReducedMotion = useReducedMotion();
   void prefersReducedMotion; // reveal animations intentionally omitted for density
 
@@ -363,16 +365,13 @@ const ModernExperienceComponent = () => {
             id="experience-heading"
             variant="h2"
             component="h2"
-            sx={{ fontWeight: 700, color: theme.palette.text.primary }}
+            sx={{ fontWeight: 700, color: C.textPrimary }}
           >
             Experience
           </Typography>
         </Box>
 
-        <Box
-          component="ol"
-          sx={{ m: 0, p: 0, maxWidth: 760 }}
-        >
+        <Box component="ol" sx={{ m: 0, p: 0, maxWidth: 760 }}>
           {experiences.map((experience, index) => (
             <TimelineEntry
               key={`${experience.role}-${experience.company}`}
@@ -391,11 +390,11 @@ const ModernExperienceComponent = () => {
             id="certifications-heading"
             variant="h3"
             component="h3"
-            sx={{ fontWeight: 700, color: theme.palette.text.primary, mb: 1 }}
+            sx={{ fontWeight: 700, color: C.textPrimary, mb: 1 }}
           >
             Certifications
           </Typography>
-          <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+          <Typography variant="body2" sx={{ color: C.textSecondary }}>
             {certifications.length} credentials — {summary}
           </Typography>
         </Box>
@@ -428,13 +427,11 @@ const ModernExperienceComponent = () => {
                 fontSize: '0.72rem',
                 fontWeight: 600,
                 letterSpacing: 0.5,
-                borderColor: alpha(theme.palette.primary.main, 0.4),
-                color: theme.palette.primary.main,
+                borderColor: softPrimary(40),
+                color: C.primary,
               }}
             >
-              {showAllCerts
-                ? 'Show less'
-                : `Show all ${certifications.length}`}
+              {showAllCerts ? 'Show less' : `Show all ${certifications.length}`}
             </Button>
           </Box>
         )}
@@ -464,9 +461,9 @@ const ModernExperienceComponent = () => {
                   fontSize: '0.7rem',
                   fontFamily: 'var(--font-mono)',
                   fontWeight: 600,
-                  bgcolor: alpha(theme.palette.primary.main, 0.08),
-                  color: theme.palette.primary.main,
-                  '& .MuiChip-icon': { color: theme.palette.primary.main },
+                  bgcolor: softPrimary(8),
+                  color: C.primary,
+                  '& .MuiChip-icon': { color: C.primary },
                 }}
               />
               <Typography variant="h6" component="span" sx={{ fontWeight: 700, lineHeight: 1.3 }}>
@@ -477,7 +474,7 @@ const ModernExperienceComponent = () => {
             <IconButton
               aria-label="Close"
               onClick={() => setSelected(null)}
-              sx={{ position: 'absolute', top: 12, right: 12, color: theme.palette.text.secondary }}
+              sx={{ position: 'absolute', top: 12, right: 12, color: C.textSecondary }}
             >
               <CloseIcon />
             </IconButton>
@@ -487,7 +484,7 @@ const ModernExperienceComponent = () => {
                 sx={{
                   borderRadius: 2,
                   overflow: 'hidden',
-                  border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+                  border: `1px solid ${softDivider(60)}`,
                   mb: 2,
                 }}
               >

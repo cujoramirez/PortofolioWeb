@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Box, Typography, Button, useTheme } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import {
   Email as EmailIcon,
   LinkedIn as LinkedInIcon,
@@ -63,7 +63,6 @@ const CONTACT_METHODS: ContactMethod[] = [
 ];
 
 const OptimizedModernContactComponent = () => {
-  const theme = useTheme();
   const prefersReducedMotion = useReducedMotion();
 
   const reveal = prefersReducedMotion
@@ -90,7 +89,7 @@ const OptimizedModernContactComponent = () => {
             fontFamily: 'var(--font-mono)',
             fontWeight: 600,
             letterSpacing: 3,
-            color: theme.palette.primary.main,
+            color: 'var(--app-palette-primary-main)',
             display: 'block',
             mb: 1,
           }}
@@ -100,13 +99,13 @@ const OptimizedModernContactComponent = () => {
         <Typography
           variant="h2"
           component="h2"
-          sx={{ fontWeight: 700, color: theme.palette.text.primary, mb: 1.5 }}
+          sx={{ fontWeight: 700, color: 'var(--app-palette-text-primary)', mb: 1.5 }}
         >
           Get in touch
         </Typography>
         <Typography
           variant="body1"
-          sx={{ color: theme.palette.text.secondary, maxWidth: 540, mx: 'auto' }}
+          sx={{ color: 'var(--app-palette-text-secondary)', maxWidth: 540, mx: 'auto' }}
         >
           Open to research collaborations, AI engineering roles, and software opportunities.
           The quickest way to reach me is the channels below.
@@ -141,7 +140,7 @@ const OptimizedModernContactComponent = () => {
                   width: 44,
                   height: 44,
                   borderRadius: 2,
-                  color: theme.palette.primary.main,
+                  color: 'var(--app-palette-primary-main)',
                   backgroundColor: 'var(--app-palette-action-hover)',
                 }}
               >
@@ -156,7 +155,7 @@ const OptimizedModernContactComponent = () => {
                     fontFamily: 'var(--font-mono)',
                     letterSpacing: 1.5,
                     lineHeight: 1.4,
-                    color: theme.palette.text.secondary,
+                    color: 'var(--app-palette-text-secondary)',
                   }}
                 >
                   {method.label}
@@ -167,7 +166,7 @@ const OptimizedModernContactComponent = () => {
                   sx={{
                     display: 'block',
                     fontWeight: 600,
-                    color: theme.palette.text.primary,
+                    color: 'var(--app-palette-text-primary)',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -186,7 +185,7 @@ const OptimizedModernContactComponent = () => {
             p: { xs: 1.75, sm: 2 },
             borderRadius: 3,
             backgroundColor: 'var(--app-palette-bg-elevated)',
-            border: `1px solid ${theme.palette.divider}`,
+            border: `1px solid ${'var(--app-palette-divider)'}`,
           } as const;
 
           if (!isLink) {
@@ -211,11 +210,11 @@ const OptimizedModernContactComponent = () => {
                 textDecoration: 'none',
                 transition: 'border-color 0.2s ease, transform 0.2s ease',
                 '&:hover': {
-                  borderColor: theme.palette.primary.main,
+                  borderColor: 'var(--app-palette-primary-main)',
                   transform: prefersReducedMotion ? 'none' : 'translateY(-2px)',
                 },
                 '&:focus-visible': {
-                  outline: `2px solid ${theme.palette.primary.main}`,
+                  outline: `2px solid ${'var(--app-palette-primary-main)'}`,
                   outlineOffset: 2,
                 },
               }}

@@ -8,8 +8,6 @@ import {
   CardContent,
   Button,
   Stack,
-  useTheme,
-  alpha,
 } from '@mui/material';
 import {
   GitHub as GitHubIcon,
@@ -33,7 +31,6 @@ const MAX_CHIPS = 4;
 const INITIAL_VISIBLE = 6;
 
 const ProjectCard = memo(({ project }: { project: Project }) => {
-  const theme = useTheme();
   const techs = project.technologies ?? [];
   const visibleTechs = techs.slice(0, MAX_CHIPS);
   const extraTech = techs.length - visibleTechs.length;
@@ -54,14 +51,14 @@ const ProjectCard = memo(({ project }: { project: Project }) => {
         display: 'flex',
         flexDirection: 'column',
         borderRadius: 3,
-        bgcolor: alpha(theme.palette.background.paper, 0.6),
-        border: `1px solid ${theme.palette.divider}`,
+        bgcolor: 'var(--app-palette-bg-elevated)',
+        border: '1px solid var(--app-palette-divider)',
         overflow: 'hidden',
         transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), border-color 0.3s ease',
         '&:hover': {
           transform: 'translateY(-4px)',
-          borderColor: alpha(theme.palette.primary.main, 0.4),
-          boxShadow: `0 16px 40px ${alpha(theme.palette.common.black, 0.18)}`,
+          borderColor: 'color-mix(in srgb, var(--app-palette-primary-main) 40%, transparent)',
+          boxShadow: '0 16px 40px rgba(0,0,0,0.18)',
         },
         '@media (prefers-reduced-motion: reduce)': {
           '&:hover': { transform: 'none' },
@@ -75,7 +72,7 @@ const ProjectCard = memo(({ project }: { project: Project }) => {
           width: '100%',
           aspectRatio: '16 / 9',
           overflow: 'hidden',
-          bgcolor: alpha(theme.palette.text.primary, 0.04),
+          bgcolor: 'color-mix(in srgb, var(--app-palette-text-primary) 4%, transparent)',
         }}
       >
         <OptimizedImage
@@ -139,9 +136,9 @@ const ProjectCard = memo(({ project }: { project: Project }) => {
                   height: 22,
                   fontSize: '0.68rem',
                   fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
-                  bgcolor: alpha(theme.palette.text.primary, 0.04),
+                  bgcolor: 'color-mix(in srgb, var(--app-palette-text-primary) 4%, transparent)',
                   color: 'text.secondary',
-                  border: `1px solid ${theme.palette.divider}`,
+                  border: '1px solid var(--app-palette-divider)',
                 }}
               />
             ))}
@@ -154,7 +151,7 @@ const ProjectCard = memo(({ project }: { project: Project }) => {
                   height: 22,
                   fontSize: '0.68rem',
                   fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
-                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  bgcolor: 'color-mix(in srgb, var(--app-palette-primary-main) 10%, transparent)',
                   color: 'primary.main',
                   border: 'none',
                 }}
@@ -223,7 +220,6 @@ const ProjectCard = memo(({ project }: { project: Project }) => {
 ProjectCard.displayName = 'ProjectCard';
 
 const ModernProjectsComponent = () => {
-  const theme = useTheme();
   const prefersReducedMotion = useReducedMotion();
   const [showAll, setShowAll] = useState(false);
 
@@ -299,9 +295,9 @@ const ModernProjectsComponent = () => {
               textTransform: 'none',
               fontWeight: 600,
               px: 3,
-              borderColor: theme.palette.divider,
+              borderColor: 'var(--app-palette-divider)',
               color: 'text.primary',
-              '&:hover': { borderColor: alpha(theme.palette.primary.main, 0.5) },
+              '&:hover': { borderColor: 'color-mix(in srgb, var(--app-palette-primary-main) 50%, transparent)' },
             }}
           >
             {showAll ? 'Show less' : `Show all ${projects.length} projects`}

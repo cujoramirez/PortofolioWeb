@@ -1,6 +1,6 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Box, Chip, Typography, useTheme, alpha } from '@mui/material';
+import { Box, Chip, Typography, alpha } from '@mui/material';
 
 import { ABOUT_TEXT, ABOUT_QUOTES } from '../constants/index';
 import { technologies, type TechnologyCategory } from './techData';
@@ -17,7 +17,6 @@ const GLANCE_FACTS = [
 ];
 
 const ModernAbout = () => {
-  const theme = useTheme();
 
   const paragraphs = useMemo(
     () => ABOUT_TEXT.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean),
@@ -170,7 +169,7 @@ const ModernAbout = () => {
                       label={tech.name}
                       variant="outlined"
                       sx={{
-                        borderColor: alpha(theme.palette.divider, 0.4),
+                        borderColor: 'color-mix(in srgb, var(--app-palette-divider) 40%, transparent)',
                         bgcolor: 'background.paper',
                         color: 'text.primary',
                         fontWeight: 500,
@@ -196,7 +195,7 @@ const ModernAbout = () => {
         sx={{
           m: 0,
           pl: 2.5,
-          borderLeft: `2px solid ${alpha(theme.palette.primary.main, 0.4)}`,
+          borderLeft: '2px solid color-mix(in srgb, var(--app-palette-primary-main) 40%, transparent)',
           minHeight: 88,
         }}
       >
