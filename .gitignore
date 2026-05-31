@@ -25,3 +25,6 @@ dist-ssr
 
 # impeccable live-mode local state
 .impeccable/
+
+# superpowers brainstorm scratch (visual companion mockups)
+.superpowers/
