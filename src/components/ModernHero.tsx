@@ -238,24 +238,26 @@ const ModernHero = () => {
                 justifyContent: 'center',
               }}
             >
-              {/* Tinted panel behind the cutout — adapts light/dark via color-mix over bg-elevated.
-                  `top` controls how far the head/shoulders break above the panel. */}
+              {/* Tinted backdrop card that grounds the portrait; head/shoulders break
+                  above its top edge onto the animated background. Opaque (color-mix over
+                  bg-elevated) so the bends don't show through it and it reads as a card. */}
               <Box
                 component={motion.div}
                 variants={panelVariants}
                 aria-hidden
                 sx={{
                   position: 'absolute',
-                  inset: '15% 0 0 0',
+                  inset: '14% 0 0 0',
                   borderRadius: '24px',
                   border: '1px solid var(--app-palette-divider)',
                   background:
-                    'linear-gradient(165deg, color-mix(in srgb, var(--app-palette-primary-main) 14%, var(--app-palette-bg-elevated)) 0%, color-mix(in srgb, var(--app-palette-secondary-main) 10%, var(--app-palette-bg-elevated)) 100%)',
+                    'linear-gradient(165deg, color-mix(in srgb, var(--app-palette-primary-main) 18%, var(--app-palette-bg-elevated)) 0%, color-mix(in srgb, var(--app-palette-secondary-main) 12%, var(--app-palette-bg-elevated)) 100%)',
+                  boxShadow: '0 24px 60px rgba(0,0,0,0.38)',
                   transformOrigin: 'bottom center',
                   zIndex: 0,
                 }}
               />
-              {/* Transparent cutout in front; drop-shadow lifts the dark suit off the panel */}
+              {/* Transparent cutout in front, breaking above the card onto the bends. */}
               <Box component={motion.div} variants={cutoutVariants} sx={{ position: 'relative', zIndex: 1, width: '100%' }}>
                 <Box
                   component="img"
@@ -266,7 +268,7 @@ const ModernHero = () => {
                     width: '100%',
                     height: 'auto',
                     display: 'block',
-                    filter: 'drop-shadow(0 16px 28px rgba(0,0,0,0.35))',
+                    filter: 'drop-shadow(0 18px 36px rgba(0,0,0,0.4))',
                   }}
                 />
               </Box>

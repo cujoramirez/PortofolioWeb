@@ -71,7 +71,7 @@ const GlobalBackground = memo(() => {
             height: '100dvh',
             zIndex: 0,
             pointerEvents: 'none',
-            opacity: resolved === 'light' ? 0.6 : 0.85,
+            opacity: resolved === 'light' ? 0.4 : 0.6,
             transition: 'opacity 0.6s ease',
           }}
         >
@@ -88,7 +88,7 @@ const GlobalBackground = memo(() => {
             parallax={0.4}
             noise={0.05}
             iterations={1}
-            intensity={1.6}
+            intensity={1.35}
             bandWidth={7}
             colorTransition={0.6}
             maxPixelRatio={1.5}
