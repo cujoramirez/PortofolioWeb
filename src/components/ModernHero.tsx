@@ -160,8 +160,8 @@ const ModernHero = () => {
               >
                 <GooeyText
                   texts={HERO_PHRASES}
-                  holdTime={2.6}
-                  transitionTime={0.55}
+                  holdTime={2.4}
+                  transitionTime={0.7}
                 />
               </Box>
             </Box>
