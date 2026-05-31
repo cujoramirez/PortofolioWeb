@@ -73,14 +73,9 @@ const ModernHero = () => {
         display: 'flex',
         alignItems: 'center',
         minHeight: { xs: 'auto', md: '100svh' },
-        overflow: 'hidden',
-        // Token-driven background: tint layers over the base surface so it
-        // reads intentionally in BOTH light and dark schemes.
-        backgroundColor: 'var(--app-palette-bg-base)',
-        backgroundImage: `
-          radial-gradient(60% 80% at 12% 0%, color-mix(in srgb, var(--app-palette-primary-main) 12%, transparent) 0%, transparent 60%),
-          radial-gradient(50% 70% at 100% 100%, color-mix(in srgb, var(--app-palette-secondary-main) 10%, transparent) 0%, transparent 60%)
-        `,
+        // No section-specific background — inherits the shared body surface
+        // (var(--app-palette-bg-base)) so the hero blends seamlessly into About
+        // and every other section in both light and dark.
       }}
     >
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
