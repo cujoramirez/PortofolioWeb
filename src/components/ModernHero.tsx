@@ -1,5 +1,5 @@
-import { useRef, type RefObject, type ComponentProps } from 'react';
-import { motion, useInView } from 'framer-motion';
+import type { ComponentProps } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Box,
   Typography,
@@ -11,10 +11,9 @@ import {
   SvgIcon,
 } from '@mui/material';
 import { GitHub, LinkedIn, Email, ArrowDownward } from '@mui/icons-material';
-import { useSystemProfile } from './useSystemProfile';
-import RotatingText from './RotatingText';
 import heroImg from '../assets/GadingAdityaPerdana.webp';
 import { HERO_CONTENT } from '../constants/index';
+import { GooeyText } from './GooeyText';
 
 // Custom Google Scholar icon
 const GoogleScholarIcon = (props: ComponentProps<typeof SvgIcon>) => (
@@ -23,11 +22,13 @@ const GoogleScholarIcon = (props: ComponentProps<typeof SvgIcon>) => (
   </SvgIcon>
 );
 
-const RESEARCH_INTERESTS = [
-  'Vision Transformers',
-  'Ensemble Learning',
-  'Model Calibration',
-  'Computer Vision',
+// Rotating capability phrases (gooey morph). Component-level presentation copy;
+// constants stay frozen. Formal, parallel, research + building as peers.
+const HERO_PHRASES = [
+  'I research computer vision',
+  'I publish peer-reviewed work',
+  'I build software',
+  'I design interfaces',
 ];
 
 const SOCIAL_LINKS = [
@@ -40,61 +41,71 @@ const SOCIAL_LINKS = [
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const ModernHero = () => {
-  const { performanceTier } = useSystemProfile();
-  const heroRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isInView = useInView(heroRef as RefObject<Element>, { once: true });
+  const prefersReducedMotion = useReducedMotion();
 
-  const shouldReduceMotion = performanceTier === 'low' || isMobile;
+  // Mobile gets a lighter (smaller) rise; reduced-motion zeroes it.
+  const rise = prefersReducedMotion ? 0 : isMobile ? 12 : 20;
 
-  const containerVariants = {
+  const container = {
     hidden: {},
     visible: {
-      transition: { staggerChildren: 0.1, delayChildren: 0.05 },
+      transition: { staggerChildren: prefersReducedMotion ? 0 : 0.09, delayChildren: 0.05 },
     },
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 24 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.7, ease },
-    },
+  const item = {
+    hidden: { opacity: 0, y: rise },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease } },
+  };
+
+  // Signature headline reveal: a left-to-right clip wipe (fade only under reduced-motion).
+  const nameVariants = prefersReducedMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.5 } } }
+    : {
+        hidden: { opacity: 0, clipPath: 'inset(0 100% 0 0)' },
+        visible: { opacity: 1, clipPath: 'inset(0 0% 0 0)', transition: { duration: 0.85, ease } },
+      };
+
+  const panelVariants = {
+    hidden: { opacity: 0, scale: prefersReducedMotion ? 1 : 0.92 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.7, ease } },
+  };
+
+  const cutoutVariants = {
+    hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 26 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.75, ease, delay: 0.1 } },
   };
 
   return (
     <Box
-      ref={heroRef}
       component="div"
       sx={{
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
         minHeight: { xs: 'auto', md: '100svh' },
-        // No section-specific background — inherits the shared body surface
-        // (var(--app-palette-bg-base)) so the hero blends seamlessly into About
-        // and every other section in both light and dark.
+        // No section-specific background — inherits the shared body surface.
       }}
     >
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
         <Box
           component={motion.div}
-          variants={containerVariants}
+          variants={container}
           initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
+          animate="visible"
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1.2fr 0.8fr' },
+            gridTemplateColumns: { xs: '1fr', md: '1.15fr 0.85fr' },
             gap: { xs: 5, md: 8 },
             alignItems: 'center',
           }}
         >
           {/* Left column — content */}
           <Box sx={{ order: { xs: 2, md: 1 } }}>
-            {/* Eyebrow / role tag */}
-            <Box component={motion.div} variants={itemVariants}>
+            {/* Eyebrow */}
+            <Box component={motion.div} variants={item}>
               <Typography
                 variant="overline"
                 sx={{
@@ -117,12 +128,13 @@ const ModernHero = () => {
             </Box>
 
             {/* Headline — the one allowed gradient-text accent on the site */}
-            <Box component={motion.div} variants={itemVariants}>
+            <Box component={motion.div} variants={nameVariants}>
               <Typography
                 variant="h1"
                 sx={{
-                  mb: 2,
-                  background: `linear-gradient(120deg, var(--app-palette-text-primary) 0%, var(--app-palette-text-primary) 45%, var(--app-palette-primary-main) 80%, var(--app-palette-secondary-main) 100%)`,
+                  mb: 2.5,
+                  background:
+                    'linear-gradient(120deg, var(--app-palette-text-primary) 0%, var(--app-palette-text-primary) 45%, var(--app-palette-primary-main) 80%, var(--app-palette-secondary-main) 100%)',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
@@ -133,44 +145,36 @@ const ModernHero = () => {
               </Typography>
             </Box>
 
-            {/* Rotating research interests */}
-            <Box
-              component={motion.div}
-              variants={itemVariants}
-              sx={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 1, mb: 3 }}
-            >
-              <Typography variant="h5" component="span" sx={{ color: 'var(--app-palette-text-secondary)', fontWeight: 400 }}>
-                Researching
-              </Typography>
-              <Typography
-                variant="h5"
-                component="span"
-                sx={{ color: 'var(--app-palette-primary-main)', fontWeight: 600 }}
+            {/* Capability line — gooey morph through formal, parallel phrases
+                (replaces the retired character-rotating line). */}
+            <Box component={motion.div} variants={item} sx={{ mb: 3 }}>
+              <Box
+                sx={{
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 500,
+                  fontSize: 'clamp(1.15rem, 1.2vw + 0.9rem, 1.5rem)',
+                  lineHeight: 1.4,
+                  color: 'var(--app-palette-label-primary)',
+                  minHeight: '1.6em',
+                }}
               >
-                <RotatingText
-                  texts={RESEARCH_INTERESTS}
-                  rotationInterval={3000}
-                  staggerDuration={0.02}
-                  staggerFrom="first"
-                  animatePresenceMode="wait"
-                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                  initial={{ y: '100%', opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  auto
-                  loop
+                <GooeyText
+                  texts={HERO_PHRASES}
+                  disabled={Boolean(prefersReducedMotion)}
+                  morphTime={1.1}
+                  cooldownTime={2.6}
                 />
-              </Typography>
+              </Box>
             </Box>
 
-            {/* Lede — HERO_CONTENT, constrained to a readable measure */}
-            <Box component={motion.div} variants={itemVariants}>
+            {/* Frozen research paragraph */}
+            <Box component={motion.div} variants={item}>
               <Typography
                 variant="body1"
                 sx={{
                   color: 'var(--app-palette-label-secondary)',
                   maxWidth: '60ch',
-                  fontSize: { xs: '1rem', md: '1.0625rem' },
+                  fontSize: { xs: '0.95rem', md: '1rem' },
                   lineHeight: 1.75,
                   mb: 4,
                 }}
@@ -182,15 +186,10 @@ const ModernHero = () => {
             {/* Actions */}
             <Box
               component={motion.div}
-              variants={itemVariants}
+              variants={item}
               sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}
             >
-              <Button
-                variant="contained"
-                size="large"
-                href="#projects"
-                sx={{ px: 3.5, py: 1.25 }}
-              >
+              <Button variant="contained" size="large" href="#projects" sx={{ px: 3.5, py: 1.25 }}>
                 View Projects
               </Button>
               <Button
@@ -229,54 +228,49 @@ const ModernHero = () => {
             </Box>
           </Box>
 
-          {/* Right column — profile card */}
-          <Box
-            component={motion.div}
-            variants={itemVariants}
-            sx={{ order: { xs: 1, md: 2 }, display: 'flex', justifyContent: 'center' }}
-          >
+          {/* Right column — Shape Breakout portrait */}
+          <Box sx={{ order: { xs: 1, md: 2 }, display: 'flex', justifyContent: 'center' }}>
             <Box
               sx={{
                 position: 'relative',
-                width: { xs: 'min(280px, 72vw)', md: 'min(360px, 32vw)' },
-                aspectRatio: '4 / 5',
-                borderRadius: 4,
-                overflow: 'hidden',
-                border: '1px solid',
-                borderColor: 'divider',
-                backgroundColor: 'var(--app-palette-bg-elevated)',
-                boxShadow: 4,
+                width: { xs: 'min(300px, 78vw)', md: 'min(380px, 34vw)' },
+                display: 'flex',
+                alignItems: 'flex-end',
+                justifyContent: 'center',
               }}
             >
+              {/* Tinted panel behind the cutout — adapts light/dark via color-mix over bg-elevated.
+                  `top` controls how far the head/shoulders break above the panel. */}
               <Box
-                component="img"
-                src={heroImg}
-                alt="Gading Aditya Perdana"
-                loading="eager"
-                fetchPriority="high"
-                sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
-              <Box
+                component={motion.div}
+                variants={panelVariants}
+                aria-hidden
                 sx={{
                   position: 'absolute',
-                  left: 12,
-                  right: 12,
-                  bottom: 12,
-                  px: 1.5,
-                  py: 1,
-                  borderRadius: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  backgroundColor: 'var(--app-palette-bg-elevated)',
-                  border: '1px solid',
-                  borderColor: 'divider',
+                  inset: '15% 0 0 0',
+                  borderRadius: '24px',
+                  border: '1px solid var(--app-palette-divider)',
+                  background:
+                    'linear-gradient(165deg, color-mix(in srgb, var(--app-palette-primary-main) 14%, var(--app-palette-bg-elevated)) 0%, color-mix(in srgb, var(--app-palette-secondary-main) 10%, var(--app-palette-bg-elevated)) 100%)',
+                  transformOrigin: 'bottom center',
+                  zIndex: 0,
                 }}
-              >
-                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main', flexShrink: 0 }} />
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500, lineHeight: 1.3 }}>
-                  Apple Developer Academy Scholar
-                </Typography>
+              />
+              {/* Transparent cutout in front; drop-shadow lifts the dark suit off the panel */}
+              <Box component={motion.div} variants={cutoutVariants} sx={{ position: 'relative', zIndex: 1, width: '100%' }}>
+                <Box
+                  component="img"
+                  src={heroImg}
+                  alt="Gading Aditya Perdana"
+                  loading="eager"
+                  fetchPriority="high"
+                  sx={{
+                    width: '100%',
+                    height: 'auto',
+                    display: 'block',
+                    filter: 'drop-shadow(0 16px 28px rgba(0,0,0,0.35))',
+                  }}
+                />
               </Box>
             </Box>
           </Box>

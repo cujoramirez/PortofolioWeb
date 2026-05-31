@@ -12,6 +12,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-05-31-hero-section-design.md`
 
+> **Amendment (2026-05-31, during execution):** the static one-liner was replaced by a **gooey morphing capability line** (new component `src/components/GooeyText.tsx`) cycling "I research computer vision" / "I publish peer-reviewed work" / "I build software" / "I design interfaces", and the portrait was re-encoded from PNG to true WebP with alpha (492 KB → 58 KB). The Task 2 code block below predates this; the committed `ModernHero.tsx` is the source of truth.
+
 ---
 
 ## Files

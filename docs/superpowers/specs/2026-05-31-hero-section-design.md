@@ -14,8 +14,8 @@ There is no 21st.dev reference for this section; the direction was derived colla
 
 | Decision | Choice |
 |---|---|
-| Identity framing | Integrated one-liner: research and building as **peers**, not building-in-service-of-research |
-| Hero copy (subhead) | "I publish AI research, and I design and build software that stands on its own." |
+| Identity framing | Research and building as **peers** (not building-in-service-of-research), shown via a rotating capability line |
+| Hero copy (subhead) | Gooey morphing capability line cycling formal, parallel phrases; the static one-liner was cut as too self-assured |
 | Layout | **Balanced Split** — text left, portrait right |
 | Portrait treatment | **Shape Breakout** — frameless transparent cutout on a tinted panel, head/shoulders breaking the top edge |
 | Rotating "Researching X" line | **Removed**, replaced by the one-liner |
@@ -41,7 +41,7 @@ There is no 21st.dev reference for this section; the direction was derived colla
 ### Content stack — left column (top to bottom)
 1. **Eyebrow** `AI Researcher` — `overline` (JetBrains Mono), `var(--app-palette-primary-main)`, with the existing leading rule line.
 2. **Headline** `Gading Aditya Perdana` — Sora `h1`, fluid clamp, the one sanctioned gradient (text-primary → primary → secondary). Frozen string.
-3. **One-liner** "I publish AI research, and I design and build software that stands on its own." — `var(--app-palette-label-primary)`, sized between `h1` and body (≈`h5`/large body), max ~48ch. Replaces the removed rotating line.
+3. **Capability line (gooey morph)** — a `GooeyText` component cycling formal, parallel phrases: "I research computer vision", "I publish peer-reviewed work", "I build software", "I design interfaces". `var(--app-palette-label-primary)`, sized between `h1` and body. Replaces both the old character-rotating line and the rejected static one-liner. Reduced-motion shows the first phrase statically.
 4. **Frozen paragraph** `HERO_CONTENT` — `var(--app-palette-label-secondary)`, max ~60ch, visibly smaller than the one-liner. Carries the research specifics + publications/Apple Academy credentials. Unedited.
 5. **Actions** — **View Projects** (`contained`, → `#projects`) and **Get in Touch** (`text`, → `#contact`). Distinct intents (portfolio vs contact), no duplicate-intent issue.
 6. **Social row** — GitHub, LinkedIn, Google Scholar, Email (`SOCIAL_LINKS`), icon buttons, `label-tertiary` → `primary` on hover.
@@ -81,9 +81,11 @@ On first load, content paints immediately (no overlay), then:
 - Dividers/strokes: `divider`. Shadows: tinted/`rgba(0,0,0,x)`.
 
 ## Files affected (preview; detailed steps in the plan)
-- **Rewrite:** `src/components/ModernHero.tsx` (layout, copy, Shape Breakout, Compose motion).
-- **Likely touched:** `src/components/ModernNavbar.tsx` (first-load drop/stagger), and a check on `RotatingText` usage (remove from hero; delete the file only if no other importers — out of scope to force).
-- **Unchanged:** `LandingPage.tsx` wrapper, `src/constants/index.js`, `index.html` preload (same asset path), theme tokens.
+- **Rewrite:** `src/components/ModernHero.tsx` (layout, copy, Shape Breakout, gooey capability line, Compose motion).
+- **Create:** `src/components/GooeyText.tsx` (hardened gooey morph: reduced-motion static, off-screen/hidden-tab pause, rAF cleanup, screen-reader label).
+- **Likely touched:** `src/components/ModernNavbar.tsx` (first-load easing), and remove `RotatingText` usage then delete the file (only the hero imported it).
+- **Asset:** `src/assets/GadingAdityaPerdana.webp` re-encoded from a PNG-in-`.webp` to true WebP with alpha (492 KB → 58 KB); the `index.html` preload `type="image/webp"` is now correct.
+- **Unchanged:** `LandingPage.tsx`, `src/constants/index.js`, theme tokens.
 
 ## Out of scope
 - All other sections; the optional "Halo." greeting (declined); any edit to `HERO_CONTENT` or other constants; reintroducing a contact form; any new heavy/WebGL decoration.
@@ -93,5 +95,6 @@ On first load, content paints immediately (no overlay), then:
 - Visual, both schemes: hero fits ~one viewport; cutout reads with clear figure-ground separation in light and dark; Compose plays on load and collapses under reduced motion; mobile stacks cleanly; AA contrast holds.
 
 ## Open risks / notes
-- **Asset transparency:** confirm `GadingAdityaPerdana.webp` actually carries an alpha channel before finalizing the panel (first implementation check). If it is not transparent, the Shape Breakout reads as a floating opaque rectangle.
+- **Asset transparency:** RESOLVED — verified `hasAlpha: true` and re-encoded to true WebP with alpha (492 KB → 58 KB, 800×1067).
+- **Gooey line cost:** continuous SVG-filter morph; mitigated by reduced-motion static fallback, off-screen/hidden-tab pause, and rAF cleanup on unmount.
 - **Mobile motion change:** lighter-but-present motion on mobile is a deliberate departure from the current "fully disabled on mobile" behavior; still fully gated by reduced-motion.
