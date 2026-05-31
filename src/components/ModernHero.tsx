@@ -1,5 +1,5 @@
-import type { ComponentProps } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { useState, type ComponentProps, type MouseEvent as ReactMouseEvent } from 'react';
+import { motion, useReducedMotion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import {
   Box,
   Typography,
@@ -40,6 +40,14 @@ const SOCIAL_LINKS = [
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
+// Detection-frame corner brackets (the "bounding box" around the portrait).
+const BRACKETS = [
+  { top: 10, left: 10, borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: '8px' },
+  { top: 10, right: 10, borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: '8px' },
+  { bottom: 10, left: 10, borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: '8px' },
+  { bottom: 10, right: 10, borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: '8px' },
+];
+
 const ModernHero = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -47,6 +55,34 @@ const ModernHero = () => {
 
   // Mobile gets a lighter (smaller) rise; reduced-motion zeroes it.
   const rise = prefersReducedMotion ? 0 : isMobile ? 12 : 20;
+
+  // Hover "detection" state + a key to re-trigger the scanline sweep each hover.
+  const [detecting, setDetecting] = useState(false);
+  const [scanKey, setScanKey] = useState(0);
+
+  // Cursor parallax for the cutout (motion values stay off the React render path).
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+  const parallaxSpring = { stiffness: 150, damping: 18, mass: 0.5 };
+  const cutoutX = useSpring(useTransform(pointerX, [-1, 1], [-14, 14]), parallaxSpring);
+  const cutoutY = useSpring(useTransform(pointerY, [-1, 1], [-14, 14]), parallaxSpring);
+
+  const handlePortraitMove = (e: ReactMouseEvent<HTMLDivElement>) => {
+    if (prefersReducedMotion) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    pointerX.set(((e.clientX - r.left) / r.width) * 2 - 1);
+    pointerY.set(((e.clientY - r.top) / r.height) * 2 - 1);
+  };
+  const handlePortraitEnter = () => {
+    if (prefersReducedMotion) return;
+    setDetecting(true);
+    setScanKey((k) => k + 1);
+  };
+  const handlePortraitLeave = () => {
+    setDetecting(false);
+    pointerX.set(0);
+    pointerY.set(0);
+  };
 
   const container = {
     hidden: {},
@@ -86,7 +122,6 @@ const ModernHero = () => {
         display: 'flex',
         alignItems: 'center',
         minHeight: { xs: 'auto', md: '100svh' },
-        // No section-specific background — inherits the shared body surface.
       }}
     >
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
@@ -145,8 +180,7 @@ const ModernHero = () => {
               </Typography>
             </Box>
 
-            {/* Capability line — gooey morph through formal, parallel phrases
-                (replaces the retired character-rotating line). */}
+            {/* Capability line — gooey morph through formal, parallel phrases */}
             <Box component={motion.div} variants={item} sx={{ mb: 3 }}>
               <Box
                 sx={{
@@ -158,11 +192,7 @@ const ModernHero = () => {
                   minHeight: '1.6em',
                 }}
               >
-                <GooeyText
-                  texts={HERO_PHRASES}
-                  holdTime={2.4}
-                  transitionTime={0.7}
-                />
+                <GooeyText texts={HERO_PHRASES} holdTime={2.4} transitionTime={0.7} />
               </Box>
             </Box>
 
@@ -227,9 +257,12 @@ const ModernHero = () => {
             </Box>
           </Box>
 
-          {/* Right column — Shape Breakout portrait */}
+          {/* Right column — Vision-model detection portrait */}
           <Box sx={{ order: { xs: 1, md: 2 }, display: 'flex', justifyContent: 'center' }}>
             <Box
+              onMouseMove={handlePortraitMove}
+              onMouseEnter={handlePortraitEnter}
+              onMouseLeave={handlePortraitLeave}
               sx={{
                 position: 'relative',
                 width: { xs: 'min(300px, 78vw)', md: 'min(380px, 34vw)' },
@@ -238,9 +271,7 @@ const ModernHero = () => {
                 justifyContent: 'center',
               }}
             >
-              {/* Tinted backdrop card that grounds the portrait; head/shoulders break
-                  above its top edge onto the animated background. Opaque (color-mix over
-                  bg-elevated) so the bends don't show through it and it reads as a card. */}
+              {/* Tinted backdrop card that grounds the portrait. */}
               <Box
                 component={motion.div}
                 variants={panelVariants}
@@ -252,25 +283,148 @@ const ModernHero = () => {
                   border: '1px solid var(--app-palette-divider)',
                   background:
                     'linear-gradient(165deg, color-mix(in srgb, var(--app-palette-primary-main) 18%, var(--app-palette-bg-elevated)) 0%, color-mix(in srgb, var(--app-palette-secondary-main) 12%, var(--app-palette-bg-elevated)) 100%)',
-                  boxShadow: '0 24px 60px rgba(0,0,0,0.38)',
+                  boxShadow: detecting
+                    ? '0 24px 60px rgba(0,0,0,0.42), 0 0 0 1px color-mix(in srgb, var(--app-palette-primary-main) 45%, transparent)'
+                    : '0 24px 60px rgba(0,0,0,0.38)',
                   transformOrigin: 'bottom center',
+                  transition: 'box-shadow 0.35s ease',
                   zIndex: 0,
                 }}
               />
-              {/* Transparent cutout in front, breaking above the card onto the bends. */}
-              <Box component={motion.div} variants={cutoutVariants} sx={{ position: 'relative', zIndex: 1, width: '100%' }}>
+
+              {/* Scanline — clipped to the card; sweeps once on load and on each hover. */}
+              {!prefersReducedMotion && (
                 <Box
-                  component="img"
-                  src={heroImg}
-                  alt="Gading Aditya Perdana"
-                  loading="eager"
+                  aria-hidden
                   sx={{
-                    width: '100%',
-                    height: 'auto',
-                    display: 'block',
-                    filter: 'drop-shadow(0 18px 36px rgba(0,0,0,0.4))',
+                    position: 'absolute',
+                    inset: '14% 0 0 0',
+                    borderRadius: '24px',
+                    overflow: 'hidden',
+                    zIndex: 2,
+                    pointerEvents: 'none',
                   }}
-                />
+                >
+                  <Box
+                    key={scanKey}
+                    component={motion.div}
+                    initial={{ top: '-8%', opacity: 0 }}
+                    animate={{ top: '108%', opacity: detecting ? 0.95 : 0.7 }}
+                    transition={{ duration: 1.3, ease }}
+                    sx={{
+                      position: 'absolute',
+                      left: 0,
+                      right: 0,
+                      height: '2px',
+                      background:
+                        'linear-gradient(90deg, transparent, var(--app-palette-primary-main), var(--app-palette-secondary-main), transparent)',
+                      boxShadow: '0 0 14px color-mix(in srgb, var(--app-palette-primary-main) 65%, transparent)',
+                    }}
+                  />
+                </Box>
+              )}
+
+              {/* Cutout (load rise) wrapping a parallax layer (cursor depth). */}
+              <Box component={motion.div} variants={cutoutVariants} sx={{ position: 'relative', zIndex: 1, width: '100%' }}>
+                <Box component={motion.div} style={{ x: cutoutX, y: cutoutY }} sx={{ width: '100%' }}>
+                  <Box
+                    component="img"
+                    src={heroImg}
+                    alt="Gading Aditya Perdana"
+                    loading="eager"
+                    sx={{
+                      width: '100%',
+                      height: 'auto',
+                      display: 'block',
+                      filter: 'drop-shadow(0 18px 36px rgba(0,0,0,0.4))',
+                    }}
+                  />
+                </Box>
+              </Box>
+
+              {/* Detection HUD — boots up with a digital jitter on load, then settles.
+                  Brackets are the bounding box; the bare TRACKING tag appears on hover. */}
+              <Box
+                component={motion.div}
+                aria-hidden
+                initial={{ opacity: 0 }}
+                animate={
+                  prefersReducedMotion
+                    ? { opacity: 1 }
+                    : {
+                        opacity: [0, 1, 0.25, 1, 0.6, 1, 0.85, 1],
+                        x: [0, -3, 3, -2, 2, -1, 1, 0],
+                        y: [0, 2, -3, 2, -1, 1, 0, 0],
+                      }
+                }
+                transition={
+                  prefersReducedMotion
+                    ? { duration: 0.3, delay: 0.4 }
+                    : {
+                        duration: 0.6,
+                        delay: 0.45,
+                        ease: 'linear',
+                        times: [0, 0.12, 0.26, 0.4, 0.55, 0.7, 0.85, 1],
+                      }
+                }
+                sx={{ position: 'absolute', inset: '14% 0 0 0', zIndex: 3, pointerEvents: 'none' }}
+              >
+                {BRACKETS.map((b, i) => (
+                  <Box
+                    key={i}
+                    sx={{
+                      position: 'absolute',
+                      width: 22,
+                      height: 22,
+                      borderStyle: 'solid',
+                      borderColor: detecting
+                        ? 'var(--app-palette-primary-main)'
+                        : 'var(--app-palette-label-tertiary)',
+                      borderTopWidth: 0,
+                      borderRightWidth: 0,
+                      borderBottomWidth: 0,
+                      borderLeftWidth: 0,
+                      transform: detecting ? 'scale(1.08)' : 'scale(1)',
+                      filter: detecting
+                        ? 'drop-shadow(0 0 6px color-mix(in srgb, var(--app-palette-primary-main) 70%, transparent))'
+                        : 'none',
+                      transition: 'border-color 0.3s ease, transform 0.3s ease, filter 0.3s ease',
+                      ...b,
+                    }}
+                  />
+                ))}
+
+                {/* Bare HUD tag (no pill) — fades in on hover */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 12,
+                    left: 14,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.62rem',
+                    letterSpacing: '0.2em',
+                    textTransform: 'uppercase',
+                    color: 'var(--app-palette-label-secondary)',
+                    textShadow: '0 1px 8px rgba(0,0,0,0.7)',
+                    opacity: detecting ? 1 : 0,
+                    transform: detecting ? 'translateY(0)' : 'translateY(-4px)',
+                    transition: 'opacity 0.3s ease, transform 0.3s ease',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      bgcolor: 'var(--app-palette-primary-main)',
+                      boxShadow: '0 0 8px var(--app-palette-primary-main)',
+                    }}
+                  />
+                  Tracking
+                </Box>
               </Box>
             </Box>
           </Box>
