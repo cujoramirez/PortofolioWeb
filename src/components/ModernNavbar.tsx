@@ -631,7 +631,7 @@ const ModernNavbarComponent = () => {
 					<motion.div
 						initial={{ opacity: 0, x: -24, filter: 'blur(4px)' }}
 						animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-						transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
+						transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
 						style={{ scale: shouldReduceMotion ? 1 : logoScale }}
 						whileHover={shouldReduceMotion ? undefined : { scale: 1.05 }}
 						whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
@@ -783,7 +783,7 @@ const ModernNavbarComponent = () => {
 							ref={desktopNavRef}
 							initial={{ opacity: 0, y: -12, filter: 'blur(4px)' }}
 							animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-							transition={{ duration: 0.7, delay: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+							transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
 							style={{ position: 'relative', overflow: 'visible' }}
 						>
 							{!shouldReduceMotion && (
@@ -959,7 +959,7 @@ const ModernNavbarComponent = () => {
 					<motion.div
 						initial={{ opacity: 0, scale: 0.85 }}
 						animate={{ opacity: 1, scale: 1 }}
-						transition={{ duration: 0.6, delay: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+						transition={{ duration: 0.6, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
 						style={{
 							display: 'inline-flex',
 							marginRight: (isMobileDevice || isTabletDevice) ? 48 : 0,
