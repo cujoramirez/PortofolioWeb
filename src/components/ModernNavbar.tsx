@@ -7,8 +7,10 @@ import {
 	useMemo,
 	type ElementType,
 	type PointerEvent as ReactPointerEvent,
+	type MouseEvent as ReactMouseEvent,
 	type ReactNode,
 } from 'react';
+import { flushSync } from 'react-dom';
 import {
 	motion,
 	useScroll,
@@ -200,9 +202,32 @@ const ModernNavbarComponent = () => {
 	const pal =
 		(theme as unknown as { colorSchemes?: Record<'light' | 'dark', { palette: typeof theme.palette }> })
 			.colorSchemes?.[resolvedMode]?.palette ?? theme.palette;
-	const toggleColorScheme = useCallback(() => {
-		setMode(resolvedMode === 'dark' ? 'light' : 'dark');
-	}, [resolvedMode, setMode]);
+	const toggleColorScheme = useCallback(
+		(event?: ReactMouseEvent) => {
+			const next = resolvedMode === 'dark' ? 'light' : 'dark';
+			const vtDoc = document as Document & { startViewTransition?: (cb: () => void) => void };
+			const reduce =
+				typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			if (!vtDoc.startViewTransition || reduce) {
+				setMode(next);
+				return;
+			}
+			// Circular reveal of the new theme, centered on the toggle button.
+			const x = event?.clientX ?? window.innerWidth - 48;
+			const y = event?.clientY ?? 48;
+			const root = document.documentElement;
+			root.style.setProperty('--vt-x', `${x}px`);
+			root.style.setProperty('--vt-y', `${y}px`);
+			root.style.setProperty(
+				'--vt-r',
+				`${Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y))}px`,
+			);
+			vtDoc.startViewTransition(() => {
+				flushSync(() => setMode(next));
+			});
+		},
+		[resolvedMode, setMode],
+	);
 
 	const { lenis } = useLenis();
 	const getScrollPosition = useCallback(() => {
