@@ -571,6 +571,9 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
 .sm-scope .sm-panel-item { white-space: normal; overflow-wrap: anywhere; text-wrap: balance; }
 .sm-scope .sm-panel-item:focus-visible { outline: 2px solid var(--sm-accent, #3b82f6); outline-offset: 6px; border-radius: 6px; }
 .sm-scope .sm-icon-line { position: absolute; left: 50%; top: 50%; width: 100%; height: 2px; background: currentColor; border-radius: 2px; transform: translate(-50%, -50%); will-change: transform; }
+/* Menu icon color via adaptive token (not GSAP currentColor) so the "+" is visible in light mode */
+.sm-scope .sm-toggle .sm-icon-line { background: var(--app-palette-text-primary); transition: background 0.3s ease; }
+.sm-scope [data-open] .sm-toggle .sm-icon-line { background: var(--app-palette-primary-main); }
 .sm-scope .staggered-menu-panel { position: absolute; top: 0; right: 0; width: clamp(280px, 40vw, 450px); height: 100%; display: flex; flex-direction: column; overflow-y: auto; z-index: 10; }
 .sm-scope [data-position='left'] .staggered-menu-panel { right: auto; left: 0; }
 .sm-scope .sm-prelayers { position: absolute; top: 0; right: 0; bottom: 0; width: clamp(280px, 40vw, 450px); pointer-events: none; z-index: 5; }
