@@ -246,17 +246,50 @@ const ModernHero = () => {
               <Button variant="contained" size="large" href="#projects" sx={{ px: 3.5, py: 1.25 }}>
                 View Projects
               </Button>
-              <Button
-                variant="text"
-                size="large"
-                href="#contact"
-                endIcon={<ArrowDownward fontSize="small" />}
-                sx={{ px: 2, py: 1.25, color: 'var(--app-palette-text-primary)' }}
+              {/* Secondary action — Apple liquid-glass pill (View Projects stays solid) */}
+              <LiquidGlass
+                component="div"
+                intensity="subtle"
+                interactive
+                radius={999}
+                sx={{
+                  display: 'inline-flex',
+                  overflow: 'hidden',
+                  transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                  '&:hover': { transform: 'translateY(-2px)' },
+                }}
               >
-                Get in Touch
-              </Button>
+                <Button
+                  variant="text"
+                  size="large"
+                  href="#contact"
+                  endIcon={<ArrowDownward fontSize="small" />}
+                  sx={{
+                    px: 3,
+                    py: 1.25,
+                    borderRadius: 'inherit',
+                    color: 'var(--app-palette-text-primary)',
+                    '&:hover': { bgcolor: 'transparent', color: 'var(--app-palette-primary-main)' },
+                  }}
+                >
+                  Get in Touch
+                </Button>
+              </LiquidGlass>
 
-              <Box sx={{ display: 'flex', gap: 0.5, ml: { xs: 0, sm: 1 } }}>
+              {/* Social links — grouped into one liquid-glass cluster */}
+              <LiquidGlass
+                component="div"
+                intensity="subtle"
+                interactive
+                radius={999}
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.25,
+                  overflow: 'hidden',
+                  px: 0.5,
+                }}
+              >
                 {SOCIAL_LINKS.map((social) => {
                   const Icon = social.icon;
                   return (
@@ -270,15 +303,19 @@ const ModernHero = () => {
                       aria-label={social.label}
                       sx={{
                         color: 'var(--app-palette-label-tertiary)',
-                        transition: 'color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
-                        '&:hover': { color: 'var(--app-palette-primary-main)' },
+                        transition: 'color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1), transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                        '&:hover': {
+                          color: 'var(--app-palette-primary-main)',
+                          bgcolor: 'transparent',
+                          transform: 'translateY(-2px)',
+                        },
                       }}
                     >
                       <Icon fontSize="small" />
                     </IconButton>
                   );
                 })}
-              </Box>
+              </LiquidGlass>
             </Box>
           </Box>
 
