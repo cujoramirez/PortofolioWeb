@@ -1,7 +1,7 @@
 # Navbar Liquid Glass — Phase 2 Design Spec
 
 **Date:** 2026-06-01
-**Status:** Approved (design); ready for implementation plan
+**Status:** Approved (design) + mobile control fixes folded in from review; ready for implementation plan
 **Scope:** The navigation chrome only — `src/components/ModernNavbar.tsx`, `src/components/StaggeredMenu.tsx`, `src/components/ModernNavbar.css`, plus new shared glass primitives. No section/content changes. This is a navbar-only detour before the About section.
 
 ## Goal
@@ -18,7 +18,8 @@ The literal r3f snippet (`@react-three/fiber` + `drei` + `maath` + GLB) was **re
 | Surfaces in scope | **All** — top bar, nav pills + the spring "liquid" active indicator, theme toggle + "G" brand chip, mobile `StaggeredMenu` panel + toggle, back-to-top FAB. |
 | Default intensity | **Bold & alive** — 18px frost, visible edge-refraction where supported, active pointer-reactive specular. Still idles when static; degrades cleanly. Exact values tuned live. |
 | Active indicator | Re-skinned as a **moving glass lozenge** (keeps all scroll-spy/interpolation behavior). |
-| FAB | Glass variant that keeps the primary gradient as a specular accent so it stays legible over content. |
+| Back-to-top (from review) | **Remove the duplicate.** Mobile showed two (blue FAB bottom-left in `ModernNavbar` + glass Fab bottom-right in `BackToTop.tsx`). Keep the single glass `BackToTop` (bottom-right); delete the `ModernNavbar` FAB. |
+| Mobile toggle + menu (from review) | Theme toggle and `StaggeredMenu` button unified into one Gestalt cluster: **equal size (44px) + equal radius + matching glass material**, high-contrast icons (visible in light, refined in dark), **symmetric spacing**. |
 
 ## Hard constraints (carried from the Phase 2 handover)
 
@@ -55,9 +56,24 @@ A single glass surface composes these layers, bottom to top:
 
 - **Top bar** (`ModernNavbar.tsx`): replace the near-opaque `background.paper` `Box` (currently `backdropFilter: 'none'`) with `LiquidGlass intensity="bold"`. Keeps the 2px scroll-progress bar and the scroll-triggered intensity bump.
 - **Nav pills + active indicator:** hover pills become light glass lozenges; the spring `liquidX/liquidWidth` indicator becomes a **glass lozenge** (`intensity` lighter so labels stay readable). All scroll-spy, interpolation, and `MagnifiedInteractive` behavior preserved.
-- **Theme toggle + "G" brand chip:** small glass controls (`interactive` specular on desktop). The toggle keeps the View-Transitions circular-reveal behavior.
+- **Theme toggle + "G" brand chip:** small glass controls (`interactive` specular on desktop). The toggle keeps the View-Transitions circular-reveal behavior. On mobile/tablet the toggle is paired with the menu button as a matched cluster (see *Mobile control fixes*).
 - **Mobile `StaggeredMenu` panel + toggle:** re-skin `.sm-panel-surface` and the toggle to the shared recipe via CSS vars, replacing the bespoke hardcoded-rgba gradients with token-driven glass. Keeps its GSAP open/close, per-device blur tiers, and `[data-mui-color-scheme="light"]` adaptation (upgraded to the unified tokens).
-- **Back-to-top FAB:** glass variant; the primary gradient becomes a specular accent ring so it remains a legible, high-affordance control over arbitrary content.
+- **Back-to-top:** the single `BackToTop` Fab (bottom-right) becomes the canonical glass back-to-top, aligned to the shared recipe; the duplicate `ModernNavbar` FAB (bottom-left) is **removed** (see *Mobile control fixes*).
+
+### Mobile control fixes (from review)
+
+Screenshots surfaced three issues on mobile/tablet; all fold into this work.
+
+1. **Duplicate back-to-top — remove one.** `BackToTop.tsx` (bottom-right, glass, `scrollY > 500`, all devices) and the `ModernNavbar` FAB (bottom-left, blue, mobile/tablet, `trigger`) both render → two buttons. **Keep `BackToTop`** (already glass + token-driven; aligns to the recipe) and **delete the `ModernNavbar` FAB** and its now-unused `Fab`/`Zoom`/`KeyboardArrowUp` wiring. (The "RESEARCH" caption beneath the blue FAB is the Research section's eyebrow showing through, not a label.)
+2. **Theme toggle + menu button: low contrast.** Today the menu button is `rgba(255,255,255,0.04)` with a faint border — invisible on light backgrounds, a muddy outlined square in dark. Both become **glass controls** with a token tint (clearly visible on any backdrop) and **`text.primary` icons** for AA contrast in both schemes.
+3. **Theme toggle + menu button: mismatched + asymmetric.** They differ in size (40px toggle vs 48px menu) and radius (10 vs 12), and the toggle clears the menu with a brittle `marginRight: 48` hack.
+
+**Unified treatment (Gestalt + UX):**
+- **Similarity:** both controls 44×44 (≥44px touch target), identical radius (12px) and identical glass material → they read as one control set.
+- **Proximity / common region:** grouped at top-right with one consistent gap (~10–12px); the toggle's offset is derived from the shared `menuSize + gap` constants, not a magic number, so they can't drift.
+- **Symmetry / balance:** the pair's right edge aligns to the same toolbar gutter as the brand on the left (`px` 16 mobile / 32 tablet); both vertically centered in the toolbar height.
+- Scope: unification applies to **mobile/tablet** (where the menu button exists). On desktop the toggle stays sized to the nav-pill rhythm.
+- `StaggeredMenu` keeps its GSAP plus→close icon animation; only its toggle's size/material/contrast change (it already accepts size/color props).
 
 ### Light / dark token mapping (quick reference)
 
@@ -94,7 +110,7 @@ Refraction is a **progressive enhancement**, not a requirement. Safari/Firefox g
 ## Files affected (preview; detailed steps in the plan)
 
 - **Create:** `src/components/LiquidGlass.tsx`, `src/components/GlassFilters.tsx`, `src/hooks/useGlassCapabilities.ts`, and glass CSS (extend `ModernNavbar.css` or a new `liquidGlass.css`).
-- **Modify:** `src/components/ModernNavbar.tsx` (bar surface, pills, indicator, toggle, brand chip, FAB, mount `GlassFilters`), `src/components/StaggeredMenu.tsx` (`.sm-panel-surface` + toggle → shared recipe), `src/components/ModernNavbar.css` (wire in; remove dead `.navbar-glass-surface` / `.glass-backdrop` / `.navbar-glass-shimmer` rules the TSX no longer uses).
+- **Modify:** `src/components/ModernNavbar.tsx` (bar surface, pills, indicator, brand chip, mount `GlassFilters`; **remove the FAB** + unused `Fab`/`Zoom`/`KeyboardArrowUp`; unify the mobile/tablet theme toggle to 44px glass), `src/components/StaggeredMenu.tsx` (`.sm-panel-surface` + toggle → shared recipe, 44px), `src/components/BackToTop.tsx` (align the kept back-to-top to the glass recipe), `src/components/ModernNavbar.css` (wire in; remove dead `.navbar-glass-surface` / `.glass-backdrop` / `.navbar-glass-shimmer` rules the TSX no longer uses).
 - **No dependencies added.** Existing `three` (ColorBends) untouched.
 - **Caution:** `ModernNavbar.css` defines **global** `.MuiChip-root` glass styles that currently affect the About section chips. Leave those untouched (out of scope); only remove the verified-dead navbar-bar classes.
 
@@ -111,6 +127,7 @@ Refraction is a **progressive enhancement**, not a requirement. Safari/Firefox g
 - Visual, **both schemes**: bar reads as refractive glass over `ColorBends` and over content while scrolling; text stays AA; pills/indicator/toggle/brand/FAB are cohesive glass; mobile `StaggeredMenu` panel + toggle match the language; light/dark toggle (View-Transitions reveal) still works.
 - **Device/tier checks:** desktop (refraction + specular), touch/tablet (frost, no specular), `data-perf="low"` (frost off, solid tint), `prefers-reduced-motion` (no sheen). Confirm it **idles** (no busy rAF / steady CPU when the pointer is still).
 - Confirm only one WebGL context exists (ColorBends); no second canvas introduced.
+- **Mobile control fixes:** exactly **one** back-to-top button on mobile/tablet; theme toggle and menu button are equal-sized, clearly visible and legible in **both** themes, and evenly spaced as a balanced top-right cluster.
 
 ## Open risks / notes
 
