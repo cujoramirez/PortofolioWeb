@@ -162,6 +162,9 @@ const NAV_ITEMS: NavItem[] = [
 	{ name: 'Contact', href: '#contact', icon: ContactMail },
 ];
 
+// Shared sizing for the top-right control cluster (theme toggle + mobile menu button).
+const CTRL_SIZE = 44; // px — equal-sized, >=44px touch target
+
 type NavItemPositions = Record<string, NavItemPosition>;
 
 type InterpolationDatum = {
@@ -698,6 +701,7 @@ const ModernNavbarComponent = () => {
 								}}
 							>
 								<Box
+									className="glass-sheen glass-sheen--interactive"
 									sx={{
 										width: 44,
 										height: 44,
@@ -709,15 +713,15 @@ const ModernNavbarComponent = () => {
 										fontSize: '1.25rem',
 										fontWeight: 700,
 										color: pal.primary.contrastText,
-										boxShadow: `0 4px 12px ${alpha(pal.primary.main, 0.3)}`,
+										boxShadow: `0 4px 12px ${alpha(pal.primary.main, 0.3)}, inset 0 1px 0 rgba(255,255,255,0.4)`,
 										transition: 'box-shadow 0.2s ease',
 										willChange: 'box-shadow',
 										'&:hover': {
-											boxShadow: `0 6px 20px ${alpha(pal.primary.main, 0.4)}`,
+											boxShadow: `0 6px 20px ${alpha(pal.primary.main, 0.4)}, inset 0 1px 0 rgba(255,255,255,0.45)`,
 										},
 									}}
 								>
-									G
+									<span>G</span>
 								</Box>
 								{!isMobileDevice && (
 									<Box>
@@ -770,6 +774,7 @@ const ModernNavbarComponent = () => {
 									}}
 								>
 									<Box
+										className="glass-sheen glass-sheen--interactive"
 										sx={{
 											width: 44,
 											height: 44,
@@ -782,14 +787,14 @@ const ModernNavbarComponent = () => {
 											fontFamily: '"Sora", sans-serif',
 											fontWeight: 700,
 											color: pal.primary.contrastText,
-											boxShadow: `0 4px 12px ${alpha(pal.primary.main, 0.3)}`,
+											boxShadow: `0 4px 12px ${alpha(pal.primary.main, 0.3)}, inset 0 1px 0 rgba(255,255,255,0.4)`,
 											transition: 'all 0.3s ease',
 											'&:hover': {
-												boxShadow: `0 6px 20px ${alpha(pal.primary.main, 0.4)}`,
+												boxShadow: `0 6px 20px ${alpha(pal.primary.main, 0.4)}, inset 0 1px 0 rgba(255,255,255,0.45)`,
 											},
 										}}
 									>
-										G
+										<span>G</span>
 									</Box>
 									{!isMobileDevice && (
 										<Box>
@@ -1002,33 +1007,35 @@ const ModernNavbarComponent = () => {
 							marginRight: (isMobileDevice || isTabletDevice) ? 48 : 0,
 						}}
 					>
-						<IconButton
-							onClick={toggleColorScheme}
-							aria-label="Toggle light/dark theme"
-							sx={{
-								width: 40,
-								height: 40,
-								borderRadius: '10px',
-								color: 'text.secondary',
-								border: '1px solid',
-								borderColor: 'divider',
-								backgroundColor: 'transparent',
-								transition: 'color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1), background-color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1), border-color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
-								'&:hover': {
-									color: 'primary.light',
-									borderColor: 'primary.main',
-									backgroundColor: 'action.hover',
-								},
-							}}
+						<LiquidGlass
+							component="div"
+							intensity="bold"
+							interactive
+							radius={12}
+							sx={{ width: CTRL_SIZE, height: CTRL_SIZE, display: 'inline-flex' }}
 						>
-							{/* Before hydration `mode` is undefined; render a stable fallback icon
-							    (dark = default scheme) to avoid a flash/crash. */}
-							{resolvedMode === 'light' ? (
-								<DarkMode sx={{ fontSize: '1.25rem' }} />
-							) : (
-								<LightMode sx={{ fontSize: '1.25rem' }} />
-							)}
-						</IconButton>
+							<IconButton
+								onClick={toggleColorScheme}
+								aria-label="Toggle light/dark theme"
+								sx={{
+									width: '100%',
+									height: '100%',
+									borderRadius: '12px',
+									color: 'text.primary',
+									backgroundColor: 'transparent',
+									transition: 'color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
+									'&:hover': { color: 'primary.light', backgroundColor: 'transparent' },
+								}}
+							>
+								{/* Before hydration `mode` is undefined; render a stable fallback icon
+								    (dark = default scheme) to avoid a flash/crash. */}
+								{resolvedMode === 'light' ? (
+									<DarkMode sx={{ fontSize: '1.25rem' }} />
+								) : (
+									<LightMode sx={{ fontSize: '1.25rem' }} />
+								)}
+							</IconButton>
+						</LiquidGlass>
 					</motion.div>
 
 				</Toolbar>
