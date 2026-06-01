@@ -1,6 +1,7 @@
 import { useCallback, useLayoutEffect, useRef, useState, useEffect, type FC, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { gsap } from 'gsap';
 import { useSystemProfile } from './useSystemProfile';
+import './liquidGlass.css';
 
 export interface StaggeredMenuItem {
   label: string;
@@ -58,8 +59,8 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
   toolbarPadding
 }) => {
   const { performanceTier, deviceType } = useSystemProfile();
-  const prefersLightweightMenu = performanceTier === 'low' && deviceType !== 'mobile';
-  const enablePreLayers = performanceTier === 'high';
+  const prefersLightweightMenu = performanceTier !== 'high' || deviceType !== 'desktop';
+  const enablePreLayers = performanceTier === 'high' && deviceType === 'desktop';
 
   const resolvedToolbarHeight = toolbarHeight ?? 66;
   const resolvedToolbarPadding = toolbarPadding ?? 16;
@@ -412,6 +413,8 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
   return (
     <div
       className={`sm-scope ${isFixed ? 'fixed top-0 left-0 w-screen h-screen' : 'w-full h-full'}`}
+      data-perf={performanceTier}
+      data-device={deviceType}
       style={{ 
         zIndex: zIndex ?? 1400,
         pointerEvents: menuOpen ? 'auto' : 'none',
@@ -458,14 +461,14 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
         >
           <button
             ref={toggleBtnRef}
-            className="sm-toggle relative inline-flex items-center justify-center bg-transparent border-0 cursor-pointer overflow-visible pointer-events-auto transition-all duration-300 text-white w-[48px] h-[48px]"
+            className="sm-toggle liquid-glass relative inline-flex items-center justify-center cursor-pointer overflow-visible pointer-events-auto transition-all duration-300 text-white w-[44px] h-[44px]"
             style={{
-              background: menuOpen ? 'linear-gradient(135deg, rgba(30,64,175,0.22), rgba(59,130,246,0.18))' : 'rgba(255,255,255,0.04)',
-              borderRadius: 12,
-              border: '1.5px solid rgba(148, 163, 184, 0.15)',
+              ['--lg-radius' as any]: '12px',
+              ['--lg-tint' as any]: menuOpen
+                ? 'color-mix(in srgb, var(--app-palette-primary-main) 20%, transparent)'
+                : 'color-mix(in srgb, var(--app-palette-bg-elevated) 62%, transparent)',
               padding: 8,
-              boxShadow: menuOpen ? '0 8px 24px rgba(59,130,246,0.12)' : '0 2px 8px rgba(0,0,0,0.08)'
-            }}
+            } as CSSProperties}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
             aria-controls="staggered-menu-panel"
@@ -578,20 +581,32 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
 .sm-scope .sm-panel-itemLabel { display: inline-block; will-change: transform; transform-origin: 50% 100%; }
 .sm-scope .sm-panel-list[data-numbering] { counter-reset: smItem; }
 .sm-scope .sm-panel-list[data-numbering] .sm-panel-item::after { counter-increment: smItem; content: counter(smItem, decimal-leading-zero); position: absolute; top: 0.15em; right: 0; font-size: 1rem; font-weight: 400; color: rgba(59, 130, 246, 0.7); letter-spacing: 0; pointer-events: none; user-select: none; opacity: var(--sm-num-opacity, 0); transition: opacity 0.3s ease; }
-.sm-panel-surface { position: relative; width: 100%; height: 100%; border-radius: 0; overflow: hidden; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(148, 163, 184, 0.16); box-shadow: 0 18px 48px rgba(15, 23, 42, 0.3); background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.82)); }
-.sm-panel-surface::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 20% 20%, rgba(30, 64, 175, 0.28), transparent 55%), radial-gradient(circle at 80% 10%, rgba(59, 130, 246, 0.2), transparent 60%); opacity: 0.85; pointer-events: none; }
-.sm-panel-surface::after { content: ''; position: absolute; inset: 0; background: linear-gradient(160deg, rgba(148, 163, 184, 0.12), rgba(15, 23, 42, 0.65)); mix-blend-mode: lighten; pointer-events: none; }
-.sm-panel-surface--light { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 64, 175, 0.75)); box-shadow: 0 12px 32px rgba(15, 23, 42, 0.24); }
+.sm-panel-surface { position: relative; width: 100%; height: 100%; border-radius: 0; overflow: hidden; backdrop-filter: blur(18px) saturate(170%); -webkit-backdrop-filter: blur(18px) saturate(170%); border: 1px solid color-mix(in srgb, var(--app-palette-divider) 60%, transparent); box-shadow: 0 18px 48px rgba(0, 0, 0, 0.3); background: color-mix(in srgb, var(--app-palette-bg-elevated) 80%, transparent); }
+.sm-panel-surface::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--app-palette-primary-main) 22%, transparent), transparent 55%), radial-gradient(circle at 80% 10%, color-mix(in srgb, var(--app-palette-secondary-main) 16%, transparent), transparent 60%); opacity: 0.85; pointer-events: none; }
+.sm-panel-surface::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, #ffffff 14%, transparent), transparent 38%); pointer-events: none; }
+.sm-panel-surface--light { backdrop-filter: blur(12px) saturate(170%); -webkit-backdrop-filter: blur(12px) saturate(170%); background: color-mix(in srgb, var(--app-palette-bg-elevated) 76%, transparent); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24); }
 .sm-panel-surface--light::before { opacity: 0.7; }
-.sm-panel-surface--rich { box-shadow: 0 20px 56px rgba(15, 23, 42, 0.38); }
+.sm-panel-surface--rich { box-shadow: 0 20px 56px rgba(0, 0, 0, 0.38); }
 .sm-panel-surface--rich::before { opacity: 0.95; }
-/* Light-mode mobile menu: light surface + dark text so it adapts with the in-app theme */
-[data-mui-color-scheme="light"] .sm-panel-surface,
-[data-mui-color-scheme="light"] .sm-panel-surface--light,
-[data-mui-color-scheme="light"] .sm-panel-surface--rich { background: linear-gradient(135deg, rgba(255, 255, 255, 0.97), rgba(241, 243, 246, 0.93)); border: 1px solid rgba(0, 0, 0, 0.10); box-shadow: 0 18px 48px rgba(0, 0, 0, 0.16); }
-[data-mui-color-scheme="light"] .sm-panel-surface::before { background: radial-gradient(circle at 20% 20%, rgba(37, 99, 235, 0.10), transparent 55%), radial-gradient(circle at 80% 10%, rgba(8, 145, 178, 0.08), transparent 60%); opacity: 1; }
-[data-mui-color-scheme="light"] .sm-panel-surface::after { background: linear-gradient(160deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06)); mix-blend-mode: normal; }
-[data-mui-color-scheme="light"] .sm-panel-item { color: rgba(0, 0, 0, 0.92); }
+/* Mobile menu text adapts with the in-app theme (panel surface adapts via tokens) */
+[data-mui-color-scheme="light"] .sm-panel-item { color: var(--app-palette-label-primary); }
+/* Performance tiers: reduce blur + layers on constrained devices */
+.sm-scope[data-device='mobile'] .sm-panel-surface,
+.sm-scope[data-device='mobile'] .sm-panel-surface--light,
+.sm-scope[data-device='mobile'] .sm-panel-surface--rich {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+}
+.sm-scope[data-perf='low'] .sm-panel-surface,
+.sm-scope[data-perf='low'] .sm-panel-surface--light,
+.sm-scope[data-perf='low'] .sm-panel-surface--rich {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+}
+.sm-scope[data-perf='low'] .sm-panel-surface::before { opacity: 0.45; }
+.sm-scope[data-perf='low'] .sm-panel-surface::after { display: none; }
 @media (max-width: 1024px) { 
   .sm-scope .staggered-menu-panel { width: 100%; left: 0; right: 0; } 
   .sm-scope .sm-prelayers { width: 100%; } 
