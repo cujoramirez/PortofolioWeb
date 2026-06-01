@@ -109,6 +109,22 @@ const ModernHero = () => {
     setDetecting(false);
   };
 
+  // Magnetic pull for the primary CTA (snappy spring; disabled for reduced motion).
+  const magX = useMotionValue(0);
+  const magY = useMotionValue(0);
+  const magXSpring = useSpring(magX, { damping: 20, stiffness: 300, mass: 0.5 });
+  const magYSpring = useSpring(magY, { damping: 20, stiffness: 300, mass: 0.5 });
+  const handleMagnetMove = (e: ReactMouseEvent<HTMLDivElement>) => {
+    if (prefersReducedMotion) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    magX.set((e.clientX - r.left - r.width / 2) * 0.2);
+    magY.set((e.clientY - r.top - r.height / 2) * 0.3);
+  };
+  const handleMagnetLeave = () => {
+    magX.set(0);
+    magY.set(0);
+  };
+
   const container = {
     hidden: {},
     visible: {
@@ -178,7 +194,9 @@ const ModernHero = () => {
                     height: '1px',
                     bgcolor: 'currentColor',
                     opacity: 0.6,
+                    transition: 'width 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
                   },
+                  '&:hover::before': { width: 48 },
                 }}
               >
                 AI Researcher
@@ -221,6 +239,7 @@ const ModernHero = () => {
               <LiquidGlass
                 component="div"
                 intensity="subtle"
+                interactive
                 blur={10}
                 radius={14}
                 sx={{ maxWidth: '60ch', mb: 4, p: { xs: 2, md: 2.5 } }}
@@ -243,42 +262,56 @@ const ModernHero = () => {
               variants={item}
               sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}
             >
-              {/* Primary action — blue liquid glass (tint/border/shadow overridden to keep the brand blue) */}
-              <LiquidGlass
-                component="div"
-                intensity="bold"
-                interactive
-                radius={999}
-                style={
-                  {
-                    '--lg-tint': 'color-mix(in srgb, var(--app-palette-primary-main) 82%, transparent)',
-                    '--lg-border': 'color-mix(in srgb, var(--app-palette-primary-light) 65%, transparent)',
-                    '--lg-shadow': '0 10px 30px color-mix(in srgb, var(--app-palette-primary-main) 35%, transparent)',
-                  } as CSSProperties
-                }
-                sx={{
-                  display: 'inline-flex',
-                  overflow: 'hidden',
-                  transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
-                  '&:hover': { transform: 'translateY(-2px)' },
-                }}
+              {/* Primary action — blue liquid glass with a magnetic pull toward the cursor.
+                  Handlers on a plain Box; the motion transform on a separate Box (framer v10
+                  types drop DOM handlers on motion elements). */}
+              <Box
+                onMouseMove={handleMagnetMove}
+                onMouseLeave={handleMagnetLeave}
+                sx={{ display: 'inline-flex' }}
               >
-                <Button
-                  variant="text"
-                  size="large"
-                  href="#projects"
-                  sx={{
-                    px: 3.5,
-                    py: 1.25,
-                    borderRadius: 'inherit',
-                    fontWeight: 600,
-                    color: 'var(--app-palette-primary-contrastText)',
-                    '&:hover': { bgcolor: 'transparent' },
-                  }}
+                <Box
+                  component={motion.div}
+                  style={{ x: magXSpring, y: magYSpring }}
+                  sx={{ display: 'inline-flex' }}
                 >
-                  View Projects
-                </Button>
-              </LiquidGlass>
+                  <LiquidGlass
+                    component="div"
+                    intensity="bold"
+                    interactive
+                    radius={999}
+                    style={
+                      {
+                        '--lg-tint': 'color-mix(in srgb, var(--app-palette-primary-main) 82%, transparent)',
+                        '--lg-border': 'color-mix(in srgb, var(--app-palette-primary-light) 65%, transparent)',
+                        '--lg-shadow': '0 10px 30px color-mix(in srgb, var(--app-palette-primary-main) 35%, transparent)',
+                      } as CSSProperties
+                    }
+                    sx={{
+                      display: 'inline-flex',
+                      overflow: 'hidden',
+                      transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                      '&:hover': { transform: 'scale(1.03)' },
+                    }}
+                  >
+                    <Button
+                      variant="text"
+                      size="large"
+                      href="#projects"
+                      sx={{
+                        px: 3.5,
+                        py: 1.25,
+                        borderRadius: 'inherit',
+                        fontWeight: 600,
+                        color: 'var(--app-palette-primary-contrastText)',
+                        '&:hover': { bgcolor: 'transparent' },
+                      }}
+                    >
+                      View Projects
+                    </Button>
+                  </LiquidGlass>
+                </Box>
+              </Box>
               {/* Secondary action — liquid-glass pill */}
               <LiquidGlass
                 component="div"
@@ -289,7 +322,7 @@ const ModernHero = () => {
                   display: 'inline-flex',
                   overflow: 'hidden',
                   transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
-                  '&:hover': { transform: 'translateY(-2px)' },
+                  '&:hover': { transform: 'translateY(-2px) scale(1.02)' },
                 }}
               >
                 <Button
@@ -302,7 +335,11 @@ const ModernHero = () => {
                     py: 1.25,
                     borderRadius: 'inherit',
                     color: 'var(--app-palette-text-primary)',
+                    '& .MuiButton-endIcon': {
+                      transition: 'transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)',
+                    },
                     '&:hover': { bgcolor: 'transparent', color: 'var(--app-palette-primary-main)' },
+                    '&:hover .MuiButton-endIcon': { transform: 'translateY(3px)' },
                   }}
                 >
                   Get in Touch
@@ -340,7 +377,7 @@ const ModernHero = () => {
                         '&:hover': {
                           color: 'var(--app-palette-primary-main)',
                           bgcolor: 'transparent',
-                          transform: 'translateY(-2px)',
+                          transform: 'translateY(-2px) scale(1.12)',
                         },
                       }}
                     >
