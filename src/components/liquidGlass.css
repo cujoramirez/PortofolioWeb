@@ -1,0 +1,124 @@
+/* Liquid-glass material: frost + token tint + edge light + specular + optional refraction.
+   Tunables are CSS vars so callers (and live tuning) can override per surface. */
+
+.liquid-glass {
+  --lg-blur: 18px;
+  --lg-radius: 14px;
+  --lg-tint: color-mix(in srgb, var(--app-palette-bg-elevated) 62%, transparent);
+  --lg-border: color-mix(in srgb, var(--app-palette-divider) 60%, transparent);
+  --lg-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  --lg-rim: rgba(255, 255, 255, 0.5);
+  --lg-spec: 0.7;
+  --gx: 50%;
+  --gy: 0%;
+
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--lg-radius);
+  background-color: var(--lg-tint);
+  border: 1px solid var(--lg-border);
+  box-shadow: var(--lg-shadow), inset 0 1px 0 var(--lg-rim);
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(170%);
+  backdrop-filter: blur(var(--lg-blur)) saturate(170%);
+}
+
+/* Static top-edge glint */
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--lg-rim), transparent 42%);
+  opacity: 0.32;
+  z-index: 0;
+}
+
+/* Reactive specular (follows pointer; idles via CSS transition) */
+.liquid-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(60% 80% at var(--gx) var(--gy), var(--lg-rim), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+}
+.liquid-glass--interactive:hover::after,
+.liquid-glass--interactive:focus-within::after {
+  opacity: var(--lg-spec);
+}
+
+/* Keep real content above the glint layers */
+.liquid-glass > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Chromium-only refraction enhancement */
+.liquid-glass--refract {
+  backdrop-filter: blur(var(--lg-blur)) saturate(170%) url(#liquid-glass);
+}
+
+/* No backdrop-filter support OR low tier -> readable near-solid fallback */
+.liquid-glass--no-blur {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  --lg-tint: color-mix(in srgb, var(--app-palette-bg-elevated) 92%, transparent);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .liquid-glass {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    --lg-tint: color-mix(in srgb, var(--app-palette-bg-elevated) 92%, transparent);
+  }
+}
+
+/* Light scheme: white sheen reads faintly; lean on border + shadow, brighten rim slightly */
+[data-mui-color-scheme='light'] .liquid-glass,
+[data-mui-color-scheme='light'] .glass-sheen {
+  --lg-border: color-mix(in srgb, var(--app-palette-divider) 95%, transparent);
+  --lg-shadow: 0 8px 28px rgba(0, 0, 0, 0.10);
+  --lg-rim: rgba(255, 255, 255, 0.8);
+}
+
+/* Solid element with a glass "finish": rim + hover sheen, NO backdrop blur
+   (used over the already-frosted bar to avoid nested/costly backdrop-filters). */
+.glass-sheen {
+  --lg-rim: rgba(255, 255, 255, 0.5);
+  --lg-spec: 0.55;
+  --gx: 50%;
+  --gy: 0%;
+  position: relative;
+  isolation: isolate;
+  box-shadow: inset 0 1px 0 var(--lg-rim);
+}
+.glass-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(60% 80% at var(--gx) var(--gy), var(--lg-rim), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+}
+.glass-sheen--interactive:hover::after,
+.glass-sheen--interactive:focus-within::after {
+  opacity: var(--lg-spec);
+}
+.glass-sheen > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Reduced motion -> no reactive specular */
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass::after,
+  .glass-sheen::after {
+    display: none;
+  }
+}
