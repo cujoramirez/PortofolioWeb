@@ -137,6 +137,8 @@ const MagnifiedInteractive = ({
 
 import './ModernNavbar.css';
 import { StaggeredMenu } from './StaggeredMenu';
+import LiquidGlass from './LiquidGlass';
+import GlassFilters from './GlassFilters';
 
 type NavItem = {
 	name: string;
@@ -612,6 +614,7 @@ const ModernNavbarComponent = () => {
 
 	return (
 		<>
+			<GlassFilters />
 			<AppBar
 				position="fixed"
 				elevation={0}
@@ -630,15 +633,24 @@ const ModernNavbarComponent = () => {
 					transition: 'opacity 0.35s ease',
 				}}
 			>
-				<Box
+				<LiquidGlass
+					component="div"
+					intensity="bold"
+					interactive
 					sx={{
 						width: '100%',
-						backgroundColor: alpha(pal.background.paper, trigger ? 0.95 : 0.9),
-						borderBottom: `1px solid ${alpha(pal.divider, 0.8)}`,
-						boxShadow: trigger
-							? `0 8px 24px ${alpha(pal.common.black, 0.12)}`
-							: `0 4px 16px ${alpha(pal.common.black, 0.06)}`,
-						transition: 'background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
+						borderRadius: 0,
+						borderTop: 'none',
+						borderLeft: 'none',
+						borderRight: 'none',
+						borderBottom: '1px solid var(--lg-border)',
+						transition: 'background-color 0.3s ease, box-shadow 0.3s ease',
+						'--lg-tint': trigger
+							? 'color-mix(in srgb, var(--app-palette-bg-elevated) 80%, transparent)'
+							: 'color-mix(in srgb, var(--app-palette-bg-elevated) 62%, transparent)',
+						'--lg-shadow': trigger
+							? '0 8px 24px rgba(0,0,0,0.14)'
+							: '0 4px 16px rgba(0,0,0,0.06)',
 					}}
 				>
 				<Toolbar
@@ -1035,7 +1047,7 @@ const ModernNavbarComponent = () => {
 						opacity: 0.8,
 					}}
 				/>
-				</Box>
+				</LiquidGlass>
 			</AppBar>
 			
 			{/* StaggeredMenu for mobile/tablet */}
