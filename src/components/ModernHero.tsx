@@ -1,4 +1,4 @@
-import { useEffect, useState, type ComponentProps, type MouseEvent as ReactMouseEvent } from 'react';
+import { useEffect, useState, type ComponentProps, type CSSProperties, type MouseEvent as ReactMouseEvent } from 'react';
 import { motion, useReducedMotion, useMotionValue, useSpring } from 'framer-motion';
 import {
   Box,
@@ -243,10 +243,43 @@ const ModernHero = () => {
               variants={item}
               sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}
             >
-              <Button variant="contained" size="large" href="#projects" sx={{ px: 3.5, py: 1.25 }}>
-                View Projects
-              </Button>
-              {/* Secondary action — Apple liquid-glass pill (View Projects stays solid) */}
+              {/* Primary action — blue liquid glass (tint/border/shadow overridden to keep the brand blue) */}
+              <LiquidGlass
+                component="div"
+                intensity="bold"
+                interactive
+                radius={999}
+                style={
+                  {
+                    '--lg-tint': 'color-mix(in srgb, var(--app-palette-primary-main) 82%, transparent)',
+                    '--lg-border': 'color-mix(in srgb, var(--app-palette-primary-light) 65%, transparent)',
+                    '--lg-shadow': '0 10px 30px color-mix(in srgb, var(--app-palette-primary-main) 35%, transparent)',
+                  } as CSSProperties
+                }
+                sx={{
+                  display: 'inline-flex',
+                  overflow: 'hidden',
+                  transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                  '&:hover': { transform: 'translateY(-2px)' },
+                }}
+              >
+                <Button
+                  variant="text"
+                  size="large"
+                  href="#projects"
+                  sx={{
+                    px: 3.5,
+                    py: 1.25,
+                    borderRadius: 'inherit',
+                    fontWeight: 600,
+                    color: 'var(--app-palette-primary-contrastText)',
+                    '&:hover': { bgcolor: 'transparent' },
+                  }}
+                >
+                  View Projects
+                </Button>
+              </LiquidGlass>
+              {/* Secondary action — liquid-glass pill */}
               <LiquidGlass
                 component="div"
                 intensity="subtle"
@@ -346,25 +379,30 @@ const ModernHero = () => {
                   justifyContent: 'center',
                 }}
               >
-                {/* Tinted backdrop card */}
+                {/* Tinted backdrop card — a hint of liquid glass behind the portrait */}
                 <Box
                   component={motion.div}
                   variants={panelVariants}
                   aria-hidden
-                  sx={{
-                    position: 'absolute',
-                    inset: '14% 0 0 0',
-                    borderRadius: '24px',
-                    border: '1px solid var(--app-palette-divider)',
-                    background:
-                      'linear-gradient(165deg, color-mix(in srgb, var(--app-palette-primary-main) 18%, var(--app-palette-bg-elevated)) 0%, color-mix(in srgb, var(--app-palette-secondary-main) 12%, var(--app-palette-bg-elevated)) 100%)',
-                    boxShadow: detecting
-                      ? '0 24px 60px rgba(0,0,0,0.42), 0 0 0 1px color-mix(in srgb, var(--app-palette-primary-main) 45%, transparent)'
-                      : '0 24px 60px rgba(0,0,0,0.38)',
-                    transition: 'box-shadow 0.35s ease',
-                    zIndex: 0,
-                  }}
-                />
+                  sx={{ position: 'absolute', inset: '14% 0 0 0', zIndex: 0 }}
+                >
+                  <LiquidGlass
+                    component="div"
+                    intensity="subtle"
+                    blur={14}
+                    radius={24}
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      background:
+                        'linear-gradient(165deg, color-mix(in srgb, var(--app-palette-primary-main) 20%, transparent) 0%, color-mix(in srgb, var(--app-palette-secondary-main) 14%, transparent) 100%)',
+                      boxShadow: detecting
+                        ? '0 24px 60px rgba(0,0,0,0.42), 0 0 0 1px color-mix(in srgb, var(--app-palette-primary-main) 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.45)'
+                        : '0 24px 60px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.35)',
+                      transition: 'box-shadow 0.35s ease',
+                    }}
+                  />
+                </Box>
 
                 {/* Pixel assemble (load) + shimmer (hover) — behind the cutout, on the card. */}
                 <PixelCanvas
