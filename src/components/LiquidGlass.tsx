@@ -34,21 +34,15 @@ const LiquidGlass = memo(
 
     const wantsInteractive = interactive && reactiveSpecular;
 
-    const handlePointerMove = useCallback((e: ReactPointerEvent<HTMLElement>) => {
+    // Track the pointer as pixel coords on the host; the specular layer reads them and
+    // moves via GPU transform (no per-frame gradient repaint). On leave we do NOTHING —
+    // CSS :hover fades the layer out IN PLACE (no position reset, so it can't drift to center).
+    const updateSpec = useCallback((e: ReactPointerEvent<HTMLElement>) => {
       const el = elRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      el.style.setProperty('--gx', `${x}%`);
-      el.style.setProperty('--gy', `${y}%`);
-    }, []);
-
-    const handlePointerLeave = useCallback(() => {
-      const el = elRef.current;
-      if (!el) return;
-      el.style.setProperty('--gx', '50%');
-      el.style.setProperty('--gy', '0%');
+      el.style.setProperty('--px', `${e.clientX - rect.left}px`);
+      el.style.setProperty('--py', `${e.clientY - rect.top}px`);
     }, []);
 
     const effectiveBlur = canBlur ? Math.min(blur ?? 18, maxBlur) : 0;
@@ -80,11 +74,16 @@ const LiquidGlass = memo(
         ref={setRefs}
         component={component}
         className={classes}
-        onPointerMove={wantsInteractive ? handlePointerMove : undefined}
-        onPointerLeave={wantsInteractive ? handlePointerLeave : undefined}
+        onPointerEnter={wantsInteractive ? updateSpec : undefined}
+        onPointerMove={wantsInteractive ? updateSpec : undefined}
         style={{ ...cssVars, ...style }}
         sx={sx}
       >
+        {wantsInteractive && (
+          <span className="liquid-glass__specwrap" aria-hidden="true">
+            <span className="liquid-glass__spec" />
+          </span>
+        )}
         {children}
       </Box>
     );

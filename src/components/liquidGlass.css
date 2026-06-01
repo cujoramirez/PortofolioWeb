@@ -1,20 +1,6 @@
 /* Liquid-glass material: frost + token tint + edge light + specular + optional refraction.
    Tunables are CSS vars so callers (and live tuning) can override per surface. */
 
-/* Type the pointer coords with safe defaults. Updated 1:1 on pointermove (no easing —
-   any transition here trails the cursor and reads as lag). The soft, low-opacity
-   highlight is what keeps instant tracking from looking harsh. */
-@property --gx {
-  syntax: '<length-percentage>';
-  inherits: true;
-  initial-value: 50%;
-}
-@property --gy {
-  syntax: '<length-percentage>';
-  inherits: true;
-  initial-value: 0%;
-}
-
 .liquid-glass {
   --lg-blur: 18px;
   --lg-radius: 14px;
@@ -24,8 +10,6 @@
   --lg-rim: rgba(255, 255, 255, 0.5);
   --lg-sheen: rgba(255, 255, 255, 0.5);
   --lg-spec: 0.5;
-  --gx: 50%;
-  --gy: 0%;
 
   position: relative;
   isolation: isolate;
@@ -49,27 +33,39 @@
   z-index: 0;
 }
 
-/* Reactive specular (eases toward pointer via the @property transition; idles when still) */
-.liquid-glass::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: radial-gradient(260px 150px at var(--gx) var(--gy), var(--lg-sheen), transparent 72%);
-  opacity: 0;
-  transition: opacity 0.55s cubic-bezier(0.25, 0.1, 0.25, 1);
-  z-index: 0;
-}
-.liquid-glass--interactive:hover::after,
-.liquid-glass--interactive:focus-within::after {
-  opacity: var(--lg-spec);
-}
-
-/* Keep real content above the glint layers */
+/* Keep real content above the glint + specular layers */
 .liquid-glass > * {
   position: relative;
   z-index: 1;
+}
+
+/* Reactive specular: a GPU-composited highlight layer that tracks the pointer via
+   transform (no per-frame paint). Fades in/out via opacity; never repositions on leave,
+   so it can't drift to center on unhover. */
+.liquid-glass__specwrap {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0; /* below content; placed after `> *` so this wins for the wrapper */
+}
+.liquid-glass__spec {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--lg-sheen), transparent 72%);
+  opacity: 0;
+  transform: translate3d(var(--px, -9999px), var(--py, -9999px), 0) translate(-50%, -50%);
+  transition: opacity 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: transform, opacity;
+}
+.liquid-glass--interactive:hover .liquid-glass__spec,
+.liquid-glass--interactive:focus-within .liquid-glass__spec {
+  opacity: var(--lg-spec);
 }
 
 /* Chromium-only refraction enhancement */
@@ -134,7 +130,7 @@
 
 /* Reduced motion -> no reactive specular */
 @media (prefers-reduced-motion: reduce) {
-  .liquid-glass::after,
+  .liquid-glass__spec,
   .glass-sheen::after {
     display: none;
   }
