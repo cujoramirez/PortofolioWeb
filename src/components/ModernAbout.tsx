@@ -112,9 +112,11 @@ const ModernAbout = () => {
         <>
           Cohort 2026 ·{' '}
           <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>
-            {ABOUT_FACTS.academy.rate} admit rate
-          </Box>{' '}
-          (≈{ABOUT_FACTS.academy.accepted} of ~{ABOUT_FACTS.academy.applicants.toLocaleString()})
+            {ABOUT_FACTS.academy.rate} acceptance rate
+          </Box>
+          <Box component="span" sx={{ display: 'block', mt: 0.25 }}>
+            {ABOUT_FACTS.academy.accepted} of {ABOUT_FACTS.academy.applicants} applicants
+          </Box>
         </>
       ),
     },
@@ -195,12 +197,24 @@ const ModernAbout = () => {
               <Typography component="div" sx={{ ...MONO_LABEL, mb: 1.5 }}>
                 OVERVIEW
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: '68ch' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.25, maxWidth: '66ch' }}>
                 {paragraphs.map((p, i) => (
                   <Typography
                     key={i}
-                    variant={i === 0 ? 'body1' : 'body2'}
-                    sx={{ color: i === 0 ? 'text.primary' : 'text.secondary', lineHeight: 1.75 }}
+                    variant="body1"
+                    component="p"
+                    sx={{
+                      m: 0,
+                      color:
+                        i === 0
+                          ? 'text.primary'
+                          : 'color-mix(in srgb, var(--app-palette-text-primary) 80%, transparent)',
+                      fontSize: i === 0 ? 'clamp(1.05rem, 0.45vw + 0.95rem, 1.15rem)' : '0.975rem',
+                      fontWeight: i === 0 ? 500 : 400,
+                      lineHeight: i === 0 ? 1.62 : 1.78,
+                      letterSpacing: i === 0 ? '-0.003em' : 0,
+                      textWrap: 'pretty',
+                    }}
                   >
                     {p}
                   </Typography>

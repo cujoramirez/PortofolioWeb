@@ -49,7 +49,7 @@ export const ABOUT_FACTS = {
   gpa: "3.55",
   gpaScale: "4.00",
   // Apple Developer Academy @ BINUS, Cohort 2026 (applicant figures approximate).
-  academy: { accepted: 200, applicants: 20000, rate: "≈1%" },
+  academy: { accepted: 200, applicants: "17,500–20,000", rate: "≈1%" },
 };
 
 
