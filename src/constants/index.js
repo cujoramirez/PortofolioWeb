@@ -37,6 +37,21 @@ export const ABOUT_QUOTES = [
   { text: "Whereof one cannot speak, thereof one must be silent.", author: "Ludwig Wittgenstein" },
 ];
 
+// ── About section · verifiable credibility facts ─────────────────────────────
+// Google Scholar exposes no public API and a static site cannot query it from
+// the browser (no CORS headers, bot-blocked), so the citation total is kept here
+// by hand. Bump SCHOLAR_CITATIONS when it changes (currently 4, a 5th incoming).
+export const SCHOLAR_PROFILE_URL = "https://scholar.google.com/citations?user=hwbWuI0AAAAJ";
+export const SCHOLAR_CITATIONS = 4;
+
+// Academic standing + program selectivity surfaced in the About spec sheet.
+export const ABOUT_FACTS = {
+  gpa: "3.55",
+  gpaScale: "4.00",
+  // Apple Developer Academy @ BINUS, Cohort 2026 (applicant figures approximate).
+  academy: { accepted: 200, applicants: 20000, rate: "≈1%" },
+};
+
 
 export const EXPERIENCES = [{
         year: "Mar 2026 – Dec 2026",

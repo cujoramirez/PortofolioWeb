@@ -1,8 +1,15 @@
-import { memo, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
-import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion';
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { AnimatePresence, animate, motion, useInView, useReducedMotion } from 'framer-motion';
 import { Box, Chip, Typography, alpha } from '@mui/material';
 
-import { ABOUT_TEXT, ABOUT_QUOTES } from '../constants/index';
+import {
+  ABOUT_TEXT,
+  ABOUT_QUOTES,
+  RESEARCH_PAPERS,
+  SCHOLAR_CITATIONS,
+  SCHOLAR_PROFILE_URL,
+  ABOUT_FACTS,
+} from '../constants/index';
 import { technologies, type TechnologyCategory } from './techData';
 import LiquidGlass from './LiquidGlass';
 import DetectionFrame from './DetectionFrame';
@@ -10,19 +17,8 @@ import DetectionFrame from './DetectionFrame';
 // Order the skill groups for a stable, scannable layout
 const CATEGORY_ORDER: TechnologyCategory[] = ['AI/ML', 'Backend', 'Frontend', 'Other'];
 
-// Spec-sheet rows — presentation labels over facts already in the data layer
-// (HERO_CONTENT, RESEARCH_PAPERS, the prior GLANCE_FACTS). No data is invented.
-const SPEC_FIELDS: { label: string; value: string; detail?: string; tag: string }[] = [
-  {
-    label: 'FOCUS',
-    value: 'Computer Vision · Deep Learning',
-    detail: 'Vision Transformers · Ensemble Learning · Model Calibration',
-    tag: '0.99',
-  },
-  { label: 'PUBLICATIONS', value: '5 · 4 first-author', tag: '0.98' },
-  { label: 'EDUCATION', value: 'BINUS University · Computer Science', tag: '0.97' },
-  { label: 'PROGRAM', value: 'Apple Developer Academy Scholar (2026)', tag: '0.96' },
-];
+// Signature reveal curve, typed so framer-motion accepts it as a cubic-bezier.
+const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 const MONO_LABEL = {
   fontFamily: 'var(--font-mono)',
@@ -30,6 +26,25 @@ const MONO_LABEL = {
   letterSpacing: '0.15em',
   color: 'text.secondary',
 } as const;
+
+// Count from 0 to a target when the card scrolls in; static under reduced motion.
+const CountUp = ({ value, active, reduce }: { value: number; active: boolean; reduce: boolean }) => {
+  const [display, setDisplay] = useState(reduce ? value : 0);
+  useEffect(() => {
+    if (reduce) {
+      setDisplay(value);
+      return;
+    }
+    if (!active) return;
+    const controls = animate(0, value, {
+      duration: 1.1,
+      ease: EASE,
+      onUpdate: (v) => setDisplay(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [active, value, reduce]);
+  return <>{display}</>;
+};
 
 const ModernAbout = () => {
   const paragraphs = useMemo(
@@ -46,6 +61,13 @@ const ModernAbout = () => {
     [],
   );
 
+  // Publication metrics derive from the data layer so they never drift.
+  const pubCount = RESEARCH_PAPERS.length;
+  const firstAuthorCount = useMemo(
+    () => RESEARCH_PAPERS.filter((p) => p.isFirstAuthor).length,
+    [],
+  );
+
   const prefersReducedMotion = useReducedMotion();
   const reduce = !!prefersReducedMotion;
 
@@ -53,12 +75,50 @@ const ModernAbout = () => {
   const rootRef = useRef<HTMLDivElement>(null);
   const inView = useInView(rootRef as RefObject<HTMLDivElement>, { once: true, margin: '-15% 0px' });
 
-  // Per-section reveal props (static when reduced motion).
-  const reveal = (i: number) => ({
+  // Per-element reveal (static when reduced motion). Delays cascade top-to-bottom.
+  const item = (delay: number) => ({
     initial: reduce ? false : { opacity: 0, y: 12 },
     animate: reduce ? undefined : inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 },
-    transition: { duration: 0.5, delay: 0.15 + i * 0.1, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.5, delay, ease: EASE },
   });
+
+  // Spec-sheet detail rows. Every value traces to a fact in the data layer.
+  const detailRows: { label: string; tag: string; value: string; detail?: ReactNode }[] = [
+    {
+      label: 'FOCUS',
+      tag: '0.99',
+      value: 'Computer Vision · Deep Learning',
+      detail: 'Vision Transformers · Ensemble Learning · Model Calibration',
+    },
+    {
+      label: 'EDUCATION',
+      tag: '0.97',
+      value: 'BINUS University · Computer Science',
+      detail: (
+        <>
+          GPA{' '}
+          <Box component="span" sx={{ color: 'text.primary', fontWeight: 700 }}>
+            {ABOUT_FACTS.gpa}
+          </Box>{' '}
+          / {ABOUT_FACTS.gpaScale}
+        </>
+      ),
+    },
+    {
+      label: 'PROGRAM',
+      tag: '0.96',
+      value: 'Apple Developer Academy Scholar',
+      detail: (
+        <>
+          Cohort 2026 ·{' '}
+          <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>
+            {ABOUT_FACTS.academy.rate} admit rate
+          </Box>{' '}
+          (≈{ABOUT_FACTS.academy.accepted} of ~{ABOUT_FACTS.academy.applicants.toLocaleString()})
+        </>
+      ),
+    },
+  ];
 
   // Rotating quote (single visible; paused for reduced motion).
   const [quoteIndex, setQuoteIndex] = useState(0);
@@ -71,15 +131,27 @@ const ModernAbout = () => {
   }, [reduce]);
   const quote = ABOUT_QUOTES[quoteIndex];
 
+  // Shared styling for the two metric cells.
+  const metricNumberSx = {
+    fontFamily: 'var(--font-display)',
+    fontWeight: 700,
+    fontSize: 'clamp(1.7rem, 1.1vw + 1.35rem, 2.05rem)',
+    lineHeight: 1,
+    color: 'text.primary',
+    fontVariantNumeric: 'tabular-nums',
+  };
+  const metricLabelSx = { ...MONO_LABEL, fontSize: '0.62rem', letterSpacing: '0.18em', mt: 1 };
+  const metricSubSx = { color: 'text.secondary', fontSize: '0.76rem', mt: 0.5, lineHeight: 1.4 };
+
   return (
     <Box ref={rootRef}>
       {/* Section header (outside the card) */}
       <Box sx={{ mb: { xs: 3, md: 4 } }}>
         <Typography variant="overline" sx={{ color: 'primary.main', display: 'block', mb: 1 }}>
-          Get to know me
+          About
         </Typography>
         <Typography variant="h2" sx={{ color: 'text.primary' }}>
-          About
+          Background
         </Typography>
       </Box>
 
@@ -87,7 +159,7 @@ const ModernAbout = () => {
       <LiquidGlass component="div" intensity="subtle" blur={12} radius={20} sx={{ p: { xs: 2.5, md: 4 } }}>
         <DetectionFrame scan active={inView}>
           {/* Header bar */}
-          <motion.div {...reveal(0)}>
+          <motion.div {...item(0.1)}>
             <Box
               sx={{
                 display: 'flex',
@@ -113,13 +185,13 @@ const ModernAbout = () => {
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 20rem)' },
+              gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 21rem)' },
               gap: { xs: 4, md: 5 },
               alignItems: 'start',
             }}
           >
             {/* OVERVIEW */}
-            <motion.div {...reveal(1)}>
+            <motion.div {...item(0.2)}>
               <Typography component="div" sx={{ ...MONO_LABEL, mb: 1.5 }}>
                 OVERVIEW
               </Typography>
@@ -137,38 +209,110 @@ const ModernAbout = () => {
             </motion.div>
 
             {/* Spec sheet */}
-            <motion.div {...reveal(2)}>
+            <Box>
+              <motion.div {...item(0.24)}>
+                <Typography component="div" sx={{ ...MONO_LABEL, mb: 1.75 }}>
+                  SPEC SHEET
+                </Typography>
+              </motion.div>
+
+              {/* Metric pair: publications + citations */}
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.25, mb: 1.75 }}>
+                <motion.div {...item(0.3)} style={{ height: '100%' }}>
+                  <DetectionFrame interactive sx={{ px: 1.75, py: 1.5, height: '100%' }}>
+                    <Typography component="div" sx={{ ...metricNumberSx }}>
+                      <CountUp value={pubCount} active={inView} reduce={reduce} />
+                    </Typography>
+                    <Typography component="div" sx={{ ...metricLabelSx }}>
+                      PUBLICATIONS
+                    </Typography>
+                    <Typography component="div" sx={{ ...metricSubSx }}>
+                      {firstAuthorCount} as first author
+                    </Typography>
+                  </DetectionFrame>
+                </motion.div>
+
+                <motion.div {...item(0.36)} style={{ height: '100%' }}>
+                  <Box
+                    component="a"
+                    href={SCHOLAR_PROFILE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${SCHOLAR_CITATIONS} citations on Google Scholar, opens in a new tab`}
+                    sx={{
+                      display: 'block',
+                      height: '100%',
+                      textDecoration: 'none',
+                      borderRadius: '6px',
+                      '&:focus-visible': {
+                        outline: '2px solid var(--app-palette-primary-main)',
+                        outlineOffset: '2px',
+                      },
+                    }}
+                  >
+                    <DetectionFrame interactive sx={{ px: 1.75, py: 1.5, height: '100%' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+                        <Typography component="span" sx={{ ...metricNumberSx }}>
+                          <CountUp value={SCHOLAR_CITATIONS} active={inView} reduce={reduce} />
+                        </Typography>
+                        <Box
+                          aria-hidden
+                          component="span"
+                          sx={{
+                            color: 'var(--df-stroke)',
+                            fontSize: '0.95rem',
+                            fontWeight: 700,
+                            transition: 'color 0.25s ease',
+                          }}
+                        >
+                          ↗
+                        </Box>
+                      </Box>
+                      <Typography component="div" sx={{ ...metricLabelSx }}>
+                        CITATIONS
+                      </Typography>
+                      <Typography component="div" sx={{ ...metricSubSx }}>
+                        Google Scholar
+                      </Typography>
+                    </DetectionFrame>
+                  </Box>
+                </motion.div>
+              </Box>
+
+              {/* Detail rows */}
               <Box component="dl" sx={{ m: 0, display: 'flex', flexDirection: 'column', gap: 1.75 }}>
-                {SPEC_FIELDS.map((f) => (
-                  <DetectionFrame key={f.label} interactive sx={{ px: 1.75, py: 1.25 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-                      <Typography component="dt" sx={{ ...MONO_LABEL, fontSize: '0.66rem', letterSpacing: '0.18em' }}>
+                {detailRows.map((f, i) => (
+                  <motion.div key={f.label} {...item(0.42 + i * 0.06)}>
+                    <DetectionFrame interactive tag={f.tag} sx={{ px: 1.75, py: 1.25 }}>
+                      <Typography
+                        component="dt"
+                        sx={{ ...MONO_LABEL, fontSize: '0.66rem', letterSpacing: '0.18em' }}
+                      >
                         {f.label}
                       </Typography>
-                      <Box
-                        aria-hidden
-                        component="span"
-                        sx={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', letterSpacing: '0.05em', color: 'var(--df-stroke)' }}
+                      <Typography
+                        component="dd"
+                        sx={{ m: 0, mt: 0.75, color: 'text.primary', fontWeight: 600, fontSize: '0.95rem', lineHeight: 1.3 }}
                       >
-                        {f.tag}
-                      </Box>
-                    </Box>
-                    <Typography component="dd" sx={{ m: 0, mt: 0.75, color: 'text.primary', fontWeight: 600, fontSize: '0.95rem', lineHeight: 1.3 }}>
-                      {f.value}
-                    </Typography>
-                    {f.detail && (
-                      <Typography component="dd" sx={{ m: 0, mt: 0.5, color: 'text.secondary', fontSize: '0.8rem', lineHeight: 1.5 }}>
-                        {f.detail}
+                        {f.value}
                       </Typography>
-                    )}
-                  </DetectionFrame>
+                      {f.detail && (
+                        <Typography
+                          component="dd"
+                          sx={{ m: 0, mt: 0.5, color: 'text.secondary', fontSize: '0.8rem', lineHeight: 1.5 }}
+                        >
+                          {f.detail}
+                        </Typography>
+                      )}
+                    </DetectionFrame>
+                  </motion.div>
                 ))}
               </Box>
-            </motion.div>
+            </Box>
           </Box>
 
           {/* STACK */}
-          <motion.div {...reveal(3)}>
+          <motion.div {...item(0.6)}>
             <Box sx={{ mt: { xs: 4, md: 5 }, pt: 3, borderTop: '1px solid var(--app-palette-divider)' }}>
               <Typography component="div" sx={{ ...MONO_LABEL, mb: 2.5 }}>
                 STACK
@@ -216,7 +360,7 @@ const ModernAbout = () => {
           </motion.div>
 
           {/* Quote footer */}
-          <motion.div {...reveal(4)}>
+          <motion.div {...item(0.68)}>
             <Box
               component="blockquote"
               sx={{
@@ -225,12 +369,23 @@ const ModernAbout = () => {
                 pt: 3,
                 borderTop: '1px solid var(--app-palette-divider)',
                 display: 'flex',
-                gap: 1.5,
+                gap: 2,
                 alignItems: 'flex-start',
               }}
             >
-              <Box aria-hidden component="span" sx={{ ...MONO_LABEL, color: 'color-mix(in srgb, var(--app-palette-primary-main) 70%, transparent)', mt: 0.4 }}>
-                // note
+              <Box
+                aria-hidden
+                component="span"
+                sx={{
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 700,
+                  fontSize: '2.75rem',
+                  lineHeight: 0.8,
+                  color: 'color-mix(in srgb, var(--app-palette-primary-main) 55%, transparent)',
+                  userSelect: 'none',
+                }}
+              >
+                &ldquo;
               </Box>
               <Box sx={{ flex: 1, minHeight: 64 }}>
                 <AnimatePresence mode="wait">
@@ -239,10 +394,10 @@ const ModernAbout = () => {
                     initial={reduce ? false : { opacity: 0, y: 10, filter: 'blur(6px)' }}
                     animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                     exit={reduce ? undefined : { opacity: 0, y: -10, filter: 'blur(6px)' }}
-                    transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.55, ease: EASE }}
                   >
                     <Typography variant="body1" sx={{ color: 'text.primary', fontStyle: 'italic', lineHeight: 1.6 }}>
-                      &ldquo;{quote.text}&rdquo;
+                      {quote.text}
                     </Typography>
                     <Typography variant="overline" sx={{ color: 'text.secondary', display: 'block', mt: 1 }}>
                       — {quote.author}
