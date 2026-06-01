@@ -24,11 +24,9 @@ import {
 import {
 	AppBar,
 	Toolbar,
-	Fab,
 	Box,
 	IconButton,
 	useScrollTrigger,
-	Zoom,
 } from '@mui/material';
 import { useColorScheme, useTheme, alpha } from '@mui/material/styles';
 import {
@@ -38,7 +36,6 @@ import {
 	Science,
 	School,
 	ContactMail,
-	KeyboardArrowUp,
 	LightMode,
 	DarkMode,
 } from '@mui/icons-material';
@@ -1086,34 +1083,6 @@ const ModernNavbarComponent = () => {
 				/>
 			)}
 
-			{/* Scroll to top FAB for mobile/tablet */}
-			{(isMobileDevice || isTabletDevice) && (
-				<Zoom in={trigger}>
-					<Fab
-						onClick={() => scrollToSection('#hero')}
-						size="medium"
-						aria-label="Scroll to top"
-						sx={{
-							position: 'fixed',
-							bottom: 24,
-							left: 24,
-							zIndex: 1200,
-							background: `linear-gradient(135deg, ${pal.primary.dark} 0%, ${pal.primary.main} 100%)`,
-							color: pal.primary.contrastText,
-							boxShadow: `0 4px 20px ${alpha(pal.primary.main, 0.35)}`,
-							'&:hover': {
-								background: `linear-gradient(135deg, ${pal.primary.main} 0%, ${pal.primary.light} 100%)`,
-								boxShadow: `0 6px 24px ${alpha(pal.primary.main, 0.45)}`,
-							},
-							'&:active': {
-								transform: 'scale(0.95)',
-							},
-						}}
-					>
-						<KeyboardArrowUp />
-					</Fab>
-				</Zoom>
-			)}
 		</>
 	);
 };
