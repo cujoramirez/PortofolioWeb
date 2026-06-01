@@ -21,8 +21,8 @@ export interface LiquidGlassProps {
   style?: CSSProperties;
 }
 
-const BOLD_SPEC = 0.85;
-const SUBTLE_SPEC = 0.45;
+const BOLD_SPEC = 0.5;
+const SUBTLE_SPEC = 0.3;
 
 const LiquidGlass = memo(
   forwardRef<HTMLDivElement, LiquidGlassProps>(function LiquidGlass(
