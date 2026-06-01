@@ -34,7 +34,7 @@
   box-shadow: var(--lg-shadow), inset 0 1px 0 var(--lg-rim);
   -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(170%);
   backdrop-filter: blur(var(--lg-blur)) saturate(170%);
-  transition: --gx 0.45s cubic-bezier(0.25, 0.1, 0.25, 1), --gy 0.45s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: --gx 0.12s cubic-bezier(0.22, 1, 0.36, 1), --gy 0.12s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Static top-edge glint */
