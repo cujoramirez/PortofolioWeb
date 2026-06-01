@@ -6,62 +6,7 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
-/* Navbar Glass with GPU Acceleration */
-.navbar-glass-surface,
-.navbar-mobile-menu-glass,
-.navbar-fab-glass,
-.navbar-menu-toggle-glass {
-	position: relative;
-	transform: translateZ(0);
-	backface-visibility: hidden;
-	perspective: 1000px;
-	contain: layout style paint;
-	content-visibility: auto;
-}
-
-.navbar-menu-toggle-glass::before,
-.navbar-menu-toggle-glass::after {
-	content: '';
-	position: absolute;
-	inset: 0;
-	border-radius: inherit;
-	pointer-events: none;
-	opacity: 0.78;
-	transition: opacity 0.35s ease, filter 0.35s ease;
-	will-change: opacity, filter;
-	transform: translateZ(0);
-}
-
-.navbar-menu-toggle-glass::before {
-	background: radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.45), transparent 56%),
-		linear-gradient(135deg, rgba(248, 250, 252, 0.35), rgba(15, 23, 42, 0.45));
-	mix-blend-mode: screen;
-}
-
-.navbar-menu-toggle-glass::after {
-	inset: -0.5px;
-	border: 1px solid rgba(255, 255, 255, 0.38);
-	box-shadow: inset 0 0 18px rgba(148, 163, 184, 0.35);
-}
-
-.navbar-menu-toggle-glass:hover::before,
-.navbar-menu-toggle-glass:hover::after,
-.navbar-menu-toggle-glass:focus-within::before,
-.navbar-menu-toggle-glass:focus-within::after,
-.navbar-menu-toggle-glass.navbar-menu-toggle-glass--open::before,
-.navbar-menu-toggle-glass.navbar-menu-toggle-glass--open::after {
-	opacity: 1;
-	filter: brightness(1.05);
-}
-
-.navbar-glass-surface > div,
-.navbar-mobile-menu-glass > div,
-.navbar-fab-glass > div,
-.navbar-menu-toggle-glass > div {
-	padding: 0;
-}
-
-/* Optimized Glass Refraction */
+/* Optimized Glass Refraction (global chip styling, used across sections) */
 .MuiChip-root {
 	position: relative;
 	will-change: auto;
@@ -121,41 +66,6 @@
 	opacity: 0.8;
 }
 
-/* Optimized Shimmer Animation with GPU Acceleration */
-@keyframes shimmer {
-	0% {
-		transform: translateX(-100%) translateZ(0);
-	}
-	100% {
-		transform: translateX(100%) translateZ(0);
-	}
-}
-
-.navbar-glass-shimmer {
-	position: relative;
-	overflow: hidden;
-	contain: layout style paint;
-}
-
-.navbar-glass-shimmer::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background: linear-gradient(
-		90deg,
-		transparent 0%,
-		rgba(255, 255, 255, 0.06) 50%,
-		transparent 100%
-	);
-	animation: shimmer 4s ease-in-out infinite;
-	pointer-events: none;
-	will-change: transform;
-	transform: translateZ(0);
-}
-
 /* Optimized FAB Button Glass Enhancement */
 .MuiFab-root {
 	position: relative;
@@ -189,14 +99,6 @@
 	opacity: 1;
 }
 
-/* Backdrop Blur Enhancement */
-@supports (backdrop-filter: blur(20px)) or (-webkit-backdrop-filter: blur(20px)) {
-	.glass-backdrop {
-		backdrop-filter: blur(24px) saturate(180%);
-		-webkit-backdrop-filter: blur(24px) saturate(180%);
-	}
-}
-
 /* Nav button hover underline - GPU accelerated */
 .nav-btn {
 	transform: translateZ(0);
@@ -205,40 +107,18 @@
 
 /* Responsive Adjustments - Optimized for Mobile Performance */
 @media (max-width: 768px) {
-	.navbar-glass-surface,
-	.navbar-mobile-menu-glass,
-	.navbar-fab-glass,
-	.navbar-menu-toggle-glass {
-		/* Reduce complexity on mobile for 60fps */
-		contain: layout style paint;
-		will-change: transform;
-	}
-
-	.navbar-glass-surface::before {
-		filter: blur(0.3px);
-		opacity: 0.15;
-	}
-	
 	.MuiChip-root::after {
 		display: none;
-	}
-	
-	.navbar-glass-shimmer::after {
-		animation-duration: 5s; /* Slower on mobile */
 	}
 }
 
 /* Accessibility - Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
-	.navbar-glass-shimmer::after {
-		animation: none;
-	}
-	
 	.MuiChip-root::after,
 	.MuiFab-root::before {
 		transition: none;
 	}
-	
+
 	.nav-btn,
 	.nav-btn::after {
 		transition: none !important;
