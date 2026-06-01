@@ -647,7 +647,7 @@ const ModernNavbarComponent = () => {
 						borderLeft: 'none',
 						borderRight: 'none',
 						borderBottom: '1px solid var(--lg-border)',
-						transition: 'background-color 0.3s ease, box-shadow 0.3s ease, --gx 0.12s cubic-bezier(0.22, 1, 0.36, 1), --gy 0.12s cubic-bezier(0.22, 1, 0.36, 1)',
+						transition: 'background-color 0.3s ease, box-shadow 0.3s ease',
 						'--lg-tint': trigger
 							? 'color-mix(in srgb, var(--app-palette-bg-elevated) 80%, transparent)'
 							: 'color-mix(in srgb, var(--app-palette-bg-elevated) 62%, transparent)',

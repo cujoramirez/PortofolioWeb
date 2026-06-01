@@ -1,8 +1,9 @@
 /* Liquid-glass material: frost + token tint + edge light + specular + optional refraction.
    Tunables are CSS vars so callers (and live tuning) can override per surface. */
 
-/* Register the pointer coords so the browser can INTERPOLATE them (smooth glide)
-   instead of snapping. No JS rAF — the compositor eases between updates. */
+/* Type the pointer coords with safe defaults. Updated 1:1 on pointermove (no easing —
+   any transition here trails the cursor and reads as lag). The soft, low-opacity
+   highlight is what keeps instant tracking from looking harsh. */
 @property --gx {
   syntax: '<length-percentage>';
   inherits: true;
@@ -34,7 +35,6 @@
   box-shadow: var(--lg-shadow), inset 0 1px 0 var(--lg-rim);
   -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(170%);
   backdrop-filter: blur(var(--lg-blur)) saturate(170%);
-  transition: --gx 0.12s cubic-bezier(0.22, 1, 0.36, 1), --gy 0.12s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Static top-edge glint */
