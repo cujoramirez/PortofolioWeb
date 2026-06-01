@@ -113,8 +113,8 @@ const ModernAbout = () => {
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 22rem)' },
-              gap: { xs: 4, md: 6 },
+              gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 20rem)' },
+              gap: { xs: 4, md: 5 },
               alignItems: 'start',
             }}
           >
@@ -138,17 +138,26 @@ const ModernAbout = () => {
 
             {/* Spec sheet */}
             <motion.div {...reveal(2)}>
-              <Box component="dl" sx={{ m: 0, display: 'flex', flexDirection: 'column', gap: 2.25 }}>
+              <Box component="dl" sx={{ m: 0, display: 'flex', flexDirection: 'column', gap: 1.75 }}>
                 {SPEC_FIELDS.map((f) => (
-                  <DetectionFrame key={f.label} tag={f.tag} sx={{ px: 1.5, py: 1.25 }}>
-                    <Typography component="dt" sx={{ ...MONO_LABEL, fontSize: '0.65rem', letterSpacing: '0.18em' }}>
-                      {f.label}
-                    </Typography>
-                    <Typography component="dd" sx={{ m: 0, mt: 0.5, color: 'text.primary', fontWeight: 600, fontSize: '0.9rem' }}>
+                  <DetectionFrame key={f.label} interactive sx={{ px: 1.75, py: 1.25 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+                      <Typography component="dt" sx={{ ...MONO_LABEL, fontSize: '0.66rem', letterSpacing: '0.18em' }}>
+                        {f.label}
+                      </Typography>
+                      <Box
+                        aria-hidden
+                        component="span"
+                        sx={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', letterSpacing: '0.05em', color: 'var(--df-stroke)' }}
+                      >
+                        {f.tag}
+                      </Box>
+                    </Box>
+                    <Typography component="dd" sx={{ m: 0, mt: 0.75, color: 'text.primary', fontWeight: 600, fontSize: '0.95rem', lineHeight: 1.3 }}>
                       {f.value}
                     </Typography>
                     {f.detail && (
-                      <Typography component="dd" sx={{ m: 0, mt: 0.25, color: 'text.secondary', fontSize: '0.8rem', lineHeight: 1.5 }}>
+                      <Typography component="dd" sx={{ m: 0, mt: 0.5, color: 'text.secondary', fontSize: '0.8rem', lineHeight: 1.5 }}>
                         {f.detail}
                       </Typography>
                     )}
@@ -227,10 +236,10 @@ const ModernAbout = () => {
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={quoteIndex}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    initial={reduce ? false : { opacity: 0, y: 10, filter: 'blur(6px)' }}
+                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    exit={reduce ? undefined : { opacity: 0, y: -10, filter: 'blur(6px)' }}
+                    transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                   >
                     <Typography variant="body1" sx={{ color: 'text.primary', fontStyle: 'italic', lineHeight: 1.6 }}>
                       &ldquo;{quote.text}&rdquo;

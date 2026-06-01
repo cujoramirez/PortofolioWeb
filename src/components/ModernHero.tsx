@@ -15,6 +15,8 @@ import heroImg from '../assets/GadingAdityaPerdana.webp';
 import { HERO_CONTENT } from '../constants/index';
 import { GooeyText } from './GooeyText';
 import PixelCanvas from './PixelCanvas';
+import LiquidGlass from './LiquidGlass';
+import DetectionFrame from './DetectionFrame';
 
 // Custom Google Scholar icon
 const GoogleScholarIcon = (props: ComponentProps<typeof SvgIcon>) => (
@@ -217,18 +219,20 @@ const ModernHero = () => {
             </Box>
 
             <Box component={motion.div} variants={item}>
-              <Typography
-                variant="body1"
-                sx={{
-                  color: 'var(--app-palette-label-secondary)',
-                  maxWidth: '60ch',
-                  fontSize: { xs: '0.95rem', md: '1rem' },
-                  lineHeight: 1.75,
-                  mb: 4,
-                }}
-              >
-                {HERO_CONTENT}
-              </Typography>
+              <LiquidGlass component="div" intensity="subtle" blur={10} radius={14} sx={{ maxWidth: '60ch', mb: 4 }}>
+                <DetectionFrame sx={{ p: { xs: 2, md: 2.5 } }}>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: 'var(--app-palette-label-secondary)',
+                      fontSize: { xs: '0.95rem', md: '1rem' },
+                      lineHeight: 1.75,
+                    }}
+                  >
+                    {HERO_CONTENT}
+                  </Typography>
+                </DetectionFrame>
+              </LiquidGlass>
             </Box>
 
             <Box

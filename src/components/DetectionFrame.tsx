@@ -14,35 +14,56 @@ export interface DetectionFrameProps {
   tag?: string;
   /** Corner bracket arm length in px. */
   bracket?: number;
+  /** Brighten brackets + subtle tint/lift on hover (for "selectable" rows). */
+  interactive?: boolean;
   sx?: SxProps<Theme>;
 }
 
-const STROKE = 'color-mix(in srgb, var(--app-palette-primary-main) 55%, transparent)';
+const STROKE_REST = 'color-mix(in srgb, var(--app-palette-primary-main) 48%, transparent)';
+const STROKE_HOVER = 'color-mix(in srgb, var(--app-palette-primary-main) 92%, transparent)';
 
 const DetectionFrame = memo(function DetectionFrame({
   children,
   scan = false,
   active = false,
   tag,
-  bracket = 14,
+  bracket = 11,
+  interactive = false,
   sx,
 }: DetectionFrameProps) {
   const prefersReducedMotion = useReducedMotion();
   const showScan = scan && active && !prefersReducedMotion;
 
-  // Shared corner styling; each corner enables two of its four borders.
+  // Brackets read the --df-stroke custom property so hover can brighten them with a transition.
   const cornerBase = {
     position: 'absolute' as const,
     width: bracket,
     height: bracket,
-    borderColor: STROKE,
+    borderColor: 'var(--df-stroke)',
     borderStyle: 'solid',
     borderWidth: 0,
     pointerEvents: 'none' as const,
+    transition: 'border-color 0.25s ease',
+  };
+
+  const baseSx: SxProps<Theme> = {
+    position: 'relative',
+    borderRadius: '6px',
+    '--df-stroke': STROKE_REST,
+    ...(interactive
+      ? {
+          transition: 'transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1), background-color 0.25s ease',
+          '&:hover': {
+            '--df-stroke': STROKE_HOVER,
+            backgroundColor: 'color-mix(in srgb, var(--app-palette-primary-main) 6%, transparent)',
+            transform: 'translateX(3px)',
+          },
+        }
+      : {}),
   };
 
   return (
-    <Box sx={[{ position: 'relative' }, ...(Array.isArray(sx) ? sx : [sx])]}>
+    <Box sx={[baseSx, ...(Array.isArray(sx) ? sx : [sx])]}>
       {children}
 
       {/* Detection corner brackets */}
@@ -65,7 +86,7 @@ const DetectionFrame = memo(function DetectionFrame({
             fontSize: '0.6rem',
             lineHeight: 1.5,
             letterSpacing: '0.05em',
-            color: 'color-mix(in srgb, var(--app-palette-primary-main) 85%, var(--app-palette-text-primary))',
+            color: 'var(--df-stroke)',
             bgcolor: 'var(--app-palette-bg-elevated)',
             borderRadius: '3px',
           }}
