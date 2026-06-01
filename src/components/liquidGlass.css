@@ -63,8 +63,7 @@
   transition: opacity 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
   will-change: transform, opacity;
 }
-.liquid-glass--interactive:hover .liquid-glass__spec,
-.liquid-glass--interactive:focus-within .liquid-glass__spec {
+.liquid-glass--interactive[data-spec-on='1'] .liquid-glass__spec {
   opacity: var(--lg-spec);
 }
 

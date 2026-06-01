@@ -35,14 +35,21 @@ const LiquidGlass = memo(
     const wantsInteractive = interactive && reactiveSpecular;
 
     // Track the pointer as pixel coords on the host; the specular layer reads them and
-    // moves via GPU transform (no per-frame gradient repaint). On leave we do NOTHING —
-    // CSS :hover fades the layer out IN PLACE (no position reset, so it can't drift to center).
+    // moves via GPU transform (no per-frame gradient repaint). Opacity is toggled via the
+    // data-spec-on attribute (NOT CSS :hover/:focus-within, which kept it lit after a child
+    // gained focus). On leave we fade out IN PLACE — never reset --px/--py, so no center drift.
     const updateSpec = useCallback((e: ReactPointerEvent<HTMLElement>) => {
       const el = elRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
       el.style.setProperty('--px', `${e.clientX - rect.left}px`);
       el.style.setProperty('--py', `${e.clientY - rect.top}px`);
+      el.dataset.specOn = '1';
+    }, []);
+
+    const hideSpec = useCallback(() => {
+      const el = elRef.current;
+      if (el) el.dataset.specOn = '0';
     }, []);
 
     const effectiveBlur = canBlur ? Math.min(blur ?? 18, maxBlur) : 0;
@@ -76,6 +83,7 @@ const LiquidGlass = memo(
         className={classes}
         onPointerEnter={wantsInteractive ? updateSpec : undefined}
         onPointerMove={wantsInteractive ? updateSpec : undefined}
+        onPointerLeave={wantsInteractive ? hideSpec : undefined}
         style={{ ...cssVars, ...style }}
         sx={sx}
       >
