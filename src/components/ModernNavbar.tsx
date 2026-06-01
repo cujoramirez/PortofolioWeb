@@ -161,6 +161,7 @@ const NAV_ITEMS: NavItem[] = [
 
 // Shared sizing for the top-right control cluster (theme toggle + mobile menu button).
 const CTRL_SIZE = 44; // px — equal-sized, >=44px touch target
+const CTRL_GAP = 12; // px — gap between the toggle and the mobile menu button
 
 type NavItemPositions = Record<string, NavItemPosition>;
 
@@ -1001,7 +1002,7 @@ const ModernNavbarComponent = () => {
 						transition={{ duration: 0.6, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
 						style={{
 							display: 'inline-flex',
-							marginRight: (isMobileDevice || isTabletDevice) ? 48 : 0,
+							marginRight: (isMobileDevice || isTabletDevice) ? CTRL_SIZE + CTRL_GAP : 0,
 						}}
 					>
 						<LiquidGlass
