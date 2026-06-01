@@ -836,8 +836,8 @@ const ModernNavbarComponent = () => {
 										borderRadius: '11px',
 										opacity: springOpacity,
 										zIndex: 0,
-										boxShadow: `0 0 16px ${alpha(pal.primary.main, 0.18)}, inset 0 0 12px ${alpha(pal.primary.main, 0.08)}`,
-										border: `1px solid ${alpha(pal.primary.main, 0.18)}`,
+										boxShadow: `0 0 16px ${alpha(pal.primary.main, 0.18)}, inset 0 1px 0 rgba(255,255,255,0.35)`,
+										border: `1px solid ${alpha(pal.primary.main, 0.22)}`,
 									}}
 									transition={{ type: 'spring', stiffness: 260, damping: 32 }}
 								/>
@@ -889,10 +889,10 @@ const ModernNavbarComponent = () => {
 													? `1px solid ${alpha(pal.primary.main, 0.18)}`
 													: `1px solid ${alpha(pal.divider, 0.6)}`,
 												background: isHovered
-													? alpha(pal.primary.main, 0.08)
+													? `color-mix(in srgb, var(--app-palette-primary-main) 10%, transparent)`
 													: 'transparent',
 												boxShadow: isHovered
-													? `0 1px 4px ${alpha(pal.primary.main, 0.12)}`
+													? `0 1px 6px ${alpha(pal.primary.main, 0.14)}, inset 0 1px 0 rgba(255,255,255,0.30)`
 													: 'none',
 												transition: 'all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
 												'&::after': {
