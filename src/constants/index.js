@@ -322,6 +322,16 @@ export const CERTIFICATIONS = [{
     },
 ];
 
+// Curated credentials surfaced inline on the Experience section (titles must match
+// CERTIFICATIONS exactly); the full set stays in the "All credentials" overlay. Swap
+// these to feature different certificates without touching the frozen data above.
+export const FEATURED_CERTIFICATION_TITLES = [
+    "Building LLM Applications With Prompt Engineering",
+    "Computer Vision",
+    "Machine Learning with Python",
+    "Intro to Deep Learning",
+];
+
 export const RESEARCH_PAPERS = [
     {
         year: "2025",
