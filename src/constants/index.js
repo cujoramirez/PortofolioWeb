@@ -214,6 +214,16 @@ export const PROJECTS = [{
     }
 ];
 
+// Curated subset shown on the homepage Projects section, in display order. Titles must
+// match PROJECTS exactly; everything else stays available in the "All Projects" archive.
+// Swap these to feature different / flagship projects as they are audited and published.
+export const FEATURED_PROJECT_TITLES = [
+    "Deep Learning research on Computer Vision",
+    "Diabetic Retinopathy Detection Using CNN",
+    "Facial Recognition for Airport Security",
+    "StyleTailor – Customizable T-Shirt Design Website",
+];
+
 export const CERTIFICATIONS = [{
         title: "Scientific Computing with Python",
         issuer: "FreeCodeCamp",
