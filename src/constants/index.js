@@ -40,9 +40,9 @@ export const ABOUT_QUOTES = [
 // ── About section · verifiable credibility facts ─────────────────────────────
 // Google Scholar exposes no public API and a static site cannot query it from
 // the browser (no CORS headers, bot-blocked), so the citation total is kept here
-// by hand. Bump SCHOLAR_CITATIONS when it changes (currently 4, a 5th incoming).
+// by hand. Bump SCHOLAR_CITATIONS when it changes (currently 5).
 export const SCHOLAR_PROFILE_URL = "https://scholar.google.com/citations?user=hwbWuI0AAAAJ";
-export const SCHOLAR_CITATIONS = 4;
+export const SCHOLAR_CITATIONS = 5;
 
 // Academic standing + program selectivity surfaced in the About spec sheet.
 export const ABOUT_FACTS = {
@@ -394,7 +394,7 @@ export const RESEARCH_PAPERS = [
         description: "Systematic ablation study examining how teacher ensemble size influences student accuracy, calibration, and computational cost in the CALM framework. Results demonstrate that calibration-aware training yields lowest expected calibration error with diminishing returns beyond three teachers.",
         keywords: ["Ablation Study", "Ensemble Learning", "Model Calibration", "CIFAR-10", "Teacher-Student Networks"],
         isFirstAuthor: true,
-        citations: 0,
+        citations: 1,
     }
 ];
 
