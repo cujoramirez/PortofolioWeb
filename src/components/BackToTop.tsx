@@ -32,8 +32,8 @@ const BackToTop = memo(() => {
           transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
           style={{
             position: 'fixed',
-            bottom: 32,
-            right: 32,
+            bottom: 'calc(32px + env(safe-area-inset-bottom, 0px))',
+            right: 'calc(32px + env(safe-area-inset-right, 0px))',
             zIndex: 1400,
           }}
         >

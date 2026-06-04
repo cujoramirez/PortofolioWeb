@@ -1,4 +1,4 @@
-import { memo, useContext, useEffect, useId, useMemo, useRef } from 'react';
+import { memo, useEffect, useId, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Box, IconButton, Link as MuiLink, Typography } from '@mui/material';
@@ -6,7 +6,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import OptimizedImage from './OptimizedImage';
-import { LenisContext } from './LenisContext';
+import { useScrollLock } from './useScrollLock';
 import { useSystemProfile } from './useSystemProfile';
 import {
   EASE,
@@ -45,13 +45,16 @@ const CredentialCard = memo(function CredentialCard({ cert }: { cert: Certificat
         transition:
           'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.28s ease',
         '& .cred-cta svg': { transition: 'transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)' },
-        '&:hover': {
-          transform: 'translateY(-3px)',
-          borderColor: 'color-mix(in srgb, var(--app-palette-primary-main) 55%, transparent)',
-          boxShadow: '0 16px 38px rgba(0, 0, 0, 0.28)',
+        // Hover affordance only where hover is real; on touch it would stick after a tap.
+        '@media (hover: hover)': {
+          '&:hover': {
+            transform: 'translateY(-3px)',
+            borderColor: 'color-mix(in srgb, var(--app-palette-primary-main) 55%, transparent)',
+            boxShadow: '0 16px 38px rgba(0, 0, 0, 0.28)',
+          },
+          '&:hover .cred-cta': { color: 'primary.main' },
+          '&:hover .cred-cta svg': { transform: 'translate(2px, -2px)' },
         },
-        '&:hover .cred-cta': { color: 'primary.main' },
-        '&:hover .cred-cta svg': { transform: 'translate(2px, -2px)' },
         '&:focus-visible': {
           outline: '2px solid var(--app-palette-primary-main)',
           outlineOffset: 2,
@@ -136,10 +139,12 @@ const CertificationsArchive = memo(function CertificationsArchive({
   const motionOn = !prefersReducedMotion;
   const heavyFx = !prefersReducedMotion && performanceTier !== 'low';
 
-  const { stop, start } = useContext(LenisContext);
   const overlayRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
+
+  // iOS-safe background scroll lock (prevents the close-time "teleport" on mobile).
+  useScrollLock(open);
 
   // Group by issuer (counts descending), preserving each issuer's original order within.
   const groups = useMemo(() => {
@@ -150,14 +155,11 @@ const CertificationsArchive = memo(function CertificationsArchive({
     }));
   }, [certifications]);
 
-  // While open: pause Lenis, lock the body, trap focus, and wire Escape to close.
+  // While open: trap focus and wire Escape to close (background scroll lock is useScrollLock).
   useEffect(() => {
     if (!open) return undefined;
     const previouslyFocused = document.activeElement as HTMLElement | null;
-    closeBtnRef.current?.focus();
-    stop();
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    closeBtnRef.current?.focus({ preventScroll: true });
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -175,10 +177,10 @@ const CertificationsArchive = memo(function CertificationsArchive({
         const active = document.activeElement;
         if (event.shiftKey && active === first) {
           event.preventDefault();
-          last.focus();
+          last.focus({ preventScroll: true });
         } else if (!event.shiftKey && active === last) {
           event.preventDefault();
-          first.focus();
+          first.focus({ preventScroll: true });
         }
       }
     };
@@ -186,11 +188,9 @@ const CertificationsArchive = memo(function CertificationsArchive({
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = previousOverflow;
-      start();
-      previouslyFocused?.focus?.();
+      previouslyFocused?.focus?.({ preventScroll: true });
     };
-  }, [open, onClose, stop, start]);
+  }, [open, onClose]);
 
   if (typeof document === 'undefined') return null;
 

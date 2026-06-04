@@ -1,11 +1,11 @@
-import { memo, useContext, useEffect, useId, useMemo, useRef } from 'react';
+import { memo, useEffect, useId, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Box, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
 import DetectionFrame from './DetectionFrame';
-import { LenisContext } from './LenisContext';
+import { useScrollLock } from './useScrollLock';
 import { useSystemProfile } from './useSystemProfile';
 import {
   DOMAIN_META,
@@ -88,10 +88,12 @@ const ProjectsArchive = memo(function ProjectsArchive({ open, onClose, projects 
   const motionOn = !prefersReducedMotion;
   const heavyFx = !prefersReducedMotion && performanceTier !== 'low';
 
-  const { stop, start } = useContext(LenisContext);
   const overlayRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
+
+  // iOS-safe background scroll lock (prevents the close-time "teleport" on mobile).
+  useScrollLock(open);
 
   // Group by domain for scannability (Gestalt: similarity + proximity); skip empty groups.
   const groups = useMemo(() => {
@@ -109,14 +111,11 @@ const ProjectsArchive = memo(function ProjectsArchive({ open, onClose, projects 
     }));
   }, [projects]);
 
-  // While open: pause Lenis, lock the body, trap focus, and wire Escape to close.
+  // While open: trap focus and wire Escape to close (background scroll lock is useScrollLock).
   useEffect(() => {
     if (!open) return undefined;
     const previouslyFocused = document.activeElement as HTMLElement | null;
-    closeBtnRef.current?.focus();
-    stop();
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    closeBtnRef.current?.focus({ preventScroll: true });
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -134,10 +133,10 @@ const ProjectsArchive = memo(function ProjectsArchive({ open, onClose, projects 
         const active = document.activeElement;
         if (event.shiftKey && active === first) {
           event.preventDefault();
-          last.focus();
+          last.focus({ preventScroll: true });
         } else if (!event.shiftKey && active === last) {
           event.preventDefault();
-          first.focus();
+          first.focus({ preventScroll: true });
         }
       }
     };
@@ -145,11 +144,9 @@ const ProjectsArchive = memo(function ProjectsArchive({ open, onClose, projects 
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = previousOverflow;
-      start();
-      previouslyFocused?.focus?.();
+      previouslyFocused?.focus?.({ preventScroll: true });
     };
-  }, [open, onClose, stop, start]);
+  }, [open, onClose]);
 
   if (typeof document === 'undefined') return null;
 
