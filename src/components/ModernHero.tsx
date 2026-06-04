@@ -10,12 +10,14 @@ import {
   Button,
   SvgIcon,
 } from '@mui/material';
-import { GitHub, LinkedIn, Email, ArrowDownward } from '@mui/icons-material';
+import { GitHub, LinkedIn, Email, ArrowDownward, DescriptionOutlined } from '@mui/icons-material';
 import heroImg from '../assets/GadingAdityaPerdana.webp';
+import resumePdf from '../assets/Gading_Resume.pdf';
 import { HERO_CONTENT } from '../constants/index';
 import { GooeyText } from './GooeyText';
 import PixelCanvas from './PixelCanvas';
 import LiquidGlass from './LiquidGlass';
+import { useSmoothScroll } from './useSmoothScroll';
 
 // Custom Google Scholar icon
 const GoogleScholarIcon = (props: ComponentProps<typeof SvgIcon>) => (
@@ -65,6 +67,7 @@ const ModernHero = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const prefersReducedMotion = useReducedMotion();
+  const scrollToSection = useSmoothScroll();
 
   const rise = prefersReducedMotion ? 0 : isMobile ? 12 : 20;
 
@@ -224,10 +227,10 @@ const ModernHero = () => {
               <Box
                 sx={{
                   fontFamily: 'var(--font-display)',
-                  fontWeight: 500,
+                  fontWeight: 600,
                   fontSize: 'clamp(1.15rem, 1.2vw + 0.9rem, 1.5rem)',
                   lineHeight: 1.4,
-                  color: 'var(--app-palette-label-primary)',
+                  color: 'var(--app-palette-text-primary)',
                   minHeight: '1.6em',
                 }}
               >
@@ -247,9 +250,10 @@ const ModernHero = () => {
                 <Typography
                   variant="body1"
                   sx={{
-                    color: 'var(--app-palette-label-secondary)',
-                    fontSize: { xs: '0.95rem', md: '1rem' },
-                    lineHeight: 1.75,
+                    color: 'var(--app-palette-text-primary)',
+                    fontWeight: 500,
+                    fontSize: { xs: '1rem', md: '1.05rem' },
+                    lineHeight: 1.7,
                   }}
                 >
                   {HERO_CONTENT}
@@ -298,6 +302,10 @@ const ModernHero = () => {
                       variant="text"
                       size="large"
                       href="#projects"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        scrollToSection('#projects');
+                      }}
                       sx={{
                         px: 3.5,
                         py: 1.25,
@@ -329,6 +337,10 @@ const ModernHero = () => {
                   variant="text"
                   size="large"
                   href="#contact"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    scrollToSection('#contact');
+                  }}
                   endIcon={<ArrowDownward fontSize="small" />}
                   sx={{
                     px: 3,
@@ -346,6 +358,42 @@ const ModernHero = () => {
                 </Button>
               </LiquidGlass>
 
+              {/* Tertiary action — résumé (opens the PDF in a new tab) */}
+              <LiquidGlass
+                component="div"
+                intensity="subtle"
+                interactive
+                radius={999}
+                sx={{
+                  display: 'inline-flex',
+                  overflow: 'hidden',
+                  transition: 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                  '&:hover': { transform: 'translateY(-2px) scale(1.02)' },
+                }}
+              >
+                <Button
+                  variant="text"
+                  size="large"
+                  href={resumePdf}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  startIcon={<DescriptionOutlined fontSize="small" />}
+                  sx={{
+                    px: 3,
+                    py: 1.25,
+                    borderRadius: 'inherit',
+                    color: 'var(--app-palette-text-primary)',
+                    '& .MuiButton-startIcon': {
+                      transition: 'transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)',
+                    },
+                    '&:hover': { bgcolor: 'transparent', color: 'var(--app-palette-primary-main)' },
+                    '&:hover .MuiButton-startIcon': { transform: 'translateY(-2px)' },
+                  }}
+                >
+                  Résumé
+                </Button>
+              </LiquidGlass>
+
               {/* Social links — grouped into one liquid-glass cluster */}
               <LiquidGlass
                 component="div"
@@ -355,7 +403,7 @@ const ModernHero = () => {
                 sx={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 0.25,
+                  gap: 0.5,
                   overflow: 'hidden',
                   px: 0.5,
                 }}
@@ -369,15 +417,20 @@ const ModernHero = () => {
                       href={social.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      size="small"
                       aria-label={social.label}
                       sx={{
+                        // 44x44 hit target (Apple HIG); the glyph stays small inside it.
+                        width: 44,
+                        height: 44,
                         color: 'var(--app-palette-label-tertiary)',
                         transition: 'color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1), transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)',
-                        '&:hover': {
-                          color: 'var(--app-palette-primary-main)',
-                          bgcolor: 'transparent',
-                          transform: 'translateY(-2px) scale(1.12)',
+                        // Hover affordance only where hover is real; on touch it would stick after a tap.
+                        '@media (hover: hover)': {
+                          '&:hover': {
+                            color: 'var(--app-palette-primary-main)',
+                            bgcolor: 'transparent',
+                            transform: 'translateY(-2px) scale(1.12)',
+                          },
                         },
                       }}
                     >
@@ -465,6 +518,8 @@ const ModernHero = () => {
                     src={heroImg}
                     alt="Gading Aditya Perdana"
                     loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
                     sx={{
                       width: '100%',
                       height: 'auto',
