@@ -11,8 +11,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     
     <!-- Primary Meta Tags -->
-    <title>Gading's Portfolio</title>
-    <meta name="title" content="Gading's Portfolio" />
+    <title>Gading Aditya Perdana — AI Researcher | Computer Vision &amp; Deep Learning</title>
+    <meta name="title" content="Gading Aditya Perdana — AI Researcher | Computer Vision &amp; Deep Learning" />
     <meta name="description" content="First-generation undergraduate AI Researcher specializing in computer vision, deep learning, and ensemble methods. Author of 5 peer-reviewed publications (4 first-author). Apple Developer Academy Scholar at BINUS University. View my projects, publications, and experience." />
     <meta name="keywords" content="AI Researcher, Computer Vision, Deep Learning, Vision Transformers, Ensemble Learning, Model Calibration, PyTorch, Apple Developer Academy, Gading Aditya Perdana" />
     <meta name="author" content="Gading Aditya Perdana" />
@@ -22,54 +22,75 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://gadingap.com/" />
-    <meta property="og:title" content="Gading's Portfolio" />
+    <meta property="og:title" content="Gading Aditya Perdana — AI Researcher" />
     <meta property="og:description" content="First-generation undergraduate AI Researcher specializing in computer vision, deep learning, and ensemble methods. Author of 5 peer-reviewed publications. Apple Developer Academy Scholar at BINUS University." />
     <meta property="og:image" content="https://gadingap.com/og-image.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:site_name" content="Gading's Portfolio" />
+    <meta property="og:image:alt" content="Gading Aditya Perdana — AI Researcher in Computer Vision and Deep Learning" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:site_name" content="Gading Aditya Perdana" />
     <meta property="og:locale" content="en_US" />
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://gadingap.com/" />
-    <meta name="twitter:title" content="Gading's Portfolio" />
+    <meta name="twitter:title" content="Gading Aditya Perdana — AI Researcher" />
     <meta name="twitter:description" content="First-generation undergraduate AI Researcher specializing in computer vision, deep learning, and ensemble methods. Author of 5 peer-reviewed publications. Apple Developer Academy Scholar at BINUS University." />
     <meta name="twitter:image" content="https://gadingap.com/og-image.jpg" />
+    <meta name="twitter:image:alt" content="Gading Aditya Perdana — AI Researcher in Computer Vision and Deep Learning" />
     
-    <!-- Structured Data - Person -->
+    <!-- Structured Data -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
-        "@type": "Person",
-        "name": "Gading Aditya Perdana",
-        "url": "https://gadingap.com/",
-        "image": "https://gadingap.com/og-image.jpg",
-        "jobTitle": "AI Researcher & SWE Trainee at Apple Developer Academy",
-        "worksFor": {
-            "@type": "Organization",
-            "name": "Binus University"
-        },
-        "alumniOf": {
-            "@type": "EducationalOrganization",
-            "name": "Binus University"
-        },
-        "sameAs": [
-            "https://github.com/cujoramirez",
-            "https://www.linkedin.com/in/gadingadityaperdana/",
-            "https://scholar.google.com/citations?user=hwbWuI0AAAAJ&hl=en"
-        ],
-        "knowsAbout": ["Computer Vision", "Deep Learning", "Vision Transformers", "Ensemble Learning", "Model Calibration", "PyTorch", "Swift", "iOS Development"]
+        "@graph": [
+            {
+                "@type": "Person",
+                "@id": "https://gadingap.com/#person",
+                "name": "Gading Aditya Perdana",
+                "givenName": "Gading Aditya",
+                "familyName": "Perdana",
+                "url": "https://gadingap.com/",
+                "image": "https://gadingap.com/og-image.jpg",
+                "jobTitle": "AI Researcher",
+                "description": "First-generation undergraduate AI Researcher specializing in computer vision, deep learning, and ensemble methods. Author of 5 peer-reviewed publications (4 first-author). Apple Developer Academy Scholar at BINUS University.",
+                "worksFor": { "@type": "CollegeOrUniversity", "name": "BINUS University" },
+                "affiliation": { "@type": "Organization", "name": "Apple Developer Academy @ BINUS" },
+                "award": "Apple Developer Academy Scholar (Cohort 2026)",
+                "knowsAbout": ["Computer Vision", "Deep Learning", "Vision Transformers", "Ensemble Learning", "Model Calibration", "Knowledge Distillation", "PyTorch", "Swift", "iOS Development"],
+                "sameAs": [
+                    "https://github.com/cujoramirez",
+                    "https://www.linkedin.com/in/gadingadityaperdana/",
+                    "https://scholar.google.com/citations?user=hwbWuI0AAAAJ&hl=en"
+                ]
+            },
+            {
+                "@type": "WebSite",
+                "@id": "https://gadingap.com/#website",
+                "url": "https://gadingap.com/",
+                "name": "Gading Aditya Perdana — AI Researcher",
+                "inLanguage": "en",
+                "author": { "@id": "https://gadingap.com/#person" }
+            },
+            {
+                "@type": "ProfilePage",
+                "@id": "https://gadingap.com/#webpage",
+                "url": "https://gadingap.com/",
+                "name": "Gading Aditya Perdana — AI Researcher | Computer Vision & Deep Learning",
+                "isPartOf": { "@id": "https://gadingap.com/#website" },
+                "about": { "@id": "https://gadingap.com/#person" },
+                "primaryImageOfPage": "https://gadingap.com/og-image.jpg"
+            }
+        ]
     }
     </script>
     
     <!-- Favicons -->
-    <link rel="icon" type="image/png" href="/src/assets/GadingLogo.png" />
-    <link rel="apple-touch-icon" href="/src/assets/GadingLogo.png" />
-    
-    <!-- Preload LCP image (hero) for faster rendering -->
-    <link rel="preload" as="image" href="/src/assets/GadingAdityaPerdana.webp" type="image/webp" fetchpriority="high" />
-    
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
     <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -95,7 +116,7 @@
     
     <!-- Theme Color -->
     <meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#0a0b0d" media="(prefers-color-scheme: dark)" />
     <meta name="msapplication-TileColor" content="#fbfbfd" />
 </head>
 
