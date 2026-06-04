@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import Lenis from 'lenis';
 
 import { LenisContext } from './LenisContext';
+import { useSystemProfile } from './useSystemProfile';
 
 type LenisHandle = InstanceType<typeof Lenis>;
 
@@ -20,10 +21,12 @@ const isMobileDevice = () => {
 };
 
 export const LenisProvider = ({ children }: LenisProviderProps) => {
+  const { performanceTier, deviceType } = useSystemProfile();
   const lenisRef = useRef<LenisHandle | null>(null);
   const [lenisInstance, setLenisInstance] = useState<LenisHandle | null>(null);
   const rafIdRef = useRef<number | null>(null);
   const isStoppedRef = useRef(false);
+  const disableLenis = performanceTier === 'low' || deviceType === 'mobile';
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -31,8 +34,7 @@ export const LenisProvider = ({ children }: LenisProviderProps) => {
     }
 
     // Skip Lenis on mobile devices - use native scrolling
-    if (isMobileDevice()) {
-      console.log('[Lenis] Mobile device detected, using native scrolling');
+    if (disableLenis || isMobileDevice()) {
       return undefined;
     }
 
@@ -73,7 +75,7 @@ export const LenisProvider = ({ children }: LenisProviderProps) => {
       setLenisInstance(null);
       (window as unknown as { lenis?: LenisHandle | null }).lenis = null;
     };
-  }, []);
+  }, [disableLenis]);
 
   const stop = useCallback(() => {
     if (lenisRef.current && !isStoppedRef.current) {
