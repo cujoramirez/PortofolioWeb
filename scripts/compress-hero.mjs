@@ -2,42 +2,30 @@ import { promises as fs } from "fs";
 import path from "path";
 import sharp from "sharp";
 
+// Regenerate the hero image (src/assets/GadingAdityaPerdana.webp, imported by ModernHero) from the
+// high-res master portrait. Run `node scripts/compress-hero.mjs` after replacing the master PNG.
 const projectRoot = process.cwd();
-const heroImagePath = path.join(projectRoot, "src", "assets", "GadingAdityaPerdana.jpg");
-const tempOutputPath = path.join(projectRoot, "src", "assets", "GadingAdityaPerdana.tmp.jpg");
+const masterPath = path.join(projectRoot, "src", "assets", "GadingAdityaPerdana.png");
+const outputPath = path.join(projectRoot, "src", "assets", "GadingAdityaPerdana.webp");
 
 async function compressHeroImage() {
   try {
-    const originalStats = await fs.stat(heroImagePath);
+    const originalStats = await fs.stat(masterPath);
 
-    await sharp(heroImagePath)
+    await sharp(masterPath)
       .resize({ width: 1600, withoutEnlargement: true })
-      .jpeg({ quality: 70, mozjpeg: true })
-      .toFile(tempOutputPath);
+      .webp({ quality: 80 })
+      .toFile(outputPath);
 
-    await fs.rename(tempOutputPath, heroImagePath);
+    const optimizedStats = await fs.stat(outputPath);
 
-    const optimizedStats = await fs.stat(heroImagePath);
-
-    console.log("Hero image compressed successfully.");
+    console.log("Hero image regenerated from master PNG.");
     console.log(
       `Size: ${(originalStats.size / 1024 / 1024).toFixed(2)} MB -> ${(optimizedStats.size / 1024 / 1024).toFixed(2)} MB`
     );
   } catch (error) {
-    console.error("Failed to compress hero image:", error);
-    if (await fileExists(tempOutputPath)) {
-      await fs.unlink(tempOutputPath);
-    }
+    console.error("Failed to regenerate hero image:", error);
     process.exitCode = 1;
-  }
-}
-
-async function fileExists(filePath) {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch {
-    return false;
   }
 }
 
