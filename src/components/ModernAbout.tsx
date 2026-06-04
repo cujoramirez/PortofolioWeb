@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { memo, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import { AnimatePresence, animate, motion, useInView, useReducedMotion } from 'framer-motion';
 import { Box, Chip, Typography, alpha } from '@mui/material';
 
@@ -20,12 +20,21 @@ const CATEGORY_ORDER: TechnologyCategory[] = ['AI/ML', 'Backend', 'Frontend', 'O
 // Signature reveal curve, typed so framer-motion accepts it as a cubic-bezier.
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
+// Mono labels: medium weight + an ink-leaning tint so the small type stays legible over the
+// frosted glass (shared treatment with every other section; the default gray read too thin).
 const MONO_LABEL = {
   fontFamily: 'var(--font-mono)',
+  fontWeight: 500,
   fontSize: '0.72rem',
   letterSpacing: '0.15em',
-  color: 'text.secondary',
+  color: 'color-mix(in srgb, var(--app-palette-text-primary) 72%, transparent)',
 } as const;
+
+// Steadier glass: more opaque tint than the 62% default so this text-heavy card reads cleanly
+// where the animated background streaks pass behind it (matches Research/Projects/etc.).
+const GLASS_TINT = {
+  '--lg-tint': 'color-mix(in srgb, var(--app-palette-bg-elevated) 80%, transparent)',
+} as CSSProperties;
 
 // Count from 0 to a target when the card scrolls in; static under reduced motion.
 const CountUp = ({ value, active, reduce }: { value: number; active: boolean; reduce: boolean }) => {
@@ -148,17 +157,17 @@ const ModernAbout = () => {
   return (
     <Box ref={rootRef}>
       {/* Section header (outside the card) */}
-      <Box sx={{ mb: { xs: 3, md: 4 } }}>
+      <Box sx={{ mb: { xs: 3, md: 3.5 } }}>
         <Typography variant="overline" sx={{ color: 'primary.main', display: 'block', mb: 1 }}>
           About
         </Typography>
-        <Typography variant="h2" sx={{ color: 'text.primary' }}>
+        <Typography variant="h2" component="h2" sx={{ color: 'text.primary' }}>
           Background
         </Typography>
       </Box>
 
       {/* The dossier card */}
-      <LiquidGlass component="div" intensity="subtle" blur={12} radius={20} sx={{ p: { xs: 2.5, md: 4 } }}>
+      <LiquidGlass component="div" intensity="subtle" blur={12} radius={20} style={GLASS_TINT} sx={{ p: { xs: 2.5, md: 4 } }}>
         <DetectionFrame scan active={inView}>
           {/* Header bar */}
           <motion.div {...item(0.1)}>
@@ -205,13 +214,10 @@ const ModernAbout = () => {
                     component="p"
                     sx={{
                       m: 0,
-                      color:
-                        i === 0
-                          ? 'text.primary'
-                          : 'color-mix(in srgb, var(--app-palette-text-primary) 80%, transparent)',
-                      fontSize: i === 0 ? 'clamp(1.05rem, 0.45vw + 0.95rem, 1.15rem)' : '0.975rem',
-                      fontWeight: i === 0 ? 500 : 400,
-                      lineHeight: i === 0 ? 1.62 : 1.78,
+                      color: 'text.primary',
+                      fontSize: i === 0 ? 'clamp(1.12rem, 0.5vw + 1rem, 1.25rem)' : '1.05rem',
+                      fontWeight: i === 0 ? 600 : 500,
+                      lineHeight: i === 0 ? 1.6 : 1.7,
                       letterSpacing: i === 0 ? '-0.003em' : 0,
                       textWrap: 'pretty',
                     }}

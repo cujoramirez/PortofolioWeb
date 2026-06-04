@@ -123,8 +123,10 @@ const ProjectHeroCard = memo(function ProjectHeroCard({ project }: { project: Pr
           px: { xs: 1.5, md: 1.75 },
           py: { xs: 1.5, md: 1.75 },
           '--df-stroke': 'color-mix(in srgb, var(--app-palette-primary-main) 55%, transparent)',
-          '&:hover': {
-            '--df-stroke': 'color-mix(in srgb, var(--app-palette-primary-main) 92%, transparent)',
+          '@media (hover: hover)': {
+            '&:hover': {
+              '--df-stroke': 'color-mix(in srgb, var(--app-palette-primary-main) 92%, transparent)',
+            },
           },
         }}
       >
@@ -281,8 +283,9 @@ const ModernProjectsComponent = () => {
                 </Box>
                 <Typography
                   sx={{
-                    color: 'color-mix(in srgb, var(--app-palette-text-primary) 78%, transparent)',
-                    fontSize: '0.92rem',
+                    color: 'text.primary',
+                    fontSize: '1rem',
+                    fontWeight: 500,
                     lineHeight: 1.55,
                     maxWidth: '52ch',
                     textWrap: 'pretty',
@@ -308,6 +311,7 @@ const ModernProjectsComponent = () => {
                   color: 'primary.main',
                   px: 2,
                   py: 0.9,
+                  minHeight: 44,
                   borderRadius: '10px',
                   border: '1px solid color-mix(in srgb, var(--app-palette-primary-main) 45%, transparent)',
                   backgroundColor: 'color-mix(in srgb, var(--app-palette-primary-main) 8%, transparent)',

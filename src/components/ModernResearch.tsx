@@ -129,8 +129,10 @@ const PublicationEntry = memo(({ paper, index }: { paper: ResearchPaper; index: 
           px: { xs: 1.75, md: 2.25 },
           py: { xs: 1.5, md: 1.75 },
           '--df-stroke': 'color-mix(in srgb, var(--app-palette-primary-main) 58%, transparent)',
-          '&:hover': {
-            '--df-stroke': 'color-mix(in srgb, var(--app-palette-primary-main) 95%, transparent)',
+          '@media (hover: hover)': {
+            '&:hover': {
+              '--df-stroke': 'color-mix(in srgb, var(--app-palette-primary-main) 95%, transparent)',
+            },
           },
         }}
       >
@@ -276,6 +278,7 @@ const PublicationEntry = memo(({ paper, index }: { paper: ResearchPaper; index: 
                 }
                 sx={{
                   px: 0.5,
+                  minHeight: { xs: 44, sm: 'auto' },
                   minWidth: 0,
                   textTransform: 'none',
                   color: 'color-mix(in srgb, var(--app-palette-text-primary) 72%, transparent)',

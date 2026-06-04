@@ -156,8 +156,10 @@ const TimelineEntry = memo(function TimelineEntry({
             px: { xs: 1.75, md: 2.25 },
             py: { xs: 1.5, md: 1.75 },
             '--df-stroke': 'color-mix(in srgb, var(--app-palette-primary-main) 55%, transparent)',
-            '&:hover': {
-              '--df-stroke': 'color-mix(in srgb, var(--app-palette-primary-main) 92%, transparent)',
+            '@media (hover: hover)': {
+              '&:hover': {
+                '--df-stroke': 'color-mix(in srgb, var(--app-palette-primary-main) 92%, transparent)',
+              },
             },
           }}
         >
@@ -292,6 +294,7 @@ const TimelineEntry = memo(function TimelineEntry({
                 }
                 sx={{
                   px: 0.5,
+                  minHeight: { xs: 44, sm: 'auto' },
                   minWidth: 0,
                   textTransform: 'none',
                   color: 'color-mix(in srgb, var(--app-palette-text-primary) 72%, transparent)',
@@ -334,12 +337,15 @@ const FeaturedCert = memo(function FeaturedCert({ cert }: { cert: Certification 
         transition:
           'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.28s ease',
         '& .fc-icon': { transition: 'transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)' },
-        '&:hover': {
-          transform: 'translateY(-3px)',
-          borderColor: 'color-mix(in srgb, var(--app-palette-primary-main) 50%, transparent)',
-          boxShadow: '0 14px 34px rgba(0, 0, 0, 0.24)',
+        // Hover affordance only where hover is real; on touch it would stick after a tap.
+        '@media (hover: hover)': {
+          '&:hover': {
+            transform: 'translateY(-3px)',
+            borderColor: 'color-mix(in srgb, var(--app-palette-primary-main) 50%, transparent)',
+            boxShadow: '0 14px 34px rgba(0, 0, 0, 0.24)',
+          },
+          '&:hover .fc-icon': { color: 'primary.main', transform: 'translate(2px, -2px)' },
         },
-        '&:hover .fc-icon': { color: 'primary.main', transform: 'translate(2px, -2px)' },
         '&:focus-visible': { outline: '2px solid var(--app-palette-primary-main)', outlineOffset: 2 },
         '@media (prefers-reduced-motion: reduce)': {
           transition: 'border-color 0.28s ease',
@@ -544,7 +550,7 @@ const ModernExperienceComponent = () => {
             blur={12}
             radius={16}
             style={GLASS_TINT}
-            sx={{ mt: { xs: 2, md: 2.5 }, px: { xs: 1.5, md: 2 }, py: { xs: 1.25, md: 1.5 } }}
+            sx={{ mt: { xs: 2.5, md: 3 }, px: { xs: 1.5, md: 2 }, py: { xs: 1.25, md: 1.5 } }}
           >
             <DetectionFrame sx={{ px: { xs: 1.5, md: 2 }, py: { xs: 1.25, md: 1.5 } }}>
               <Box
@@ -562,8 +568,9 @@ const ModernExperienceComponent = () => {
                   </Box>
                   <Typography
                     sx={{
-                      color: 'color-mix(in srgb, var(--app-palette-text-primary) 78%, transparent)',
-                      fontSize: '0.92rem',
+                      color: 'text.primary',
+                      fontSize: '1rem',
+                      fontWeight: 500,
                       lineHeight: 1.55,
                       maxWidth: '52ch',
                       textWrap: 'pretty',
@@ -588,6 +595,7 @@ const ModernExperienceComponent = () => {
                     color: 'primary.main',
                     px: 2,
                     py: 0.9,
+                    minHeight: 44,
                     borderRadius: '10px',
                     border: '1px solid color-mix(in srgb, var(--app-palette-primary-main) 45%, transparent)',
                     backgroundColor: 'color-mix(in srgb, var(--app-palette-primary-main) 8%, transparent)',

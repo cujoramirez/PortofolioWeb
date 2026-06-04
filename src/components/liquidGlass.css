@@ -86,6 +86,25 @@
   }
 }
 
+/* Honor the OS "Reduce Transparency" setting (Apple HIG pairs it with Reduce Motion): drop the
+   blur and make the material effectively solid so nothing shows through. !important is needed to
+   override the per-surface inline --lg-tint (GLASS_TINT) and the navbar's sx tint. */
+@media (prefers-reduced-transparency: reduce) {
+  .liquid-glass {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    --lg-tint: color-mix(in srgb, var(--app-palette-bg-elevated) 97%, transparent) !important;
+  }
+}
+
+/* Touch devices have no real hover, so a hover-lift would "stick" after a tap. Disable the lift on
+   touch (tapping still navigates; the cursor specular is already gated off for touch). */
+@media (hover: none) {
+  .liquid-glass:hover {
+    transform: none !important;
+  }
+}
+
 /* Light scheme: white sheen reads faintly; lean on border + shadow, brighten rim slightly */
 [data-mui-color-scheme='light'] .liquid-glass,
 [data-mui-color-scheme='light'] .glass-sheen {

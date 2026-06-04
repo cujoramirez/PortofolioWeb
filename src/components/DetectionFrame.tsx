@@ -53,10 +53,13 @@ const DetectionFrame = memo(function DetectionFrame({
     ...(interactive
       ? {
           transition: 'transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1), background-color 0.25s ease',
-          '&:hover': {
-            '--df-stroke': STROKE_HOVER,
-            backgroundColor: 'color-mix(in srgb, var(--app-palette-primary-main) 6%, transparent)',
-            transform: 'translateX(3px)',
+          // Hover affordance only where hover is real; on touch it would stick after a tap.
+          '@media (hover: hover)': {
+            '&:hover': {
+              '--df-stroke': STROKE_HOVER,
+              backgroundColor: 'color-mix(in srgb, var(--app-palette-primary-main) 6%, transparent)',
+              transform: 'translateX(3px)',
+            },
           },
         }
       : {}),
