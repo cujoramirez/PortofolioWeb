@@ -656,7 +656,7 @@ const ModernNavbarComponent = () => {
 				>
 				<Toolbar
 					sx={{
-						justifyContent: 'space-between',
+						justifyContent: 'flex-start',
 						alignItems: 'center',
 						px: { xs: 2, md: 4 },
 						py: 0,
@@ -824,7 +824,7 @@ const ModernNavbarComponent = () => {
 							initial={{ opacity: 0, y: -12, filter: 'blur(4px)' }}
 							animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
 							transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-							style={{ position: 'relative', overflow: 'visible' }}
+							style={{ position: 'relative', overflow: 'visible', marginLeft: 'auto' }}
 						>
 							{!shouldReduceMotion && (
 								<motion.div
@@ -833,7 +833,7 @@ const ModernNavbarComponent = () => {
 										top: '50%',
 										left: springX,
 										width: springWidth,
-										height: '42px',
+										height: '46px',
 										transform: 'translateY(-50%)',
 										background: `linear-gradient(135deg, ${alpha(pal.primary.main, 0.16)}, ${alpha(pal.secondary.main, 0.12)})`,
 										borderRadius: '11px',
@@ -884,7 +884,7 @@ const ModernNavbarComponent = () => {
 												justifyContent: 'center',
 												gap: 0.5,
 												px: 1.75,
-												height: 40,
+												height: 44,
 												borderRadius: '10px',
 												cursor: 'pointer',
 												textDecoration: 'none',
@@ -1002,6 +1002,7 @@ const ModernNavbarComponent = () => {
 						transition={{ duration: 0.6, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
 						style={{
 							display: 'inline-flex',
+							marginLeft: (isMobileDevice || isTabletDevice) ? 'auto' : 0,
 							marginRight: (isMobileDevice || isTabletDevice) ? CTRL_SIZE + CTRL_GAP : 0,
 						}}
 					>
@@ -1028,9 +1029,9 @@ const ModernNavbarComponent = () => {
 								{/* Before hydration `mode` is undefined; render a stable fallback icon
 								    (dark = default scheme) to avoid a flash/crash. */}
 								{resolvedMode === 'light' ? (
-									<DarkMode sx={{ fontSize: '1.25rem' }} />
+									<DarkMode className="theme-toggle-icon" sx={{ fontSize: '1.25rem' }} />
 								) : (
-									<LightMode sx={{ fontSize: '1.25rem' }} />
+									<LightMode className="theme-toggle-icon" sx={{ fontSize: '1.25rem' }} />
 								)}
 							</IconButton>
 						</LiquidGlass>

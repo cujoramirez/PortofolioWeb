@@ -135,10 +135,6 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
         });
       }
 
-      gsap.set(plusH, { transformOrigin: '50% 50%', rotate: menuOpen ? 45 : 0 });
-      gsap.set(plusV, { transformOrigin: '50% 50%', rotate: menuOpen ? -45 : 90 });
-      gsap.set(icon, { rotate: 0, transformOrigin: '50% 50%' });
-
       if (toggleBtnRef.current) {
         const color = menuOpen && changeMenuColorOnOpen ? openMenuButtonColor : menuButtonColor;
         gsap.set(toggleBtnRef.current, { color });
@@ -146,6 +142,19 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
     });
     return () => ctx.revert();
   }, [menuButtonColor, openMenuButtonColor, changeMenuColorOnOpen, position, enablePreLayers, panelRendered, menuOpen]);
+
+  // Form the initial "+" once. animateIcon() then owns every open/close transition, so the icon
+  // tweens + <-> x smoothly. The effect above intentionally no longer re-sets the icon rotation on
+  // each menuOpen change — that instant set was overriding the tween and making it snap.
+  useLayoutEffect(() => {
+    const h = plusHRef.current;
+    const v = plusVRef.current;
+    const icon = iconRef.current;
+    if (!h || !v || !icon) return;
+    gsap.set(icon, { rotate: 0, transformOrigin: '50% 50%' });
+    gsap.set(h, { rotate: 0, transformOrigin: '50% 50%' });
+    gsap.set(v, { rotate: 90, transformOrigin: '50% 50%' });
+  }, []);
 
   const buildOpenTimeline = useCallback(() => {
     const panel = panelRef.current;
@@ -591,8 +600,10 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
 .sm-panel-surface--light::before { opacity: 0.7; }
 .sm-panel-surface--rich { box-shadow: 0 20px 56px rgba(0, 0, 0, 0.38); }
 .sm-panel-surface--rich::before { opacity: 0.95; }
-/* Mobile menu text adapts with the in-app theme (panel surface adapts via tokens) */
-[data-mui-color-scheme="light"] .sm-panel-item { color: var(--app-palette-label-primary); }
+/* Mobile menu text adapts with the in-app theme (dark panel -> light text, light panel -> dark
+   text). Uses the always-defined text-primary token and beats the Tailwind text-white utility. */
+.sm-scope .sm-panel-item { color: var(--app-palette-text-primary); }
+.sm-scope .sm-panel-item:hover { color: var(--sm-accent, #3b82f6); }
 /* Performance tiers: reduce blur + layers on constrained devices */
 .sm-scope[data-device='mobile'] .sm-panel-surface,
 .sm-scope[data-device='mobile'] .sm-panel-surface--light,

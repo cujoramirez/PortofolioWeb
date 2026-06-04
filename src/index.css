@@ -532,6 +532,37 @@ html {
     }
 }
 
+/* The theme toggle icon gets its own transition group, so it spins (sun <-> moon) during the
+   same theme change — independent of the page's circular reveal above. Works on mobile + desktop
+   wherever View Transitions are supported; elsewhere it swaps instantly (same as the reveal). */
+.theme-toggle-icon {
+    view-transition-name: theme-icon;
+}
+::view-transition-old(theme-icon) {
+    animation: theme-icon-out 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+::view-transition-new(theme-icon) {
+    animation: theme-icon-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes theme-icon-out {
+    to {
+        opacity: 0;
+        transform: rotate(90deg) scale(0.4);
+    }
+}
+@keyframes theme-icon-in {
+    from {
+        opacity: 0;
+        transform: rotate(-90deg) scale(0.4);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(theme-icon),
+    ::view-transition-new(theme-icon) {
+        animation: none !important;
+    }
+}
+
 
 /* Layout Utilities */
 
