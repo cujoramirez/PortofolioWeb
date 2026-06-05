@@ -627,7 +627,7 @@ export const StaggeredMenu: FC<StaggeredMenuProps> = ({
 }
 @media (max-width: 640px) { 
   .sm-scope .staggered-menu-panel { width: 100%; left: 0; right: 0; } 
-  .sm-scope .sm-panel-item { font-size: 2.75rem !important; } 
+  .sm-scope .sm-panel-item { font-size: clamp(2rem, 10vw, 2.75rem) !important; white-space: nowrap; overflow-wrap: normal; } 
   .sm-scope .sm-prelayers { width: 100%; } 
   .sm-scope .sm-panel-list[data-numbering] .sm-panel-item::after { font-size: 0.875rem; }
 }
