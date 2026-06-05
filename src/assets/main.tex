@@ -1,0 +1,292 @@
+%-------------------------
+% Resume in Latex
+% Author : Jake Gutierrez
+% Based off of: https://github.com/sb2nov/resume
+% License : MIT
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+\usepackage{multicol}
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{lmodern}
+\usepackage{fourier}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+\usepackage{url}
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+% Fix footskip warning
+\setlength{\footskip}{4.08003pt}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+% Ensure that generate pdf is machine readable/ATS parsable
+\pdfgentounicode=1
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    \textbf{\Huge \scshape Gading Aditya Perdana} \\ \vspace{1pt}
+    % \small +62 811920059 $|$ 
+    \href{mailto:gadingadityaperdana@gmail.com}{\underline{gadingadityaperdana@gmail.com}} $|$ 
+    \href{https://www.linkedin.com/in/gadingadityaperdana/}{\underline{LinkedIn/gadingperdana}} $|$
+    \href{https://gadingap.com/}{\underline{gadingap.com}} $|$
+    \href{https://scholar.google.com/citations?user=hwbWuI0AAAAJ}{\underline{Google Scholar}} \\ \vspace{1pt}
+    \small Central Jakarta, Indonesia
+\end{center}
+
+\vspace{-6ex}
+%-----------Summary-----------
+\section{\textbf{Summary}}
+First-generation undergraduate AI Researcher and Engineer specializing in Computer Vision and Deep Learning. Author of five peer-reviewed publications (four first-author) with interest in Vision Transformers, Ensemble Learning, and Model Calibration. Independently drive research projects from conception to publication while self-funding through freelance work. Experienced in implementing and deploying machine learning systems, with strong foundations in PyTorch.
+
+\vspace{-2ex}
+%-----------EDUCATION-----------
+\section{\textbf{Education}}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Binus University{\normalfont\small\enspace$|$ GPA: 3.55/4.00}}{Jakarta, Indonesia}
+      {Bachelor of Science in Computer Science, Specialization in Intelligence Systems}{Aug. 2023 -- Feb 2027}
+      \resumeItemListStart
+        \resumeItem{Accelerated 3.5-year program; \textbf{Apple Developer Academy Scholar (Cohort 2026)}}
+        \resumeItem{Research focus: Medical Imaging, Vision Transformers, and Efficient AI.}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+\vspace{-3ex}
+
+%-----------Publications-----------
+\section{\textbf{Publications}}
+\resumeItemListStart
+  \resumeItem {\textbf{Perdana, G. A.}, Nasari, M., Saputra, M.A., Halim, R., Minor, K.A. "Enhancing Bone Fracture Detection in X-ray Images Using Faster R-CNN with EfficientNetV2." \textit{IEEE ISRITI} (2025). \textbf{First author.}}
+  \vspace{-1.5ex}
+  \resumeItem {\textbf{Perdana, G. A.}, Ghazali, M.A., Iswanto, I.A., Joddy, S. "CALM: Calibrated Adaptive Learning via Mutual-Ensemble Fusion." \textit{Procedia Computer Science} (ICCSCI 2025). \textbf{First author. [1 Citation]}}
+  \vspace{-1.5ex}
+  \resumeItem {\textbf{Perdana, G. A.}, Kisdi, M.I.A., Wairooy, I.K., Makalew, B.A. "Analytical Analysis of Cryptocurrency Regulation and Adoption: A Machine Learning-Driven Ablation Study of the United States, Russia, and Indonesia." \textit{Procedia Computer Science} (ICCSCI 2025). \textbf{First author. [3 Citations]}}
+  \vspace{-1.5ex}
+  \resumeItem {Nathen, A., \textbf{Perdana, G. A.}, Jefferson, G., Hasani, M.F., Maulina, A., Tjahyadi, B.G. "Tiny vs. Tinier: Baseline ViT-Tiny vs. Ensemble-Distilled Student on Imbalanced Fracture Detection." \textit{Procedia Computer Science} (ICCSCI 2025).}
+  \vspace{-1.5ex}
+  \resumeItem {\textbf{Perdana, G. A.}, Wijaya, I.I., Fahreza, K.A., Tarigan, G.A. "Ablation Study: Calibrated Adaptive Learning Ensemble Methodology." \textit{Procedia Computer Science} (ICCSCI 2025). \textbf{First author.}}
+\resumeItemListEnd
+\textit{Note: All research was independently self-funded; ICCSCI acceptance rate $\approx$26\%.}
+\vspace{-1.5ex}
+
+%-----------AWARDS & HONORS-----------
+\section{\textbf{Awards \& Honors}}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Best Presenter Award}{Semarang, Indonesia}
+      {The 10th International Conference on Computer Science (ICCSCI)}{August 2025}
+      \resumeItemListStart
+        \resumeItem{Awarded for technical communication and research defense among international doctoral and academic presenters.}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+\vspace{-2ex}
+
+%-----------EXPERIENCE-----------
+\section{\textbf{Experience}}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Apple Developer Academy Scholar}{Feb. 2026 -- Present}
+      {Apple \& Binus University}{BSD City, Indonesia}
+      \resumeItemListStart
+        \resumeItem{Selected for the 2026 cohort to engineer native iOS/macOS applications using Swift, SwiftUI, and CoreML.}
+        \resumeItem{Collaborating within cross-functional teams employing Challenge-Based Learning to design, build, and ship production-ready applications to the App Store.}
+      \resumeItemListEnd
+    \resumeSubheading
+      {Undergraduate Research Assistant}{Jan 2025 -- Dec 2025}
+      {Binus University (Bina Nusantara University)}{Anggrek Campus, Jakarta}
+      \resumeItemListStart
+            \resumeItem{\textbf{Lead Author \& Researcher:} Led experimental design for bone fracture detection, progressing from research assistant to first authorship on an IEEE publication.}
+            \resumeItem{\textbf{Data Engineering:} Designed a preprocessing pipeline to mitigate severe class imbalance in X-ray data.}
+            \resumeItem{\textbf{Model Architecture:} Benchmarked FPN vs. PAFPN architectures; engineered a Faster R-CNN model with an EfficientNetV2-S backbone, implementing cost-sensitive loss functions.}
+            \resumeItem{\textbf{Training Pipeline:} Optimized training using AdamW, mixed precision (AMP), and Exponential Moving Average (EMA); achieved a 21.6\% mAP improvement over baseline models.}
+      \resumeItemListEnd
+
+ % \resumeSubheading
+ %      {Application Developer Intern}{Jul. 2024 -- Aug. 2024}
+ %      {Otoritas Jasa Keuangan (Indonesia Financial Services Authority)} {Jakarta, Indonesia}
+ %      \resumeItemListStart
+ %        \resumeItem{Developed backend banking supervision features ensuring strict regulatory compliance (\textit{Tech Stack: C\#/.NET, PostgreSQL}).}
+ %        \resumeItem{Optimized high-volume database queries and refactored legacy code, significantly reducing query latency and support ticket volume.}
+ %        \resumeItem{Collaborated with senior engineers on architectural decisions for government-scale system scalability and reliability.}
+ %      \resumeItemListEnd
+\resumeSubheading
+  {Freelance Software Developer \& Independent Tutor}{Aug. 2021 -- Jan. 2026}
+  {Self-Employed}{Remote \& Jakarta, Indonesia}
+  \resumeItemListStart
+    \resumeItem{Various contract work including full-stack development, research consulting, and courier/logistics services, averaging 80+ hours/week while maintaining full-time student status.}
+    \resumeItem{Delivered technical projects ranging from web applications to research (Computer Vision) methodology consultation.}
+  \resumeItemListEnd
+  \resumeSubHeadingListEnd
+\vspace{-4ex}
+
+
+%-----------PROJECTS & RESEARCH-----------
+\section{\textbf{Selected Projects}}
+  \resumeSubHeadingListStart
+\resumeProjectHeading
+      {\textbf{MESA-ViT: Multi-Scale Efficient Spatial Attention Vision Transformer}}{Aug. 2025 -- Present}
+      \resumeItemListStart
+        \resumeItem{Architected a 4-stage isotropic hybrid Vision Transformer (MESA-ViT) from scratch in PyTorch, built on a composite block (MESA $\rightarrow$ XCA+LPI $\rightarrow$ FFN) that mixes spatial and channel features in near-parallel. \textbf{Paper in preparation for CVPR 2027.}}
+        \resumeItem{Engineered a Multi-Scale Efficient Spatial Attention (MESA) module with multi-scale dilated key-value extraction that runs cheaper than standard self-attention, paired with a Cross-Covariance Attention (XCA) sub-layer for resolution-linear channel mixing.}
+        \resumeItem{Added a parallel ConvNeXt-style CNN stem with content-gated lateral fusion, and built the training stack on 2D RoPE, bf16 mixed precision, and NVIDIA DALI; held the Tiny variant to $\sim$9.60M parameters.}
+      \resumeItemListEnd
+      \vspace{-1ex}
+    \resumeProjectHeading
+      {\textbf{CALM: Calibrated Adaptive Learning via Mutual-Ensemble Fusion}}{Feb. 2025 -- May 2025}
+      \resumeItemListStart
+        \resumeItem{Designed a novel ensemble framework integrating knowledge distillation, mutual learning, and calibration to enhance model confidence and reliability.}
+        \resumeItem{Introduced adaptive curriculum protocol to dynamically schedule training objectives, optimizing multi-teacher fusion.}
+        \resumeItem{Achieved \textbf{98.16\% accuracy} on CIFAR-10 with a \textbf{20\% reduction} in Expected Calibration Error (ECE), demonstrating strong generalization.}
+      \resumeItemListEnd
+      \vspace{-1ex}
+    \resumeProjectHeading
+      {\textbf{Diabetic Retinopathy Detection System}}{Sep. 2024 -- Nov. 2024}
+      \resumeItemListStart
+        \resumeItem{Engineered a desktop analysis tool for retinal disease classification featuring Grad-CAM visualization for medical interpretability.}
+        \resumeItem{Fine-tuned InceptionV3 on the APTOS dataset, using data augmentation to achieve \textbf{88\% accuracy}.}
+      \resumeItemListEnd
+      \vspace{-1ex}
+  \resumeProjectHeading{\textbf{Ensemble Learning for Waste Classification}}{Mar 2025 -- May 2025}
+  \resumeItemListStart
+    \resumeItem{Developed a logit-fusion ensemble combining EfficientNet-B0 and DenseNet121 with learnable weights, improving classification performance on 12-class datasets.}
+  \resumeItemListEnd
+  \vspace{-1ex}
+  \resumeSubHeadingListEnd
+\vspace{-3ex}
+
+%-----------Activities-----------
+\section{\textbf{Leadership \& Service}}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Board Member -- General Secretary, Bagi Dunia (NGO)}{Feb. 2024 -- Present}
+      {Jakarta, Indonesia}{}
+      \vspace{-1ex}
+      \resumeItemListStart
+        \resumeItem{Directed financial operations and fundraising, securing Rp17M+ (USD $\approx$\$1000) and seven corporate sponsorships.}
+        % \vspace{-3ex}
+        \resumeItem{Managed 30+ volunteers and coordinated logistics for food distribution aid to over 100 beneficiaries.}
+        \resumeItem{Supervised volunteering volumes, Treasury \& Public Relations Operations.}
+      \resumeItemListEnd
+      % \vspace{-1ex}
+    \resumeSubheading
+      {Academic Tutor \& Content Creator}{Nov. 2023 -- Dec 2025}
+      {Independent}{Jakarta, Indonesia}
+      \resumeItemListStart
+        \resumeItem{Conducted weekly tutorials in Statistics, Discrete Math, Computational Physics and Linear Algebra; organized technical bootcamps reaching 150+ students.}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+\vspace{-3.5ex}
+
+%-----------CERTIFICATIONS-----------
+\section{\textbf{Certifications}}
+  \resumeSubHeadingListStart
+    \resumeSubSubheading
+{\textbf{Course Certifications}}{}
+    \resumeItemListStart
+      \resumeItem{\textbf{NVIDIA Deep Learning Institute} (Dec 2025): Building LLM Applications With Prompt Engineering}
+      \resumeItem{\textbf{Kaggle ML} (2025): Computer Vision, Model Explainability, Deep Learning}
+      \resumeItem{\textbf{FreeCodeCamp} (2024-2025): Scientific Computing (Python), Machine Learning (Python), Algorithms}
+    \resumeItemListEnd
+  \resumeSubHeadingListEnd
+\vspace{-4.5ex}
+
+%-----------TECHNICAL SKILLS-----------
+\section{\textbf{Technical Skills}}
+\begin{itemize}[leftmargin=0.15in, label={}]
+  \small{\item{
+    \textbf{Languages}{:} Python, C, SQL, JavaScript, Java \\  
+    \textbf{Deep Learning}{:} PyTorch, TensorFlow, Keras, Vision Transformers (ViT), CNNs, Object Detection, Transfer Learning \\  
+    \textbf{ML Ops \& Tools}{:} Git, Weights \& Biases (W\&B), NumPy, Pandas, OpenCV, Grad-CAM \\ 
+    \textbf{Research}{:} Experimental Design, Ablation Studies, Statistical Analysis, Technical Writing, Data Augmentation \& Pipeline curation
+  }}
+\end{itemize}
+
+%-------------------------------------------
+\vspace{-4ex}
+%-----------LANGUAGES-----------
+\section{\textbf{Languages}}
+  \resumeSubHeadingListStart
+    \vspace{-3ex}
+    \begin{multicols}{2}
+      \resumeItem{English (Professional Proficiency)}
+      \resumeItem{Indonesian (Native)}
+    \end{multicols}
+    \vspace{-4.5ex}
+  \resumeSubHeadingListEnd
+  
+\end{document}
