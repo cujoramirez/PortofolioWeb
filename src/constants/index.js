@@ -4,6 +4,9 @@ import project3 from "../assets/projects/project-3.jpg";
 import project4 from "../assets/projects/project-4.jpg";
 import project5 from "../assets/projects/project-5.jpg";
 import project6 from "../assets/projects/project-6.jpg";
+import project7 from "../assets/projects/project-7.jpg";
+import project8 from "../assets/projects/project-8.jpg";
+import project9 from "../assets/projects/project-9.jpg";
 import certificate1 from "../assets/certificates/certificate1.png";
 import certificate2 from "../assets/certificates/certificate2.png";
 import certificate3 from "../assets/certificates/certificate3.png";
@@ -94,8 +97,8 @@ export const EXPERIENCES = [{
         description: `Managed financial operations and fundraising for non-profit organization focused on community service. Recruited and onboarded 30+ volunteers, developed SOPs reducing coordination overhead by 25%. Coordinated multi-site food distribution delivering 500+ aid packages to 100+ beneficiaries across Jakarta.`,
         technologies: ["Project Management", "Fundraising", "Team Leadership", "Logistics"],
         achievements: [
-            "Raised Rp13.5M+ (~$800 USD), exceeding fundraising targets by 25%",
-            "Expanded partnerships by 4 entities, increased community engagement by 40%",
+            "Raised Rp17M+ (~$1000 USD), exceeding fundraising targets by 25%",
+            "Secured 7 corporate sponsorships, increased community engagement by 40%",
             "Delivered 500+ aid packages to 100+ beneficiaries across Jakarta"
         ]
     },
@@ -115,13 +118,13 @@ export const EXPERIENCES = [{
 
 
 export const PROJECTS = [{
-        title: "StyleTailor – Customizable T-Shirt Design Website",
-        image: project1,
-        description: "Developed and published a front-end web application that allows users to customize and order t-shirts. Integrated the Polotno API for interactive, Canva-like design features supporting both original and custom designs.",
-        technologies: ["HTML", "CSS", "JavaScript", "React", "Polotno API"],
-        demo: "https://styletailor.netlify.app/",
+        title: "MESA-ViT – Dual-Attention Vision Transformer",
+        image: project7,
+        description: "Designing a from-scratch hybrid Vision Transformer that partitions attention along two axes in every block: a Multi-Scale Efficient Spatial Attention (MESA) module that uses dilated key-value extraction to run cheaper than standard self-attention, and a Cross-Covariance Attention (XCA) sub-layer for channel mixing that scales linearly with resolution. A parallel ConvNeXt-style CNN stem injects multi-scale features into the deeper stages through gated lateral fusion, holding the Tiny variant to ~9.60M parameters, built in PyTorch with 2D RoPE, bf16, and torch.compile.",
+        technologies: ["PyTorch", "Vision Transformer", "Deep Learning", "Computer Vision", "Cross-Covariance Attention", "RoPE", "High-Performance Computing", "CVPR 2027"],
+        demo: null,
         github: null,
-        links: ["https://styletailor.netlify.app/"]
+        links: []
     },
     {
         title: "Diabetic Retinopathy Detection Using CNN",
@@ -173,8 +176,8 @@ export const PROJECTS = [{
         description: "Developed a full-stack music streaming platform featuring real-time vocal and instrumental track separation. Implemented user authentication, music library management, and an interactive audio player with synchronized playback controls.",
         technologies: ["React", "Node.js", "Express", "SQLite", "JavaScript", "CSS", "HTML5 Audio API", "RESTful API"],
         demo: null,
-        github: "https://github.com/cujoramirez/Aria",
-        links: ["https://github.com/cujoramirez/Aria"]
+        github: null,
+        links: []
     },
     {
         title: "CS Learning Platform",
@@ -211,6 +214,24 @@ export const PROJECTS = [{
         demo: null,
         github: null,
         links: []
+    },
+    {
+        title: "67Cam – macOS Camera Studio & Virtual Camera",
+        image: project9,
+        description: "Built a macOS camera studio that turns a webcam into a system-wide virtual camera, with 35 real-time filters and a Vision tracker that follows up to five people at once. Users record a gesture, train an on-device CreateML classifier in seconds, then trigger custom pose overlays that any app reads as a camera input, from Zoom and Discord to OBS and FaceTime.",
+        technologies: ["Swift", "SwiftUI", "Vision", "CoreML", "CreateML", "Metal", "CoreImage", "CoreMediaIO", "AVFoundation"],
+        demo: null,
+        github: null,
+        links: []
+    },
+    {
+        title: "FightRoom – Martial Arts Coach & Gym Discovery",
+        image: project8,
+        description: "Built a native iOS 26 app for discovering martial arts coaches and gyms: a Liquid Glass MapKit map, an App Intents Siri shortcut, and WCAG AAA contrast throughout. Designed as an evidence project for applying Apple HIG and Gestalt principles in real Swift code, with each design decision justified inline.",
+        technologies: ["Swift", "SwiftUI", "MapKit", "App Intents", "CoreLocation", "iOS 26", "Accessibility", "HIG"],
+        demo: null,
+        github: null,
+        links: []
     }
 ];
 
@@ -218,10 +239,10 @@ export const PROJECTS = [{
 // match PROJECTS exactly; everything else stays available in the "All Projects" archive.
 // Swap these to feature different / flagship projects as they are audited and published.
 export const FEATURED_PROJECT_TITLES = [
-    "Deep Learning research on Computer Vision",
+    "MESA-ViT – Dual-Attention Vision Transformer",
+    "67Cam – macOS Camera Studio & Virtual Camera",
+    "FightRoom – Martial Arts Coach & Gym Discovery",
     "Diabetic Retinopathy Detection Using CNN",
-    "Facial Recognition for Airport Security",
-    "StyleTailor – Customizable T-Shirt Design Website",
 ];
 
 export const CERTIFICATIONS = [{

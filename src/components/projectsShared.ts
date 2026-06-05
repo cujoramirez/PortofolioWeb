@@ -47,22 +47,27 @@ export const visuallyHidden = {
 
 // Coarse domain inference so cards can carry a "detection class" tag and the archive can
 // group by similarity (Gestalt). Order matters: research wins over its own CV stack.
-export type DomainKey = 'research' | 'vision' | 'web' | 'teaching' | 'other';
+export type DomainKey = 'research' | 'apple' | 'vision' | 'web' | 'teaching' | 'other';
 
 export const DOMAIN_META: Record<DomainKey, { tag: string; label: string }> = {
   research: { tag: 'RESEARCH', label: 'Research' },
+  apple: { tag: 'SWIFT', label: 'Apple Platforms' },
   vision: { tag: 'CV', label: 'Computer Vision & ML' },
   web: { tag: 'WEB', label: 'Web & Full-Stack' },
   teaching: { tag: 'EDU', label: 'Teaching' },
   other: { tag: 'PROJECT', label: 'Other Work' },
 };
 
-export const DOMAIN_ORDER: DomainKey[] = ['research', 'vision', 'web', 'teaching', 'other'];
+export const DOMAIN_ORDER: DomainKey[] = ['research', 'apple', 'vision', 'web', 'teaching', 'other'];
 
 export function inferDomain(project: Pick<Project, 'title' | 'technologies'>): DomainKey {
   const hay = `${project.title} ${(project.technologies ?? []).join(' ')}`.toLowerCase();
-  if (/\bresearch\b|ensemble|mutual learning|distillation/.test(hay)) return 'research';
+  if (/\bresearch\b|cvpr|ensemble|mutual learning|distillation/.test(hay)) return 'research';
   if (/tutor|lecture|teaching|educational|bootcamp/.test(hay)) return 'teaching';
+  // Native Apple-platform apps win over their own CV/ML stack (67Cam ships Vision + CoreML).
+  if (/\bswift\b|swiftui|swiftdata|\bios\b|ipados|macos|mapkit|app intents|coreml|createml|liquid glass|xcode|coremediaio|\bcmio\b/.test(hay)) {
+    return 'apple';
+  }
   if (/cnn|computer vision|opencv|gradcam|grad-cam|tensorflow|keras|pytorch|mobilenet|transfer learning|machine learning|deep learning|\beda\b/.test(hay)) {
     return 'vision';
   }

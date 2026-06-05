@@ -29,6 +29,7 @@ const FALLBACK_FEATURED = 4;
 // Human phrasing for the archive summary line.
 const DOMAIN_WORDS: Record<DomainKey, string> = {
   research: 'research',
+  apple: 'Apple platforms',
   vision: 'computer vision',
   web: 'the web',
   teaching: 'teaching',
