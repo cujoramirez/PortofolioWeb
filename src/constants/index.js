@@ -7,6 +7,7 @@ import project6 from "../assets/projects/project-6.jpg";
 import project7 from "../assets/projects/project-7.jpg";
 import project8 from "../assets/projects/project-8.jpg";
 import project9 from "../assets/projects/project-9.jpg";
+import project10 from "../assets/projects/project-10.jpg";
 import certificate1 from "../assets/certificates/certificate1.png";
 import certificate2 from "../assets/certificates/certificate2.png";
 import certificate3 from "../assets/certificates/certificate3.png";
@@ -216,6 +217,15 @@ export const PROJECTS = [{
         links: []
     },
     {
+        title: "DALX – On-Device Chest Radiograph Measurement Platform",
+        image: project10,
+        description: "Built an on-device chest radiograph measurement platform: a native macOS SwiftUI app over a Python engine running five local deep learning models (HybridGNet, CXAS, RAD-DINO, MedGemma) that extract anatomical measurements from a DICOM with no cloud round-trip. It reports geometry rather than diagnoses — a measurement that cannot be validly computed returns null with a machine-readable reason code instead of a plausible number — and exports structured DICOM SR and PDF. Selected to exhibit at Garuda Spark Expo.",
+        technologies: ["Swift", "SwiftUI", "Python", "PyTorch", "MLX", "FastAPI", "DICOM", "Medical Imaging", "On-Device AI"],
+        demo: null,
+        github: null,
+        links: []
+    },
+    {
         title: "67Cam – macOS Camera Studio & Virtual Camera",
         image: project9,
         description: "Built a macOS camera studio that turns a webcam into a system-wide virtual camera, with 35 real-time filters and a Vision tracker that follows up to five people at once. Users record a gesture, train an on-device CreateML classifier in seconds, then trigger custom pose overlays that any app reads as a camera input, from Zoom and Discord to OBS and FaceTime.",
@@ -240,7 +250,7 @@ export const PROJECTS = [{
 // Swap these to feature different / flagship projects as they are audited and published.
 export const FEATURED_PROJECT_TITLES = [
     "MESA-ViT – Dual-Attention Vision Transformer",
-    "67Cam – macOS Camera Studio & Virtual Camera",
+    "DALX – On-Device Chest Radiograph Measurement Platform",
     "FightRoom – Martial Arts Coach & Gym Discovery",
     "Diabetic Retinopathy Detection Using CNN",
 ];
