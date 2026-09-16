@@ -21,11 +21,13 @@ const CHIP_SX = {
   borderRadius: '5px',
 } as const;
 
+// Overflow marker stays neutral: it is a count, not an action, so it must not compete
+// with the one tinted affordance on the card.
 const CHIP_EXTRA_SX = {
   ...CHIP_SX,
-  color: 'primary.main',
-  bgcolor: 'color-mix(in srgb, var(--app-palette-primary-main) 10%, transparent)',
-  border: '1px solid color-mix(in srgb, var(--app-palette-primary-main) 30%, transparent)',
+  color: 'color-mix(in srgb, var(--app-palette-text-primary) 55%, transparent)',
+  bgcolor: 'transparent',
+  border: '1px dashed color-mix(in srgb, var(--app-palette-divider) 85%, transparent)',
 } as const;
 
 // Shared external-link styling: the trailing icon nudges out on hover (a small "opens

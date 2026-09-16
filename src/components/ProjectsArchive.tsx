@@ -27,12 +27,12 @@ interface ProjectsArchiveProps {
   projects: Project[];
 }
 
-// One full-detail dossier row (detection-framed, hover-selectable) — denser than the
-// homepage hero cards: full description, every technology, all available links.
+// One full-detail dossier row — denser than the homepage hero cards: full description,
+// every technology, all available links. Deliberately not hover-selectable: the row is
+// already the full read, so a "selectable" affordance would point nowhere.
 const ArchiveRow = memo(function ArchiveRow({ project }: { project: Project }) {
   return (
     <DetectionFrame
-      interactive
       sx={{
         height: '100%',
         display: 'flex',

@@ -10,6 +10,7 @@ import DetectionFrame from './DetectionFrame';
 import LiquidGlass from './LiquidGlass';
 import { useSystemProfile } from './useSystemProfile';
 import ProjectsArchive from './ProjectsArchive';
+import ProjectDetail from './ProjectDetail';
 import {
   DOMAIN_META,
   DOMAIN_ORDER,
@@ -21,7 +22,7 @@ import {
   type DomainKey,
   type Project,
 } from './projectsShared';
-import { ProjectLinks, TechChips } from './ProjectMeta';
+import { TechChips } from './ProjectMeta';
 
 const ARCHIVE_HASH = '#all-projects';
 const FALLBACK_FEATURED = 4;
@@ -90,7 +91,16 @@ function useArchiveRoute() {
 
 // Image-led hero card: the screenshot is framed as a "detected input" (corner brackets +
 // a domain class tag), unifying the visually heterogeneous captures into one CV motif.
-const ProjectHeroCard = memo(function ProjectHeroCard({ project }: { project: Project }) {
+// The hover lift promised a target, so the target is real: the "View details" button
+// stretches its ::after over the whole card (keeping the h3 outside the button, where a
+// heading is valid), opening the full read that the clamped teaser hides.
+const ProjectHeroCard = memo(function ProjectHeroCard({
+  project,
+  onOpen,
+}: {
+  project: Project;
+  onOpen: (project: Project) => void;
+}) {
   const domain = DOMAIN_META[inferDomain(project)];
   return (
     <LiquidGlass
@@ -105,13 +115,13 @@ const ProjectHeroCard = memo(function ProjectHeroCard({ project }: { project: Pr
         py: { xs: 1.25, md: 1.5 },
         transition:
           'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
-        '&:hover': {
+        '&:hover, &:has(button:focus-visible)': {
           transform: 'translateY(-4px)',
           '--lg-shadow': '0 18px 44px rgba(0, 0, 0, 0.32)',
         },
         '@media (prefers-reduced-motion: reduce)': {
           transition: 'none',
-          '&:hover': { transform: 'none' },
+          '&:hover, &:has(button:focus-visible)': { transform: 'none' },
         },
       }}
     >
@@ -124,6 +134,8 @@ const ProjectHeroCard = memo(function ProjectHeroCard({ project }: { project: Pr
           px: { xs: 1.5, md: 1.75 },
           py: { xs: 1.5, md: 1.75 },
           '--df-stroke': 'color-mix(in srgb, var(--app-palette-primary-main) 55%, transparent)',
+          // The decorative class tag overhangs the frame; keep it from eating card clicks.
+          '& > span': { pointerEvents: 'none' },
           '@media (hover: hover)': {
             '&:hover': {
               '--df-stroke': 'color-mix(in srgb, var(--app-palette-primary-main) 92%, transparent)',
@@ -131,11 +143,11 @@ const ProjectHeroCard = memo(function ProjectHeroCard({ project }: { project: Pr
           },
         }}
       >
-        {/* Screenshot */}
+        {/* Screenshot — 16:9 so the capture leads without crowding out the text block */}
         <Box
           sx={{
             position: 'relative',
-            aspectRatio: '16 / 10',
+            aspectRatio: '16 / 9',
             borderRadius: '10px',
             overflow: 'hidden',
             mb: 1.75,
@@ -164,7 +176,7 @@ const ProjectHeroCard = memo(function ProjectHeroCard({ project }: { project: Pr
             letterSpacing: '-0.01em',
             color: 'text.primary',
             textWrap: 'pretty',
-            mb: 1,
+            mb: 0.85,
           }}
         >
           {project.title}
@@ -176,12 +188,12 @@ const ProjectHeroCard = memo(function ProjectHeroCard({ project }: { project: Pr
         <Typography
           variant="body2"
           sx={{
-            color: 'color-mix(in srgb, var(--app-palette-text-primary) 70%, transparent)',
-            fontSize: '0.9rem',
-            lineHeight: 1.6,
-            mb: 1.5,
+            color: 'color-mix(in srgb, var(--app-palette-text-primary) 80%, transparent)',
+            fontSize: '0.925rem',
+            lineHeight: 1.65,
+            mb: 1.75,
             display: '-webkit-box',
-            WebkitLineClamp: 2,
+            WebkitLineClamp: 3,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
           }}
@@ -190,8 +202,61 @@ const ProjectHeroCard = memo(function ProjectHeroCard({ project }: { project: Pr
         </Typography>
 
         <Box sx={{ mt: 'auto', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          <TechChips technologies={project.technologies ?? []} max={4} />
-          <ProjectLinks project={project} />
+          <TechChips technologies={project.technologies ?? []} max={3} />
+
+          {/* The card's one tinted element: what clicking it does. Its ::after is the
+              real hit area, stretched across the whole card. */}
+          <Box
+            component="button"
+            type="button"
+            onClick={() => onOpen(project)}
+            aria-label={`View details for ${project.title}`}
+            sx={{
+              appearance: 'none',
+              position: 'static',
+              display: 'inline-flex',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              gap: 0.6,
+              m: 0,
+              px: 0,
+              pt: 1.25,
+              pb: 0,
+              background: 'none',
+              border: 0,
+              borderTop: '1px solid color-mix(in srgb, var(--app-palette-divider) 55%, transparent)',
+              width: '100%',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 600,
+              fontSize: '0.74rem',
+              letterSpacing: '0.03em',
+              color: 'primary.main',
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                inset: 0,
+                borderRadius: '8px',
+                zIndex: 1,
+              },
+              '&:focus-visible': { outline: 'none' },
+              '&:focus-visible::after': {
+                outline: '2px solid var(--app-palette-primary-main)',
+                outlineOffset: '4px',
+              },
+              '& svg': { transition: 'transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)' },
+              '@media (hover: hover)': {
+                '&:hover svg': { transform: 'translateX(3px)' },
+              },
+              '@media (prefers-reduced-motion: reduce)': {
+                '& svg': { transition: 'none' },
+                '&:hover svg': { transform: 'none' },
+              },
+            }}
+          >
+            View details
+            <ArrowForwardIcon sx={{ fontSize: 15 }} />
+          </Box>
         </Box>
       </DetectionFrame>
     </LiquidGlass>
@@ -221,6 +286,9 @@ const ModernProjectsComponent = () => {
   }, [projects]);
 
   const { open, openArchive, closeArchive } = useArchiveRoute();
+
+  const [detail, setDetail] = useState<Project | null>(null);
+  const closeDetail = useCallback(() => setDetail(null), []);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const inView = useInView(rootRef as RefObject<HTMLDivElement>, { once: true, margin: '-15% 0px' });
@@ -254,7 +322,7 @@ const ModernProjectsComponent = () => {
       >
         {featured.map((project, index) => (
           <motion.div key={project.title} {...item(0.08 + index * 0.08)} style={{ height: '100%' }}>
-            <ProjectHeroCard project={project} />
+            <ProjectHeroCard project={project} onOpen={setDetail} />
           </motion.div>
         ))}
       </Box>
@@ -340,6 +408,7 @@ const ModernProjectsComponent = () => {
       </motion.div>
 
       <ProjectsArchive open={open} onClose={closeArchive} projects={projects} />
+      <ProjectDetail project={detail} onClose={closeDetail} />
     </Box>
   );
 };
