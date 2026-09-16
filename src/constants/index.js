@@ -49,7 +49,7 @@ export const SCHOLAR_CITATIONS = 5;
 
 // Academic standing + program selectivity surfaced in the About spec sheet.
 export const ABOUT_FACTS = {
-  gpa: "3.55",
+  gpa: "3.63",
   gpaScale: "4.00",
   // Apple Developer Academy @ BINUS, Cohort 2026 (applicant figures approximate).
   academy: { accepted: 200, applicants: "17,500–20,000", rate: "≈1%" },
