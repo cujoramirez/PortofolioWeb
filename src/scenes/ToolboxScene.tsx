@@ -41,6 +41,21 @@ export default function ToolboxScene() {
     // phones have less room between items, so only the front-most few carry names
     const [from, span] = section.classList.contains('is-mobile') ? [0.55, 0.3] : [0.05, 0.4];
 
+    // Layout numbers the name pass needs, read once (and again on refresh), never per frame.
+    const box = { widths: [] as number[], icon: 28, drop: 16, persp: 1400 };
+    const measure = () => {
+      box.widths = labels.map((l) => l?.offsetWidth ?? 0);
+      box.icon = items[0]?.querySelector<HTMLElement>('.globe__icon')?.offsetWidth ?? 28;
+      // the name's centre sits this far under the item's centre (icon, gap, then the name)
+      const name = labels.find(Boolean);
+      if (name && items[0]) box.drop = (items[0].offsetHeight - name.offsetHeight) / 2;
+      box.persp = parseFloat(getComputedStyle(globe.parentElement as HTMLElement).perspective) || 1400;
+    };
+    measure();
+
+    const near = items.map(() => 0);
+    const at = items.map(() => [0, 0]);
+    const order = items.map((_, i) => i);
     const render = () => {
       const R = globe.offsetWidth / 2;
       const a = ((state.turn + state.spin) * Math.PI) / 180;
@@ -54,10 +69,31 @@ export default function ToolboxScene() {
         const z2 = p.y * sb + z1 * cb;
         el.style.transform = `translate3d(${(x1 * R).toFixed(1)}px, ${(y2 * R).toFixed(1)}px, ${(z2 * R).toFixed(1)}px) translate(-50%, -50%)`;
         el.style.opacity = (0.16 + 0.84 * ((z2 + 1) / 2) ** 1.5).toFixed(3);
-        const label = labels[i];
-        // names only on the near side: the far side is logos only
-        if (label) label.style.opacity = Math.min(1, Math.max(0, (z2 - from) / span)).toFixed(3);
+        near[i] = z2;
+        at[i] = [x1 * R, y2 * R];
       });
+      // Names only on the near side (the far side is logos only), and nearest first: a name shows
+      // only where no nearer logo or name already sits. Without this pass they piled up
+      // ("PostgreSQL" under "ASP.NET MVC", "HTML" under "JS").
+      const taken: number[][] = [];
+      const free = (r: number[]) => !taken.some((o) => r[0] < o[2] && r[2] > o[0] && r[1] < o[3] && r[3] > o[1]);
+      order.sort((p, q) => near[q] - near[p]);
+      for (const i of order) {
+        // nearer items draw larger under the stage's perspective
+        const m = box.persp / (box.persp - near[i] * R);
+        const [x, y] = [at[i][0] * m, at[i][1] * m];
+        const logo = (box.icon / 2 + 2) * m;
+        const label = labels[i];
+        let shown = Math.min(1, Math.max(0, (near[i] - from) / span));
+        if (label && shown > 0) {
+          const [w, h] = [(box.widths[i] / 2 + 4) * m, 9 * m];
+          const rect = [x - w, y + box.drop * m - h, x + w, y + box.drop * m + h];
+          if (free(rect)) taken.push(rect);
+          else shown = 0;
+        }
+        if (label) label.style.opacity = shown.toFixed(3);
+        taken.push([x - logo, y - box.drop * m - logo, x + logo, y - box.drop * m + logo]);
+      }
     };
     render();
 
@@ -67,7 +103,17 @@ export default function ToolboxScene() {
       tilt: 12,
       ease: 'none',
       onUpdate: render,
-      scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: 0.6, invalidateOnRefresh: true, onRefresh: render },
+      scrollTrigger: {
+        trigger: section,
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: 0.6,
+        invalidateOnRefresh: true,
+        onRefresh: () => {
+          measure();
+          render();
+        },
+      },
     });
 
     // Drag to spin: the globe follows the pointer 1:1, then glides a moment after release.

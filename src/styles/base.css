@@ -212,6 +212,13 @@ p {
   color: var(--accent);
   text-decoration-color: currentColor;
 }
+/* a short word ("Email") is narrower than a fingertip: 44px wide as well as tall on touch */
+@media (pointer: coarse) {
+  .text-link {
+    min-width: 44px;
+    justify-content: center;
+  }
+}
 
 /* Chips: static labels (not interactive, so no hover state) */
 .chips {
@@ -498,9 +505,12 @@ html.lenis body {
   inset: 0;
   width: 100%;
   height: 100%;
-  /* dimmer than the original 0.6 / 0.4: body text sits directly on this layer, and at these
-     values secondary text stays at or above ~4.6:1 even over the brightest band */
-  opacity: 0.34;
+  /* Dimmer than the original 0.6 / 0.4: body text sits directly on this layer. The brightest band
+     is white in the canvas, so its colour on the page is set by this opacity (plus the tint under
+     it). At 0.34 it reached rgb(93) and secondary text over it measured 3.66:1 on a real GPU; 0.25
+     passed on desktop but left phone lines at 4.34:1. At 0.23 every line clears 4.5:1 in
+     scripts/devtools/contrast.mjs, on both. */
+  opacity: 0.23;
   transition: opacity 0.6s var(--ease-out);
 }
 :root[data-theme='light'] .bends canvas {

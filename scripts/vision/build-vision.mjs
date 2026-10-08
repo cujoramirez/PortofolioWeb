@@ -30,20 +30,19 @@ const maskPng = join(tmp, 'mask.png');
 await sharp(SOURCE).flatten({ background: '#8a8f98' }).jpeg({ quality: 95 }).toFile(input);
 const raw = JSON.parse(execFileSync('swift', ['scripts/vision/analyze.swift', input, maskPng], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }));
 
-// Mask -> white image whose alpha is the mask; contour -> 3 px band where the mask changes.
-const { data } = await sharp(maskPng).resize(MW, MH, { fit: 'fill' }).greyscale().raw().toBuffer({ resolveWithObject: true });
+// Mask -> white image whose alpha is the mask. Contour -> a soft band where a lightly blurred copy
+// of the mask crosses half coverage. It has to be anti-aliased: the About reveal scales it up to
+// 7x, and the hard 1 px boundary this used to be showed stair-steps from about 2.5x on a 2x display.
+const resized = () => sharp(maskPng).resize(MW, MH, { fit: 'fill' }).greyscale();
+const data = await resized().raw().toBuffer();
+const soft = await resized().blur(1).raw().toBuffer();
 const mask = Buffer.alloc(MW * MH * 4, 255);
 const edge = Buffer.alloc(MW * MH * 4, 255);
-const on = (x, y) => data[Math.min(MH - 1, Math.max(0, y)) * MW + Math.min(MW - 1, Math.max(0, x))] > 127;
-for (let y = 0; y < MH; y++) {
-  for (let x = 0; x < MW; x++) {
-    const i = (y * MW + x) * 4;
-    mask[i + 3] = data[y * MW + x];
-    const c = on(x, y);
-    let boundary = false;
-    for (let d = 1; d <= 1 && !boundary; d++) boundary = on(x + d, y) !== c || on(x - d, y) !== c || on(x, y + d) !== c || on(x, y - d) !== c;
-    edge[i + 3] = boundary ? 255 : 0;
-  }
+for (let p = 0; p < MW * MH; p++) {
+  mask[p * 4 + 3] = data[p];
+  // 1 where coverage is exactly half, falling to 0 about 1.5 px either side
+  const off = Math.abs(soft[p] / 255 - 0.5) / 0.42;
+  edge[p * 4 + 3] = off >= 1 ? 0 : Math.round(255 * (1 - off * off));
 }
 const emit = async (buf, name) => {
   const webp = await sharp(buf, { raw: { width: MW, height: MH, channels: 4 } }).webp({ lossless: true }).toBuffer();

@@ -10,6 +10,15 @@
   pointer-events: none;
 }
 
+/* Denser glass than buttons and dialogs get: the bar is the one glass surface that content scrolls
+   under. At the shared 55% tint, link labels over a white certificate (dark theme) measured 2.54:1,
+   and over a dark screenshot (light theme) about 3.9:1. These tints hold 4.5:1 over either. */
+.nav__bar {
+  --glass: rgb(20 21 24 / 0.8);
+}
+:root[data-theme='light'] .nav__bar {
+  --glass: rgb(255 255 255 / 0.74);
+}
 .nav__bar {
   position: relative;
   pointer-events: auto;
@@ -234,6 +243,10 @@
   color: var(--ink);
   font: inherit;
   font-size: 1.05rem;
+}
+/* the input's own outline is off: the bar under the field carries the focus instead */
+.palette__field:focus-within {
+  box-shadow: inset 0 -2px 0 var(--accent);
 }
 .palette__field input::placeholder {
   color: var(--ink-3);

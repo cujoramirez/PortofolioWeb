@@ -32,6 +32,7 @@ export const HERO = {
   ],
   alt: 'Gading Aditya Perdana in a navy suit and blue tie',
   tags: ['Backdrop', 'Type', 'Portrait', 'Interface'],
+  indexLabel: 'On this page',
 } as const;
 
 export type SectionId = 'hero' | 'about' | 'disciplines' | 'toolbox' | 'projects' | 'experience' | 'papers' | 'certificates' | 'contact';

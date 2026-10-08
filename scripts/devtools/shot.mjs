@@ -1,7 +1,7 @@
 // Headless-Chrome screenshot helper over raw CDP (no deps).
 import { guard } from './chrome-guard.mjs';
 // usage: node shot.mjs <url> <outPrefix> [--w 1440] [--h 900] [--scheme dark|light] [--reduced]
-//        [--scrolls 0,900,1800] [--full] [--wait 2500] [--dpr 1] [--eval "js"] [--init "js before load"]
+//        [--scrolls 0,900,1800] [--full] [--wait 2500] [--dpr 1] [--eval "js"] [--init "js before load"] [--gpu]
 import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -26,7 +26,8 @@ const port = 9300 + Math.floor(Math.random() * 500);
 const chrome = guard(spawn(CHROME, [
   '--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`,
   '--no-first-run', '--no-default-browser-check', '--hide-scrollbars', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', '--disable-frame-rate-limit',
-  '--enable-webgl', '--ignore-gpu-blocklist', '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
+  // --gpu: the Mac's own GPU (ANGLE Metal) instead of SwiftShader, for a truer picture of 3D and WebGL
+  ...(flag('gpu') ? [] : ['--enable-webgl', '--ignore-gpu-blocklist', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']),
   `--window-size=${W},${H}`, 'about:blank',
 ], { stdio: 'ignore' }));
 

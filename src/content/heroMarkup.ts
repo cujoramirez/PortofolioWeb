@@ -4,6 +4,7 @@
  * scroll choreography, the Vision lens and the detections toggle to this DOM.
  * Pure: no DOM access, no asset imports.
  */
+import type { IndexEntry } from './heroIndex';
 import { FONT_FACES_ID, HERO, OWNER, THEME_COLOR } from './site';
 
 export interface HeroImage {
@@ -72,7 +73,18 @@ export function visionMarkup(v: VisionData): string {
 </div>`;
 }
 
-export function heroMarkup(img: HeroImage, vision: VisionData | null): string {
+/** The index in the plate's right third: one link per section, with its count where it has one. */
+function indexMarkup(entries: IndexEntry[]): string {
+  const rows = entries
+    .map((s, i) => {
+      const count = s.count === undefined ? '' : `<span class="hero__index-count">${s.count}</span>`;
+      return `<li><a href="#${s.id}"><span class="hero__index-no" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span><span>${escapeHtml(s.title)}</span>${count}</a></li>`;
+    })
+    .join('');
+  return `<nav class="hero__index layer" data-layer="3" aria-label="${escapeHtml(HERO.indexLabel)}"><ol>${rows}</ol></nav>`;
+}
+
+export function heroMarkup(img: HeroImage, vision: VisionData | null, index: IndexEntry[] = []): string {
   const fallback = img.webp[Math.min(1, img.webp.length - 1)];
   const lines = HERO.lines.map((l) => `<span class="hero__line">${escapeHtml(l)}</span>`).join(' ');
   const socials = HERO.socials
@@ -107,6 +119,7 @@ ${cv}
 </div>
 <p class="hero__socials">${socials}</p>
 </div>
+${index.length ? indexMarkup(index) : ''}
 ${tags}
 </div>
 </div>

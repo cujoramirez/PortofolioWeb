@@ -128,6 +128,10 @@
 .globe__icon {
   color: var(--ink);
 }
+/* a name gives way to a nearer one (ToolboxScene): it fades instead of blinking out */
+.globe__label {
+  transition: opacity 0.18s linear;
+}
 .is-mobile .globe__item {
   font-size: 0.78rem;
 }

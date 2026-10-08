@@ -9,6 +9,7 @@ import { CheckIcon, CopyIcon } from '../components/icons';
 import { spark } from '../lib/micro';
 import { LINKS } from '../content/site';
 import { gsap } from '../lib/gsap';
+import { showOnFocus } from '../lib/focusStep';
 import { useScene } from '../lib/useScene';
 import './contact.css';
 
@@ -87,7 +88,8 @@ export default function ContactScene() {
       0.5,
     );
     tl.set({}, {}, 1);
-    return undefined;
+    // the card's controls exist from the start but show only once it has assembled
+    return showOnFocus(section, () => tl.scrollTrigger, () => 1);
   });
 
   return (

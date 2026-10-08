@@ -11,6 +11,7 @@
 import type { Plugin } from 'vite';
 import { HERO_SIZES, fontGateScript, heroMarkup, themeInitScript, type VisionData } from '../src/content/heroMarkup';
 import { FONT_FACES_ID } from '../src/content/site';
+import { heroIndex } from '../src/content/heroIndex';
 import { noscriptMarkup } from '../src/content/noscriptMarkup';
 import images from '../src/data/images.json';
 import vision from '../src/data/vision.json';
@@ -23,7 +24,7 @@ export default function heroShell(): Plugin {
       handler(html, ctx) {
         const hero = images.hero;
         if (!html.includes('<!--hero-shell-->')) throw new Error('index.html is missing the <!--hero-shell--> slot');
-        let out = html.replace('<!--hero-shell-->', heroMarkup(hero, vision as VisionData));
+        let out = html.replace('<!--hero-shell-->', () => heroMarkup(hero, vision as VisionData, heroIndex()));
         if (!out.includes('<div id="root"></div>')) throw new Error('index.html is missing <div id="root"></div>');
         // a function, so a "$" in the copy is never read as a replacement pattern
         out = out.replace('<div id="root"></div>', (root) => `${root}\n        ${noscriptMarkup()}`);

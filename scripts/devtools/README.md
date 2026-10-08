@@ -43,6 +43,12 @@ then run from this folder:
   distance. `--dead` steps through every pinned stretch (0.1 viewport heights) and lists runs where the
   picture does not change; the second strip shows how much changed at each step.
 
+- `node contrast.mjs <url> [--w] [--h] [--mobile] [--scheme dark|light] [--reduced] [--step 0.25]`: WCAG
+  contrast of every text line against the real pixels behind it, on the Mac's GPU. Use `--reduced` to
+  audit the posters, where every line is at rest; without it, lines are also sampled mid-choreography
+  with other layers crossing them. Lines under the nav bar or covered by another layer are skipped.
+- `node shot.mjs ... --gpu`: screenshots on the Mac's GPU instead of SwiftShader.
+
 The newer tools share `cdp.mjs`. It turns on focus emulation: without it a CDP Escape key press makes
 the headless page `hidden`, no frame is produced afterwards, and every idle check reads a false 0.
 

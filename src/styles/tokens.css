@@ -63,6 +63,10 @@
   --dot: rgb(255 255 255 / 0.08);
   /* accent: lines, active states, small accent text (5.35:1 on bg) */
   --accent: #3b82f6;
+  /* accent for text that sits straight on the color bends, where --accent drops to 2.4:1 over the
+     brightest band: the same blue, lighter (3.4:1 there, and 4.7:1 on a chapter's scrim). The light
+     theme uses the darker fill blue for it: #2563eb is 4.3:1 over the light band. */
+  --accent-text: #60a5fa;
   /* fill for primary buttons, white text on it is 5.17:1 */
   --accent-fill: #2563eb;
   --accent-fill-hover: #1d4ed8;
@@ -93,6 +97,7 @@
     --hairline-strong: rgb(0 0 0 / 0.18);
     --dot: rgb(0 0 0 / 0.09);
     --accent: #2563eb;
+    --accent-text: #1d4ed8;
     --accent-fill: #2563eb;
     --accent-fill-hover: #1d4ed8;
     --on-accent: #ffffff;
@@ -120,6 +125,7 @@
   --hairline-strong: rgb(0 0 0 / 0.18);
   --dot: rgb(0 0 0 / 0.09);
   --accent: #2563eb;
+  --accent-text: #1d4ed8;
   --accent-fill: #2563eb;
   --accent-fill-hover: #1d4ed8;
   --on-accent: #ffffff;

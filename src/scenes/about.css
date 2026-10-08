@@ -102,8 +102,33 @@
   display: grid;
   gap: clamp(40px, 6vw, 72px);
 }
+/* A soft scrim behind each chapter. The text sits straight on the color bends, and over their
+   brightest band secondary text measured 3.66:1 in the dark theme (4.5 needed). A third of the
+   page colour under it brings the worst pixel to about 5:1; in the light theme it does not show.
+   Feathered by a shadow of the same colour. The chapter is its own stacking context (z-index 0)
+   so the scrim stays above the backdrop and below the text. */
+.about__chapter {
+  position: relative;
+  z-index: 0;
+}
+.about__chapter::before {
+  content: '';
+  position: absolute;
+  inset: -18px -26px;
+  z-index: -1;
+  border-radius: 28px;
+  background: color-mix(in srgb, var(--bg) 34%, transparent);
+  box-shadow: 0 0 44px 30px color-mix(in srgb, var(--bg) 34%, transparent);
+  /* --scrim: AboutScene fades it in with the chapter's first line (pinned layouts) */
+  opacity: var(--scrim, 1);
+  pointer-events: none;
+}
+/* behind the plane the words rise through, so a tilted word is never cut by it */
+.is-motion .about__chapter::before {
+  transform: translateZ(-40px);
+}
 .about__num {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 .about__title {
   margin-top: 0.4rem;
@@ -118,6 +143,10 @@
   color: var(--ink-2);
   font-size: var(--fs-body);
   line-height: 1.7;
+}
+/* a word is the unit that rises: an inline-block takes a transform and still wraps like text */
+.about__word {
+  display: inline-block;
 }
 
 .about__quote {
@@ -313,10 +342,8 @@
 .is-motion:not(.is-mobile) .about__text {
   transform-style: preserve-3d;
 }
-.is-motion:not(.is-mobile) .about__sentence {
-  display: block;
-}
-.is-motion:not(.is-mobile) .about__rise {
+.is-motion:not(.is-mobile) .about__rise,
+.is-motion:not(.is-mobile) .about__word {
   transform-origin: 50% 100%;
 }
 .is-motion:not(.is-mobile) .about__quote--fly {
@@ -458,10 +485,8 @@
   line-height: 1.62;
   transform-style: preserve-3d;
 }
-.is-pinned .about__sentence {
-  display: block;
-}
-.is-pinned .about__rise {
+.is-pinned .about__rise,
+.is-pinned .about__word {
   transform-origin: 50% 100%;
 }
 .is-pinned .about__quote--fly {
@@ -531,7 +556,7 @@
   line-height: 1;
 }
 .metric__sym {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 .metric__label {
   max-width: 24ch;

@@ -9,6 +9,7 @@ import { ArrowUpRight } from '../components/icons';
 import { firstSentence, papers, scholarUrl } from '../content/data';
 import { gsap } from '../lib/gsap';
 import { spotlight } from '../lib/micro';
+import { showOnFocus } from '../lib/focusStep';
 import { useScene } from '../lib/useScene';
 import './papers.css';
 
@@ -70,7 +71,7 @@ export default function PapersScene() {
           bars.forEach((bar, b) => bar.style.setProperty('--f', Math.min(1, Math.max(0, state.p - b + 1)).toFixed(3)));
         };
         update();
-        gsap.to(state, {
+        const turn = gsap.to(state, {
           p: n - 1,
           ease: 'none',
           onUpdate: update,
@@ -86,7 +87,13 @@ export default function PapersScene() {
             invalidateOnRefresh: true,
           },
         });
+        // Tab to a paper turns the drum to it
+        const unfocus = showOnFocus(section, () => turn.scrollTrigger, (el) => {
+          const i = cards.findIndex((card) => card.contains(el));
+          return i < 0 ? null : i / (n - 1);
+        });
         return () => {
+          unfocus();
           section.classList.remove('is-drum');
           grid.style.removeProperty('height');
           cards.forEach((card) => {
@@ -158,7 +165,8 @@ export default function PapersScene() {
       0.6,
     );
     tl.from(q('.papers__foot'), { opacity: 0, y: 16, duration: 0.15 }, 0.88);
-    return undefined;
+    // until the grid has landed the papers are a stacked deck: Tab to one goes to the grid
+    return showOnFocus(section, () => tl.scrollTrigger, () => 1);
   });
 
   return (

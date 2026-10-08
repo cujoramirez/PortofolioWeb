@@ -63,7 +63,33 @@ export function scrollToTarget(target: HTMLElement | number, { immediate = false
   }
   const top = typeof target === 'number' ? target : target.getBoundingClientRect().top + window.scrollY;
   const smooth = !immediate && motionAllowed();
+  if (smooth) holdRefreshUntilLanded();
   window.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' });
+}
+
+let gliding = false;
+
+/**
+ * A native smooth scroll is under way (touch devices, where Lenis does not run). A ScrollTrigger
+ * refresh restores the scroll position it started from, which stops such a scroll where it
+ * stands: on a phone the first tap on "View my work" mounted the lazy scenes, their refresh
+ * fired 80 ms into the scroll, and the page stopped 38 px down. refreshSoon waits while this is
+ * set. It clears once the position has stopped changing.
+ */
+function holdRefreshUntilLanded() {
+  gliding = true;
+  let last = window.scrollY;
+  let still = 0;
+  let checks = 0;
+  const check = () => {
+    const y = window.scrollY;
+    still = y === last ? still + 1 : 0;
+    last = y;
+    // two unchanged readings, or 8 s as a ceiling for a scroll someone interrupted
+    if (still >= 2 || ++checks > 66) gliding = false;
+    else window.setTimeout(check, 120);
+  };
+  window.setTimeout(check, 120);
 }
 
 let locks = 0;
@@ -96,6 +122,10 @@ let refreshTimer = 0;
 export function refreshSoon(delay = 80) {
   window.clearTimeout(refreshTimer);
   refreshTimer = window.setTimeout(() => {
+    if (gliding) {
+      refreshSoon(160);
+      return;
+    }
     ScrollTrigger.sort();
     ScrollTrigger.refresh();
   }, delay);

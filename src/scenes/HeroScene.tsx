@@ -19,6 +19,7 @@
 import { useEffect, useRef } from 'react';
 import { gsap, ScrollTrigger, SplitText } from '../lib/gsap';
 import { decrypt, magnet } from '../lib/micro';
+import { showOnFocus } from '../lib/focusStep';
 import { fontsReady } from '../lib/fonts';
 import { refreshSoon } from '../lib/scroll';
 import { useScene } from '../lib/useScene';
@@ -26,6 +27,9 @@ import { HERO_DISPERSE, HERO_PIN, leadPx, offsetWithin } from './handoff';
 
 const EXPLODE = 0.45;
 const HOLD_END = 1 - HERO_DISPERSE;
+/** The stage's turn and tilt (rotateY, rotateX, degrees) in the exploded view on desktop and tablet. */
+const TURN = -24;
+const TILT = 12;
 const LENS_R = 105;
 
 /** Fit the name to the plate and aim the portrait's head between the names (see below). */
@@ -34,22 +38,24 @@ function fitHero(section: HTMLElement) {
   const stage = section.querySelector<HTMLElement>('.hero__stage');
   const portrait = section.querySelector<HTMLElement>('.hero__portrait');
   if (!name || !stage || !portrait) return;
-  name.style.removeProperty('--fs-name');
-  portrait.style.removeProperty('--head-px');
+  // on the stage, not on the name or the portrait: the layer tags read both (see hero.css)
+  stage.style.removeProperty('--fs-name');
+  stage.style.removeProperty('--head-px');
+  section.classList.remove('no-index');
   const stacked = window.matchMedia('(max-width: 767px), (min-width: 768px) and (max-aspect-ratio: 1 / 1)').matches;
   if (stacked) return;
 
   const avail = stage.clientWidth - name.offsetLeft * 2;
   if (name.offsetWidth > avail) {
     const fs = parseFloat(getComputedStyle(name).fontSize);
-    name.style.setProperty('--fs-name', `${Math.floor((fs * avail) / name.offsetWidth)}px`);
+    stage.style.setProperty('--fs-name', `${Math.floor((fs * avail) / name.offsetWidth)}px`);
   }
   // and to the height: on short windows the name must still clear the intro block under it
   const ui = stage.querySelector<HTMLElement>('.hero__ui');
   const room = ui ? ui.offsetTop - 20 - name.offsetTop : Infinity;
   if (name.offsetHeight > room && room > 0) {
     const fs = parseFloat(getComputedStyle(name).fontSize);
-    name.style.setProperty('--fs-name', `${Math.max(40, Math.floor((fs * room) / name.offsetHeight))}px`);
+    stage.style.setProperty('--fs-name', `${Math.max(40, Math.floor((fs * room) / name.offsetHeight))}px`);
   }
 
   // Midway between the end of "Perdana" (line 2, beside the face) and the start of "Aditya"
@@ -77,7 +83,15 @@ function fitHero(section: HTMLElement) {
       target = (aditya + perdanaEnd) / 2 - stage.getBoundingClientRect().left;
     }
   }
-  if (target !== null) portrait.style.setProperty('--head-px', `${Math.round(target)}px`);
+  if (target !== null) stage.style.setProperty('--head-px', `${Math.round(target)}px`);
+  // The index needs the plate's right third to itself: its box must clear the portrait's shoulder
+  // (the silhouette ends about 5% inside the portrait's box) and the first line of the name.
+  const index = stage.querySelector<HTMLElement>('.hero__index');
+  if (index && index.offsetWidth) {
+    const shoulder = portrait.offsetLeft + portrait.offsetWidth * 0.95;
+    const lineBottom = name.offsetTop + line1.offsetHeight;
+    section.classList.toggle('no-index', index.offsetLeft < shoulder + 12 || index.offsetTop < lineBottom + 12);
+  }
   section.dispatchEvent(new Event('hero:fit'));
 }
 
@@ -173,12 +187,13 @@ export default function HeroScene() {
     const [name] = q('.hero__name') as HTMLElement[];
     const [portrait] = q('.hero__portrait') as HTMLElement[];
     const [ui] = q('.hero__ui') as HTMLElement[];
+    // the index is part of the interface layer: same depth, same exit
+    const front = [ui, ...(q('.hero__index') as HTMLElement[])];
     const tags = q('.hero__tag') as HTMLElement[];
     const cv = q('.hero__portrait > .hero__cv') as HTMLElement[];
     const cvFill = q('.hero__portrait > .hero__cv > .cv-mask, .hero__portrait > .hero__cv > .cv-edge');
     const cvMarks = q('.hero__portrait > .hero__cv > .cv-svg');
     const scan = q('.hero__portrait > .hero__cv > .cv-scan');
-    const layers = [plate, name, portrait, ui];
     const root = document.documentElement;
     const mobile = variant === 'mobile';
 
@@ -324,10 +339,28 @@ export default function HeroScene() {
       gsap.set(portrait, { transformOrigin: '0 0' });
       gsap.set(tags, { z: (i: number) => [2, 3, 4, 5][i] });
       // 0 -> 0.45: turn to a three-quarter view and pull the layers apart
-      tl.to(stage, { rotateX: 12, rotateY: -24, scale: 0.8, duration: EXPLODE, ease: 'power1.inOut' }, 0);
-      layers.forEach((layer, i) => tl.to(layer, { z: Z[i], duration: EXPLODE, ease: 'power1.inOut' }, 0));
+      tl.to(stage, { rotateX: TILT, rotateY: TURN, scale: 0.8, duration: EXPLODE, ease: 'power1.inOut' }, 0);
+      // Turning and tilting the stage slides every layer across the screen by its depth (z x tan of
+      // the angle). Unchecked, the portrait drifted over the ends of "Gading" and "Perdana", the
+      // interface ran off the left edge of a 1190 px window, and in a short window it rose into the
+      // name. The name and the interface slide back by their depth relative to the portrait, so the
+      // stack reads as the poster seen from the side. The backdrop keeps its drift: that is the depth.
+      const rad = Math.PI / 180;
+      const X = Z.map((z) => (z - Z[2]) * Math.tan(-TURN * rad));
+      const Y = Z.map((z) => (z - Z[2]) * Math.tan(TILT * rad));
+      const pose = [
+        { z: Z[0] },
+        // a little further than its depth: perspective draws the portrait (in front) larger, and
+        // the head would cover the last letter of each word again
+        { z: Z[1], x: X[1] - 14 * k, y: Y[1] },
+        { z: Z[2] },
+        { z: Z[3], x: X[3], y: Y[3] },
+      ];
+      [plate, name, portrait, ui].forEach((layer, i) => tl.to(layer, { ...pose[i], duration: EXPLODE, ease: 'power1.inOut' }, 0));
+      // the index has nothing above it to clear, and sliding down would take it off a short window
+      tl.to(front.slice(1), { z: Z[3], x: X[3], duration: EXPLODE, ease: 'power1.inOut' }, 0);
       tags.forEach((t, i) => {
-        tl.to(t, { z: Z[i] + 6, duration: EXPLODE, ease: 'power1.inOut' }, 0);
+        tl.to(t, { ...pose[i], z: Z[i] + 6, duration: EXPLODE, ease: 'power1.inOut' }, 0);
         tl.to(t, { opacity: 1, duration: 0.1 }, 0.22 + i * 0.03);
       });
       // what the model sees: segmentation, boxes and landmarks on the portrait layer
@@ -337,7 +370,9 @@ export default function HeroScene() {
       tl.to(tags, { opacity: 0, duration: 0.08 }, HOLD_END - 0.1);
       // 0.75 -> 1: disperse into the next scene
       tl.to(stage, { rotateX: 0, rotateY: 0, scale: 1, duration: D, ease: 'power2.inOut' }, HOLD_END)
-        .to(ui, { y: -180 * k, z: Z[3] + 240 * k, opacity: 0, duration: D * 0.7, ease: 'power1.in' }, HOLD_END)
+        .to(front, { y: -180 * k, z: Z[3] + 240 * k, opacity: 0, duration: D * 0.7, ease: 'power1.in' }, HOLD_END)
+        // the name squares up with the stage again while its letters scatter
+        .to(name, { x: 0, y: 0, duration: D * 0.6, ease: 'power2.inOut' }, HOLD_END)
         .to(plate, { z: -900 * k, duration: D * 0.9, ease: 'power1.in' }, HOLD_END)
         .to(portrait, { x: () => landing().x, y: () => landing().y, scale: () => landing().scale, z: 0, duration: D, ease: 'power2.inOut' }, HOLD_END);
       splitName(k);
@@ -358,8 +393,8 @@ export default function HeroScene() {
      *   0.52-0.66  the card lifts away; the stack glides to the centre and grows;
      *   0.75-1.00  the stack swings back to face you, the name scatters, the backdrop fades, and the
      *              portrait flies into the About card (the silhouette hand-off, as on desktop).
-     * One state object drives the stack; the perspective origin sits on the stack's centre, so depth
-     * shrinks it in place instead of dragging it across the screen.
+     * One state object drives the stack. It is drawn without perspective (hero.css): `zb` only keeps
+     * the stack behind the interface card, and `oy` is where its hinge sits on screen.
      */
     const [tBackdrop, tType, tPortrait, tInterface] = tags;
     const rigid: { el: HTMLElement; d: number }[] = [
@@ -371,6 +406,10 @@ export default function HeroScene() {
       { el: tPortrait, d: 193 },
     ];
     const planes = [plate, name, portrait];
+    // Poses (tilt a, turn c, degrees): apart beside the card, then alone on the screen. The second
+    // is turned and tilted less, so the plate stands taller than it is wide and can use the height.
+    const POSE_A = { a: 52, c: -28 };
+    const POSE_C = { a: 42, c: -12 };
     const st = { a: 0, c: 0, s: 1, zb: 0, lift: 0, spread: 0, oy: 0 };
     const geo = { plateC: 0, oyA: 0, oyC: 0, sA: 0.6, sC: 0.8, uiY: 0, perspTop: 0 };
     const RAD = Math.PI / 180;
@@ -378,7 +417,6 @@ export default function HeroScene() {
     const measure = () => {
       const vh = window.innerHeight;
       const vw = window.innerWidth;
-      const P = parseFloat(getComputedStyle(persp).perspective) || 1000;
       const pl = offsetWithin(plate, persp);
       geo.perspTop = offsetWithin(persp, pin).top;
       geo.plateC = pl.top + pl.height / 2;
@@ -386,20 +424,62 @@ export default function HeroScene() {
       const uiBox = offsetWithin(ui, pin);
       const sheetTop = vh - 14 - ui.offsetHeight;
       geo.uiY = sheetTop - uiBox.top;
-      // fit the exploded stack (projected size ~ M * s * box + the spread along the normal)
-      const M = P / (P + 260);
-      const box = { h: 0.47 * pl.width + 0.55 * pl.height, w: 0.88 * pl.width + 0.29 * pl.height };
-      const fit = (y0: number, y1: number) =>
-        Math.max(0.34, Math.min(0.95, ((0.94 * (y1 - y0)) / M - 140) / box.h, (0.96 * (vw - 16)) / (M * box.w)));
+      // Fit the exploded stack by projecting it. Each layer's corners go through the steps the render
+      // applies (scale about the hinge, tilt, turn, rise along the plane's normal by the layer's
+      // depth), and the scale is the largest whose outline stays inside the screen. There is no
+      // perspective term: the phone stack is drawn without one (see hero.css). An earlier estimate
+      // from the plate alone was tuned by eye and capped the stack at under half of an 844 px screen.
+      const hinge = { x: pl.left + pl.width / 2, y: geo.plateC };
+      const outline = [
+        { el: plate, d: 0 },
+        { el: name, d: 90 },
+        { el: portrait, d: 190 },
+      ].map(({ el, d }) => {
+        const b = offsetWithin(el, persp);
+        return { d, xs: [b.left - hinge.x, b.left + b.width - hinge.x], ys: [b.top - hinge.y, b.top + b.height - hinge.y] };
+      });
+      const extent = (pose: { a: number; c: number }, s: number) => {
+        const [ca, sa, cc, sc] = [Math.cos(pose.a * RAD), Math.sin(pose.a * RAD), Math.cos(pose.c * RAD), Math.sin(pose.c * RAD)];
+        const e = { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity };
+        for (const { d, xs, ys } of outline) {
+          for (const px of xs) {
+            for (const py of ys) {
+              const y = py * s * ca;
+              const X = px * s * cc - y * sc + d * sa * sc;
+              const Y = px * s * sc + y * cc - d * sa * cc;
+              e.x0 = Math.min(e.x0, X);
+              e.x1 = Math.max(e.x1, X);
+              e.y0 = Math.min(e.y0, Y);
+              e.y1 = Math.max(e.y1, Y);
+            }
+          }
+        }
+        return e;
+      };
+      /** Largest scale (up to `cap`) at which the pose fits between y0 and y1, and where to centre it. */
+      const fit = (pose: { a: number; c: number }, y0: number, y1: number, cap: number) => {
+        const half = vw / 2 - 8;
+        const fits = (s: number) => {
+          const e = extent(pose, s);
+          return e.x0 >= -half && e.x1 <= half && e.y1 - e.y0 <= y1 - y0;
+        };
+        let [lo, hi] = [0.34, cap];
+        if (fits(hi)) lo = hi;
+        else for (let i = 0; i < 18; i++) {
+          const mid = (lo + hi) / 2;
+          if (fits(mid)) lo = mid;
+          else hi = mid;
+        }
+        const e = extent(pose, lo);
+        // the hinge goes where the outline sits centred
+        return { s: lo, oy: (y0 + y1) / 2 - geo.perspTop - (e.y0 + e.y1) / 2 };
+      };
       const top = 80;
       // while the card is up, the stack may run behind the card's top edge (the card is in front)
-      const bottomA = sheetTop + 110;
-      geo.sA = fit(top, bottomA);
-      geo.sC = fit(top, vh - 24) * 0.9;
-      // centres, in the perspective element's coordinates (the stack rises along its normal, so its
-      // hinge sits a little below the visual centre)
-      geo.oyA = (top + bottomA) / 2 - geo.perspTop + 40;
-      geo.oyC = (top + vh - 24) / 2 - geo.perspTop + 44;
+      const a = fit(POSE_A, top, sheetTop + 110, 0.95);
+      // alone on the screen it may grow past its resting size
+      const c = fit(POSE_C, top, vh - 24, 1.3);
+      [geo.sA, geo.oyA, geo.sC, geo.oyC] = [a.s, a.oy, c.s, c.oy];
       // one shared hinge for the rigid stack: the plate's centre, in each element's own box
       const cx = plate.offsetLeft + plate.offsetWidth / 2;
       const cy = plate.offsetTop + plate.offsetHeight / 2;
@@ -423,7 +503,6 @@ export default function HeroScene() {
       const ny = -Math.sin(st.a * RAD) * Math.cos(st.c * RAD);
       const nz = Math.cos(st.a * RAD);
       const yb = st.lift * (st.oy - geo.plateC);
-      persp.style.perspectiveOrigin = `50% ${st.oy.toFixed(1)}px`;
       const handing = tl.progress() > HOLD_END;
       rigid.forEach(({ el, d }) => {
         if (handing && el === portrait) return;
@@ -435,7 +514,7 @@ export default function HeroScene() {
 
     const IN = 0.2;
     // apart: into the isometric stack; the interface card rises
-    tl.to(st, { a: 52, c: -28, s: () => geo.sA, zb: -260, lift: 1, duration: IN, ease: 'power2.inOut' }, 0)
+    tl.to(st, { ...POSE_A, s: () => geo.sA, zb: -260, lift: 1, duration: IN, ease: 'power2.inOut' }, 0)
       // the layers pop apart with a little overshoot, like a physical stack
       .to(st, { spread: 1, duration: IN * 0.9, ease: 'back.out(1.6)' }, IN * 0.25)
       .to([ui, tInterface], { y: () => geo.uiY, duration: IN, ease: 'power3.out' }, 0.02)
@@ -448,7 +527,7 @@ export default function HeroScene() {
     // the card lifts away; the stack takes the whole screen
     tl.to([ui, tInterface], { y: () => geo.uiY - 140, opacity: 0, duration: 0.12, ease: 'power2.in' }, 0.52)
       .to(ui, { '--sheet': 0, duration: 0.08 }, 0.56)
-      .to(st, { oy: () => geo.oyC, s: () => geo.sC, a: 55, c: -30, duration: 0.14, ease: 'power2.inOut' }, 0.52)
+      .to(st, { oy: () => geo.oyC, s: () => geo.sC, ...POSE_C, duration: 0.14, ease: 'power2.inOut' }, 0.52)
       // back together facing you, then the hand-off
       .to([tBackdrop, tType, tPortrait], { opacity: 0, duration: 0.05 }, HOLD_END - 0.04)
       .to(planes, { '--planes': 0, duration: 0.06 }, HOLD_END - 0.03)
@@ -460,13 +539,14 @@ export default function HeroScene() {
       );
     splitName(0.6);
     render();
+    // at rest the interface is below the fold and the pin holds it there: it shows while its card is up
+    cleanups.push(showOnFocus(section, () => tl.scrollTrigger, (el) => (ui.contains(el) ? [0.25, 0.48] : null)));
 
     return () => {
       cleanups.forEach((fn) => fn());
       root.style.removeProperty('--hero-overlap');
       root.style.removeProperty('--handoff');
       root.classList.remove('hero-handed');
-      persp.style.removeProperty('perspective-origin');
       tags.forEach((t) => ['left', 'top', 'right', 'bottom'].forEach((key) => t.style.removeProperty(key)));
     };
 

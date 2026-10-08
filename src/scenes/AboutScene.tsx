@@ -171,7 +171,8 @@ export default function AboutScene() {
       q('.about__rise')
         .filter((el) => el !== card)
         .forEach((el) => {
-          gsap.from(el, {
+          const words = el.querySelectorAll('.about__word');
+          gsap.from(words.length ? words : el, {
             y: 36,
             rotateX: -35,
             opacity: 0,
@@ -208,13 +209,19 @@ export default function AboutScene() {
     let t = LEAD + REVEAL;
     chapters.forEach((ch, i) => {
       starts.push(t);
-      const lines = ch.querySelectorAll('.about__rise');
-      tl.fromTo(
-        lines,
-        { rotateX: -65, z: -120 * k, y: 24, opacity: 0 },
-        { rotateX: 0, z: 0, y: 0, opacity: 1, duration: 0.18, stagger: 0.05, ease: 'power2.out', immediateRender: true },
-        t + 0.02,
-      );
+      // the scrim behind the chapter (about.css) arrives with its first line
+      tl.fromTo(ch, { '--scrim': 0 }, { '--scrim': 1, duration: 0.14, immediateRender: true }, t + 0.02);
+      // number, title, then one sentence at a time: a sentence rises as its words, all at once
+      ch.querySelectorAll<HTMLElement>('.about__rise').forEach((line, j) => {
+        const words = line.querySelectorAll('.about__word');
+        tl.fromTo(
+          words.length ? words : line,
+          // no z on words: their parent is an inline box, and engines differ on whether depth survives it
+          { rotateX: -65, z: words.length ? 0 : -120 * k, y: 24, opacity: 0 },
+          { rotateX: 0, z: 0, y: 0, opacity: 1, duration: 0.18, ease: 'power2.out', immediateRender: true },
+          t + 0.02 + j * 0.05,
+        );
+      });
       if (i < n - 1) {
         tl.to(ch, { rotateX: 18, z: -240 * k, opacity: 0, duration: 0.12, ease: 'power1.in' }, t + CHAPTER - 0.12);
         const quote = flyers[i];
@@ -317,9 +324,15 @@ export default function AboutScene() {
                       {TITLES[i]}
                     </h3>
                     <p className="about__text">
+                      {/* Sentences stay inline so the chapter reads as one paragraph. A transform needs a
+                          box, so each word is one (inline-block) and a sentence's words rise together. */}
                       {sentences(text).map((s) => (
                         <span key={s} className="about__rise about__sentence">
-                          {s}{' '}
+                          {s.split(' ').map((word, w) => (
+                            <Fragment key={w}>
+                              <span className="about__word">{word}</span>{' '}
+                            </Fragment>
+                          ))}
                         </span>
                       ))}
                     </p>

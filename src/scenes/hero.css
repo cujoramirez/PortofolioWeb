@@ -20,6 +20,13 @@
 
 .hero__stage {
   --inset: clamp(20px, 3.4vw, 52px);
+  /* The portrait's geometry is declared here, on the stage, because its layer tag reads it too.
+     Declared on the portrait alone, the tag's offsets were invalid and it sat in the stage's
+     top-left corner. --fs-name and --head-px (measured by HeroScene) are set on the stage as well. */
+  /* 88vh, capped by the stage height and by width, so the head keeps its size relative to the name */
+  --portrait-h: min(88vh, 100vh - 92px, 56vw, 980px);
+  /* where the head goes: measured from the real glyphs by HeroScene (--head-px), else estimated */
+  --head-x: calc(var(--inset) + var(--fs-name, var(--fs-hero)) * 4.9);
   position: absolute;
   top: calc(var(--nav-top) + var(--nav-h) + 12px);
   left: 12px;
@@ -44,7 +51,7 @@
   top: clamp(16px, 4.5vh, 48px);
   left: var(--inset);
   margin: 0;
-  /* --fs-name is set by HeroScene only when the measured name would not fit the plate */
+  /* --fs-name is set (on the stage) by HeroScene only when the measured name would not fit the plate */
   font-size: var(--fs-name, var(--fs-hero));
   font-weight: 800;
   line-height: 0.9;
@@ -95,10 +102,6 @@
 /* ---------- Portrait ---------- */
 
 .hero__portrait {
-  /* 88vh, capped by the stage height and by width, so the head keeps its size relative to the name */
-  --portrait-h: min(88vh, 100vh - 92px, 56vw, 980px);
-  /* where the head goes: measured from the real glyphs by HeroScene (--head-px), else estimated */
-  --head-x: calc(var(--inset) + var(--fs-name, var(--fs-hero)) * 4.9);
   position: absolute;
   bottom: 0;
   left: calc(var(--head-px, var(--head-x)) - var(--portrait-h) * 0.75 * 0.496);
@@ -237,6 +240,14 @@
   bottom: clamp(20px, 5vh, 52px);
   width: min(28rem, 36vw);
 }
+/* The interface layer and the index keep their children in their own plane. As preserve-3d layers
+   (.layer), a button the pointer had moved (the magnet sets a transform on it) became a plane of
+   its own, coplanar with its parent, and Chrome's hit test gave the click to the parent: with a
+   mouse, "View my work" and the résumé button did nothing. */
+.hero__ui,
+.hero__index {
+  transform-style: flat;
+}
 .hero__role {
   font-size: clamp(1.0625rem, 0.9rem + 0.4vw, 1.25rem);
   line-height: 1.5;
@@ -275,19 +286,77 @@
   font-size: var(--fs-small);
 }
 
+/* ---------- Index: what the page holds, in the plate's right third, which was bare at rest.
+   Part of the interface layer (same depth, leaves with it). Rows are two cells of the plate's
+   22px dot grid. Shown only where the right third exists: wide landscape windows. ---------- */
+
+.hero__index {
+  position: absolute;
+  right: var(--inset);
+  bottom: clamp(20px, 5vh, 52px);
+  width: 13.75rem;
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.hero__index a {
+  display: grid;
+  grid-template-columns: 2.5em 1fr auto;
+  align-items: center;
+  min-height: 44px;
+  border-top: 1px solid var(--hairline);
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: color 0.2s var(--ease-hover), border-color 0.2s var(--ease-hover);
+}
+.hero__index li:last-child a {
+  border-bottom: 1px solid var(--hairline);
+}
+.hero__index a:hover {
+  color: var(--ink);
+  border-top-color: var(--accent);
+}
+.hero__index-no {
+  color: var(--accent);
+}
+.hero__index-count {
+  color: var(--ink-3);
+}
+/* short windows with a mouse: one and a half grid cells a row, so the list clears "Aditya" */
+@media (max-height: 700px) and (pointer: fine) {
+  .hero__index a {
+    min-height: 33px;
+  }
+}
+/* no right third: narrower windows, portrait-shaped ones, and short ones where rows must stay 44px.
+   HeroScene also hides it (.no-index) when its measured box would touch the portrait or the name. */
+@media (max-width: 1099px), (max-aspect-ratio: 1 / 1), (max-height: 700px) and (pointer: coarse) {
+  .hero__index {
+    display: none;
+  }
+}
+.hero.no-index .hero__index {
+  visibility: hidden;
+}
+
 /* ---------- Layer tags (visible only while the stack is exploded) ---------- */
 
+/* the plate's top right corner: its bottom right is where the index sits */
 .hero__tag--0 {
   right: 24px;
-  bottom: 18px;
+  top: 18px;
 }
+/* just under the baseline of "Perdana" (line 2 of a 0.9 line-height, baseline 0.79em down) */
 .hero__tag--1 {
-  top: calc(clamp(16px, 4.5vh, 48px) + var(--fs-name, var(--fs-hero)) * 1.86);
+  top: calc(clamp(16px, 4.5vh, 48px) + var(--fs-name, var(--fs-hero)) * 1.72);
   left: var(--inset);
 }
+/* resting on the shoulder: the segmentation mask puts its top edge 58% down at 78% across */
 .hero__tag--2 {
-  bottom: calc(var(--portrait-h) - 26px);
-  left: calc(var(--head-px, var(--head-x)) + var(--portrait-h) * 0.16);
+  bottom: calc(var(--portrait-h) * 0.42 + 4px);
+  left: calc(var(--head-px, var(--head-x)) + var(--portrait-h) * 0.75 * 0.284);
 }
 .hero__tag--3 {
   bottom: calc(clamp(20px, 5vh, 52px) - 30px);
@@ -306,8 +375,10 @@
   .hero__line:first-child {
     word-spacing: normal;
   }
-  .hero__portrait {
+  .hero__stage {
     --portrait-h: min(58vh, 100vh - 92px);
+  }
+  .hero__portrait {
     left: auto;
     right: 0;
   }
@@ -377,6 +448,14 @@
 
 /* Phones in motion: the exploded view. Tags are placed on their layers by HeroScene; each layer is
    drawn as a dashed plane while apart (--planes 0 -> 1, tweened on the layer). */
+/* No perspective on the phone stack, in any engine (keyed on the variant, which short wide windows
+   get too). iOS WebKit never applied it here: it passes `perspective` down only through an element
+   with a transform of its own, and this stage has none (its layers carry them). So an iPhone drew
+   the stack isometric while Chrome foreshortened it and drew it a fifth smaller. HeroScene fits
+   the stack to this flat projection. */
+.hero.is-motion.is-mobile .hero__persp {
+  perspective: none;
+}
 @media (max-width: 767px) {
   .hero.is-motion .hero__tag {
     display: inline-flex;
@@ -424,7 +503,8 @@
   /* crossfades into the About card photo as it lands (--handoff from HeroScene) */
   opacity: calc(1 - var(--handoff, 0));
 }
-.hero.is-motion .hero__ui { transform: translateZ(3px); }
+.hero.is-motion .hero__ui,
+.hero.is-motion .hero__index { transform: translateZ(3px); }
 
 /* The portrait has handed over to the About card; the dispersed hero stops covering the page */
 html.hero-handed .hero__pin {
@@ -459,6 +539,11 @@ html.hero-handed .hero__pin {
   }
   html.js .hero__ui > :nth-child(4) {
     animation-delay: 0.6s;
+  }
+  /* on the list, not the nav: GSAP fades the nav during the dispersal, and a tween on an element
+     that is mid-intro records opacity 0 as its start (as it once did for the plate) */
+  html.js .hero__index > ol {
+    animation: hero-rise 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.68s backwards;
   }
 }
 @keyframes hero-plate {
