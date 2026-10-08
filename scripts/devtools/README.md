@@ -30,6 +30,21 @@ then run from this folder:
   Chrome (`shot.mjs`) or real Safari, not here.
 - `node idle-scroll.mjs <url> [--mobile]`: rAF count over 2.5 s, 1 s after scrolling settles (should be 0).
 - `node cls.mjs <url> [--desktop]`: layout-shift sources.
+- `node budget.mjs [--out <dir>] [--no-build] [--limit 125] [--sum "label=regex:limitKB"]`: builds, then
+  prints gzip sizes of the first-load chunks, every lazy chunk and the HTML. Exits 1 over a limit.
+- `node perf.mjs <url> --actions [--desktop]`: scripted interactions (hover, globe drag, project dialog,
+  menu sheet on the phone preset, theme toggle, search). After each one: the 2.5 s idle window, starting
+  1 s after the last input, and the interaction's INP with its three phases, under 4x CPU throttle.
+- `node perf.mjs <url> --scroll [--desktop]`: one full-page scroll gesture: frame-interval percentiles and
+  the ten longest animation frames with their top script and forced style/layout time.
+  Both modes need `?tier=high` and run on the Mac's GPU; `--software` forces SwiftShader, where a
+  dialog's backdrop blur alone takes about 500 ms to present.
+- `node pins.mjs <url> [--w] [--h] [--mobile] [--dead]`: page height, each section's height and pinned
+  distance. `--dead` steps through every pinned stretch (0.1 viewport heights) and lists runs where the
+  picture does not change; the second strip shows how much changed at each step.
+
+The newer tools share `cdp.mjs`. It turns on focus emulation: without it a CDP Escape key press makes
+the headless page `hidden`, no frame is produced afterwards, and every idle check reads a false 0.
 
 Every script launches Chrome through `chrome-guard.mjs`, which kills it on any exit, including a
 SIGKILL of the parent. An orphaned SwiftShader Chrome once ran for 27 minutes at 2+ cores.
