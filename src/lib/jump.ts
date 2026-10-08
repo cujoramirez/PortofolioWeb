@@ -26,7 +26,7 @@ export function focusHeading(target: HTMLElement) {
   heading.focus({ preventScroll: true });
 }
 
-export async function jumpTo(id: string, { immediate = false } = {}) {
+export async function jumpTo(id: string, { immediate = false, url = true } = {}) {
   const needsLoad = loaders.size > 0;
   if (needsLoad) {
     await loadAllScenes();
@@ -35,6 +35,9 @@ export async function jumpTo(id: string, { immediate = false } = {}) {
   }
   const target = document.getElementById(id);
   if (!target) return;
+  // An explicit jump is a link you can copy: the URL names the section, and the top clears it.
+  // Replaced, not pushed, so Back still leaves the page. Scrolling never writes the hash.
+  if (url) history.replaceState(null, '', id === 'hero' ? location.pathname + location.search : `#${id}`);
   // A scene can ask to land a little past its top (About waits out the hero's hand-off).
   const offset = Number(target.dataset.jumpOffset ?? 0);
   const top = id === 'hero' ? 0 : target.getBoundingClientRect().top + window.scrollY + offset;

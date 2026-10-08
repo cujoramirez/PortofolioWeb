@@ -1,4 +1,6 @@
 /** A one-line status toast (glass pill, bottom centre), announced politely to screen readers. */
+import './toast.css';
+
 let host: HTMLElement | null = null;
 let timer = 0;
 

@@ -3,6 +3,8 @@
  * first paint (see themeInitScript in src/content/heroMarkup.ts; same key and values).
  * Choosing the scheme the OS already uses stores nothing, which means "follow the system".
  */
+import { THEME_COLOR } from '../content/site';
+
 export type Scheme = 'light' | 'dark';
 
 const KEY = 'theme';
@@ -24,6 +26,9 @@ export const currentScheme = (): Scheme => (document.documentElement.dataset.the
 
 function apply(scheme: Scheme) {
   document.documentElement.dataset.theme = scheme;
+  // The pre-paint script's tag (the one without a media query): a manual toggle has to recolour
+  // the mobile browser toolbar too, and the media-keyed tags only follow the OS.
+  document.querySelector('meta[name="theme-color"]:not([media])')?.setAttribute('content', THEME_COLOR[scheme]);
   listeners.forEach((fn) => fn());
 }
 

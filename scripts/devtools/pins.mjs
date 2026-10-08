@@ -79,7 +79,7 @@ console.log(`Pinned / page: ${vh(pinned)} / ${vh(map.page)} vh (${((100 * pinned
 if (flag('dead')) {
   // The nav's progress line and the background repaint on every scroll step by design; hidden,
   // a frame only changes when the scene itself does.
-  await evaluate(`document.head.appendChild(Object.assign(document.createElement('style'), { textContent: '#nav-root, .bends, .cursor-label { visibility: hidden !important }' })); 0`);
+  await evaluate(`document.head.appendChild(Object.assign(document.createElement('style'), { textContent: '#nav-root, .bends, .cursor-chip { visibility: hidden !important }' })); 0`);
   const maxY = map.page - map.vh;
   const px = step * map.vh;
   console.log(`\nDead-zone scan: ${step} vh steps, runs of ${min} vh or more with an unchanged frame`);

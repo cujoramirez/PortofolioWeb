@@ -4,6 +4,7 @@
  * and fades out in place. Targets opt in with `data-cursor="Label"`.
  */
 import { motionAllowed } from './motion';
+import './cursor.css';
 
 export function installCursorLabel(): () => void {
   if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches || !motionAllowed()) return () => {};

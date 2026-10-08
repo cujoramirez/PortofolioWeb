@@ -11,6 +11,7 @@ import Nav from './components/Nav';
 import SceneSlot, { type SceneDef } from './components/SceneSlot';
 import HeroScene from './scenes/HeroScene';
 import { OWNER } from './content/site';
+import { fontsReady } from './lib/fonts';
 import { ScrollTrigger } from './lib/gsap';
 import { focusHeading, jumpTo, loadAllScenes } from './lib/jump';
 import { initScroll, refreshSoon, scrollToTarget } from './lib/scroll';
@@ -25,6 +26,9 @@ const SCENES: SceneDef[] = [
   { id: 'certificates', load: () => import('./scenes/CertificatesScene'), estimate: '110vh' },
   { id: 'contact', load: () => import('./scenes/ContactScene'), estimate: '200vh' },
 ];
+
+/** Overlay hashes (useHashDialog) and the section whose scene opens each overlay. */
+const OVERLAY_HOME: Record<string, string> = { 'all-projects': 'projects', 'all-certificates': 'certificates' };
 
 /** Every in-page anchor (including the static hero's) goes through jumpTo. */
 function useAnchorJumps() {
@@ -55,11 +59,14 @@ export default function App() {
 
   useEffect(() => {
     const stop = initScroll();
-    void document.fonts?.ready.then(() => refreshSoon());
+    void fontsReady().then(() => refreshSoon());
     const onLoad = () => refreshSoon();
     window.addEventListener('load', onLoad);
     const hash = decodeURIComponent(location.hash.slice(1));
-    if (hash && document.getElementById(hash)) void jumpTo(hash, { immediate: true });
+    // An overlay link opens from a lazy scene, which a cold load never mounted: mount the scenes
+    // and stand on the overlay's section, leaving the hash for useHashDialog.
+    if (OVERLAY_HOME[hash]) void jumpTo(OVERLAY_HOME[hash], { immediate: true, url: false });
+    else if (hash && document.getElementById(hash)) void jumpTo(hash, { immediate: true });
     // dev only: ?at=papers_350 opens the page scrolled to a scene (the iOS Simulator cannot scroll)
     if (import.meta.env.DEV) {
       const at = /^([a-z]+)(?:_(-?\d+))?$/.exec(new URLSearchParams(location.search).get('at') ?? '');

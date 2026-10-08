@@ -21,6 +21,8 @@ html {
   -webkit-text-size-adjust: 100%;
   /* clip, not hidden: hidden turns html into a scroll container and breaks sticky and pins */
   overflow-x: clip;
+  /* keyboard focus and scrollIntoView stop below the fixed nav instead of under it */
+  scroll-padding-top: calc(var(--nav-top) + var(--nav-h) + 12px);
   scrollbar-width: thin;
   scrollbar-color: var(--hairline-strong) transparent;
 }
@@ -282,45 +284,6 @@ p {
   background: currentColor;
 }
 
-/* Callout: an accent leader line with a mono label, like a drawing callout */
-.callout {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-}
-.callout::before {
-  content: '';
-  width: var(--leader, 56px);
-  height: 1px;
-  background: currentColor;
-}
-.callout::after {
-  content: '';
-  position: absolute;
-  left: -3px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-}
-.callout--left {
-  flex-direction: row-reverse;
-}
-.callout--left::after {
-  left: auto;
-  right: -3px;
-}
-
 /* Scene scaffolding: a perspective container around one preserve-3d stage */
 .scene {
   position: relative;
@@ -447,11 +410,13 @@ html.lenis body {
   overflow: clip;
 }
 
-/* Theme switch: circular reveal from the toggle (View Transitions); instant without support */
-::view-transition-old(root) {
+/* Theme switch: circular reveal from the toggle (View Transitions); instant without support.
+   Scoped to [data-vt='theme'] (set by toggleScheme for the duration) so other view transitions
+   on the page keep their own animation. */
+:root[data-vt='theme']::view-transition-old(root) {
   animation: none;
 }
-::view-transition-new(root) {
+:root[data-vt='theme']::view-transition-new(root) {
   animation: vt-reveal 0.5s var(--ease-out);
 }
 @keyframes vt-reveal {
@@ -472,6 +437,33 @@ html.lenis body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Without JavaScript only the hero shell exists: the rest of the page as plain text
+   (src/content/noscriptMarkup.ts, inside <noscript>). */
+.nojs {
+  max-width: 70ch;
+  margin-inline: auto;
+  padding: 0 var(--gutter) 4rem;
+}
+.nojs section {
+  padding-top: 3.5rem;
+}
+.nojs h2 {
+  font-size: 1.75rem;
+  letter-spacing: -0.02em;
+}
+.nojs p,
+.nojs li {
+  margin-top: 0.75rem;
+  color: var(--ink-2);
+}
+.nojs b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.nojs .text-link {
+  margin-right: 1.25rem;
 }
 
 .footer {
@@ -624,73 +616,6 @@ html.lenis body {
     transform: translateX(110%);
     transition: transform 0.7s var(--ease-out);
   }
-}
-
-/* ---------- Toast (status line for easter eggs) ---------- */
-
-.toast.glass {
-  position: fixed;
-  left: 50%;
-  top: calc(var(--nav-top) + var(--nav-h) + 12px);
-  z-index: 90;
-  max-width: min(92vw, 520px);
-  padding: 10px 16px;
-  border-radius: 999px;
-  color: var(--ink);
-  font-size: 0.78rem;
-  line-height: 1.4;
-  text-align: center;
-  opacity: 0;
-  transform: translate(-50%, -10px);
-  transition:
-    opacity 0.25s ease,
-    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
-}
-.toast.glass[data-on='1'] {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-@media (prefers-reduced-motion: reduce) {
-  .toast.glass,
-  .toast.glass[data-on='1'] {
-    transform: translate(-50%, 0);
-  }
-}
-
-/* ---------- Easter egg: view hierarchy (after Xcode's view debugger) ---------- */
-
-html.is-hierarchy body *:not(svg *) {
-  outline: 1px solid color-mix(in srgb, var(--accent) 50%, transparent) !important;
-  outline-offset: -1px;
-}
-
-/* ---------- Cursor label (lib/cursor.ts) ---------- */
-
-.cursor-chip {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 95;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: var(--accent-fill);
-  color: #fff;
-  font-size: 0.7rem;
-  line-height: 1.2;
-  letter-spacing: 0.02em;
-  box-shadow: 0 6px 18px -8px rgb(0 0 0 / 0.5);
-  pointer-events: none;
-  opacity: 0;
-  scale: 0.85;
-  transition:
-    opacity 0.18s ease,
-    scale 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
-}
-.cursor-chip[data-on='1'] {
-  opacity: 1;
-  scale: 1;
 }
 
 /* ---------- Meter: "02 / 05" and one bar per item, for pinned phone decks (Experience, Papers) ---------- */

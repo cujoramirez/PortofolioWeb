@@ -123,6 +123,12 @@
   inset: 0;
   pointer-events: none;
   opacity: 0;
+  /* Not rendered until HeroScene attaches (.has-cv). A rendered element fetches its mask images
+     even at opacity 0, and those 15 KB took bandwidth from the LCP portrait on a slow connection. */
+  display: none;
+}
+.hero.has-cv .hero__cv {
+  display: block;
 }
 .cv-mask,
 .cv-edge {

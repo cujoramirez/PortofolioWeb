@@ -11,6 +11,7 @@
 import { LINKS } from '../content/site';
 import { currentScheme, setScheme, subscribeScheme, systemScheme } from './theme';
 import { toast } from './toast';
+import './eggs.css';
 
 const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 

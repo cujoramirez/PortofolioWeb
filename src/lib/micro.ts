@@ -6,6 +6,7 @@
  *  - nothing loops: each effect runs on a hover, a click or once on reveal, then stops;
  *  - reduced motion and the low tier get the resting state.
  */
+import { fontsReady } from './fonts';
 import { gsap, ScrollTrigger, SplitText } from './gsap';
 import { motionAllowed } from './motion';
 
@@ -136,29 +137,39 @@ export function spark(x: number, y: number, count = 9): void {
  */
 export function revealHeading(heading: HTMLElement): () => void {
   if (!motionAllowed()) return () => {};
-  const split = SplitText.create(heading, { type: 'words', mask: 'words', wordsClass: 'hw' });
-  const tween = gsap.fromTo(
-    split.words,
-    { yPercent: 105, rotate: 4 },
-    {
-      yPercent: 0,
-      rotate: 0,
-      ease: 'power3.out',
-      stagger: 0.12,
-      immediateRender: true,
-      scrollTrigger: {
-        trigger: heading,
-        start: 'top 92%',
-        end: 'top 62%',
-        scrub: 0.6,
-        // headings inside a pinned scene: measure against the pin, or the reveal lands late
-        pinnedContainer: heading.closest<HTMLElement>('.about__pin, .disciplines__pin, .projects__pin, .xp__pin, .papers__pin, .contact__pin') ?? undefined,
+  let undo: (() => void) | null = null;
+  let live = true;
+  // split once the web fonts are in: a scene can mount while they are still downloading
+  void fontsReady().then(() => {
+    if (!live) return;
+    const split = SplitText.create(heading, { type: 'words', mask: 'words', wordsClass: 'hw' });
+    const tween = gsap.fromTo(
+      split.words,
+      { yPercent: 105, rotate: 4 },
+      {
+        yPercent: 0,
+        rotate: 0,
+        ease: 'power3.out',
+        stagger: 0.12,
+        immediateRender: true,
+        scrollTrigger: {
+          trigger: heading,
+          start: 'top 92%',
+          end: 'top 62%',
+          scrub: 0.6,
+          // headings inside a pinned scene: measure against the pin, or the reveal lands late
+          pinnedContainer: heading.closest<HTMLElement>('.about__pin, .disciplines__pin, .projects__pin, .xp__pin, .papers__pin, .contact__pin') ?? undefined,
+        },
       },
-    },
-  );
+    );
+    undo = () => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+      split.revert();
+    };
+  });
   return () => {
-    tween.scrollTrigger?.kill();
-    tween.kill();
-    split.revert();
+    live = false;
+    undo?.();
   };
 }

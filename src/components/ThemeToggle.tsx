@@ -7,10 +7,15 @@ export function useScheme(): Scheme {
   return useSyncExternalStore(subscribeScheme, currentScheme, () => 'dark');
 }
 
+const VT_PROPS = ['--vt-x', '--vt-y', '--vt-r'];
+let revealing = false;
+
 /** Switch schemes with a circular reveal from the control (View Transitions), else instantly. */
 export function toggleScheme(event: MouseEvent<HTMLElement>) {
+  // a second press mid-reveal would skip the running transition and snap the theme
+  if (revealing) return;
   const next: Scheme = currentScheme() === 'dark' ? 'light' : 'dark';
-  const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+  const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
   if (!doc.startViewTransition || !motionAllowed()) {
     setScheme(next);
     return;
@@ -22,7 +27,15 @@ export function toggleScheme(event: MouseEvent<HTMLElement>) {
   root.style.setProperty('--vt-x', `${x}px`);
   root.style.setProperty('--vt-y', `${y}px`);
   root.style.setProperty('--vt-r', `${Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))}px`);
-  doc.startViewTransition(() => setScheme(next));
+  // marks this transition as the theme reveal (base.css scopes the circular animation to it)
+  root.dataset.vt = 'theme';
+  revealing = true;
+  const done = () => {
+    revealing = false;
+    delete root.dataset.vt;
+    VT_PROPS.forEach((p) => root.style.removeProperty(p));
+  };
+  doc.startViewTransition(() => setScheme(next)).finished.then(done, done);
 }
 
 export default function ThemeToggle({ withLabel = false }: { withLabel?: boolean }) {

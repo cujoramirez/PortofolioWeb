@@ -1,0 +1,5 @@
+/* View hierarchy easter egg, after Xcode's view debugger (lib/eggs.ts). */
+html.is-hierarchy body *:not(svg *) {
+  outline: 1px solid color-mix(in srgb, var(--accent) 50%, transparent) !important;
+  outline-offset: -1px;
+}

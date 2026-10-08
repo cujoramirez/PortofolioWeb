@@ -6,7 +6,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Dialog from './Dialog';
-import MenuSheet from './MenuSheet';
 import ThemeToggle from './ThemeToggle';
 import { MenuIcon } from './icons';
 import { LINKS, NAV, OWNER, type SectionId } from '../content/site';
@@ -16,6 +15,10 @@ import { jumpTo } from '../lib/jump';
 
 // The palette carries every project and paper: load it the first time it opens.
 const CommandPalette = lazy(() => import('./CommandPalette'));
+// The menu sheet exists only below 900 px. As a lazy chunk its code stays out of the desktop first
+// load and its stylesheet out of the HTML (the entry CSS is inlined there).
+const loadMenuSheet = () => import('./MenuSheet');
+const MenuSheet = lazy(loadMenuSheet);
 
 /** Sections that count toward a nav item's progress and active state. */
 const OWNED: Record<string, SectionId[]> = {
@@ -42,6 +45,20 @@ export default function Nav() {
   useEffect(() => {
     if (paletteOpen) setPaletteUsed(true);
   }, [paletteOpen]);
+  const [menuUsed, setMenuUsed] = useState(false);
+  useEffect(() => {
+    if (menuOpen) setMenuUsed(true);
+  }, [menuOpen]);
+  // Where the menu button shows, fetch the sheet once the page is idle so the first tap opens it at once.
+  useEffect(() => {
+    if (!window.matchMedia('(max-width: 899px)').matches) return undefined;
+    if (window.requestIdleCallback) {
+      const id = window.requestIdleCallback(() => void loadMenuSheet());
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(() => void loadMenuSheet(), 1500);
+    return () => window.clearTimeout(id);
+  }, []);
   const progressRef = useRef<HTMLSpanElement>(null);
   const linkRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const barRef = useRef<HTMLDivElement>(null);
@@ -244,14 +261,18 @@ export default function Nav() {
         <p className="help-dialog__note">A few things on this page are hidden.</p>
       </Dialog>
 
-      <MenuSheet
-        open={menuOpen}
-        active={active}
-        progress={sectionProgress}
-        button={menuButton}
-        onClosed={closedMenu}
-        onSearch={openPalette}
-      />
+      {menuUsed ? (
+        <Suspense fallback={null}>
+          <MenuSheet
+            open={menuOpen}
+            active={active}
+            progress={sectionProgress}
+            button={menuButton}
+            onClosed={closedMenu}
+            onSearch={openPalette}
+          />
+        </Suspense>
+      ) : null}
     </>
   );
   return target ? createPortal(ui, target) : ui;

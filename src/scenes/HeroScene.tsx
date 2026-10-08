@@ -19,6 +19,8 @@
 import { useEffect, useRef } from 'react';
 import { gsap, ScrollTrigger, SplitText } from '../lib/gsap';
 import { decrypt, magnet } from '../lib/micro';
+import { fontsReady } from '../lib/fonts';
+import { refreshSoon } from '../lib/scroll';
 import { useScene } from '../lib/useScene';
 import { HERO_DISPERSE, HERO_PIN, leadPx, offsetWithin } from './handoff';
 
@@ -89,6 +91,9 @@ export default function HeroScene() {
     const portrait = section.querySelector<HTMLElement>('.hero__portrait');
     const cv = section.querySelector<HTMLElement>('.hero__cv');
     const cleanups: (() => void)[] = [];
+    // the Vision overlay starts unrendered so its mask images load after the portrait (hero.css)
+    section.classList.add('has-cv');
+    cleanups.push(() => section.classList.remove('has-cv'));
 
     // Measure only once the real font is in: measuring the fallback font first would move the
     // portrait twice (a layout shift) as the web font swaps in.
@@ -98,7 +103,7 @@ export default function HeroScene() {
     const fit = () => {
       if (ready) fitHero(section);
     };
-    void (document.fonts?.ready ?? Promise.resolve()).then(() => {
+    void fontsReady().then(() => {
       ready = true;
       fit();
       // the facts resolve out of scrambled glyphs once, like a terminal printing them
@@ -211,11 +216,14 @@ export default function HeroScene() {
 
     // On phones the name wraps at its natural (min-content) width: characters stay inside unbreakable
     // words (.hero__word), or the min-content of single characters would be one letter wide.
-    const split = SplitText.create(name, { type: mobile ? 'words,chars' : 'chars', charsClass: 'hero__char', wordsClass: 'hero__word' });
+    // Created once the web fonts are in (splitName below): on a slow connection this build step
+    // runs while they are still downloading, and SplitText warns about a split made in the fallback.
+    let split: SplitText | null = null;
     // Each character shows its own slice of the name's gradient (so it survives the scatter). Measured
     // from layout offsets (through positioned words), never from on-screen boxes: a refresh can run
     // this mid-choreography, and transformed boxes cut the glyphs out of their gradient.
     const paintGradient = () => {
+      if (!split) return;
       const w = `${name.offsetWidth}px`;
       const h = `${name.offsetHeight}px`;
       (split.chars as HTMLElement[]).forEach((c) => {
@@ -226,13 +234,13 @@ export default function HeroScene() {
         c.style.setProperty('--gh', h);
       });
     };
-    section.classList.add('is-split');
-    paintGradient();
     section.addEventListener('hero:fit', paintGradient);
+    let live = true;
     cleanups.push(() => {
+      live = false;
       section.removeEventListener('hero:fit', paintGradient);
       section.classList.remove('is-split');
-      split.revert();
+      split?.revert();
     });
 
     let handed = false;
@@ -284,9 +292,9 @@ export default function HeroScene() {
 
     const D = HERO_DISPERSE;
     const rand = gsap.utils.random;
-    const scatter = (f: number) =>
+    const scatter = (chars: Element[], f: number) =>
       tl.to(
-        split.chars,
+        chars,
         {
           x: () => rand(-260, 260) * f,
           y: () => rand(-180, 180) * f,
@@ -300,6 +308,16 @@ export default function HeroScene() {
         },
         HOLD_END + 0.01,
       );
+    /** Split the name and add its scatter to the running timeline, then re-measure. */
+    const splitName = (f: number) =>
+      void fontsReady().then(() => {
+        if (!live) return;
+        split = SplitText.create(name, { type: mobile ? 'words,chars' : 'chars', charsClass: 'hero__char', wordsClass: 'hero__word' });
+        section.classList.add('is-split');
+        paintGradient();
+        scatter(split.chars, f);
+        refreshSoon();
+      });
 
     if (!mobile) {
       const Z = [-360, -120, 120, 320].map((z) => z * k);
@@ -322,7 +340,7 @@ export default function HeroScene() {
         .to(ui, { y: -180 * k, z: Z[3] + 240 * k, opacity: 0, duration: D * 0.7, ease: 'power1.in' }, HOLD_END)
         .to(plate, { z: -900 * k, duration: D * 0.9, ease: 'power1.in' }, HOLD_END)
         .to(portrait, { x: () => landing().x, y: () => landing().y, scale: () => landing().scale, z: 0, duration: D, ease: 'power2.inOut' }, HOLD_END);
-      scatter(k);
+      splitName(k);
       return () => {
         cleanups.forEach((fn) => fn());
         root.style.removeProperty('--hero-overlap');
@@ -440,7 +458,7 @@ export default function HeroScene() {
         { x: () => landing().x, y: () => landing().y, scale: () => landing().scale, z: 0, rotateX: 0, rotation: 0, duration: D, ease: 'power2.inOut' },
         HOLD_END,
       );
-    scatter(0.6);
+    splitName(0.6);
     render();
 
     return () => {

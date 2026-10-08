@@ -4,6 +4,12 @@
  */
 export const OWNER = 'Gading Aditya Perdana';
 
+/** id of the <style> that holds the web fonts' @font-face rules in a build (fontGateScript, lib/fonts.ts). */
+export const FONT_FACES_ID = 'font-faces';
+
+/** Browser toolbar colour per scheme: the `--bg` token of each theme (src/styles/tokens.css). */
+export const THEME_COLOR = { light: '#fbfbfd', dark: '#0a0b0d' } as const;
+
 export const LINKS = {
   email: 'gadingadityaperdana@gmail.com',
   linkedin: 'https://www.linkedin.com/in/gadingadityaperdana/',
@@ -29,6 +35,18 @@ export const HERO = {
 } as const;
 
 export type SectionId = 'hero' | 'about' | 'disciplines' | 'toolbox' | 'projects' | 'experience' | 'papers' | 'certificates' | 'contact';
+
+/** Sections after the hero, in page order, with their headings. */
+export const SECTIONS: { id: SectionId; title: string }[] = [
+  { id: 'about', title: 'About' },
+  { id: 'disciplines', title: 'What I do' },
+  { id: 'toolbox', title: 'Tools I use' },
+  { id: 'projects', title: 'Projects' },
+  { id: 'experience', title: 'Experience' },
+  { id: 'papers', title: 'Papers' },
+  { id: 'certificates', title: 'Certificates' },
+  { id: 'contact', title: 'Get in touch' },
+];
 
 /** Navbar links, in page order, with their `g` + letter shortcut. */
 export const NAV: { id: SectionId; label: string; key: string }[] = [
