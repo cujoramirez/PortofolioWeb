@@ -1,0 +1,728 @@
+/* Reset, typography, shared surfaces (buttons, chips, cards, dialogs), scene scaffolding. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+h1, h2, h3, h4, p, figure, blockquote, dl, dd, ol, ul {
+  margin: 0;
+}
+
+ol, ul {
+  padding: 0;
+  list-style: none;
+}
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-text-size-adjust: 100%;
+  /* clip, not hidden: hidden turns html into a scroll container and breaks sticky and pins */
+  overflow-x: clip;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline-strong) transparent;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  /* transparent: the fixed .bends layer (z-index -1) sits between html's background and content */
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+img, picture, svg {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+::selection {
+  background: var(--accent-fill);
+  color: var(--on-accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: -80px;
+  z-index: calc(var(--z-nav) + 10);
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--accent-fill);
+  color: var(--on-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: 12px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.wrap {
+  width: 100%;
+  max-width: calc(var(--content-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Section heading: no eyebrow, one big line, optional plain lede */
+.heading {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.lede {
+  max-width: 52ch;
+  margin-top: 1rem;
+  color: var(--ink-2);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0 1.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s var(--ease-hover), border-color 0.2s var(--ease-hover), transform 0.2s var(--ease-hover);
+}
+.btn--primary {
+  background: var(--accent-fill);
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 6px 18px -8px color-mix(in srgb, var(--accent-fill) 70%, transparent);
+}
+.btn--primary:hover {
+  background: var(--accent-fill-hover);
+}
+/* Secondary buttons are liquid glass (controls float above content, per HIG) */
+.btn--secondary {
+  background: var(--glass);
+  border-color: var(--hairline-strong);
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 var(--glass-rim), var(--shadow-far);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  backdrop-filter: blur(14px) saturate(170%);
+}
+.btn--secondary:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--hairline-strong));
+  background: color-mix(in srgb, var(--accent) 10%, var(--glass));
+}
+/* inside a 3D stage the backdrop can't be sampled reliably: keep the tint and rim, drop the blur */
+.stage .btn--secondary {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: color-mix(in srgb, var(--elevated) 82%, transparent);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .btn--secondary {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--elevated);
+  }
+}
+.btn--ghost {
+  min-height: 44px;
+  padding: 0 0.75rem;
+  background: transparent;
+  color: var(--ink);
+}
+.btn--ghost:hover {
+  background: var(--accent-soft);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--hairline-strong);
+  text-underline-offset: 0.3em;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color 0.2s var(--ease-hover), color 0.2s var(--ease-hover);
+}
+.text-link:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+
+/* Chips: static labels (not interactive, so no hover state) */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Surfaces */
+.card {
+  position: relative;
+  background: var(--elevated);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+}
+.plate {
+  position: relative;
+  background-color: var(--elevated);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-plate);
+}
+.dots {
+  background-image: radial-gradient(circle at 1px 1px, var(--dot) 1.2px, transparent 0);
+  background-size: 22px 22px;
+}
+
+/* Layer tag: names a layer while a stack is exploded, like the layer list in a design tool.
+   Pinned to its layer's edge (no floating leader lines); hidden at rest. */
+.layer-tag {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--elevated) 90%, transparent);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+}
+.layer-tag::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+/* Callout: an accent leader line with a mono label, like a drawing callout */
+.callout {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+}
+.callout::before {
+  content: '';
+  width: var(--leader, 56px);
+  height: 1px;
+  background: currentColor;
+}
+.callout::after {
+  content: '';
+  position: absolute;
+  left: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.callout--left {
+  flex-direction: row-reverse;
+}
+.callout--left::after {
+  left: auto;
+  right: -3px;
+}
+
+/* Scene scaffolding: a perspective container around one preserve-3d stage */
+.scene {
+  position: relative;
+}
+.persp {
+  perspective: var(--persp);
+  perspective-origin: var(--persp-origin);
+}
+.stage {
+  position: relative;
+  transform-style: preserve-3d;
+}
+.layer {
+  transform-style: preserve-3d;
+}
+/* will-change only while a scene is active (toggled by ScrollTrigger), so text stays sharp */
+.scene.is-active .layer,
+.scene.is-active [data-layer] {
+  will-change: transform;
+}
+
+/* Native dialogs */
+.dialog {
+  /* explicit: the reset above would otherwise pin a modal dialog to the top-left */
+  margin: auto;
+  padding: 0;
+  width: min(100% - 32px, 760px);
+  max-height: min(100dvh - 32px, 900px);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 24px;
+  /* a glass sheet over the dimmed page */
+  background: color-mix(in srgb, var(--elevated) 84%, transparent);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  backdrop-filter: blur(28px) saturate(170%);
+  color: var(--ink);
+  box-shadow: var(--shadow-near);
+  overscroll-behavior: contain;
+}
+.dialog::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+:root[data-theme='light'] .dialog::backdrop {
+  background: rgb(15 17 21 / 0.4);
+}
+.dialog[open] {
+  animation: dialog-in 0.32s var(--ease-out);
+}
+.dialog--full {
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+  background: var(--bg);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .dialog {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--elevated);
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+}
+.dialog__head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 14px 14px 24px;
+  background: color-mix(in srgb, var(--elevated) 72%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%);
+  border-bottom: 1px solid var(--hairline);
+}
+.dialog--full .dialog__head {
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+}
+.dialog__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color 0.2s var(--ease-hover);
+}
+.icon-btn:hover {
+  background: var(--accent-soft);
+}
+
+/* Lenis (required rules) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* Theme switch: circular reveal from the toggle (View Transitions); instant without support */
+::view-transition-old(root) {
+  animation: none;
+}
+::view-transition-new(root) {
+  animation: vt-reveal 0.5s var(--ease-out);
+}
+@keyframes vt-reveal {
+  from {
+    clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%));
+  }
+  to {
+    clip-path: circle(var(--vt-r, 150vmax) at var(--vt-x, 50%) var(--vt-y, 50%));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.footer {
+  padding-block: 2.5rem 3rem;
+  color: var(--ink-3);
+}
+/* After the pinned contact scene the footer overlays the scene's bottom edge (net height 0), so
+   the page ends where the pin ends and the card never shifts up under the nav. */
+.scene--contact.is-motion + .footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  height: 4rem;
+  margin-top: -4rem;
+  padding-block: 0;
+}
+
+/* Global background: the original blue -> cyan "color bends". A static tint paints first (and is
+   the no-WebGL fallback); src/lib/bends.ts then draws the shader into a canvas on demand. */
+.bends {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 12% 0%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 70%),
+    radial-gradient(55% 55% at 100% 100%, color-mix(in srgb, var(--secondary) 12%, transparent) 0%, transparent 70%);
+}
+.bends canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* dimmer than the original 0.6 / 0.4: body text sits directly on this layer, and at these
+     values secondary text stays at or above ~4.6:1 even over the brightest band */
+  opacity: 0.34;
+  transition: opacity 0.6s var(--ease-out);
+}
+:root[data-theme='light'] .bends canvas {
+  opacity: 0.26;
+}
+@media (prefers-contrast: more) {
+  .bends canvas {
+    opacity: 0.15;
+  }
+}
+.bends canvas[data-ready='false'] {
+  opacity: 0;
+}
+
+/* ---------- Micro-interactions (src/lib/micro.ts) ---------- */
+
+/* Spotlight + border glow on clickable cards */
+.spot {
+  position: absolute;
+  inset: 0;
+  /* above the card's own background, below all of its content (the card isolates) */
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s var(--ease-hover);
+}
+.spot[data-on='1'] {
+  opacity: 1;
+}
+.spot__fill,
+.spot__ring {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.spot__ring {
+  /* only the 1px rim shows */
+  padding: 1px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.spot i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+}
+.spot__fill i {
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 16%, transparent), transparent);
+}
+.spot__ring i {
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(closest-side, var(--accent), color-mix(in srgb, var(--secondary) 60%, transparent) 55%, transparent);
+}
+.has-spot {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Click sparks */
+.spark {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+.spark i {
+  position: absolute;
+  left: 0;
+  top: -1px;
+  width: 12px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--secondary));
+  transform-origin: 0 50%;
+  transform: rotate(var(--r)) translateX(var(--d, 8px)) scaleX(calc(1 - var(--l, 0)));
+}
+
+/* Heading reveal: words rise from behind their own mask (SplitText names it .hw-mask);
+   the mask extends below the baseline so descenders (g, j, p, y) are never clipped */
+.hw {
+  display: inline-block;
+}
+.hw-mask {
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+/* Glare sweep across buttons on hover (after React Bits' GlareHover / SpecularButton) */
+.btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.28) 50%, transparent 62%);
+  transform: translateX(-110%);
+  pointer-events: none;
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .btn:hover::after {
+    transform: translateX(110%);
+    transition: transform 0.7s var(--ease-out);
+  }
+}
+
+/* ---------- Toast (status line for easter eggs) ---------- */
+
+.toast.glass {
+  position: fixed;
+  left: 50%;
+  top: calc(var(--nav-top) + var(--nav-h) + 12px);
+  z-index: 90;
+  max-width: min(92vw, 520px);
+  padding: 10px 16px;
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  text-align: center;
+  opacity: 0;
+  transform: translate(-50%, -10px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.toast.glass[data-on='1'] {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast.glass,
+  .toast.glass[data-on='1'] {
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ---------- Easter egg: view hierarchy (after Xcode's view debugger) ---------- */
+
+html.is-hierarchy body *:not(svg *) {
+  outline: 1px solid color-mix(in srgb, var(--accent) 50%, transparent) !important;
+  outline-offset: -1px;
+}
+
+/* ---------- Cursor label (lib/cursor.ts) ---------- */
+
+.cursor-chip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 95;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--accent-fill);
+  color: #fff;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 18px -8px rgb(0 0 0 / 0.5);
+  pointer-events: none;
+  opacity: 0;
+  scale: 0.85;
+  transition:
+    opacity 0.18s ease,
+    scale 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.cursor-chip[data-on='1'] {
+  opacity: 1;
+  scale: 1;
+}
+
+/* ---------- Meter: "02 / 05" and one bar per item, for pinned phone decks (Experience, Papers) ---------- */
+
+.meter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.meter__count {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+.meter__bars {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+}
+.meter__bars i {
+  position: relative;
+  flex: 1;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--hairline-strong);
+}
+.meter__bars i::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform: scaleX(var(--f, 0));
+  transform-origin: 0 50%;
+}

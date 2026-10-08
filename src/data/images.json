@@ -1,0 +1,568 @@
+{
+  "hero": {
+    "widths": [
+      480,
+      720,
+      960,
+      1280
+    ],
+    "avif": [
+      "/img/portrait-eb3b1fe1-480.avif",
+      "/img/portrait-eb3b1fe1-720.avif",
+      "/img/portrait-eb3b1fe1-960.avif",
+      "/img/portrait-eb3b1fe1-1280.avif"
+    ],
+    "webp": [
+      "/img/portrait-eb3b1fe1-480.webp",
+      "/img/portrait-eb3b1fe1-720.webp",
+      "/img/portrait-eb3b1fe1-960.webp",
+      "/img/portrait-eb3b1fe1-1280.webp"
+    ],
+    "width": 1600,
+    "height": 2134
+  },
+  "about": {
+    "widths": [
+      480,
+      720,
+      900
+    ],
+    "avif": [
+      "/img/about-cfa8bd40-480.avif",
+      "/img/about-cfa8bd40-720.avif",
+      "/img/about-cfa8bd40-900.avif"
+    ],
+    "webp": [
+      "/img/about-cfa8bd40-480.webp",
+      "/img/about-cfa8bd40-720.webp",
+      "/img/about-cfa8bd40-900.webp"
+    ],
+    "width": 900,
+    "height": 1200
+  },
+  "projects": {
+    "cover-aria": {
+      "widths": [
+        480,
+        960,
+        1440
+      ],
+      "avif": [
+        "/img/projects/cover-aria-ff378961-480.avif",
+        "/img/projects/cover-aria-ff378961-960.avif",
+        "/img/projects/cover-aria-ff378961-1440.avif"
+      ],
+      "webp": [
+        "/img/projects/cover-aria-ff378961-480.webp",
+        "/img/projects/cover-aria-ff378961-960.webp",
+        "/img/projects/cover-aria-ff378961-1440.webp"
+      ],
+      "width": 1600,
+      "height": 1000
+    },
+    "cover-bearing": {
+      "widths": [
+        480,
+        960,
+        1440
+      ],
+      "avif": [
+        "/img/projects/cover-bearing-ac798a61-480.avif",
+        "/img/projects/cover-bearing-ac798a61-960.avif",
+        "/img/projects/cover-bearing-ac798a61-1440.avif"
+      ],
+      "webp": [
+        "/img/projects/cover-bearing-ac798a61-480.webp",
+        "/img/projects/cover-bearing-ac798a61-960.webp",
+        "/img/projects/cover-bearing-ac798a61-1440.webp"
+      ],
+      "width": 1600,
+      "height": 1000
+    },
+    "cover-card-shop": {
+      "widths": [
+        480,
+        960,
+        1440
+      ],
+      "avif": [
+        "/img/projects/cover-card-shop-08eba8ac-480.avif",
+        "/img/projects/cover-card-shop-08eba8ac-960.avif",
+        "/img/projects/cover-card-shop-08eba8ac-1440.avif"
+      ],
+      "webp": [
+        "/img/projects/cover-card-shop-08eba8ac-480.webp",
+        "/img/projects/cover-card-shop-08eba8ac-960.webp",
+        "/img/projects/cover-card-shop-08eba8ac-1440.webp"
+      ],
+      "width": 1600,
+      "height": 1000
+    },
+    "cover-cs-learning": {
+      "widths": [
+        480,
+        960,
+        1440
+      ],
+      "avif": [
+        "/img/projects/cover-cs-learning-e520e82d-480.avif",
+        "/img/projects/cover-cs-learning-e520e82d-960.avif",
+        "/img/projects/cover-cs-learning-e520e82d-1440.avif"
+      ],
+      "webp": [
+        "/img/projects/cover-cs-learning-e520e82d-480.webp",
+        "/img/projects/cover-cs-learning-e520e82d-960.webp",
+        "/img/projects/cover-cs-learning-e520e82d-1440.webp"
+      ],
+      "width": 1600,
+      "height": 1000
+    },
+    "cover-echovision": {
+      "widths": [
+        480,
+        960,
+        1440
+      ],
+      "avif": [
+        "/img/projects/cover-echovision-0b4ad2c4-480.avif",
+        "/img/projects/cover-echovision-0b4ad2c4-960.avif",
+        "/img/projects/cover-echovision-0b4ad2c4-1440.avif"
+      ],
+      "webp": [
+        "/img/projects/cover-echovision-0b4ad2c4-480.webp",
+        "/img/projects/cover-echovision-0b4ad2c4-960.webp",
+        "/img/projects/cover-echovision-0b4ad2c4-1440.webp"
+      ],
+      "width": 1600,
+      "height": 1000
+    },
+    "project-1": {
+      "widths": [
+        480
+      ],
+      "avif": [
+        "/img/projects/project-1-bf68e749-480.avif"
+      ],
+      "webp": [
+        "/img/projects/project-1-bf68e749-480.webp"
+      ],
+      "width": 956,
+      "height": 946
+    },
+    "project-10": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/projects/project-10-44f4cc36-480.avif",
+        "/img/projects/project-10-44f4cc36-960.avif"
+      ],
+      "webp": [
+        "/img/projects/project-10-44f4cc36-480.webp",
+        "/img/projects/project-10-44f4cc36-960.webp"
+      ],
+      "width": 1200,
+      "height": 720
+    },
+    "project-11": {
+      "widths": [
+        480,
+        960,
+        1440
+      ],
+      "avif": [
+        "/img/projects/project-11-58c1d71a-480.avif",
+        "/img/projects/project-11-58c1d71a-960.avif",
+        "/img/projects/project-11-58c1d71a-1440.avif"
+      ],
+      "webp": [
+        "/img/projects/project-11-58c1d71a-480.webp",
+        "/img/projects/project-11-58c1d71a-960.webp",
+        "/img/projects/project-11-58c1d71a-1440.webp"
+      ],
+      "width": 1600,
+      "height": 1000
+    },
+    "project-2": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/projects/project-2-cd1bb8b6-480.avif",
+        "/img/projects/project-2-cd1bb8b6-960.avif"
+      ],
+      "webp": [
+        "/img/projects/project-2-cd1bb8b6-480.webp",
+        "/img/projects/project-2-cd1bb8b6-960.webp"
+      ],
+      "width": 1146,
+      "height": 1052
+    },
+    "project-3": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/projects/project-3-6534f2e3-480.avif",
+        "/img/projects/project-3-6534f2e3-960.avif"
+      ],
+      "webp": [
+        "/img/projects/project-3-6534f2e3-480.webp",
+        "/img/projects/project-3-6534f2e3-960.webp"
+      ],
+      "width": 1388,
+      "height": 942
+    },
+    "project-4": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/projects/project-4-046280ef-480.avif",
+        "/img/projects/project-4-046280ef-960.avif"
+      ],
+      "webp": [
+        "/img/projects/project-4-046280ef-480.webp",
+        "/img/projects/project-4-046280ef-960.webp"
+      ],
+      "width": 1095,
+      "height": 992
+    },
+    "project-5": {
+      "widths": [
+        480
+      ],
+      "avif": [
+        "/img/projects/project-5-0adc1384-480.avif"
+      ],
+      "webp": [
+        "/img/projects/project-5-0adc1384-480.webp"
+      ],
+      "width": 941,
+      "height": 660
+    },
+    "project-6": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/projects/project-6-30cb89b5-480.avif",
+        "/img/projects/project-6-30cb89b5-960.avif"
+      ],
+      "webp": [
+        "/img/projects/project-6-30cb89b5-480.webp",
+        "/img/projects/project-6-30cb89b5-960.webp"
+      ],
+      "width": 1302,
+      "height": 841
+    },
+    "project-7": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/projects/project-7-b21c9dc3-480.avif",
+        "/img/projects/project-7-b21c9dc3-960.avif"
+      ],
+      "webp": [
+        "/img/projects/project-7-b21c9dc3-480.webp",
+        "/img/projects/project-7-b21c9dc3-960.webp"
+      ],
+      "width": 1200,
+      "height": 750
+    },
+    "project-8": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/projects/project-8-4e1eeb19-480.avif",
+        "/img/projects/project-8-4e1eeb19-960.avif"
+      ],
+      "webp": [
+        "/img/projects/project-8-4e1eeb19-480.webp",
+        "/img/projects/project-8-4e1eeb19-960.webp"
+      ],
+      "width": 1200,
+      "height": 750
+    },
+    "project-9": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/projects/project-9-b7ae6b7d-480.avif",
+        "/img/projects/project-9-b7ae6b7d-960.avif"
+      ],
+      "webp": [
+        "/img/projects/project-9-b7ae6b7d-480.webp",
+        "/img/projects/project-9-b7ae6b7d-960.webp"
+      ],
+      "width": 1200,
+      "height": 750
+    }
+  },
+  "certificates": {
+    "certificate1": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate1-d5e69557-480.avif",
+        "/img/certificates/certificate1-d5e69557-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate1-d5e69557-480.webp",
+        "/img/certificates/certificate1-d5e69557-960.webp"
+      ],
+      "width": 1373,
+      "height": 922
+    },
+    "certificate10": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate10-be011571-480.avif",
+        "/img/certificates/certificate10-be011571-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate10-be011571-480.webp",
+        "/img/certificates/certificate10-be011571-960.webp"
+      ],
+      "width": 1200,
+      "height": 740
+    },
+    "certificate11": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate11-d2227fb8-480.avif",
+        "/img/certificates/certificate11-d2227fb8-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate11-d2227fb8-480.webp",
+        "/img/certificates/certificate11-d2227fb8-960.webp"
+      ],
+      "width": 1372,
+      "height": 922
+    },
+    "certificate12": {
+      "widths": [
+        480
+      ],
+      "avif": [
+        "/img/certificates/certificate12-52faacfa-480.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate12-52faacfa-480.webp"
+      ],
+      "width": 687,
+      "height": 461
+    },
+    "certificate13": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate13-682318e3-480.avif",
+        "/img/certificates/certificate13-682318e3-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate13-682318e3-480.webp",
+        "/img/certificates/certificate13-682318e3-960.webp"
+      ],
+      "width": 1372,
+      "height": 922
+    },
+    "certificate14": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate14-d63059f2-480.avif",
+        "/img/certificates/certificate14-d63059f2-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate14-d63059f2-480.webp",
+        "/img/certificates/certificate14-d63059f2-960.webp"
+      ],
+      "width": 1372,
+      "height": 920
+    },
+    "certificate15": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate15-ebe2206a-480.avif",
+        "/img/certificates/certificate15-ebe2206a-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate15-ebe2206a-480.webp",
+        "/img/certificates/certificate15-ebe2206a-960.webp"
+      ],
+      "width": 1372,
+      "height": 921
+    },
+    "certificate16": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate16-693ac96f-480.avif",
+        "/img/certificates/certificate16-693ac96f-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate16-693ac96f-480.webp",
+        "/img/certificates/certificate16-693ac96f-960.webp"
+      ],
+      "width": 1255,
+      "height": 1008
+    },
+    "certificate2": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate2-018333e6-480.avif",
+        "/img/certificates/certificate2-018333e6-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate2-018333e6-480.webp",
+        "/img/certificates/certificate2-018333e6-960.webp"
+      ],
+      "width": 1372,
+      "height": 920
+    },
+    "certificate3": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate3-0a926bdf-480.avif",
+        "/img/certificates/certificate3-0a926bdf-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate3-0a926bdf-480.webp",
+        "/img/certificates/certificate3-0a926bdf-960.webp"
+      ],
+      "width": 1200,
+      "height": 740
+    },
+    "certificate4": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate4-6ad8e2c4-480.avif",
+        "/img/certificates/certificate4-6ad8e2c4-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate4-6ad8e2c4-480.webp",
+        "/img/certificates/certificate4-6ad8e2c4-960.webp"
+      ],
+      "width": 1200,
+      "height": 740
+    },
+    "certificate5": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate5-fe71ac96-480.avif",
+        "/img/certificates/certificate5-fe71ac96-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate5-fe71ac96-480.webp",
+        "/img/certificates/certificate5-fe71ac96-960.webp"
+      ],
+      "width": 1200,
+      "height": 740
+    },
+    "certificate6": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate6-5cc420f4-480.avif",
+        "/img/certificates/certificate6-5cc420f4-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate6-5cc420f4-480.webp",
+        "/img/certificates/certificate6-5cc420f4-960.webp"
+      ],
+      "width": 1200,
+      "height": 740
+    },
+    "certificate7": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate7-0b3afdfb-480.avif",
+        "/img/certificates/certificate7-0b3afdfb-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate7-0b3afdfb-480.webp",
+        "/img/certificates/certificate7-0b3afdfb-960.webp"
+      ],
+      "width": 1200,
+      "height": 740
+    },
+    "certificate8": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate8-87d0f7c5-480.avif",
+        "/img/certificates/certificate8-87d0f7c5-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate8-87d0f7c5-480.webp",
+        "/img/certificates/certificate8-87d0f7c5-960.webp"
+      ],
+      "width": 1200,
+      "height": 740
+    },
+    "certificate9": {
+      "widths": [
+        480,
+        960
+      ],
+      "avif": [
+        "/img/certificates/certificate9-18e6a862-480.avif",
+        "/img/certificates/certificate9-18e6a862-960.avif"
+      ],
+      "webp": [
+        "/img/certificates/certificate9-18e6a862-480.webp",
+        "/img/certificates/certificate9-18e6a862-960.webp"
+      ],
+      "width": 1200,
+      "height": 740
+    }
+  }
+}

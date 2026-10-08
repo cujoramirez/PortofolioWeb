@@ -1,0 +1,140 @@
+/* Rest state: heading plus grouped chips with logos. Motion: a globe of logos that scroll and drag turn. */
+
+.toolbox {
+  padding-block: var(--section-py);
+}
+
+.toolbox__groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 28px 40px;
+  margin-top: clamp(2rem, 5vw, 3.5rem);
+}
+.toolbox__cat {
+  margin-bottom: 12px;
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+.toolbox__chip {
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 12px 0 10px;
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+.toolbox__chip svg {
+  flex: none;
+  color: var(--ink-2);
+}
+
+.toolbox__persp,
+.toolbox__hint {
+  display: none;
+}
+
+/* ---------- Motion: the globe ---------- */
+
+.is-motion .toolbox__groups {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.is-motion .toolbox__hint {
+  display: block;
+  margin-top: 1.5rem;
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+.is-motion .toolbox__persp {
+  display: grid;
+  place-items: center;
+  perspective: calc(var(--persp) * 0.9);
+  perspective-origin: 50% 50%;
+}
+
+/* desktop and tablet: sticky two-column stage */
+.is-motion:not(.is-mobile) .toolbox {
+  height: 150vh;
+  padding: 0;
+}
+.is-motion:not(.is-mobile) .toolbox__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: clip;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: center;
+  max-width: calc(var(--content-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: calc(var(--nav-top) + var(--nav-h)) var(--gutter) 0;
+}
+.is-motion:not(.is-mobile) .toolbox__head {
+  position: relative;
+  z-index: 1;
+  padding: 0;
+  pointer-events: none;
+}
+.is-motion:not(.is-mobile) .toolbox__persp {
+  height: 100%;
+}
+
+/* phones: the globe under the heading, full width */
+.is-mobile .toolbox__persp {
+  margin-top: 1.5rem;
+  padding-block: 12px;
+}
+
+.globe {
+  position: relative;
+  width: min(62vh, 46vw, 640px);
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  cursor: grab;
+  /* horizontal drags spin the globe; vertical swipes keep scrolling the page */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.globe.is-dragging {
+  cursor: grabbing;
+}
+.is-mobile .globe {
+  /* leaves room at the edges for the widest names */
+  width: min(72vw, 380px);
+}
+.globe__item {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(0.8rem, 0.66rem + 0.4vw, 1.05rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.globe__icon {
+  color: var(--ink);
+}
+.is-mobile .globe__item {
+  font-size: 0.78rem;
+}
+.is-mobile .globe__icon {
+  width: 22px;
+  height: 22px;
+}
+.scene.is-active .globe__item {
+  will-change: transform, opacity;
+}

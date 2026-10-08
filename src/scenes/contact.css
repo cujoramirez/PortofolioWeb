@@ -1,0 +1,226 @@
+/* Contact: one card on a stack of plates (the page's layers, reassembled). */
+
+.contact {
+  padding-block: var(--section-py) 2rem;
+}
+.contact__stage {
+  width: min(100% - 2 * var(--gutter), 760px);
+  margin-inline: auto;
+}
+.contact__plate {
+  --step: calc(4 - var(--i));
+  /* the stack: each plate peeks out a little lower and narrower than the one above
+     (inset, not transforms: GSAP owns the transforms while the plates fly in) */
+  position: absolute;
+  top: calc(var(--step) * 12px);
+  bottom: calc(var(--step) * -12px);
+  left: calc(var(--step) * 1.8%);
+  right: calc(var(--step) * 1.8%);
+  border-radius: 28px;
+}
+.contact__plate--sunken {
+  background: var(--sunken);
+  border: 1px solid var(--hairline);
+}
+.contact__plate--elevated {
+  background: var(--elevated);
+  border: 1px solid var(--hairline);
+}
+.contact__plate--accent {
+  border: 1px solid var(--accent);
+  background: var(--elevated);
+}
+.contact__plate--outline {
+  border: 1px solid var(--hairline-strong);
+  background: var(--bg);
+}
+.contact__card {
+  position: relative;
+  padding: clamp(22px, 5vw, 56px);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 28px;
+  background: var(--elevated);
+  box-shadow: var(--shadow-near);
+  transform-style: preserve-3d;
+}
+.contact__title {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.contact__line {
+  margin-top: 1rem;
+  color: var(--ink-2);
+  font-size: 1.125rem;
+}
+.contact__email {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  width: 100%;
+  margin-top: 1.75rem;
+  padding: 18px 20px 18px 24px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 18px;
+  background: var(--sunken);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease-hover), background-color 0.2s var(--ease-hover);
+}
+.contact__email:hover {
+  border-color: var(--accent);
+}
+.contact__address {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 0.6rem + 1.6vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.contact__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: var(--accent-fill);
+  color: var(--on-accent);
+  font-size: 0.8rem;
+}
+.contact__hint {
+  margin-top: 0.5rem;
+  font-size: var(--fs-small);
+}
+.contact__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--hairline);
+}
+.contact__links .text-link {
+  gap: 4px;
+}
+
+/* ---------- Motion ---------- */
+
+.is-motion .contact {
+  padding: 0;
+}
+.is-motion .contact__pin {
+  /* scattered plates stay inside this scene */
+  overflow: clip;
+  height: 100vh;
+  height: 100svh;
+  display: grid;
+  place-items: center;
+  padding-top: calc(var(--nav-top) + var(--nav-h));
+}
+.is-motion .contact__persp {
+  width: 100%;
+}
+
+@media (max-width: 479px) {
+  .contact__email {
+    padding: 14px;
+  }
+}
+
+/* Dock (components/Dock.tsx) */
+.dock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 1.5rem;
+  padding: 14px 16px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
+}
+.dock__item {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 56px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.dock__icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 14px;
+  background: var(--elevated);
+  box-shadow: inset 0 1px 0 var(--glass-rim), var(--shadow-far);
+  transform-origin: 50% 100%;
+  transition: border-color 0.2s var(--ease-hover);
+}
+.dock__item:hover .dock__icon,
+.dock__item:focus-visible .dock__icon {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.dock.is-settling .dock__icon {
+  transition: transform 0.35s var(--ease-out), border-color 0.2s var(--ease-hover);
+}
+.dock__label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.dock__item:focus-visible {
+  outline: none;
+}
+.dock__item:focus-visible .dock__icon {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+/* hover-capable screens: labels rise as tooltips */
+@media (hover: hover) and (pointer: fine) {
+  .dock {
+    gap: 14px;
+    padding-top: 18px;
+  }
+  .dock__label {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    padding: 4px 9px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 8px;
+    background: var(--elevated);
+    color: var(--ink);
+    box-shadow: var(--shadow-far);
+    opacity: 0;
+    transform: translate(-50%, 4px);
+    transition: opacity 0.18s var(--ease-hover), transform 0.18s var(--ease-hover);
+    pointer-events: none;
+  }
+  .dock__item:hover .dock__label,
+  .dock__item:focus-visible .dock__label {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Copied: the check draws itself once (after React Bits' StatusMark) */
+.contact__copy.is-copied path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: check-draw 0.35s var(--ease-out) forwards;
+}
+@keyframes check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

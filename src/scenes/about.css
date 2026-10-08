@@ -1,0 +1,546 @@
+/* About. Rest state (reduced motion, low tier, phones): card and chapters in flow.
+   Motion state (.is-motion on desktop/tablet): pinned stage, stacked chapters, flip card. */
+
+.scene--about {
+  position: relative;
+  z-index: 1;
+}
+
+.about__pin {
+  position: relative;
+  padding-block: var(--section-py) 3rem;
+}
+
+.about__stage {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(32px, 6vw, 104px);
+  align-items: start;
+  max-width: calc(var(--content-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.about__card {
+  display: grid;
+  gap: 16px;
+}
+.about__face--front {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  margin: 0;
+  border-radius: var(--radius-plate);
+}
+/* every layer of the front face is pinned to its box with insets (no percentage heights: Safari 27
+   left the photo short of an aspect-ratio card) */
+.about__plate,
+.about__swap,
+.about__reveal,
+.about__counter,
+.about__face--front picture,
+.about__tint,
+.about__edge,
+.about__frame {
+  position: absolute;
+  inset: 0;
+}
+.about__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 55% 35%;
+}
+/* hairline ring over the photo */
+.about__face--front::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--hairline);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.about__tint,
+.about__edge,
+.about__frame {
+  display: none;
+}
+.about__face--back {
+  padding: clamp(20px, 2.4vw, 32px);
+}
+.about__facts {
+  display: grid;
+  gap: 18px;
+  margin: 0;
+}
+.about__facts div {
+  display: grid;
+  gap: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline);
+}
+.about__facts div:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.about__facts dt {
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+.about__facts dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.about__chapters {
+  display: grid;
+  gap: clamp(40px, 6vw, 72px);
+}
+.about__num {
+  color: var(--accent);
+}
+.about__title {
+  margin-top: 0.4rem;
+  font-size: clamp(2rem, 1.4rem + 2.4vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+.about__text {
+  max-width: 62ch;
+  margin-top: 1.25rem;
+  color: var(--ink-2);
+  font-size: var(--fs-body);
+  line-height: 1.7;
+}
+
+.about__quote {
+  margin: 0;
+  padding-left: 20px;
+  border-left: 2px solid var(--hairline-strong);
+}
+.about__quote p {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 1rem + 0.9vw, 1.75rem);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.about__quote cite {
+  display: block;
+  margin-top: 0.75rem;
+  color: var(--ink-2);
+  font-style: normal;
+}
+
+.about__more {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 32px;
+  padding-block: 2rem var(--section-py);
+}
+.about__more .about__quote p {
+  font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.3rem);
+}
+
+@media (max-width: 767px) {
+  .about__stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .about__card-col {
+    max-width: 420px;
+  }
+}
+
+/* ---------- Motion: pinned stage ---------- */
+
+/* Sits under the pinned hero and pins while the hero disperses (--hero-overlap from HeroScene) */
+.scene--about.is-desktop,
+.scene--about.is-tablet,
+.scene--about.is-pinned {
+  margin-top: calc(-1 * var(--hero-overlap, 0px));
+}
+
+.is-motion:not(.is-mobile) .about__pin {
+  height: 100vh;
+  height: 100svh;
+  padding: calc(var(--nav-top) + var(--nav-h) + 16px) 0 24px;
+}
+.is-motion:not(.is-mobile) .about__persp {
+  height: 100%;
+}
+.is-motion:not(.is-mobile) .about__stage {
+  height: 100%;
+  align-items: center;
+}
+.is-motion:not(.is-mobile) .about__card-col {
+  display: flex;
+  justify-content: center;
+  /* never stretch the card: its height comes from its width (3:4) in every engine */
+  align-items: center;
+  align-self: center;
+}
+.is-motion:not(.is-mobile) .about__card {
+  display: block;
+  position: relative;
+  flex: none;
+  /* as tall as fits, but never wider than its column */
+  width: min(100%, min(66vh, 560px) * 0.75);
+  height: auto;
+  aspect-ratio: 3 / 4;
+  transform-style: preserve-3d;
+}
+.is-motion:not(.is-mobile) .about__face {
+  position: absolute;
+  inset: 0;
+}
+.is-motion:not(.is-mobile) .about__face--front {
+  pointer-events: none;
+}
+/* Hand-off layers (AboutScene): --solid (card surface, shadow, ring) goes 0 -> 1 after the reveal */
+.is-motion:not(.is-mobile) .about__card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-plate);
+  box-shadow: var(--shadow-mid);
+  opacity: var(--solid, 1);
+  transform: translateZ(-2px);
+}
+.is-motion .about__plate,
+.is-motion .about__face--front::after {
+  opacity: var(--solid, 1);
+}
+/* the café photo arrives inside the hero portrait's silhouette as the portrait fades out (without
+   a hero hand-off, e.g. a short phone, --handoff is unset and the silhouette simply shows) */
+.is-motion:not(.is-mobile) .about__swap,
+.is-pinned .about__swap {
+  opacity: var(--handoff, 1);
+}
+.is-motion .about__reveal {
+  -webkit-mask: var(--m) 50% 0 / auto 100% no-repeat;
+  mask: var(--m) 50% 0 / auto 100% no-repeat;
+}
+.is-motion .about__reveal.is-open {
+  -webkit-mask: none;
+  mask: none;
+}
+/* grown from the face centre (Apple Vision face box: 50% / 35.5% of the portrait) */
+.is-motion .about__reveal,
+.is-motion .about__counter,
+.is-motion .about__tint,
+.is-motion .about__edge {
+  transform-origin: 50% 35.5%;
+}
+/* no will-change here: a composited layer at 7x is too large for iOS WebKit (see AboutScene) */
+/* the same tint and contour as the hero's Vision overlay, so the swap only changes the photo */
+.is-motion .about__tint {
+  display: block;
+  background: linear-gradient(170deg, rgb(59 130 246 / 0.42), rgb(34 211 238 / 0.3));
+  -webkit-mask: var(--m) 50% 0 / auto 100% no-repeat;
+  mask: var(--m) 50% 0 / auto 100% no-repeat;
+}
+.is-motion .about__edge {
+  display: block;
+  background: #67e8f9;
+  -webkit-mask: var(--e) 50% 0 / auto 100% no-repeat;
+  mask: var(--e) 50% 0 / auto 100% no-repeat;
+}
+/* the landing frame: four edges drawn clockwise while the portrait is in flight */
+.is-motion .about__frame {
+  display: block;
+  pointer-events: none;
+}
+.about__frame i {
+  position: absolute;
+  background: var(--accent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.about__frame i:nth-child(1) {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 2px;
+  transform-origin: 0 50%;
+}
+.about__frame i:nth-child(2) {
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  transform-origin: 50% 0;
+}
+.about__frame i:nth-child(3) {
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  transform-origin: 100% 50%;
+}
+.about__frame i:nth-child(4) {
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  transform-origin: 50% 100%;
+}
+.is-motion:not(.is-mobile) .about__face--back {
+  display: flex;
+  align-items: center;
+  transform: rotateY(180deg) translateZ(1px);
+  box-shadow: var(--shadow-mid);
+}
+.is-motion:not(.is-mobile) .about__card-col {
+  grid-area: 1 / 1;
+}
+/* The chapters column dissolves so chapters and quotes become stage items: chapters stack in
+   column 2, quotes span the whole stage (a preserve-3d column would trap them). */
+.is-motion:not(.is-mobile) .about__chapters {
+  display: contents;
+}
+.is-motion:not(.is-mobile) .about__chapter {
+  grid-area: 1 / 2;
+  align-self: center;
+  transform-style: preserve-3d;
+}
+.is-motion:not(.is-mobile) .about__text {
+  transform-style: preserve-3d;
+}
+.is-motion:not(.is-mobile) .about__sentence {
+  display: block;
+}
+.is-motion:not(.is-mobile) .about__rise {
+  transform-origin: 50% 100%;
+}
+.is-motion:not(.is-mobile) .about__quote--fly {
+  /* flies through the text column only, never across the card */
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  text-align: left;
+  pointer-events: none;
+  opacity: 0;
+}
+.is-motion:not(.is-mobile) .about__quote--fly p {
+  font-size: clamp(1.75rem, 1rem + 2.4vw, 3rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+/* ---------- Phones, pinned (AboutScene adds .is-pinned when a useful photo card fits above the
+   longest chapter): a full-width photo card as tall as the space allows (--card-w / --card-h, set by
+   the scene), the chapter's number and title on the photo's lower edge, the text below, three bars
+   tracking the chapters. The chapters take turns in one place, as on desktop. ---------- */
+
+.scene--about.is-pinned .about__pin {
+  height: 100vh;
+  height: 100svh;
+  padding: calc(var(--nav-top) + var(--nav-h) + 14px) 0 12px;
+}
+.is-pinned .about__persp {
+  height: 100%;
+  /* depth grows around the text area, so the flying quotes scale in place under the card */
+  perspective-origin: 50% calc(var(--card-h) + 150px);
+}
+.is-pinned .about__stage {
+  position: relative;
+  display: block;
+  height: 100%;
+}
+.is-pinned .about__card-col {
+  max-width: none;
+  /* a few px behind the chapters: Safari sorts coplanar planes its own way, and drew the card over
+     the chapter title that sits on it */
+  transform: translateZ(-4px);
+}
+.is-pinned .about__card {
+  display: block;
+  position: relative;
+  transform-style: preserve-3d;
+}
+.is-pinned .about__card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-plate);
+  box-shadow: var(--shadow-mid);
+  opacity: var(--solid, 1);
+}
+.is-pinned .about__face {
+  position: absolute;
+  inset: 0;
+  /* the card is sized by the scene; the desktop 3:4 ratio would make the face overflow it */
+  aspect-ratio: auto;
+}
+.is-pinned .about__face--back {
+  display: none;
+}
+/* a scrim for the title (and the bars), once the photo has filled the card */
+.is-pinned .about__swap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgb(6 7 10 / 0.82), rgb(6 7 10 / 0.34) 34%, transparent 58%),
+    linear-gradient(to bottom, rgb(6 7 10 / 0.5), transparent 20%);
+  opacity: var(--solid, 1);
+  pointer-events: none;
+  /* its own layer, above the masked photo layer (Safari painted it underneath) */
+  transform: translateZ(0);
+}
+.is-pinned .about__progress {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 5px;
+  opacity: var(--solid, 1);
+}
+.is-pinned .about__progress i {
+  position: relative;
+  width: 22px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.26);
+}
+.is-pinned .about__progress i::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  transform: scaleX(var(--f, 0));
+  transform-origin: 0 50%;
+}
+.is-pinned .about__chapters {
+  display: contents;
+}
+.is-pinned .about__chapter {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  top: calc(var(--card-h) + 18px);
+  transform-style: preserve-3d;
+}
+/* number and title on the photo: number top-left, title on the lower edge */
+.is-pinned .about__num {
+  position: absolute;
+  top: calc(-18px - var(--card-h) + 16px);
+  left: 18px;
+  color: rgb(255 255 255 / 0.85);
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.5);
+}
+.is-pinned .about__title {
+  position: absolute;
+  bottom: calc(100% + 18px + 16px);
+  left: 18px;
+  right: 18px;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.9rem, 8.6vw, 2.6rem);
+  text-shadow: 0 2px 18px rgb(0 0 0 / 0.45);
+  text-wrap: balance;
+}
+.is-pinned .about__text {
+  margin-top: 0;
+  font-size: 1rem;
+  line-height: 1.62;
+  transform-style: preserve-3d;
+}
+.is-pinned .about__sentence {
+  display: block;
+}
+.is-pinned .about__rise {
+  transform-origin: 50% 100%;
+}
+.is-pinned .about__quote--fly {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  top: calc(var(--card-h) + 48px);
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.is-pinned .about__quote--fly p {
+  font-size: clamp(1.5rem, 6.4vw, 2rem);
+  line-height: 1.15;
+}
+.about__progress {
+  display: none;
+}
+
+/* ---------- At a glance ---------- */
+
+.metrics {
+  padding-block: clamp(3rem, 8vw, 5rem) 0;
+}
+.metrics__title {
+  margin-bottom: 1rem;
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+.metrics__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: clamp(16px, 3vw, 40px);
+  border-top: 1px solid var(--hairline);
+}
+.metric {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 22px 0 26px;
+  border-bottom: 1px solid var(--hairline);
+}
+.metric__value {
+  display: inline-flex;
+  align-items: flex-start;
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 1.6rem + 3vw, 4.25rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.roll {
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+}
+.roll__strip {
+  display: flex;
+  flex-direction: column;
+  /* resting state: the final digit (cell 10 + d of 20) */
+  transform: translateY(calc(-5% * (10 + var(--d))));
+}
+.roll__strip span {
+  height: 1em;
+  line-height: 1;
+}
+.metric__sym {
+  color: var(--accent);
+}
+.metric__label {
+  max-width: 24ch;
+  color: var(--ink-2);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+@media (max-width: 767px) {
+  .metrics__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

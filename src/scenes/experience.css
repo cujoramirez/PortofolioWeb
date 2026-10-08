@@ -1,0 +1,262 @@
+/* Experience. Rest state: a vertical timeline. Motion: a pinned 3D corridor. */
+
+.xp {
+  padding-block: var(--section-py);
+}
+.xp__head {
+  margin-bottom: clamp(2rem, 5vw, 3rem);
+}
+.xp__world {
+  max-width: calc(820px + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.xp__list {
+  position: relative;
+  display: grid;
+  gap: 20px;
+  padding-left: 28px;
+}
+.xp__list::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--hairline-strong);
+}
+.xp__card {
+  position: relative;
+  padding: clamp(20px, 2.4vw, 30px);
+}
+.xp__card::before {
+  content: '';
+  position: absolute;
+  left: -27px;
+  top: 30px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--accent);
+}
+.xp__dates {
+  color: var(--accent);
+}
+.xp__role {
+  margin-top: 0.5rem;
+  font-size: clamp(1.35rem, 1.1rem + 0.8vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+.xp__company {
+  margin-top: 0.2rem;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.xp__desc {
+  margin-top: 0.9rem;
+  color: var(--ink-2);
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+.xp__wins {
+  display: grid;
+  gap: 6px;
+  margin: 0.9rem 0 1.1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.xp__wins li {
+  position: relative;
+  padding-left: 18px;
+}
+.xp__wins li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.7em;
+  width: 7px;
+  height: 1px;
+  background: var(--ink-2);
+}
+.xp__floor,
+.xp__marker {
+  display: none;
+}
+
+/* ---------- Motion: corridor ---------- */
+
+.is-motion:not(.is-mobile) .xp {
+  padding: 0;
+}
+.is-motion:not(.is-mobile) .xp__pin {
+  position: relative;
+  height: 100vh;
+  height: 100svh;
+  overflow: clip;
+}
+.is-motion:not(.is-mobile) .xp__head {
+  position: absolute;
+  inset: calc(var(--nav-top) + var(--nav-h) + clamp(20px, 4vh, 40px)) 0 auto;
+  z-index: 2;
+  margin: 0 auto;
+  max-width: calc(var(--content-max) + 2 * var(--gutter));
+  pointer-events: none;
+}
+.is-motion:not(.is-mobile) .xp__persp {
+  position: absolute;
+  inset: 0;
+  perspective-origin: 50% 42%;
+}
+.is-motion:not(.is-mobile) .xp__world {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  width: 0;
+  height: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+.is-motion:not(.is-mobile) .xp__list {
+  display: block;
+  padding: 0;
+  transform-style: preserve-3d;
+}
+.is-motion:not(.is-mobile) .xp__list::before {
+  display: none;
+}
+.is-motion:not(.is-mobile) .xp__card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: min(520px, 40vw);
+  box-shadow: var(--shadow-mid);
+}
+.is-motion:not(.is-mobile) .xp__card::before {
+  display: none;
+}
+.is-motion:not(.is-mobile) .xp__floor {
+  display: block;
+  position: absolute;
+  left: -1px;
+  top: 36vh;
+  width: 2px;
+  height: 5000px;
+  background: linear-gradient(var(--accent), transparent);
+  opacity: 0.7;
+  transform: rotateX(-90deg);
+  transform-origin: 50% 0;
+}
+.is-motion:not(.is-mobile) .xp__marker {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: calc(36vh - 30px);
+  padding: 2px 8px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* Phones: a scroll stack (ExperienceScene, mobile) */
+.is-stack .xp__list {
+  gap: 28px;
+}
+.is-stack .xp__card.is-sticky {
+  position: sticky;
+  top: calc(var(--nav-top) + var(--nav-h) + 20px + var(--i) * 8px);
+  box-shadow: var(--shadow-mid);
+}
+
+/* depth fog: cards ahead dim toward the page colour but stay opaque */
+.xp__fog {
+  display: none;
+}
+.is-motion:not(.is-mobile) .xp__fog {
+  display: block;
+  position: absolute;
+  inset: -1px;
+  z-index: 2;
+  border-radius: inherit;
+  background: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------- Phones: the deck (.is-xdeck, set by the scene when the tallest card fits) ---------- */
+
+.xp__meter {
+  display: none;
+}
+.is-xdeck .xp {
+  padding: 0;
+}
+.is-xdeck .xp__pin {
+  height: 100vh;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  padding-top: calc(var(--nav-top) + var(--nav-h) + 8px);
+}
+.is-xdeck .xp__head {
+  margin-bottom: 16px;
+}
+.is-xdeck .xp__meter {
+  display: flex;
+  margin-top: 14px;
+}
+.is-xdeck .xp__persp {
+  perspective: 1100px;
+  perspective-origin: 50% 0%;
+}
+.is-xdeck .xp__world {
+  padding-inline: var(--gutter);
+}
+.is-xdeck .xp__list {
+  display: block;
+  position: relative;
+  padding: 0;
+  transform-style: preserve-3d;
+}
+.is-xdeck .xp__list::before,
+.is-xdeck .xp__card::before {
+  display: none;
+}
+.is-xdeck .xp__card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* all as tall as the tallest (the list's height): only clean edges peek from behind */
+  height: 100%;
+  transform-origin: 50% 0%;
+  box-shadow: var(--shadow-mid);
+}
+/* short phones: a compact card (one sentence, two wins, four chips; the scene may scale the deck) */
+.is-compact .xp__desc-more,
+.is-compact .xp__wins li:nth-child(n + 3),
+.is-compact .xp__card .chip:nth-child(n + 5) {
+  display: none;
+}
+.is-compact .xp__card {
+  padding: 18px 18px 20px;
+}
+.is-compact .xp__desc {
+  margin-top: 0.6rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.is-compact .xp__wins {
+  margin: 0.7rem 0 0.9rem;
+  font-size: 0.9rem;
+}
+/* while measuring natural heights */
+.is-xdeck.is-sizing .xp__card {
+  height: auto;
+}

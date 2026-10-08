@@ -1,0 +1,227 @@
+/**
+ * Papers: a deck that deals out. The five papers start stacked at the centre, fan out
+ * (rotateZ -10..10), then settle into their resting grid, which is the readable layout.
+ * Offsets are measured from the resting grid (FLIP), so the end state is exact.
+ * Phones: a drum of papers turning around a horizontal axis (see below).
+ */
+import { useEffect, useRef } from 'react';
+import { ArrowUpRight } from '../components/icons';
+import { firstSentence, papers, scholarUrl } from '../content/data';
+import { gsap } from '../lib/gsap';
+import { spotlight } from '../lib/micro';
+import { useScene } from '../lib/useScene';
+import './papers.css';
+
+export default function PapersScene() {
+  const root = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return undefined;
+    const undo = [...el.querySelectorAll<HTMLElement>('.paper--link')].map(spotlight);
+    return () => undo.forEach((fn) => fn());
+  }, []);
+
+  useScene(root, ({ variant, k, section }) => {
+    const q = gsap.utils.selector(section);
+    const cards = q('.paper') as HTMLElement[];
+
+    if (variant === 'mobile') {
+      // A picker wheel: the papers sit around a horizontal cylinder that turns as you scroll (snapping
+      // to each paper), under the heading, the one before and the one after visible dimmed above and
+      // below, each with its gist and keywords. Pinned when a paper fits; otherwise a stack that rises.
+      const head = q('.papers__head')[0] as HTMLElement;
+      const grid = q('.papers__grid')[0] as HTMLElement;
+      const count = q('.papers__count')[0] as HTMLElement;
+      const bars = q('.papers__meter i') as HTMLElement[];
+      // measured in flow (before the drum stacks the papers absolutely), with the drum's content
+      grid.classList.add('is-measuring');
+      const tallest = Math.max(...cards.map((c) => c.offsetHeight));
+      grid.classList.remove('is-measuring');
+      section.classList.add('is-drum');
+      // (the heading's meter only shows in the drum: about 30 px more)
+      if (82 + head.offsetHeight + 30 + tallest + 90 <= window.innerHeight) {
+        const n = cards.length;
+        const step = 30; // degrees between papers on the drum
+        grid.style.height = `${tallest}px`;
+        // the drum's axis sits behind the front paper, far enough that neighbours just clear it
+        const R = tallest / 2 / Math.tan(((step / 2) * Math.PI) / 180) + 16;
+        const state = { p: 0 };
+        let shown = -1;
+        // plain CSS here: a native 3D transform-origin (the axis R behind each paper) is exact
+        cards.forEach((card) => (card.style.transformOrigin = `50% 50% ${-R.toFixed(1)}px`));
+        const paint = () =>
+          cards.forEach((card, i) => {
+            const a = (i - state.p) * step;
+            const off = Math.abs(a);
+            card.style.transform = `rotateX(${(-a).toFixed(2)}deg)`;
+            // the neighbours stay in view, dimmed, like a picker wheel
+            card.style.opacity = off > 58 ? '0' : Math.max(0, 1 - (off / step) * 0.72).toFixed(3);
+            card.style.visibility = off > 58 ? 'hidden' : 'visible';
+            card.style.pointerEvents = off < step / 2 ? 'auto' : 'none';
+          });
+        const update = () => {
+          paint();
+          const i = Math.round(state.p);
+          if (i !== shown) {
+            shown = i;
+            count.textContent = `${String(i + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`;
+          }
+          bars.forEach((bar, b) => bar.style.setProperty('--f', Math.min(1, Math.max(0, state.p - b + 1)).toFixed(3)));
+        };
+        update();
+        gsap.to(state, {
+          p: n - 1,
+          ease: 'none',
+          onUpdate: update,
+          scrollTrigger: {
+            // a refresh restores progress without onUpdate: repaint from the restored state
+            onRefresh: update,
+            trigger: section,
+            start: 'top top',
+            end: () => `+=${(n - 1) * 0.5 * window.innerHeight}`,
+            pin: q('.papers__pin')[0],
+            scrub: 0.5,
+            snap: { snapTo: 1 / (n - 1), duration: { min: 0.15, max: 0.4 }, delay: 0.05, ease: 'power1.inOut' },
+            invalidateOnRefresh: true,
+          },
+        });
+        return () => {
+          section.classList.remove('is-drum');
+          grid.style.removeProperty('height');
+          cards.forEach((card) => {
+            for (const prop of ['transform', 'transform-origin', 'opacity', 'visibility', 'pointer-events']) card.style.removeProperty(prop);
+          });
+          bars.forEach((bar) => bar.style.removeProperty('--f'));
+        };
+      }
+      section.classList.remove('is-drum');
+      grid.style.removeProperty('height');
+      cards.forEach((card) =>
+        gsap.from(card, {
+          rotateX: 28,
+          y: 36,
+          opacity: 0,
+          duration: 0.75,
+          ease: 'power3.out',
+          transformOrigin: '50% 0%',
+          scrollTrigger: { trigger: card, start: 'top 90%', once: true },
+        }),
+      );
+      return undefined;
+    }
+
+    const grid = q('.papers__grid')[0] as HTMLElement;
+    const n = cards.length;
+    const mid = (n - 1) / 2;
+    // Offset from each card's resting spot to the centre of the grid.
+    const toCentre = (card: HTMLElement) => ({
+      x: grid.offsetWidth / 2 - (card.offsetLeft + card.offsetWidth / 2),
+      y: grid.offsetHeight / 2 - (card.offsetTop + card.offsetHeight / 2),
+    });
+    const spread = () => Math.min(window.innerWidth * 0.15, 220);
+
+    const tl = gsap.timeline({
+      defaults: { ease: 'none' },
+      scrollTrigger: {
+        trigger: section,
+        start: 'top top',
+        end: () => `+=${0.92 * window.innerHeight * k}`,
+        pin: q('.papers__pin')[0],
+        scrub: 0.6,
+        invalidateOnRefresh: true,
+      },
+    });
+
+    tl.fromTo(
+      cards,
+      {
+        x: (i: number) => toCentre(cards[i]).x + (i - mid) * 3,
+        y: (i: number) => toCentre(cards[i]).y - i * 4,
+        z: (i: number) => i * 2,
+        rotateZ: (i: number) => (i - mid) * 1.6,
+      },
+      {
+        // the fan: spread across the centre, tilted -10..10 degrees on a slight arc
+        x: (i: number) => toCentre(cards[i]).x + (i - mid) * spread(),
+        y: (i: number) => toCentre(cards[i]).y + Math.abs(i - mid) * 22,
+        z: 0,
+        rotateZ: (i: number) => ((i - mid) / mid) * 10,
+        duration: 0.4,
+        ease: 'power2.out',
+        immediateRender: true,
+      },
+      0.12,
+    ).to(
+      cards,
+      { x: 0, y: 0, rotateZ: 0, duration: 0.4, ease: 'power2.inOut', stagger: 0.03 },
+      0.6,
+    );
+    tl.from(q('.papers__foot'), { opacity: 0, y: 16, duration: 0.15 }, 0.88);
+    return undefined;
+  });
+
+  return (
+    <div ref={root} className="papers">
+      <div className="papers__pin">
+        <header className="papers__head wrap">
+          <h2 id="papers-title" className="heading">
+            Papers
+          </h2>
+          <p className="lede">Five peer-reviewed papers from 2025, four as first author, published in IEEE ISRITI and Procedia Computer Science.</p>
+          <p className="papers__meter meter" aria-hidden="true">
+            <span className="papers__count meter__count mono">01 / {String(papers.length).padStart(2, '0')}</span>
+            <span className="meter__bars">
+              {papers.map((p) => (
+                <i key={p.title} />
+              ))}
+            </span>
+          </p>
+        </header>
+        <div className="papers__persp persp wrap">
+          <ol className="papers__grid stage">
+            {papers.map((paper) => (
+              <li key={paper.title} className={`paper card${paper.doi ? ' paper--link has-spot' : ''}`} data-cursor={paper.doi ? 'DOI' : undefined}>
+                <p className="paper__meta">
+                  <span className="mono">{paper.year}</span>
+                  <span className="paper__badges">
+                    {paper.scopusIndexed ? <span className="paper__badge mono">Scopus {paper.scopusIndexed}</span> : null}
+                    {paper.isFirstAuthor ? <span className="paper__badge paper__badge--strong mono">First author</span> : null}
+                  </span>
+                </p>
+                <h3 className="paper__title">
+                  {paper.doi ? (
+                    <a className="paper__link" href={`https://doi.org/${paper.doi}`} target="_blank" rel="noopener noreferrer">
+                      {paper.title}
+                    </a>
+                  ) : (
+                    paper.title
+                  )}
+                </h3>
+                <p className="paper__venue">
+                  {paper.venue}
+                  {paper.doi ? <span className="paper__doi mono"> · DOI</span> : null}
+                </p>
+                <div className="paper__more">
+                  <p className="paper__gist">{firstSentence(paper.description)}</p>
+                  <ul className="chips" aria-label="Keywords">
+                    {paper.keywords.slice(0, 3).map((kw) => (
+                      <li key={kw} className="chip">
+                        {kw}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <p className="papers__foot wrap">
+          <a className="text-link" href={scholarUrl} target="_blank" rel="noopener noreferrer">
+            Google Scholar profile <ArrowUpRight />
+          </a>
+        </p>
+      </div>
+    </div>
+  );
+}

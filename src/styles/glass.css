@@ -1,0 +1,71 @@
+/* Liquid glass (after the original site's material, applied the HIG way): glass is the
+   *controls* layer floating above content (navbar, buttons, sheets and dialogs), never the
+   content itself. Frost + tint + rim light + top glint; Chromium adds a static edge refraction.
+   Honours Reduce Transparency. */
+
+.glass {
+  --glass-blur: 18px;
+  position: relative;
+  isolation: isolate;
+  background-color: var(--glass);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-far), inset 0 1px 0 var(--glass-rim), inset 0 -1px 0 rgb(0 0 0 / 0.08);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(170%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(170%);
+}
+/* static top-edge glint */
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--glass-rim), transparent 46%);
+  opacity: 0.28;
+}
+
+/* Chromium only (class set in lib/glass.ts): a static refraction of the backdrop at the edges */
+html.refract .glass--refract {
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(170%) url(#liquid-glass);
+  backdrop-filter: blur(var(--glass-blur)) saturate(170%) url(#liquid-glass);
+}
+
+/* Specular highlight that follows the pointer 1:1 (a transform, no easing) and fades out in place */
+.glass__specwrap {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.glass__spec {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--glass-sheen), transparent 72%);
+  opacity: 0;
+  transform: translate3d(var(--px, -9999px), var(--py, -9999px), 0) translate(-50%, -50%);
+  transition: opacity 0.4s var(--ease-hover);
+}
+[data-spec='on'] > .glass__specwrap > .glass__spec {
+  opacity: 0.35;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background-color: color-mix(in srgb, var(--elevated) 94%, transparent);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  html.refract .glass--refract {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: color-mix(in srgb, var(--elevated) 97%, transparent);
+  }
+}

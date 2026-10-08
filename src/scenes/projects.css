@@ -1,0 +1,422 @@
+/* Projects. Rest state: featured cards in a column, then the wall. Motion (desktop/tablet):
+   the featured cards stack in one pinned stage and play in sequence. */
+
+.projects {
+  padding-top: var(--section-py);
+}
+.projects__head {
+  margin-bottom: clamp(2rem, 5vw, 3.5rem);
+}
+
+.projects__stage {
+  display: grid;
+  gap: clamp(28px, 4vw, 48px);
+  max-width: calc(1120px + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ---------- Featured card ---------- */
+
+.pcard {
+  position: relative;
+  transform-style: preserve-3d;
+}
+.pcard__tilt {
+  transform-style: preserve-3d;
+}
+.pcard__rig {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  grid-template-rows: auto auto 1fr;
+  column-gap: clamp(24px, 3.5vw, 48px);
+  row-gap: 26px;
+  padding: clamp(14px, 1.6vw, 20px);
+  transform-style: preserve-3d;
+}
+.pcard__base {
+  position: absolute;
+  inset: 0;
+  background: var(--elevated);
+  border: 1px solid var(--hairline);
+  border-radius: 26px;
+  box-shadow: var(--shadow-mid);
+}
+.pcard__screen {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  min-height: 300px;
+  border-radius: 20px;
+  background-color: var(--sunken);
+  display: grid;
+  place-items: center;
+}
+.pcard__screen picture {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 20px;
+}
+/* app screenshots fill the plate; charts and diagrams stay whole */
+.pcard__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 40%;
+}
+.pcard__screen.is-contain {
+  padding: clamp(10px, 1.4vw, 18px);
+}
+.pcard__screen.is-contain picture {
+  border-radius: 10px;
+}
+.pcard__screen.is-contain .pcard__img {
+  object-fit: contain;
+}
+.pcard__story,
+.pcard__stack,
+.pcard__actions {
+  position: relative;
+  grid-column: 2;
+}
+.pcard__story {
+  padding-top: clamp(8px, 1.4vw, 20px);
+  padding-right: clamp(4px, 1vw, 12px);
+}
+.pcard__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--ink-2);
+}
+.pcard__count {
+  color: var(--accent);
+}
+.pcard__title {
+  margin-top: 0.45rem;
+  font-size: clamp(1.9rem, 1.2rem + 2vw, 3rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.pcard__summary {
+  margin-top: 0.75rem;
+  color: var(--ink-2);
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+.pcard__highlights {
+  display: grid;
+  gap: 6px;
+  margin-top: 0.9rem;
+  font-size: 0.93rem;
+  font-weight: 500;
+}
+.pcard__highlights li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.pcard__highlights li::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 1.5px;
+  background: linear-gradient(135deg, var(--accent), var(--secondary));
+}
+.pcard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  align-content: end;
+  gap: 10px;
+  padding-bottom: 4px;
+}
+.pcard__tag {
+  top: -11px;
+  left: 14px;
+}
+
+.project-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+.project-links .btn svg {
+  margin-left: -2px;
+}
+
+@media (max-width: 767px) {
+  .pcard__rig {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    row-gap: 18px;
+  }
+  .pcard__screen {
+    grid-row: auto;
+    min-height: 0;
+    aspect-ratio: 16 / 10;
+  }
+  .pcard__story,
+  .pcard__stack,
+  .pcard__actions {
+    grid-column: 1;
+    padding-inline: 4px;
+  }
+  .pcard__actions {
+    padding-bottom: 8px;
+  }
+  .pcard__tag {
+    display: none;
+  }
+  /* each card gets its own perspective, so its small explode is centred on the card itself
+     rather than on the far-away origin of the whole list */
+  .projects__stage {
+    transform-style: flat;
+  }
+  .pcard {
+    perspective: 900px;
+  }
+}
+
+/* phones in motion: the layer tags name each card's layers as it arrives exploded */
+@media (max-width: 767px) {
+  .is-motion .pcard__tag {
+    display: inline-flex;
+  }
+}
+
+/* ---------- Motion: one pinned stage, cards in sequence ---------- */
+
+.is-motion:not(.is-mobile) .projects__pin {
+  height: 100vh;
+  height: 100svh;
+  display: grid;
+  align-items: center;
+  padding-top: calc(var(--nav-top) + var(--nav-h));
+}
+.is-motion:not(.is-mobile) .projects__persp {
+  width: 100%;
+}
+.is-motion:not(.is-mobile) .projects__stage {
+  gap: 0;
+}
+.is-motion:not(.is-mobile) .pcard {
+  grid-area: 1 / 1;
+}
+.is-motion:not(.is-mobile) .pcard__rig {
+  height: min(66vh, 580px);
+}
+.is-motion:not(.is-mobile) .pcard__screen {
+  min-height: 0;
+}
+/* 1px resting steps so coplanar layers never z-fight in Safari */
+.is-motion .pcard__screen { transform: translateZ(1px); }
+.is-motion .pcard__story { transform: translateZ(2px); }
+.is-motion .pcard__stack { transform: translateZ(3px); }
+.is-motion .pcard__actions { transform: translateZ(4px); }
+.is-motion .pcard__story,
+.is-motion .pcard__stack,
+.is-motion .pcard__actions,
+.is-motion .pcard__screen {
+  transform-style: preserve-3d;
+}
+
+/* ---------- More work ---------- */
+
+.wall {
+  padding-block: clamp(4rem, 10vw, 7rem) var(--section-py);
+}
+.wall__heading {
+  font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.wall__persp {
+  margin-top: 1.75rem;
+  perspective-origin: 50% 0%;
+}
+.wall__plane {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform-origin: 50% 0%;
+}
+.wall__card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 10px 10px 18px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.25s var(--ease-hover), border-color 0.25s var(--ease-hover), box-shadow 0.25s var(--ease-hover);
+}
+.wall__card:hover {
+  transform: translateY(-4px);
+  border-color: var(--hairline-strong);
+  box-shadow: var(--shadow-far);
+}
+.wall__thumb {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--sunken);
+  overflow: hidden;
+}
+.wall__thumb picture {
+  width: 100%;
+  height: 100%;
+}
+.wall__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+.wall__title {
+  margin: 14px 6px 0;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+.wall__summary {
+  margin: 6px 6px 0;
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.wall__foot {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+@media (max-width: 1023px) {
+  .wall__plane {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 599px) {
+  .wall__plane {
+    gap: 10px;
+  }
+  .wall__card {
+    padding: 6px 6px 12px;
+  }
+  .wall__title {
+    margin: 10px 4px 0;
+    font-size: 0.95rem;
+  }
+  .wall__summary {
+    display: none;
+  }
+}
+
+/* ---------- Dialogs ---------- */
+
+.project-dialog__body {
+  display: grid;
+  gap: 18px;
+  padding: 20px 24px 28px;
+}
+.project-dialog__plate {
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  border-radius: 18px;
+  background-color: var(--sunken);
+}
+.project-dialog__plate {
+  position: relative;
+  margin: 0;
+}
+.project-dialog__caption {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--elevated);
+  color: var(--ink-2);
+}
+.project-dialog__img {
+  width: 100%;
+  height: auto;
+  max-height: 52vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.project-dialog__sub {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.project-dialog__desc {
+  color: var(--ink-2);
+  max-width: 68ch;
+}
+
+.archive__body {
+  padding-block: 28px 64px;
+}
+.archive__group + .archive__group {
+  margin-top: 48px;
+}
+.archive__kind {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.archive__kind .mono {
+  color: var(--ink-2);
+}
+.archive__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+.archive__item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+}
+.archive__title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.archive__sub {
+  margin-top: -6px;
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+.archive__desc {
+  color: var(--ink-2);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.archive__item .chips {
+  margin-top: auto;
+  padding-top: 6px;
+}

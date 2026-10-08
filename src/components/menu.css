@@ -1,0 +1,193 @@
+/* The menu (components/MenuSheet.tsx): a full-screen dialog; the veil paints the backdrop and
+   irises in and out of the menu button (--cx, --cy, --r); rows swing out of depth. */
+
+.menu {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+.menu::backdrop {
+  background: transparent;
+}
+
+.menu__veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(90% 60% at var(--cx, 90%) var(--cy, 4%), color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%),
+    radial-gradient(80% 50% at 10% 100%, color-mix(in srgb, var(--secondary) 12%, transparent), transparent 70%),
+    var(--bg);
+  clip-path: circle(var(--r, 160vmax) at var(--cx, 90%) var(--cy, 4%));
+}
+/* a stage floor: a grid plane receding into the dark, like a 3D tool's viewport */
+.menu__floor {
+  position: absolute;
+  left: -45%;
+  right: -45%;
+  bottom: -6%;
+  height: 58%;
+  background-image:
+    linear-gradient(var(--hairline-strong) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hairline-strong) 1px, transparent 1px);
+  background-size: 46px 46px;
+  background-position: 50% 100%;
+  transform: perspective(700px) rotateX(64deg);
+  transform-origin: 50% 100%;
+  -webkit-mask: linear-gradient(to top, #000 5%, transparent 80%);
+  mask: linear-gradient(to top, #000 5%, transparent 80%);
+}
+
+/* sits exactly over the navbar (--bar-* measured on open), so the brand and the button stay put */
+.menu__top {
+  position: absolute;
+  left: var(--bar-l, 12px);
+  top: var(--bar-t, var(--nav-top));
+  width: var(--bar-w, calc(100% - 24px));
+  height: var(--bar-h, var(--nav-h));
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px 0 18px;
+}
+.menu__brand {
+  margin-right: auto;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+}
+.menu__bars {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+.menu__bars i {
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: calc(50% - 0.9px);
+  height: 1.8px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: translateY(-4px);
+}
+.menu__bars i + i {
+  transform: translateY(4px);
+}
+
+.menu__body {
+  position: absolute;
+  inset: calc(var(--bar-t, var(--nav-top)) + var(--bar-h, var(--nav-h)) + clamp(20px, 5vh, 44px)) var(--gutter)
+    max(20px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+/* the rows' 3D space: each row hinges on its top edge */
+.menu__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  perspective: 900px;
+  perspective-origin: 50% -30%;
+}
+.menu__list > li {
+  transform-origin: 50% 0;
+  will-change: transform, opacity;
+}
+.menu__link {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--ink);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.menu__num {
+  color: var(--ink-3);
+  font-size: 0.78rem;
+}
+.menu__label {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 8.6vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+}
+.menu__link[aria-current='true'] .menu__num {
+  color: var(--accent);
+}
+.menu__link[aria-current='true'] .menu__label {
+  color: transparent;
+  background: linear-gradient(120deg, var(--ink) 20%, var(--accent) 75%, var(--secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.menu__link:active .menu__label {
+  opacity: 0.75;
+}
+@media (hover: hover) {
+  .menu__link:hover .menu__num {
+    color: var(--accent);
+  }
+}
+.menu__link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+/* how far you have read each section */
+.menu__meter {
+  position: relative;
+  width: 44px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--hairline);
+}
+.menu__meter i {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform: scaleX(var(--p, 0));
+  transform-origin: 0 50%;
+}
+
+.menu__foot {
+  display: grid;
+  gap: 14px;
+  margin-top: auto;
+}
+.menu__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.menu__social {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.menu__social .icon-btn {
+  color: var(--ink-2);
+}
