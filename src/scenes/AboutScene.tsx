@@ -18,6 +18,8 @@ import { aboutChapters, aboutFacts, quotes, sentences } from '../content/data';
 import { mask as visionMask, edge as visionEdge } from '../data/vision.json';
 import { gsap, ScrollTrigger } from '../lib/gsap';
 import { useScene } from '../lib/useScene';
+import { afterLoad } from '../lib/idle';
+import type { AboutRelief } from './aboutRelief';
 import { HERO_DISPERSE, HERO_PIN } from './handoff';
 import Metrics from './Metrics';
 import './about.css';
@@ -199,6 +201,24 @@ export default function AboutScene() {
         invalidateOnRefresh: true,
         onRefresh,
       },
+      onUpdate: () => updateRelief(),
+    });
+
+    let relief: AboutRelief | null = null;
+    let live = true;
+    const counter = q('.about__counter')[0] as HTMLElement;
+    const reveal = q('.about__reveal')[0] as HTMLElement;
+    const updateRelief = () => {
+      // The growing silhouette allocates a large layer; the canvas waits until identity returns.
+      relief?.update(Number(gsap.getProperty(card, 'rotationY')), reveal.classList.contains('is-open'));
+    };
+    repaint.push(() => { relief?.resize(); updateRelief(); });
+    const cancelRelief = afterLoad(() => {
+      void import('./aboutRelief').then((m) => live ? m.mountAboutRelief(counter) : null).then((mounted) => {
+        if (!live) return mounted?.destroy();
+        relief = mounted;
+        updateRelief();
+      }).catch(() => {});
     });
 
     // The back face stays hidden until the card is edge-on: the faces swap at 90 degrees
@@ -248,6 +268,9 @@ export default function AboutScene() {
       q('.about__progress i').forEach((bar, i) =>
         tl.fromTo(bar, { '--f': 0 }, { '--f': 1, duration: CHAPTER, immediateRender: true }, starts[i] ?? LEAD),
       );
+      tl.to(card, { rotateY: -4, duration: 0.25, ease: 'power1.inOut' }, starts[0])
+        .to(card, { rotateY: 0, duration: 0.2, ease: 'power1.inOut' }, starts[1])
+        .to(card, { rotateY: 4, duration: 0.25, ease: 'power1.inOut' }, starts[2]);
     } else {
       // The card tilts a little per chapter, then turns to the fact sheet in chapter 3.
       tl.fromTo(card, { rotateY: 0 }, { rotateY: -8, duration: 0.25, ease: 'power1.inOut', immediateRender: false }, LEAD + REVEAL)
@@ -260,7 +283,7 @@ export default function AboutScene() {
         .to(card, { rotateY: 180, duration: 0.12, ease: 'power2.out' }, flip + 0.12);
     }
 
-    return unsize;
+    return () => { live = false; cancelRelief(); relief?.destroy(); unsize(); };
   });
 
   return (
