@@ -67,7 +67,11 @@ export default function AboutScene() {
     //  - desktop/tablet: 3:4, as tall as fits;
     //  - phones (pinned): full width, and as tall as the space the longest chapter leaves, so the
     //    screen is used top to bottom (the chapter's title sits on the photo).
+    let sized = '';
     const size = () => {
+      const key = `${innerWidth}:${innerHeight}:${document.fonts.status}`;
+      if (key === sized) return;
+      sized = key;
       let w: number;
       let h: number;
       if (mobile) {

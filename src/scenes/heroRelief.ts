@@ -131,13 +131,21 @@ export async function mountRelief(portrait: HTMLElement): Promise<Relief | null>
   portrait.insertBefore(canvas, overlay);
   overlay.appendChild(marks);
   portrait.classList.add('has-relief');
+  let boxRatio = 1;
+  let sized = '';
   const resize = () => {
-    quad.size(portrait.offsetWidth, portrait.offsetHeight, 2);
+    const w = portrait.offsetWidth;
+    const h = portrait.offsetHeight;
+    const key = `${w}:${h}:${devicePixelRatio}`;
+    if (key === sized) return;
+    sized = key;
+    boxRatio = w / Math.max(1, h);
+    quad.size(w, h, 2);
     marks.width = canvas.width;
     marks.height = canvas.height;
-    const scale = Math.min(portrait.offsetWidth / width, portrait.offsetHeight / height);
-    canvas.style.left = `${(portrait.offsetWidth - width * scale) / 2}px`;
-    canvas.style.top = `${portrait.offsetHeight - height * scale}px`;
+    const scale = Math.min(w / width, h / height);
+    canvas.style.left = `${(w - width * scale) / 2}px`;
+    canvas.style.top = `${h - height * scale}px`;
     canvas.style.width = `${width * scale}px`;
     canvas.style.height = `${height * scale}px`;
   };
@@ -146,10 +154,19 @@ export async function mountRelief(portrait: HTMLElement): Promise<Relief | null>
   const clampSin = (degrees: number) => Math.max(-MAX_SIN, Math.min(MAX_SIN, Math.sin((degrees * Math.PI) / 180)));
   return {
     update(rotateX, rotateY, strength, scanEdge, scanOpacity) {
+      if (strength <= 0) {
+        if (state.strength > 0) {
+          svg.style.removeProperty('--rx');
+          svg.style.removeProperty('--ry');
+        }
+        state.strength = 0;
+        show(false);
+        return;
+      }
       // A surface nearer than the stage plane slides by depth x sin(tilt): left when the stage
       // turns its right edge away (rotateY < 0), up when it tips its top away (rotateX > 0).
       state.sx = AMOUNT * clampSin(rotateY);
-      state.sy = -AMOUNT * clampSin(rotateX) * (portrait.offsetWidth / Math.max(1, portrait.offsetHeight));
+      state.sy = -AMOUNT * clampSin(rotateX) * boxRatio;
       state.strength = strength;
       state.scan = scanEdge;
       state.scanOpacity = scanOpacity;

@@ -128,15 +128,21 @@ export function lockScroll(): () => void {
 }
 
 let refreshTimer = 0;
+let measuredAt = 0;
+ScrollTrigger.addEventListener('refresh', () => { measuredAt = performance.now(); });
 
 /** Re-measure every trigger soon (after a scene mounts, fonts load, or layout changes). */
 export function refreshSoon(delay = 80) {
   window.clearTimeout(refreshTimer);
+  const requestedAt = performance.now();
   refreshTimer = window.setTimeout(() => {
-    if (gliding) {
+    if (gliding || ScrollTrigger.isScrolling()) {
       refreshSoon(160);
       return;
     }
+    // A newly pinned scene queues GSAP's own full refresh in the next frame.
+    // Repeating it 80 ms later stalled phone scrolling as each lazy scene arrived.
+    if (measuredAt >= requestedAt) return;
     ScrollTrigger.sort();
     ScrollTrigger.refresh();
   }, delay);

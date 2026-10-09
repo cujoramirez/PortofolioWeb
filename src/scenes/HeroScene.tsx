@@ -123,9 +123,14 @@ export default function HeroScene() {
     // portrait twice (a layout shift) as the web font swaps in.
     let ready = false;
     let live = true;
+    let fitted = '';
     const timers: number[] = [];
     const fit = () => {
-      if (ready) fitHero(section);
+      if (!ready) return;
+      const key = `${innerWidth}:${innerHeight}:${section.classList.contains('is-motion')}:${section.classList.contains('is-split')}`;
+      if (key === fitted) return;
+      fitted = key;
+      fitHero(section);
     };
     void fontsReady().then(() => {
       ready = true;
@@ -292,7 +297,8 @@ export default function HeroScene() {
     // Crossfade the flying portrait into the About card photo over the last stretch of the flight.
     function sync() {
       render();
-      if (reliefReady && !reliefPending && tl.progress() > 0.01 && tl.progress() < HOLD_END) startRelief();
+      // About mounts on the first scroll too; let that layout settle before compiling the relief.
+      if (reliefReady && !reliefPending && tl.progress() > 0.12 && tl.progress() < HOLD_END) startRelief();
       if (relief) {
         // none at rest, full through the exploded view, gone again before the portrait flies off
         const p = tl.progress();
@@ -476,8 +482,14 @@ export default function HeroScene() {
     const st = { a: 0, c: 0, s: 1, zb: 0, lift: 0, spread: 0, oy: 0 };
     const geo = { plateC: 0, oyA: 0, oyC: 0, sA: 0.6, sC: 0.8, uiY: 0, perspTop: 0 };
     const RAD = Math.PI / 180;
+    let measured = '';
 
     const measure = () => {
+      // Lazy pins refresh the whole page; the rigid stack only needs new geometry after a resize
+      // or its font/split changes. Rewriting every hinge otherwise forces repeated layouts.
+      const key = `${innerWidth}:${innerHeight}:${document.fonts.status}:${section.classList.contains('is-split')}`;
+      if (key === measured) return;
+      measured = key;
       const vh = window.innerHeight;
       const vw = window.innerWidth;
       const pl = offsetWithin(plate, persp);

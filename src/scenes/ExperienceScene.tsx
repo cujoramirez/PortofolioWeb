@@ -83,9 +83,15 @@ export default function ExperienceScene() {
         return null;
       }
       const world = q('.xp__world')[0] as HTMLElement;
+      let sized = '';
       const size = () => {
-        list.style.height = `${tallest()}px`;
-        gsap.set(world, { scale: Math.min(1, room() / tallest()), transformOrigin: '50% 0%' });
+        const key = `${innerWidth}:${innerHeight}:${document.fonts.status}`;
+        if (key === sized) return;
+        sized = key;
+        const height = tallest();
+        const available = room();
+        list.style.height = `${height}px`;
+        gsap.set(world, { scale: Math.min(1, available / height), transformOrigin: '50% 0%' });
       };
       size();
       ScrollTrigger.addEventListener('refreshInit', size);
