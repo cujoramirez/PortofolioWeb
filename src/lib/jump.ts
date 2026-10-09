@@ -23,7 +23,19 @@ export async function loadAllScenes() {
 export function focusHeading(target: HTMLElement) {
   const heading = target.matches('h1, h2, h3') ? target : (target.querySelector<HTMLElement>('h1, h2') ?? target);
   if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+  const from = document.activeElement;
   heading.focus({ preventScroll: true });
+  if (document.activeElement === heading) return;
+  // The hero is hidden once it has handed over to About, and a hidden heading takes no focus:
+  // "Skip to the top" left focus at the foot of the page and the next Tab scrolled back down.
+  // Try again as the page arrives, unless the reader has moved focus meanwhile.
+  let tries = 12;
+  const retry = () => {
+    if (document.activeElement !== from) return;
+    heading.focus({ preventScroll: true });
+    if (document.activeElement !== heading && --tries > 0) window.setTimeout(retry, 200);
+  };
+  window.setTimeout(retry, 200);
 }
 
 export async function jumpTo(id: string, { immediate = false, url = true } = {}) {
