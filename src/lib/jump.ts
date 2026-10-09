@@ -26,9 +26,8 @@ export function focusHeading(target: HTMLElement) {
   const from = document.activeElement;
   heading.focus({ preventScroll: true });
   if (document.activeElement === heading) return;
-  // The hero is hidden once it has handed over to About, and a hidden heading takes no focus:
-  // "Skip to the top" left focus at the foot of the page and the next Tab scrolled back down.
-  // Try again as the page arrives, unless the reader has moved focus meanwhile.
+  // The hero hides once it has handed over to About, and a hidden heading takes no focus ("Skip to
+  // the top" left it at the foot of the page). Retry as the page arrives, unless focus has moved.
   let tries = 12;
   const retry = () => {
     if (document.activeElement !== from) return;
