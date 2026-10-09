@@ -1,15 +1,5 @@
-/**
- * Depth relief on the hero portrait: a canvas over the image, under the Vision overlay. As the
- * stage tilts, each pixel is looked up a little to the side according to its depth, so the nose,
- * jaw and shoulders move against each other as a relief would. The depth is a real estimate
- * (Depth Anything V2 Small, baked by scripts/vision): nothing here is placed by hand.
- *
- * It has no clock and no pointer input. HeroScene calls `update` from its timeline's `sync()`,
- * and each call costs at most one frame. At strength 0 the canvas shows exactly the image, so it
- * is hidden and the image shows instead.
- * The overlay's boxes and landmarks stay in the SVG: this module gives each its depth (`--k`) and
- * moves them with two variables, by the same amount the shader moves the pixel under them.
- */
+/** Scroll-driven relief from the baked depth estimate. The original image and SVG remain the fallback;
+    canvas landmarks use each point's sampled depth rather than translating whole lines. */
 import { depth, face, width, height } from '../data/vision.json';
 import { createQuad, loadTexture } from '../lib/gl';
 import './heroRelief.css';
@@ -46,7 +36,8 @@ void main() {
   vec4 hi = vec4(165.0, 243.0, 252.0, 255.0) / 255.0 * 0.95;
   vec4 beam = t < 0.72 ? lo * (t / 0.72) : mix(lo, hi, (t - 0.72) / 0.28);
   beam *= step(0.0, t) * step(t, 1.0) * uScan.z;
-  gl_FragColor = beam + colour * (1.0 - beam.a);
+  colour.rgb = beam.rgb * colour.a + colour.rgb * (1.0 - beam.a);
+  gl_FragColor = colour;
 }`;
 
 export interface Relief {
@@ -100,9 +91,9 @@ export async function mountRelief(portrait: HTMLElement): Promise<Relief | null>
           const moved = points.map(([x, y], i) => [x + state.sx * state.strength * width * (values[i] - FOCUS), y + state.sy * state.strength * height * (values[i] - FOCUS)]);
           ctx.beginPath();
           moved.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
-          if (key !== 'faceContour' && key !== 'noseCrest') ctx.closePath();
+          if (['leftEye', 'rightEye', 'outerLips', 'innerLips'].includes(key)) ctx.closePath();
           ctx.stroke();
-          moved.forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill(); });
+          moved.forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill(); });
         });
         ctx.restore();
       }
@@ -131,8 +122,7 @@ export async function mountRelief(portrait: HTMLElement): Promise<Relief | null>
     return null;
   }
 
-  // Each overlay element learns its depth relative to the face: the boxes at their centres, a
-  // landmark line at its mean, every dot at its own point. Document order matches the baked data.
+  // The boxes stay in SVG and move by their sampled centre depths.
   const k = (el: Element | null, value: number | null) => (el as SVGElement | null)?.style.setProperty('--k', ((value ?? FOCUS) - FOCUS).toFixed(3));
   k(svg.querySelector('.cv-person'), depth.person);
   k(svg.querySelector('.cv-face'), depth.face);

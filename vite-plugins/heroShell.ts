@@ -34,14 +34,15 @@ export default function heroShell(): Plugin {
         out = out.replace(/<meta charset="UTF-8" \/>/, (m) => `${m}\n    <script>${themeInitScript()}</script>`);
         out = out.replace('</head>', `    ${preload}\n</head>`);
 
-        // Build: inline the entry stylesheet(s) Vite linked, and drop them from the output.
+        // Lazy chunks can preload entry CSS too; an empty asset keeps those references valid.
         const bundle = ctx.bundle;
         if (bundle) {
           out = out.replace(/<link rel="stylesheet"[^>]*href="\/([^"]+\.css)"[^>]*>/g, (tag, file: string) => {
             const asset = bundle[file];
             if (!asset || asset.type !== 'asset') return tag;
-            delete bundle[file];
-            return `<style>${String(asset.source)}</style>`;
+            const css = String(asset.source);
+            asset.source = '';
+            return `<style>${css}</style>`;
           });
           // The web fonts' @font-face rules (the ones with a file, not the local() fallbacks) move
           // into their own <style>, which fontGateScript keeps shut until the portrait has loaded.

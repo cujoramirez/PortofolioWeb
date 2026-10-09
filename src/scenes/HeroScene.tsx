@@ -272,6 +272,8 @@ export default function HeroScene() {
     let handoff = -1;
     let render = () => {};
     let relief: Relief | null = null;
+    let reliefReady = false;
+    let reliefPending = false;
     const tl = gsap.timeline({
       defaults: { ease: 'none' },
       scrollTrigger: {
@@ -290,6 +292,7 @@ export default function HeroScene() {
     // Crossfade the flying portrait into the About card photo over the last stretch of the flight.
     function sync() {
       render();
+      if (reliefReady && !reliefPending && tl.progress() > 0.01 && tl.progress() < HOLD_END) startRelief();
       if (relief) {
         // none at rest, full through the exploded view, gone again before the portrait flies off
         const p = tl.progress();
@@ -322,7 +325,8 @@ export default function HeroScene() {
 
     // Depth relief on the portrait: a lazy chunk, mounted once the page has loaded and is idle (as
     // the backdrop is), so neither its code nor the depth map competes with the hero.
-    const cancelRelief = afterLoad(() => {
+    const startRelief = () => {
+      reliefPending = true;
       void import('./heroRelief')
         .then((m) => live ? m.mountRelief(portrait) : null)
         .then((mounted) => {
@@ -330,7 +334,8 @@ export default function HeroScene() {
           relief = mounted;
           sync();
         }).catch(() => {});
-    });
+    };
+    const cancelRelief = afterLoad(() => { reliefReady = true; sync(); });
     const resizeRelief = () => relief?.resize();
     ScrollTrigger.addEventListener('refresh', resizeRelief);
     cleanups.push(() => {
@@ -399,7 +404,7 @@ export default function HeroScene() {
           { z: Z[0] },
           // a little further than its depth: perspective draws the portrait (in front) larger, and
           // the head would cover the last letter of each word again
-          { z: Z[1], x: X[1] - 36 * k, y: Y[1] },
+          { z: Z[1], x: X[1] - 64 * k, y: Y[1] },
           { z: Z[2] },
           { z: Z[3], x: X[3], y: Y[3] },
         ];

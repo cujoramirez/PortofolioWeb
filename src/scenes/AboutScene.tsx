@@ -206,20 +206,28 @@ export default function AboutScene() {
 
     let relief: AboutRelief | null = null;
     let live = true;
+    let reliefReady = false;
+    let reliefPending = false;
     const counter = q('.about__counter')[0] as HTMLElement;
     const reveal = q('.about__reveal')[0] as HTMLElement;
     const updateRelief = () => {
       // The growing silhouette allocates a large layer; the canvas waits until identity returns.
-      relief?.update(Number(gsap.getProperty(card, 'rotationY')), reveal.classList.contains('is-open'));
+      const img = counter.querySelector('.about__img');
+      const angle = Number(gsap.getProperty(card, 'rotationY'));
+      const visible = reveal.classList.contains('is-open') && Math.abs(Number(gsap.getProperty(img, 'scaleX')) - 1) < 0.001;
+      if (reliefReady && !reliefPending && visible && Math.abs(angle) > 0.05 && Math.abs(angle) < 65) startRelief();
+      relief?.update(angle, visible);
     };
     repaint.push(() => { relief?.resize(); updateRelief(); });
-    const cancelRelief = afterLoad(() => {
+    const startRelief = () => {
+      reliefPending = true;
       void import('./aboutRelief').then((m) => live ? m.mountAboutRelief(counter) : null).then((mounted) => {
         if (!live) return mounted?.destroy();
         relief = mounted;
         updateRelief();
       }).catch(() => {});
-    });
+    };
+    const cancelRelief = afterLoad(() => { reliefReady = true; updateRelief(); });
 
     // The back face stays hidden until the card is edge-on: the faces swap at 90 degrees
     // instead of relying on backface-visibility, which WebKit renders mirrored.
