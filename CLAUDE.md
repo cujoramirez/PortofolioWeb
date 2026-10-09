@@ -238,11 +238,11 @@ does no layout reads after its strength reaches zero. The lighter hero stack als
 windows below 620 px tall; its portrait belongs beside the intro there, sized from the fitted name and
 anchored right so it does not cover the text.
 
-2026-10-10 measured state (production build, this Mac): slow-4G phone LCP 1.73 s (baseline 1.82),
-CLS 0.000 phone / 0.002 desktop, first-load JS 112.9 KB gzip (122.4 KB transferred, limit 125), HTML
+2026-10-10 measured state (production build, this Mac): slow-4G phone LCP 1.73 to 1.75 s (baseline 1.82),
+CLS 0.000 phone / 0.002 desktop, first-load JS 113.0 KB gzip (122.5 KB transferred, limit 125), HTML
 15.0 KB, fonts 69.0 KB, new canvas code 7.0 KB of 8, depth maps 4.4 and 3.6 KB. Idle frames, timers and
 running animations are zero after load, scroll and every scripted input. Worst INP at CPU x4: 88 ms
-desktop, 56 ms phone. Phone full-scroll blockingDuration 49 to 68 ms over eight runs (limit 100),
+desktop, 56 ms phone. Phone full-scroll blockingDuration 49 to 68 ms over nine runs (limit 100),
 desktop 0. Posters meet AA in both themes at 1440 x 900, 1190 x 680 and 390 x 844. Pins: unchanged
 except the phone Experience deck (3.56 to 2.80 viewport heights). Not verified: real Safari after the
 first dark hero check, iOS flick-through and address-bar resizing, Firefox, and playback of real
