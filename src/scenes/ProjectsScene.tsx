@@ -9,8 +9,13 @@ import { useEffect, useRef, useState } from 'react';
 import Picture, { ladder } from '../components/Picture';
 import { featuredProjects, firstSentence, moreWorkProjects, projects, splitTitle, type Project } from '../content/data';
 import { FEATURED } from '../content/site';
-import { gsap } from '../lib/gsap';
+import { gsap, ScrollTrigger } from '../lib/gsap';
 import { useScene } from '../lib/useScene';
+import { afterLoad } from '../lib/idle';
+import manifest from '../data/sequences.json';
+import type { Sequence, SequencePlayer } from '../lib/sequence';
+import { openProjectTransition, projectTransitionActive } from '../lib/projectTransition';
+import { showOnFocus } from '../lib/focusStep';
 import ProjectDialog, { ProjectLinks } from './ProjectDialog';
 import ProjectsArchive from './ProjectsArchive';
 import ProjectWall from './ProjectWall';
@@ -19,6 +24,37 @@ import './projects.css';
 
 const TAGS = ['Screen', 'Story', 'Stack', 'Actions'];
 const SEGMENT = 0.62; // viewport heights of scroll per featured project (x k)
+const sequences = manifest as Record<string, Sequence>;
+const clamp = (p: number) => Math.max(0, Math.min(1, p));
+
+function linkSequences(cards: HTMLElement[], phone: boolean) {
+  const players = new Map<number, SequencePlayer>();
+  const pending = new Set<number>();
+  const states = cards.map(() => ({ progress: 0, opacity: 0, near: false }));
+  let ready = false;
+  let live = true;
+  const update = (index: number, progress: number, opacity: number, near: boolean) => {
+    states[index] = { progress, opacity, near };
+    const source = sequences[splitTitle(featuredProjects[index].title)[0]];
+    if (!source) return;
+    const player = players.get(index);
+    if (player) { player.update(progress, opacity, near); return; }
+    if (!near || !ready || pending.has(index)) return;
+    pending.add(index);
+    void import('../lib/sequence').then((m) => {
+      if (!live) return;
+      const screen = cards[index].querySelector<HTMLElement>('.pcard__screen');
+      const mounted = screen && m.mountSequence(screen, source, phone);
+      if (mounted) {
+        players.set(index, mounted);
+        const s = states[index];
+        mounted.update(s.progress, s.opacity, s.near);
+      }
+    }).catch(() => {});
+  };
+  const cancel = afterLoad(() => { ready = true; states.forEach((s, i) => update(i, s.progress, s.opacity, s.near)); });
+  return { update, destroy: () => { live = false; cancel(); players.forEach((p) => p.destroy()); } };
+}
 
 function FeaturedCard({ project, index, total, onDetails }: { project: Project; index: number; total: number; onDetails: () => void }) {
   const [name, subtitle] = splitTitle(project.title);
@@ -141,7 +177,7 @@ export default function ProjectsScene() {
     const onOpen = (e: Event) => {
       const title = (e as CustomEvent<string>).detail;
       const p = projects.find((x) => x.title === title);
-      if (p) setDetail(p);
+      if (p) openProjectTransition(undefined, () => setDetail(p));
     };
     window.addEventListener('open-project', onOpen);
     return () => window.removeEventListener('open-project', onOpen);
@@ -151,6 +187,7 @@ export default function ProjectsScene() {
     const q = gsap.utils.selector(section);
     const cards = q('.pcard') as HTMLElement[];
     const plane = q('.wall__plane')[0];
+    const footage = linkSequences(cards, variant === 'mobile');
 
     if (variant === 'mobile') {
       cards.forEach((card) => {
@@ -181,13 +218,26 @@ export default function ProjectsScene() {
           },
         );
       });
+      cards.forEach((card, i) => {
+        if (!sequences[splitTitle(featuredProjects[i].title)[0]]) return;
+        const update = (self: ScrollTrigger) => footage.update(i, self.progress, clamp(self.progress / 0.16) * clamp((1 - self.progress) / 0.16), self.scroll() > self.start - innerHeight && self.scroll() < self.end + innerHeight);
+        ScrollTrigger.create({ trigger: card, start: 'top bottom', end: 'bottom top', onUpdate: update, onRefresh: update });
+      });
       gsap.fromTo(plane, { rotateX: 16, y: 40 }, { rotateX: 0, y: 0, ease: 'none', scrollTrigger: { trigger: plane, start: 'top bottom', end: 'top 50%', scrub: 0.6 } });
-      return undefined;
+      return footage.destroy;
     }
 
     const n = cards.length;
     const x = () => window.innerWidth * 0.6;
-    const tl = gsap.timeline({
+    let tl: gsap.core.Timeline | null = null;
+    const syncFootage = () => {
+      if (!tl) return;
+      cards.forEach((_, i) => {
+        const p = tl!.time() - i;
+        footage.update(i, clamp((p - 0.25) / 0.45), clamp((p - 0.1) / 0.12) * clamp((0.84 - p) / 0.12), p > -1 / SEGMENT && p < 1 + 1 / SEGMENT);
+      });
+    };
+    tl = gsap.timeline({
       defaults: { ease: 'none' },
       scrollTrigger: {
         trigger: q('.projects__seq')[0],
@@ -196,34 +246,42 @@ export default function ProjectsScene() {
         pin: q('.projects__pin')[0],
         scrub: 0.6,
         invalidateOnRefresh: true,
+        onRefresh: syncFootage,
       },
+      onUpdate: syncFootage,
     });
 
     cards.forEach((card, i) => {
       if (i > 0) {
         tl.fromTo(
           card,
-          { x, rotateY: -55, z: -400 * k, autoAlpha: 0 },
-          { x: 0, rotateY: 0, z: 0, autoAlpha: 1, duration: 0.24, ease: 'power2.out', immediateRender: true },
+          { x, rotateY: -55, z: -400 * k, opacity: 0 },
+          { x: 0, rotateY: 0, z: 0, opacity: 1, duration: 0.24, ease: 'power2.out', immediateRender: true },
           i - 0.15,
         );
       }
       explode(tl, card, i + 0.22, 0.4, 70 * k);
       if (i < n - 1) {
-        tl.to(card, { x: () => -x(), rotateY: 45, z: -200 * k, autoAlpha: 0, duration: 0.24, ease: 'power2.in' }, i + 0.8);
+        tl.to(card, { x: () => -x(), rotateY: 45, z: -200 * k, opacity: 0, duration: 0.24, ease: 'power2.in' }, i + 0.8);
       }
+      if (i > 0) tl.set(card, { pointerEvents: 'none' }, 0).set(card, { pointerEvents: 'auto' }, i + 0.09);
+      if (i < n - 1) tl.set(card, { pointerEvents: 'none' }, i + 1.04);
     });
 
     // Pad to the full pin so one timeline unit is exactly one segment of scroll.
     tl.set({}, {}, n - 0.15);
     const untilt = cards.map(tilt);
+    const unfocus = showOnFocus(section, () => tl?.scrollTrigger, (el) => {
+      const i = cards.findIndex((card) => card.contains(el));
+      return i < 0 ? null : (i + 0.74) / (n - 0.15);
+    });
 
     gsap.fromTo(
       plane,
       { rotateX: 24, z: -200 * k },
       { rotateX: 0, z: 0, ease: 'none', scrollTrigger: { trigger: plane, start: 'top bottom', end: 'top 30%', scrub: 0.6 } },
     );
-    return () => untilt.forEach((fn) => fn());
+    return () => { unfocus(); footage.destroy(); untilt.forEach((fn) => fn()); };
   });
 
   return (
@@ -240,15 +298,15 @@ export default function ProjectsScene() {
           <div className="projects__persp persp">
             <div className="projects__stage stage">
               {featuredProjects.map((p, i) => (
-                <FeaturedCard key={p.title} project={p} index={i} total={featuredProjects.length} onDetails={() => setDetail(p)} />
+                <FeaturedCard key={p.title} project={p} index={i} total={featuredProjects.length} onDetails={() => openProjectTransition(undefined, () => setDetail(p))} />
               ))}
             </div>
           </div>
         </div>
       </div>
 
-      <ProjectWall projects={moreWorkProjects} total={projects.length} onOpen={setDetail} onArchive={archive.show} />
-      <ProjectDialog project={detail} onClose={() => setDetail(null)} />
+      <ProjectWall projects={moreWorkProjects} total={projects.length} onOpen={(p, source) => openProjectTransition(source, () => setDetail(p))} onArchive={archive.show} />
+      <ProjectDialog project={detail} onClose={() => { if (!projectTransitionActive()) setDetail(null); }} />
       <ProjectsArchive open={archive.open} onClose={archive.hide} projects={projects} />
     </div>
   );

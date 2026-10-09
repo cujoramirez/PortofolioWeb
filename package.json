@@ -11,7 +11,8 @@
         "typecheck": "tsc --noEmit",
         "preview": "vite preview",
         "images": "node scripts/build-images.mjs",
-        "vision": "node scripts/vision/build-vision.mjs"
+        "vision": "node scripts/vision/build-vision.mjs",
+        "sequences": "node scripts/build-sequences.mjs"
     },
     "dependencies": {
         "@vercel/analytics": "^1.6.1",
