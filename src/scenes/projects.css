@@ -430,28 +430,36 @@
   margin-top: auto;
   padding-top: 6px;
 }
+/* Footage (lib/sequence.ts): a plate over the still, clipped to the screen's corners. The screen
+   itself cannot clip: it is a 3D layer, and overflow would flatten it. */
 .pcard__sequence {
   position: absolute;
   inset: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--sunken);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateZ(1px);
+}
+.pcard__sequence canvas {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  pointer-events: none;
-  opacity: 0;
-  background: var(--sunken);
-  transform: translateZ(1px);
 }
-.pcard__sequence.is-portrait {
-  inset: 12px auto;
+/* a phone recording is tall and the plate is wide: it stands in a plain outline on the plate */
+.pcard__sequence.is-portrait canvas {
+  position: absolute;
+  top: 12px;
   left: 50%;
   width: auto;
   height: calc(100% - 24px);
-  max-width: calc(100% - 24px);
-  object-fit: contain;
-  border: 3px solid var(--ink-3);
-  border-radius: 20px;
-  transform: translateX(-50%) translateZ(1px);
-  box-shadow: 0 0 0 1000px var(--sunken);
+  border: 2px solid var(--ink-3);
+  border-radius: 12% / 5.5%;
+  transform: translateX(-50%);
+}
+.pcard__sequence ~ .pcard__tag {
+  transform: translateZ(2px);
 }
 :root[data-vt='project']::view-transition-old(root),
 :root[data-vt='project']::view-transition-new(root) { animation: none; }

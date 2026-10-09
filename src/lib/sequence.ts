@@ -12,14 +12,21 @@ export function canPlaySequence(): boolean {
 export function mountSequence(screen: HTMLElement, source: Sequence, phone: boolean): SequencePlayer | null {
   if (!canPlaySequence() || !window.createImageBitmap) return null;
   const set = phone ? source.phone : source.desktop;
+  const tall = set.height > set.width;
+  // A tall recording stands framed on the wide plate. On a phone that frame is about 86 px
+  // wide, a thumbnail of the app next to the still it would replace: the still stays.
+  if (tall && ((screen.clientHeight - 24) * set.width) / set.height < 120) return null;
+  const plate = document.createElement('div');
+  plate.className = `pcard__sequence${tall ? ' is-portrait' : ''}`;
+  plate.setAttribute('aria-hidden', 'true');
   const canvas = document.createElement('canvas');
-  canvas.className = `pcard__sequence${set.height > set.width ? ' is-portrait' : ''}`;
-  canvas.setAttribute('aria-hidden', 'true');
   canvas.width = set.width;
   canvas.height = set.height;
   const ctx = canvas.getContext('2d', { alpha: false });
   if (!ctx) return null;
-  screen.appendChild(canvas);
+  plate.appendChild(canvas);
+  // ahead of the layer tag in the DOM: projects.css lifts the tag in front of the footage
+  screen.insertBefore(plate, screen.querySelector('.layer-tag'));
   const decoded = new Map<number, ImageBitmap>();
   const blobs = new Map<string, Promise<Blob>>();
   const pending = new Set<number>();
@@ -42,13 +49,13 @@ export function mountSequence(screen: HTMLElement, source: Sequence, phone: bool
   const draw = () => {
     frame = 0;
     const bitmap = decoded.get(wanted);
-    if (dead || failed || !bitmap || !near || !canPlaySequence()) { canvas.style.opacity = '0'; return; }
+    if (dead || failed || !bitmap || !near || !canPlaySequence()) { plate.style.opacity = '0'; return; }
     if (painted !== wanted) {
       ctx.drawImage(bitmap, 0, 0);
       painted = wanted;
-      canvas.dataset.frame = String(wanted);
+      plate.dataset.frame = String(wanted);
     }
-    canvas.style.opacity = String(opacity);
+    plate.style.opacity = String(opacity);
   };
   const request = () => { if (!frame && !dead) frame = requestAnimationFrame(draw); };
   const decode = async (index: number) => {
@@ -60,7 +67,7 @@ export function mountSequence(screen: HTMLElement, source: Sequence, phone: bool
       if (dead || !windowFrames.has(index)) bitmap.close();
       else { decoded.set(index, bitmap); if (index === wanted) request(); }
     } catch {
-      if (!dead) { failed = true; canvas.style.opacity = '0'; }
+      if (!dead) { failed = true; plate.style.opacity = '0'; }
     } finally { pending.delete(index); if (!dead && !failed) fill(); }
   };
   const fill = () => {
@@ -79,7 +86,7 @@ export function mountSequence(screen: HTMLElement, source: Sequence, phone: bool
         decoded.forEach((b) => b.close());
         decoded.clear();
         painted = -1;
-        canvas.style.opacity = '0';
+        plate.style.opacity = '0';
         return;
       }
       const start = Math.max(0, Math.min(set.count - count, wanted - Math.floor(count / 2)));
@@ -95,7 +102,7 @@ export function mountSequence(screen: HTMLElement, source: Sequence, phone: bool
       decoded.forEach((b) => b.close());
       decoded.clear();
       blobs.clear();
-      canvas.remove();
+      plate.remove();
     },
   };
 }
