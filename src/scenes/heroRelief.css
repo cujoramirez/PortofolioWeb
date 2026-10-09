@@ -24,8 +24,8 @@
 .hero__portrait.has-relief > .hero__cv {
   transform: translateZ(1px);
 }
-/* boxes and landmarks move with the surface under them: --k is each one's depth relative to the
+/* the boxes move with the surface under them: --k is each one's depth relative to the
    face, --rx and --ry the shift per unit of depth in the SVG's units */
-.hero__portrait.is-relief .cv-svg [style*='--k'] {
+.hero__portrait.is-relief .cv-svg :is(.cv-person, .cv-face) {
   transform: translate(calc(var(--rx, 0px) * var(--k)), calc(var(--ry, 0px) * var(--k)));
 }

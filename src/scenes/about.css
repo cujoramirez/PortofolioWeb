@@ -148,6 +148,19 @@
 .about__word {
   display: inline-block;
 }
+/* The words of a sentence rise together from its one --rise (AboutScene). A tween per word made
+   213 targets: about 45 ms to set up on a throttled phone, and again in every ScrollTrigger refresh.
+   No z on words: their parent is an inline box, and engines differ on whether depth survives it. */
+.is-motion .about__sentence > .about__word {
+  transform: translateY(calc((1 - var(--rise, 1)) * var(--rise-y, 24px)))
+    rotateX(calc((1 - var(--rise, 1)) * var(--rise-tilt, -65deg)));
+  opacity: var(--rise, 1);
+}
+/* the flowing phone layout rises further and tilts less */
+.is-mobile:not(.is-pinned) .about__sentence {
+  --rise-y: 36px;
+  --rise-tilt: -35deg;
+}
 
 .about__quote {
   margin: 0;

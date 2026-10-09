@@ -221,9 +221,21 @@ export default function HeroScene() {
     const cleanups: (() => void)[] = [];
 
     // About sits under the pinned hero and pins while the hero disperses (see handoff.ts).
+    // --hero-overlap and --handoff sit on the elements that read them. On <html> each write
+    // restyled the whole document: 1900 elements, twice in every ScrollTrigger refresh.
+    const about = document.getElementById('about');
+    let overlap = '';
     const setOverlap = () => {
-      root.style.setProperty('--hero-overlap', `${pin.offsetHeight + leadPx(kLen)}px`);
-      document.getElementById('about')?.setAttribute('data-jump-offset', String(Math.round(leadPx(kLen))));
+      const next = `${pin.offsetHeight + leadPx(kLen)}px`;
+      if (next !== overlap) about?.style.setProperty('--hero-overlap', (overlap = next));
+      about?.setAttribute('data-jump-offset', String(Math.round(leadPx(kLen))));
+    };
+    // The About card's photo layer once its chunk has mounted; until then the section holds the value.
+    const swapLayer = () => about?.querySelector<HTMLElement>('.about__swap') ?? about;
+    const clearHandoff = () => {
+      [about, swapLayer(), portrait].forEach((el) => el?.style.removeProperty('--handoff'));
+      about?.style.removeProperty('--hero-overlap');
+      root.classList.remove('hero-handed');
     };
     setOverlap();
     ScrollTrigger.addEventListener('refreshInit', setOverlap);
@@ -320,7 +332,7 @@ export default function HeroScene() {
       const h = Math.round(Math.min(1, Math.max(0, (tl.progress() - 0.9) / 0.09)) * 100) / 100;
       if (h !== handoff) {
         handoff = h;
-        root.style.setProperty('--handoff', String(h));
+        [portrait, swapLayer()].forEach((el) => el?.style.setProperty('--handoff', String(h)));
       }
       const done = tl.progress() > 0.995;
       if (done !== handed) {
@@ -447,9 +459,7 @@ export default function HeroScene() {
       splitName(k);
       return () => {
         cleanups.forEach((fn) => fn());
-        root.style.removeProperty('--hero-overlap');
-        root.style.removeProperty('--handoff');
-        root.classList.remove('hero-handed');
+        clearHandoff();
       };
     }
 
@@ -619,9 +629,7 @@ export default function HeroScene() {
 
     return () => {
       cleanups.forEach((fn) => fn());
-      root.style.removeProperty('--hero-overlap');
-      root.style.removeProperty('--handoff');
-      root.classList.remove('hero-handed');
+      clearHandoff();
       tags.forEach((t) => ['left', 'top', 'right', 'bottom'].forEach((key) => t.style.removeProperty(key)));
     };
 

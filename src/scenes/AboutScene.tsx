@@ -177,15 +177,10 @@ export default function AboutScene() {
       q('.about__rise')
         .filter((el) => el !== card)
         .forEach((el) => {
-          const words = el.querySelectorAll('.about__word');
-          gsap.from(words.length ? words : el, {
-            y: 36,
-            rotateX: -35,
-            opacity: 0,
-            duration: 0.7,
-            ease: 'power3.out',
-            scrollTrigger: { trigger: el, start: 'top 88%', once: true },
-          });
+          const rise = { duration: 0.7, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true } };
+          // a sentence's words follow its --rise (about.css)
+          if (el.classList.contains('about__sentence')) gsap.fromTo(el, { '--rise': 0 }, { '--rise': 1, ...rise });
+          else gsap.from(el, { y: 36, rotateX: -35, opacity: 0, ...rise });
         });
       return unsize;
     }
@@ -243,14 +238,14 @@ export default function AboutScene() {
       starts.push(t);
       // the scrim behind the chapter (about.css) arrives with its first line
       tl.fromTo(ch, { '--scrim': 0 }, { '--scrim': 1, duration: 0.14, immediateRender: true }, t + 0.02);
-      // number, title, then one sentence at a time: a sentence rises as its words, all at once
+      // Number, title, then one sentence at a time. A sentence is an inline box and takes no
+      // transform, so its words rise instead, all from the sentence's one --rise (about.css).
       ch.querySelectorAll<HTMLElement>('.about__rise').forEach((line, j) => {
-        const words = line.querySelectorAll('.about__word');
+        const sentence = line.classList.contains('about__sentence');
         tl.fromTo(
-          words.length ? words : line,
-          // no z on words: their parent is an inline box, and engines differ on whether depth survives it
-          { rotateX: -65, z: words.length ? 0 : -120 * k, y: 24, opacity: 0 },
-          { rotateX: 0, z: 0, y: 0, opacity: 1, duration: 0.18, ease: 'power2.out', immediateRender: true },
+          line,
+          sentence ? { '--rise': 0 } : { rotateX: -65, z: -120 * k, y: 24, opacity: 0 },
+          { ...(sentence ? { '--rise': 1 } : { rotateX: 0, z: 0, y: 0, opacity: 1 }), duration: 0.18, ease: 'power2.out', immediateRender: true },
           t + 0.02 + j * 0.05,
         );
       });
