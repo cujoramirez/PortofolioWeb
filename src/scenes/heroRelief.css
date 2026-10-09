@@ -1,0 +1,31 @@
+/* Depth relief on the hero portrait (heroRelief.ts). Here, not in hero.css: that file is inlined
+   into the HTML, and these rules matter only once the lazy relief has mounted. */
+.hero__relief {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateZ(0);
+}
+.hero__relief-marks { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
+.hero__portrait.is-relief .hero__relief-marks { display: block; }
+.hero__portrait.is-relief > .hero__cv .cv-landmarks { visibility: hidden; }
+/* the canvas now shows the picture (and draws the scan beam bent over it) */
+.hero__portrait.is-relief .hero__img {
+  visibility: hidden;
+}
+.hero__portrait.is-relief > .hero__cv > .cv-scan {
+  display: none;
+}
+/* The overlay sits above a canvas, which is a compositing layer of its own. Safari has painted an
+   overlay under such a layer unless it had one too, a pixel nearer. */
+.hero__portrait.has-relief > .hero__cv {
+  transform: translateZ(1px);
+}
+/* boxes and landmarks move with the surface under them: --k is each one's depth relative to the
+   face, --rx and --ry the shift per unit of depth in the SVG's units */
+.hero__portrait.has-relief .cv-svg [style*='--k'] {
+  transform: translate(calc(var(--rx, 0px) * var(--k)), calc(var(--ry, 0px) * var(--k)));
+}

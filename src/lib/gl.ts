@@ -50,6 +50,7 @@ function program(gl: WebGLRenderingContext, frag: string): WebGLProgram | null {
     gl.compileShader(shader);
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return null;
     gl.attachShader(prog, shader);
+    gl.deleteShader(shader);
   }
   gl.linkProgram(prog);
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
@@ -113,6 +114,8 @@ export function createQuad(canvas: HTMLCanvasElement, frag: string, options: Qua
       frame = 0;
       canvas.removeEventListener('webglcontextlost', onLost);
       canvas.removeEventListener('webglcontextrestored', onRestored);
+      // Release textures and buffers too when a responsive rebuild removes this canvas.
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
     },
   };
 
@@ -143,10 +146,12 @@ export function createQuad(canvas: HTMLCanvasElement, frag: string, options: Qua
  */
 export async function loadTexture(gl: WebGLRenderingContext, url: string): Promise<{ texture: WebGLTexture; width: number; height: number } | null> {
   try {
-    const blob = await (await fetch(url)).blob();
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const blob = await response.blob();
     const bitmap = await createImageBitmap(blob, { premultiplyAlpha: 'premultiply' });
     const texture = gl.createTexture();
-    if (!texture) return null;
+    if (!texture) { bitmap.close(); return null; }
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
     // any size is allowed in WebGL 1 with clamping and no mipmaps

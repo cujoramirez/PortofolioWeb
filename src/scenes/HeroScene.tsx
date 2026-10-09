@@ -24,12 +24,22 @@ import { fontsReady } from '../lib/fonts';
 import { refreshSoon } from '../lib/scroll';
 import { useScene } from '../lib/useScene';
 import { HERO_DISPERSE, HERO_PIN, leadPx, offsetWithin } from './handoff';
+import type { Relief } from './heroRelief';
+import { afterLoad } from '../lib/idle';
 
 const EXPLODE = 0.45;
 const HOLD_END = 1 - HERO_DISPERSE;
 /** The stage's turn and tilt (rotateY, rotateX, degrees) in the exploded view on desktop and tablet. */
 const TURN = -24;
 const TILT = 12;
+/** Where the stage has drifted to by the end of the hold: a slow turn that lets the relief show. */
+const TURN_END = -18;
+const TILT_END = 9;
+/** 0 below `from`, 1 above `to`, smooth between. */
+const ramp = (v: number, from: number, to: number) => {
+  const t = Math.min(1, Math.max(0, (v - from) / (to - from)));
+  return t * t * (3 - 2 * t);
+};
 const LENS_R = 105;
 
 /** Fit the name to the plate and aim the portrait's head between the names (see below). */
@@ -261,6 +271,7 @@ export default function HeroScene() {
     let handed = false;
     let handoff = -1;
     let render = () => {};
+    let relief: Relief | null = null;
     const tl = gsap.timeline({
       defaults: { ease: 'none' },
       scrollTrigger: {
@@ -279,6 +290,20 @@ export default function HeroScene() {
     // Crossfade the flying portrait into the About card photo over the last stretch of the flight.
     function sync() {
       render();
+      if (relief) {
+        // none at rest, full through the exploded view, gone again before the portrait flies off
+        const p = tl.progress();
+        const strength = ramp(p, 0.03, 0.38) * (1 - ramp(p, 0.66, 0.74));
+        const beam = scan[0];
+        relief.update(
+          mobile ? st.a : Number(gsap.getProperty(stage, 'rotationX')),
+          mobile ? 0 : Number(gsap.getProperty(stage, 'rotationY')),
+          strength,
+          // .cv-scan is 16 % of the portrait tall and travels by its own height
+          (Number(gsap.getProperty(beam, 'yPercent')) / 100 + 1) * 0.16,
+          Number(gsap.getProperty(beam, 'opacity')),
+        );
+      }
       // The backdrop fades during the dispersal. Set from progress, not tweened: a tween wrote the
       // plate's opacity mid-way through its CSS intro (0) at build time and left it invisible.
       const fade = Math.min(1, Math.max(0, (tl.progress() - HOLD_END) / (HERO_DISPERSE * 0.85)));
@@ -294,6 +319,26 @@ export default function HeroScene() {
         root.classList.toggle('hero-handed', done);
       }
     }
+
+    // Depth relief on the portrait: a lazy chunk, mounted once the page has loaded and is idle (as
+    // the backdrop is), so neither its code nor the depth map competes with the hero.
+    const cancelRelief = afterLoad(() => {
+      void import('./heroRelief')
+        .then((m) => live ? m.mountRelief(portrait) : null)
+        .then((mounted) => {
+          if (!live) return mounted?.destroy();
+          relief = mounted;
+          sync();
+        }).catch(() => {});
+    });
+    const resizeRelief = () => relief?.resize();
+    ScrollTrigger.addEventListener('refresh', resizeRelief);
+    cleanups.push(() => {
+      cancelRelief();
+      ScrollTrigger.removeEventListener('refresh', resizeRelief);
+      relief?.destroy();
+      relief = null;
+    });
 
     // The scan: a band of light sweeps the portrait; the segmentation comes first, then the boxes
     // and landmarks as the band passes them.
@@ -346,23 +391,36 @@ export default function HeroScene() {
       // name. The name and the interface slide back by their depth relative to the portrait, so the
       // stack reads as the poster seen from the side. The backdrop keeps its drift: that is the depth.
       const rad = Math.PI / 180;
-      const X = Z.map((z) => (z - Z[2]) * Math.tan(-TURN * rad));
-      const Y = Z.map((z) => (z - Z[2]) * Math.tan(TILT * rad));
-      const pose = [
-        { z: Z[0] },
-        // a little further than its depth: perspective draws the portrait (in front) larger, and
-        // the head would cover the last letter of each word again
-        { z: Z[1], x: X[1] - 14 * k, y: Y[1] },
-        { z: Z[2] },
-        { z: Z[3], x: X[3], y: Y[3] },
-      ];
+      /** Where each layer sits for a given turn and tilt of the stage. */
+      const poseAt = (turn: number, tilt: number) => {
+        const X = Z.map((z) => (z - Z[2]) * Math.tan(-turn * rad));
+        const Y = Z.map((z) => (z - Z[2]) * Math.tan(tilt * rad));
+        return [
+          { z: Z[0] },
+          // a little further than its depth: perspective draws the portrait (in front) larger, and
+          // the head would cover the last letter of each word again
+          { z: Z[1], x: X[1] - 36 * k, y: Y[1] },
+          { z: Z[2] },
+          { z: Z[3], x: X[3], y: Y[3] },
+        ];
+      };
+      const pose = poseAt(TURN, TILT);
       [plate, name, portrait, ui].forEach((layer, i) => tl.to(layer, { ...pose[i], duration: EXPLODE, ease: 'power1.inOut' }, 0));
       // the index has nothing above it to clear, and sliding down would take it off a short window
-      tl.to(front.slice(1), { z: Z[3], x: X[3], duration: EXPLODE, ease: 'power1.inOut' }, 0);
+      tl.to(front.slice(1), { z: Z[3], x: pose[3].x, duration: EXPLODE, ease: 'power1.inOut' }, 0);
       tags.forEach((t, i) => {
         tl.to(t, { ...pose[i], z: Z[i] + 6, duration: EXPLODE, ease: 'power1.inOut' }, 0);
         tl.to(t, { opacity: 1, duration: 0.1 }, 0.22 + i * 0.03);
       });
+      // 0.45 -> 0.75: the hold is a slow turn, not a freeze: the relief shifts with it, and a scan
+      // of this stretch had found 0.3 viewport heights where almost nothing changed. The layers
+      // keep sliding with the angle, so the name stays clear of the head throughout.
+      const hold = { duration: HOLD_END - EXPLODE, ease: 'sine.inOut' };
+      const rest = poseAt(TURN_END, TILT_END);
+      tl.to(stage, { rotateX: TILT_END, rotateY: TURN_END, ...hold }, EXPLODE);
+      [name, ui].forEach((layer, n) => tl.to(layer, { x: rest[n ? 3 : 1].x, y: rest[n ? 3 : 1].y, ...hold }, EXPLODE));
+      tl.to(front.slice(1), { x: rest[3].x, ...hold }, EXPLODE);
+      tl.to(tags[1], { x: rest[1].x, y: rest[1].y, ...hold }, EXPLODE).to(tags[3], { x: rest[3].x, y: rest[3].y, ...hold }, EXPLODE);
       // what the model sees: segmentation, boxes and landmarks on the portrait layer
       addScan(0.2, 0.22);
       // hold, then the labels go; the overlay stays on the portrait through its flight (the About
