@@ -7,10 +7,11 @@
 import { useEffect, useRef } from 'react';
 import { ArrowUpRight } from '../components/icons';
 import { firstSentence, papers, scholarUrl } from '../content/data';
-import { gsap } from '../lib/gsap';
+import { gsap, ScrollTrigger } from '../lib/gsap';
 import { spotlight } from '../lib/micro';
 import { showOnFocus } from '../lib/focusStep';
 import { useScene } from '../lib/useScene';
+import { snapAllowed } from '../lib/scroll';
 import './papers.css';
 
 export default function PapersScene() {
@@ -83,7 +84,7 @@ export default function PapersScene() {
             end: () => `+=${(n - 1) * 0.5 * window.innerHeight}`,
             pin: q('.papers__pin')[0],
             scrub: 0.5,
-            snap: { snapTo: 1 / (n - 1), duration: { min: 0.15, max: 0.4 }, delay: 0.05, ease: 'power1.inOut' },
+            snap: { snapTo: (value: number, self?: ScrollTrigger) => snapAllowed() ? gsap.utils.snap(1 / (n - 1), value) : self?.progress ?? value, duration: { min: 0.15, max: 0.4 }, delay: 0.05, ease: 'power1.inOut' },
             invalidateOnRefresh: true,
           },
         });

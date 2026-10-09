@@ -8,6 +8,7 @@ import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { gsap, ScrollTrigger } from './gsap';
 import { DEPTH, MQ, lowTier, variantFor, type Variant } from './motion';
 import { refreshSoon } from './scroll';
+import { skipScene } from './skipScene';
 
 export interface SceneApi {
   variant: Variant;
@@ -44,9 +45,11 @@ export function useScene(
           toggleClass: { targets: section, className: 'is-active' },
         });
         const cleanup = buildRef.current({ variant, k: DEPTH[variant], section, root });
+        const unskip = section.querySelector('.pin-spacer, .hero__spacer') ? skipScene(section) : () => {};
         refreshSoon();
         return () => {
           cleanup?.();
+          unskip();
           section.classList.remove('is-motion', `is-${variant}`, 'is-active');
         };
       },

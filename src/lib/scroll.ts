@@ -57,6 +57,7 @@ export function initScroll(): () => void {
 
 /** Scroll to an element or offset, through Lenis when it is running. */
 export function scrollToTarget(target: HTMLElement | number, { immediate = false } = {}) {
+  pauseSnaps(immediate);
   if (lenis) {
     lenis.scrollTo(target, { immediate, force: true });
     return;
@@ -65,6 +66,16 @@ export function scrollToTarget(target: HTMLElement | number, { immediate = false
   const smooth = !immediate && motionAllowed();
   if (smooth) holdRefreshUntilLanded();
   window.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' });
+}
+
+let snapUntil = 0;
+
+export const snapAllowed = () => performance.now() >= snapUntil;
+
+/** A navigation jump must not be pulled back into the deck it just left. */
+function pauseSnaps(immediate: boolean) {
+  snapUntil = performance.now() + (immediate ? 750 : 2000);
+  ScrollTrigger.getAll().filter((st) => st.vars.snap).forEach((st) => st.getTween(true)?.kill());
 }
 
 let gliding = false;

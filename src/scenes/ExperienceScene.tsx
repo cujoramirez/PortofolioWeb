@@ -9,6 +9,7 @@ import { useRef } from 'react';
 import { experiences, sentences } from '../content/data';
 import { gsap, ScrollTrigger } from '../lib/gsap';
 import { useScene } from '../lib/useScene';
+import { snapAllowed } from '../lib/scroll';
 import './experience.css';
 
 const GAP = 900; // z distance between roles, px (x k)
@@ -90,8 +91,10 @@ export default function ExperienceScene() {
       ScrollTrigger.addEventListener('refreshInit', size);
 
       const n = cards.length;
-      const DEAL = 1;
-      const HOLD = 0.25;
+      // The measured 0.30-vh still holds are trimmed by 0.20 timeline units per deal.
+      const DEAL = 0.8;
+      const HOLD = 0.1;
+      const READ = 0.18;
       /** Time at which role i is in front and settled. */
       const at = (i: number) => HOLD + i * DEAL;
       // a card d places behind the front one
@@ -113,14 +116,14 @@ export default function ExperienceScene() {
           end: () => `+=${(at(n - 1) + 0.2) * 0.8 * window.innerHeight}`,
           pin,
           scrub: 0.5,
-          snap: { snapTo: 'labels', duration: { min: 0.2, max: 0.5 }, delay: 0.06, ease: 'power1.inOut' },
+          snap: { snapTo: (value: number, self?: ScrollTrigger) => snapAllowed() ? gsap.utils.snap(cards.map((_, i) => at(i) / (at(n - 1) + 0.2)), value) : self?.progress ?? value, duration: { min: 0.2, max: 0.5 }, delay: 0.06, ease: 'power1.inOut' },
           invalidateOnRefresh: true,
         },
         onUpdate: () => {
           // the role in front: deals whose midpoint has passed
           const t = tl.time();
           let i = 0;
-          while (i < n - 1 && t >= at(i) + 0.3 + 0.25) i++;
+          while (i < n - 1 && t >= at(i) + READ + 0.25) i++;
           if (i !== shown) {
             shown = i;
             count.textContent = `${String(i + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`;
@@ -129,7 +132,7 @@ export default function ExperienceScene() {
       });
       tl.addLabel('r0', at(0));
       for (let i = 0; i < n - 1; i++) {
-        const t = at(i) + 0.3;
+        const t = at(i) + READ;
         // the front card is dealt up and toward you, gone before the next one is fully forward
         // (opaque while it tips toward you, covering the next card; it fades once mostly out of the way)
         tl.to(cards[i], { rotateX: -62, y: -150, z: 150, duration: 0.5, ease: 'power2.in' }, t)
