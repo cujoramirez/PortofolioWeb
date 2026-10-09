@@ -370,6 +370,18 @@
   }
 }
 
+/* A short wide window uses the lighter stack, but its intro still sits beside the portrait.
+   Keeping the tall portrait at the fitted head position covered that text at 115% Safari zoom. */
+@media (min-width: 768px) and (max-height: 619px) {
+  .hero__stage {
+    --portrait-h: min(76vh, var(--fs-name, var(--fs-hero)) * 6);
+  }
+  .hero__portrait {
+    left: auto;
+    right: var(--inset);
+  }
+}
+
 /* Portrait-orientation tablets: the head sits below the name, so no gap; portrait on the right */
 @media (min-width: 768px) and (max-aspect-ratio: 1 / 1) {
   .hero__line:first-child {

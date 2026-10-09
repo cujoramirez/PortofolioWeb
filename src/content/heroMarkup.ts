@@ -129,13 +129,6 @@ ${tags}
 }
 
 /**
- * Sets [data-theme] on <html> before first paint (and marks JS as available). Stored choice
- * wins; otherwise the OS scheme. Kept in sync with src/lib/theme.ts (same key and values).
- * It also adds a theme-color meta for the active scheme. The script runs before the two
- * media-keyed tags in index.html are parsed, so its tag comes first in the tree and wins;
- * those two remain for visitors without JavaScript.
- */
-/**
  * Holds the web fonts back until the hero portrait (the LCP image) has loaded. Inlined
  * @font-face rules start three font downloads with the first layout; on a slow connection they
  * took bandwidth from the portrait and LCP went from 1.82 s to 1.94 s. The script shuts the
@@ -146,6 +139,10 @@ export function fontGateScript(): string {
   return `(function(){var d=document,s=d.getElementById('${FONT_FACES_ID}'),t;if(!s)return;s.media='not all';function o(){if(!t)return;clearTimeout(t);t=0;s.media='all';d.removeEventListener('load',h,true);d.removeEventListener('error',h,true)}function h(e){if(e.target&&e.target.className==='hero__img')o()}t=setTimeout(o,3000);d.addEventListener('load',h,true);d.addEventListener('error',h,true)})();`;
 }
 
+/**
+ * Stored theme wins over the OS before paint. This tag precedes the OS-only tags in index.html;
+ * those remain for visitors without JavaScript. Keep the key and values in sync with lib/theme.ts.
+ */
 export function themeInitScript(): string {
   return `(function(){var d=document.documentElement,p=null,s,m;d.classList.add('js');try{p=localStorage.getItem('theme')}catch(e){}s=d.dataset.theme=p==='light'||p==='dark'?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');m=document.createElement('meta');m.name='theme-color';m.content=s==='light'?'${THEME_COLOR.light}':'${THEME_COLOR.dark}';document.head.appendChild(m)})();`;
 }

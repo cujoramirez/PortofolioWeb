@@ -60,6 +60,20 @@ try {
   }
   await wd('POST', s('/url'), { url });
   await sleep(Number(opt('wait', 2500)));
+  // Safari applies the site's saved zoom after navigation. Sizing its blank page first left a
+  // requested 1190 x 680 check at 1034 x 591 when localhost had the owner's 115% zoom.
+  for (let i = 0; i < 3; i++) {
+    const view = await run('[innerWidth, innerHeight]');
+    if (Math.abs(view[0] - W) <= 1 && Math.abs(view[1] - H) <= 1) break;
+    const rect = await wd('GET', s('/window/rect'));
+    const ratio = rect.width / view[0];
+    await wd('POST', s('/window/rect'), {
+      x: 0, y: 0,
+      width: Math.round(rect.width + (W - view[0]) * ratio),
+      height: Math.round(rect.height + (H - view[1]) * ratio),
+    });
+    await sleep(350);
+  }
   const logs = [`[viewport] ${JSON.stringify(await run('[innerWidth, innerHeight, devicePixelRatio]'))}`];
   const evalJs = opt('eval', null);
   if (evalJs) logs.push(`[eval] ${JSON.stringify(await runAsync(evalJs))}`);
