@@ -27,6 +27,9 @@ export default function Dialog({ open, onClose, title, hideTitle, full, classNam
   openRef.current = open;
   // A close we trigger ourselves (cleanup, re-open) fires an async close event: ignore it.
   const selfClose = useRef(false);
+  // Native overlay transitions keep the closed dialog painted briefly; keep its last content too.
+  const held = useRef({ children, title });
+  if (open) held.current = { children, title };
 
   useEffect(() => {
     const dialog = ref.current;
@@ -73,12 +76,12 @@ export default function Dialog({ open, onClose, title, hideTitle, full, classNam
       }}
     >
       <div className="dialog__head">
-        <h2 className={hideTitle ? 'sr-only' : 'dialog__title'}>{title}</h2>
+        <h2 className={hideTitle ? 'sr-only' : 'dialog__title'}>{open ? title : held.current.title}</h2>
         <button type="button" className="icon-btn" aria-label="Close" onClick={() => onCloseRef.current()}>
           <CloseIcon />
         </button>
       </div>
-      {open ? children : null}
+      {open ? children : held.current.children}
     </dialog>
   );
 }

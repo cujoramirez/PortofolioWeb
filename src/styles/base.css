@@ -73,6 +73,7 @@ p {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
   border-radius: 4px;
+  scroll-margin-block: calc(var(--nav-top) + var(--nav-h) + 12px) 20px;
 }
 
 .sr-only {
@@ -337,6 +338,17 @@ p {
 }
 .dialog[open] {
   animation: dialog-in 0.32s var(--ease-out);
+}
+@supports (transition-behavior: allow-discrete) and (overlay: auto) {
+  .dialog {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+    transition: opacity 0.24s var(--ease-out), transform 0.24s var(--ease-out), display 0.24s allow-discrete, overlay 0.24s allow-discrete;
+  }
+  .dialog[open] { animation: none; opacity: 1; transform: none; }
+  @starting-style {
+    .dialog[open] { opacity: 0; transform: translateY(16px) scale(0.985); }
+  }
 }
 .dialog--full {
   width: 100%;

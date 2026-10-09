@@ -13,7 +13,7 @@ let revealing = false;
 /** Switch schemes with a circular reveal from the control (View Transitions), else instantly. */
 export function toggleScheme(event: MouseEvent<HTMLElement>) {
   // a second press mid-reveal would skip the running transition and snap the theme
-  if (revealing) return;
+  if (revealing || document.documentElement.dataset.vt) return;
   const next: Scheme = currentScheme() === 'dark' ? 'light' : 'dark';
   const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
   if (!doc.startViewTransition || !motionAllowed()) {
