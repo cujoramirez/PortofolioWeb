@@ -3,11 +3,12 @@ import { useEffect, useRef } from 'react';
 import Picture, { ladder } from '../components/Picture';
 import { magnet, spotlight } from '../lib/micro';
 import { firstSentence, splitTitle, type Project } from '../content/data';
+import { afterLoad } from '../lib/idle';
 
 interface WallProps {
   projects: Project[];
   total: number;
-  onOpen: (p: Project) => void;
+  onOpen: (p: Project, source?: HTMLElement) => void;
   onArchive: () => void;
 }
 
@@ -20,7 +21,11 @@ export default function ProjectWall({ projects, total, onOpen, onArchive }: Wall
       ...[...el.querySelectorAll<HTMLElement>('.wall__card')].map(spotlight),
       ...[...el.querySelectorAll<HTMLElement>('.wall__foot .btn')].map((b) => magnet(b)),
     ];
-    return () => undo.forEach((fn) => fn());
+    let live = true;
+    const cancel = afterLoad(() => {
+      void import('../lib/displacement').then((m) => { if (live) undo.push(m.mountDisplacement(el)); }).catch(() => {});
+    });
+    return () => { live = false; cancel(); undo.forEach((fn) => fn()); };
   }, []);
   return (
     <div ref={root} className="wall wrap">
@@ -32,7 +37,7 @@ export default function ProjectWall({ projects, total, onOpen, onArchive }: Wall
             const img = ladder('projects', p.image);
             return (
               <li key={p.title}>
-                <button type="button" className="wall__card card has-spot" onClick={() => onOpen(p)} data-cursor="Open">
+                <button type="button" className="wall__card card has-spot" onClick={(e) => onOpen(p, e.currentTarget)} data-cursor="Open">
                   <span className="wall__thumb">
                     {img ? <Picture img={img} sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 92vw" alt="" className="wall__img" /> : null}
                   </span>
