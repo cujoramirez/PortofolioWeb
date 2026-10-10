@@ -4,7 +4,7 @@
 // default    LCP (element + time), CLS, JS/CSS/image bytes transferred, long tasks, rAF callbacks
 //            and running infinite animations during a 2.5 s idle window after load.
 // --actions  scripted interactions (hover, globe drag, project dialog, theme toggle, search
-//            palette, a jump from search; the menu sheet on the phone preset). After each: the 2.5 s idle window,
+//            palette, the portal, a jump from search; the menu sheet on the phone preset). After each: the 2.5 s idle window,
 //            starting 1 s after the last input, and the interaction's INP with its three phases.
 //            Runs under 4x CPU throttle on both presets.
 // --scroll   one full-page scroll gesture: frame-interval percentiles and the ten longest
@@ -212,6 +212,15 @@ async function actions() {
     await escape();
     await sleep(100);
     return `opened ${opened}, closed ${!(await isOpen('dialog[open]'))}`;
+  }]);
+  list.push(['open and close the portal (a certificate)', async () => {
+    await bring('a.cert');
+    await press('a.cert');
+    await sleep(1500);
+    const opened = await isOpen('dialog.portal[open]');
+    await escape();
+    await sleep(700);
+    return `opened ${opened}, closed ${!(await isOpen('dialog.portal[open]'))}`;
   }]);
   // last: it leaves the page somewhere else (the warp, where View Transitions exist)
   list.push(['jump to a section from search (Ctrl+K, "Experience", Enter)', async () => {

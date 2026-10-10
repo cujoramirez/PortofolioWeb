@@ -54,7 +54,8 @@ There are no tests configured in this project.
   WebDriver pointer actions take window points: under the 115 % zoom multiply CSS coordinates by
   window width / innerWidth (a click meant for the theme toggle landed on Search). Safari's plain
   Tab skips links and buttons; Option+Tab visits them. `?tier=low` shows the poster without
-  touching the system's reduced-motion setting. For real iOS Safari use the Xcode simulator: `xcrun simctl boot <iPhone>`,
+  touching the system's reduced-motion setting. Dev builds also take `?out=<address>`, which opens
+  the portal on that address (the simulator cannot tap). For real iOS Safari use the Xcode simulator: `xcrun simctl boot <iPhone>`,
   `xcrun simctl openurl <udid> "http://localhost:5173/?tier=high&at=papers_350"` (dev-only
   `?at=section_offset` scrolls there), then `xcrun simctl io <udid> screenshot out.png`; shut it down
   afterwards. After any run, `pgrep -fl "Google Chrome.*--headless"` must print nothing (other apps on
@@ -365,6 +366,19 @@ frame about every 100 ms after the jump with or without the transition. The warp
 slowed down in Chrome (desktop, phone, light theme); in Playwright's WebKit 26.6 the jumps land
 and nothing throws, but its screenshots do not show transition frames. Real Safari not run.
 
+Night of 2026-10-10 (the portal), game closed: first-load JS 113.7 KB gzip (123.6 transferred,
+limit 125), HTML 15.1 KB, portal chunk 5.8 KB with 2.5 KB of CSS, slow-4G phone LCP 1.74 to 1.76 s,
+CLS 0.000. `perf.mjs --actions` opens and closes the portal: INP 48 ms on the phone preset and 56 ms
+on desktop at CPU x4, 0 frames afterwards. Click-through 48 of 48, Tab walk 95 and 78 stops with
+none hidden, landings complete, search jumps still land. Checked with real pointer and touch
+events at 1440 x 900 and 440 x 956: every kind of link, the portal over the project dialog, the
+archive, the menu sheet and from search, focus back on the opener each time, Back and Close leaving
+the page where it was, a modifier click opening a tab, the pull-down at 120 px (springs back)
+and 420 px (closes). Seen in the iOS Simulator (profile, certificate, video, résumé outline) and
+in Playwright's WebKit at 1190 x 680, where Safari gives no focus to a clicked link, so focus
+returns to the page rather than the link, as with the site's other dialogs. Not verified: real
+Safari, a real finger on iOS, whether the YouTube player plays (it was only seen loaded).
+
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
 button's bars fold into an X, rows lean toward a pressing finger 1:1; picking a row flies it at the
@@ -397,6 +411,49 @@ the lazy scenes waited the dialog out; the owner found it after scrolling the wh
 doesn't teleport or move me there until i refresh"). And `pauseSnaps` must test the snap tween
 before killing it: ScrollTrigger reports a finished one as 0, and `0?.kill()` threw, which
 stopped every jump on a phone once a deck had snapped.
+
+**Portal: links that leave the page (`lib/outbound.ts`, `lib/portal.ts`, `components/PortalHost.tsx`,
+`components/Portal.tsx`, `lib/qr.ts`).** The owner asked that links stop opening new tabs and keep
+the visitor on the page ("in an elegant and overkill way ... go all out"). A plain click on any
+link to another site, or to the résumé, opens a window over the page that grows out of the link.
+What it can hold is limited by the other sites: LinkedIn, GitHub, Google Scholar, doi.org, NVIDIA,
+Kaggle and freeCodeCamp all refuse to be displayed inside another page, so the window shows what
+this site holds about the destination and states the way out instead of taking it:
+- résumé: the PDF itself in a frame (mouse devices with a PDF viewer). Phones get an outline from
+  the site's data: Chrome on Android shows nothing in such a frame and iOS draws the first page
+  at full size over whatever is beside it;
+- a project's YouTube demo: the video plays in the window (`youtube-nocookie.com`, loaded only
+  once the visitor has opened it; all three allowed embedding on 2026-10-10);
+- a paper: title, venue, authors, description, keywords, and Copy citation;
+- a certificate: its image; a profile: name, role and the matching list (LinkedIn the first
+  three roles, Scholar the papers, GitHub the hero facts);
+- always: the address, Copy link, Open in a new tab, and on mouse devices a QR code of the
+  address to carry on with a phone (`lib/qr.ts`: byte mode, level M, versions 1 to 10; all 28
+  addresses on the site and one string at each version's limit decoded correctly with Apple
+  Vision).
+Motion, all one-shot on transform and opacity: the window scales out of the link's position with
+a little overshoot while streaks fall in behind it and stay as a still field; one light runs once
+round its rim (a conic gradient turned behind a border-wide mask, hidden without
+`mask-composite`); the dossier's lines stand up in turn; the address resolves out of scrambled
+glyphs; the QR code prints from the top under a scan line (a clip sliding against its content).
+The window leans toward a mouse 1:1 and a light follows the pointer; a window that holds a frame
+stays flat. On touch the bar is a handle: the window follows the finger down 1:1, closes past a
+quarter of the screen and springs back short of that. Open in a new tab is a real link (it keeps
+`target="_blank"`), and the window flies at the viewer as the tab opens.
+Rules it keeps: a click with a modifier key, a middle click and the context menu do what the
+browser does, and without JavaScript the links are ordinary ones (`target="_blank"` stays in the
+markup). Only the click test is in the first bundle (0.8 KB gzip); the rest is a 5.8 KB chunk
+fetched when a pointer or the keyboard first reaches such a link, mounted in a React root of its
+own. The portal has a history entry, so Back closes it, as Back would have left the new tab.
+Three things that entry taught: stepping back makes the browser scroll to the section the
+address names (2600 px away in a test) and can drop focus, so the host puts both back
+(`settle`); `popstate` also fires for a hash typed into the address bar, so the host only acts on
+its own step; and Escape can reach `close` twice (the dialog's cancel, then its close when the
+browser overrules the cancel), and a second `history.back()` left the page, so closing is
+guarded. Closed, the portal unmounts after its exit: a video in a closed dialog goes on playing.
+`dialog.portal` is the whole screen and never transforms: its children are fixed against the
+viewport, and a transform on it would carry them. Its strings are in `COPY` in `Portal.tsx`.
+Not in it: live data from other sites (a rendered number needs a source in the constants).
 
 **Micro-interactions (`lib/micro.ts`, after React Bits).** `magnet` (buttons, 1:1, settles on leave),
 `spotlight` (fill + rim glow on clickable cards only: `.has-spot`), `decrypt`/`decryptOnView` (mono labels

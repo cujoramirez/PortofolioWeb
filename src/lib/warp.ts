@@ -17,11 +17,11 @@ export async function warpTo(id: string) {
   const root = document.documentElement;
   const doc = document as Document & { startViewTransition?: (cb: () => Promise<void>) => { finished: Promise<void> } };
   if (!doc.startViewTransition || !motionAllowed() || root.dataset.vt) return jumpTo(id);
+  // The key press that chose the destination gets its own frame first: with the measuring and
+  // the picture inside it, the press took up to 216 ms to show at a quarter of the CPU.
+  await new Promise<void>((resolve) => requestAnimationFrame(() => window.setTimeout(resolve, 0)));
   // mounted and measured before the picture is taken, so the jump inside lands in the same turn
   await readyToJump();
-  // The key press that chose the destination gets its own frame first: with the picture taken
-  // inside it, the press took up to 216 ms to show at a quarter of the CPU.
-  await new Promise<void>((resolve) => requestAnimationFrame(() => window.setTimeout(resolve, 0)));
   if (root.dataset.vt) return jumpTo(id);
   const layers = LAYERS.map((name) => {
     const el = document.createElement('div');

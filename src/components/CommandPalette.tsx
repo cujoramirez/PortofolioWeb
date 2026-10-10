@@ -8,6 +8,7 @@ import Dialog from './Dialog';
 import { LINKS } from '../content/site';
 import { papers, projects, splitTitle } from '../content/data';
 import { loadAllScenes } from '../lib/jump';
+import { openOutbound } from '../lib/outbound';
 import { warpTo } from '../lib/warp';
 import { toggleHierarchy } from '../lib/eggs';
 import { currentScheme, setScheme } from '../lib/theme';
@@ -24,7 +25,8 @@ interface Command {
   run: () => void;
 }
 
-const open = (href: string) => window.open(href, '_blank', 'noopener');
+/** Addresses that leave the page open in the portal, as their links on the page do. */
+const open = (href: string, label = '') => openOutbound(href, label);
 
 function buildCommands(close: () => void): Command[] {
   const go = (id: string) => () => {
@@ -68,7 +70,7 @@ function buildCommands(close: () => void): Command[] {
         keywords: p.keywords.join(' '),
         run: () => {
           close();
-          open(`https://doi.org/${p.doi}`);
+          open(`https://doi.org/${p.doi}`, p.title);
         },
       })),
     { id: 'resume', group: 'Actions', label: 'Open résumé (PDF)', run: () => (close(), open(LINKS.resume)) },
@@ -92,9 +94,9 @@ function buildCommands(close: () => void): Command[] {
         close();
       },
     },
-    { id: 'linkedin', group: 'Links', label: 'LinkedIn', run: () => (close(), open(LINKS.linkedin)) },
-    { id: 'github', group: 'Links', label: 'GitHub', run: () => (close(), open(LINKS.github)) },
-    { id: 'scholar', group: 'Links', label: 'Google Scholar', run: () => (close(), open(LINKS.scholar)) },
+    { id: 'linkedin', group: 'Links', label: 'LinkedIn', run: () => (close(), open(LINKS.linkedin, 'LinkedIn')) },
+    { id: 'github', group: 'Links', label: 'GitHub', run: () => (close(), open(LINKS.github, 'GitHub')) },
+    { id: 'scholar', group: 'Links', label: 'Google Scholar', run: () => (close(), open(LINKS.scholar, 'Google Scholar')) },
     {
       id: 'sudo',
       group: 'Hidden',

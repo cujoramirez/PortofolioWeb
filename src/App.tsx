@@ -14,6 +14,7 @@ import { OWNER } from './content/site';
 import { fontsReady } from './lib/fonts';
 import { ScrollTrigger } from './lib/gsap';
 import { focusHeading, jumpTo, loadAllScenes } from './lib/jump';
+import { installOutbound, openOutbound } from './lib/outbound';
 import { initScroll, refreshSoon, scrollToTarget } from './lib/scroll';
 
 const SCENES: SceneDef[] = [
@@ -56,6 +57,7 @@ function useAnchorJumps() {
 
 export default function App() {
   useAnchorJumps();
+  useEffect(() => installOutbound(), []);
 
   useEffect(() => {
     const stop = initScroll();
@@ -74,8 +76,11 @@ export default function App() {
       if (!OVERLAY_HOME[id] && document.getElementById(id)?.matches('section')) void jumpTo(id, { immediate: true, url: false });
     };
     window.addEventListener('hashchange', onHash);
-    // dev only: ?at=papers_350 opens the page scrolled to a scene (the iOS Simulator cannot scroll)
+    // dev only: ?at=papers_350 opens the page scrolled to a scene (the iOS Simulator cannot scroll),
+    // and ?out=<address> opens the portal on an address (it cannot tap either)
     if (import.meta.env.DEV) {
+      const out = new URLSearchParams(location.search).get('out');
+      if (out) window.setTimeout(() => openOutbound(out, ''), 2500);
       const at = /^([a-z]+)(?:_(-?\d+))?$/.exec(new URLSearchParams(location.search).get('at') ?? '');
       if (at) {
         window.setTimeout(() => {
