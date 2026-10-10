@@ -53,16 +53,16 @@ export default function PapersScene() {
          * Detents. A paper sits square in front and readable for the whole of its stretch of
          * scroll. The scroll pulls the wheel off it 1:1 but only GIVE of the way, so it answers
          * the finger; past half way the wheel lets go and clicks round to the next paper on a
-         * spring. Turning in proportion to the scroll, it rested between two papers.
+         * spring, and short of half way it springs back when the scroll stops. Turning in
+         * proportion to the scroll, it rested between two papers.
          */
         const GIVE = 0.28;
         /** `aim`: where the scroll puts the wheel. `slip`: what a click still has to travel. */
         const wheel = { at: 0, aim: 0, slip: 0, p: 0 };
         let shown = -1;
         let u = 0;
-        /** The paper a snap is carrying the scroll to: the wheel clicks to it as the snap starts. */
-        let held: number | null = null;
-        let goal = 0;
+        /** A snap is taking the scroll back to its paper: the wheel lets go of it and springs home. */
+        let homing = false;
         // plain CSS here: a native 3D transform-origin (the axis R behind each paper) is exact
         cards.forEach((card) => (card.style.transformOrigin = `50% 50% ${-R.toFixed(1)}px`));
         const paint = () => {
@@ -80,16 +80,21 @@ export default function PapersScene() {
           });
           bars.forEach((bar, b) => bar.style.setProperty('--f', Math.min(1, Math.max(0, wheel.p - b + 1)).toFixed(3)));
         };
-        /** Put the wheel where `u` (0 to n - 1, from the scroll) says. `click` springs to a new paper. */
-        const follow = (click: boolean) => {
-          const at = held ?? Math.round(u);
-          const aim = at + GIVE * (u - at);
+        /**
+         * Put the wheel where `u` (0 to n - 1, from the scroll) says. With `spring`, a turn to the
+         * next paper is sprung; `freed` says the wheel has just let go of the scroll or taken it up.
+         */
+        const follow = (spring: boolean, freed = false) => {
+          const at = Math.round(u);
+          const aim = at + (homing ? 0 : GIVE * (u - at));
+          const turned = Math.abs(at - wheel.at);
           // one paper at a time is a scroll; more at once is a jump, which just arrives
-          if (click && Math.abs(at - wheel.at) === 1) {
-            // carry on from where the wheel is drawn, and spring the rest of the way
+          if (spring && (turned === 1 || (freed && !turned && Math.abs(aim - wheel.aim) > 0.001))) {
+            // carry on from where the wheel is drawn and spring the rest of the way: a click
+            // overshoots a little, the short way home rather more, so that it shows
             wheel.slip += aim - wheel.aim;
-            gsap.to(wheel, { slip: 0, duration: 0.45, ease: 'back.out(1.7)', overwrite: true, onUpdate: paint });
-          } else if (at !== wheel.at || !click) {
+            gsap.to(wheel, { slip: 0, duration: turned ? 0.45 : 0.4, ease: turned ? 'back.out(1.7)' : 'back.out(3)', overwrite: true, onUpdate: paint });
+          } else if (turned || !spring) {
             gsap.killTweensOf(wheel);
             wheel.slip = 0;
           }
@@ -102,9 +107,10 @@ export default function PapersScene() {
           paint();
         };
         follow(false);
-        const hold = (paper: number | null) => {
-          held = paper;
-          follow(true);
+        const home = (on: boolean) => {
+          if (homing === on) return;
+          homing = on;
+          follow(true, true);
         };
         const page = 1 / (n - 1);
         const turn = ScrollTrigger.create({
@@ -119,22 +125,17 @@ export default function PapersScene() {
           // a refresh restores progress without onUpdate: repaint from the restored state
           onRefresh: (self) => {
             u = self.progress * (n - 1);
-            held = null;
+            homing = false;
             follow(false);
           },
           snap: {
-            // Paging: a scroll that has carried a paper 30 % of the way goes on to the next one in
-            // its direction; less than that, or a scroll that turned back, settles on the nearest.
-            snapTo: (value: number, self?: ScrollTrigger) => {
-              if (!snapAllowed()) return self?.progress ?? value;
-              const near = gsap.utils.snap(page, value);
-              const off = (value - near) / page;
-              const dir = self?.direction ?? 0;
-              return (goal = Math.abs(off) < 0.3 || off * dir <= 0 ? near : Math.min(1, Math.max(0, near + dir * page)));
-            },
-            onStart: () => hold(Math.round(goal / page)),
-            onComplete: () => hold(null),
-            onInterrupt: () => hold(null),
+            // Under half way to the next paper the scroll goes back to the one it left; from half
+            // way, where the wheel has already clicked, it goes on. No guess from the speed.
+            snapTo: (value: number, self?: ScrollTrigger) => (snapAllowed() ? gsap.utils.snap(page, value) : self?.progress ?? value),
+            inertia: false,
+            onStart: () => home(true),
+            onComplete: () => home(false),
+            onInterrupt: () => home(false),
             duration: { min: 0.14, max: 0.3 },
             delay: 0.03,
             ease: 'power2.out',

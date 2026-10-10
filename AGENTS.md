@@ -204,12 +204,14 @@ frame, and the browser's clamp left Contact 63 px short on a phone.
   paper: the paper in front stays square and at full strength for its whole stretch of scroll, the
   scroll pulls the wheel off it 1:1 but only 28 % of the way (so it answers the finger), and past
   half way the wheel lets go and clicks to the next paper on a spring (`slip`, which keeps the
-  drawn position continuous through the click). The scroll itself then pages: carried 30 % of a
-  paper it goes on to the next one in its direction, less than that it settles back, and the
-  wheel clicks as that snap starts rather than when the scroll gets half way. A jump of more than
-  one paper just arrives. Before 2026-10-10 the wheel turned in proportion to the scroll and
-  rested between two papers ("make this more tactile and snappy, so it's more readable it
-  snaps!"). The papers are measured in
+  drawn position continuous through the click). When the scroll stops it snaps to the nearest
+  paper with no guess from the speed (`inertia: false`): short of half way it goes back to the
+  paper it left, and as that snap starts the wheel lets go of the scroll and springs home
+  (`homing`); from half way, where the wheel has already clicked, it goes on. The owner asked for
+  exactly that split ("snap back to it's original position if it's 0-49% ... 50-100% snaps to
+  the next paper"); a first version paged forward from 30 %. A jump of more than one paper just
+  arrives. Before 2026-10-10 the wheel turned in proportion to the scroll and rested between two
+  papers ("make this more tactile and snappy, so it's more readable it snaps!"). The papers are measured in
   flow *before* the drum stacks them (plain CSS transforms: GSAP's origin smoothing broke a z origin).
   Size phone layouts for real iPhone Safari viewports (~390-402 × 740-760), not only 440 × 956.
 - Certificates: tiles flip in; `#all-certificates` archive. Contact (all variants): plates converge under one card;
@@ -342,6 +344,14 @@ deck). The Experience deck's snap to each role, which had not fired on touch, fi
 unchanged, first-load JS 112.8 KB gzip, click-through 48 of 48, Tab walk 95 and 78 stops with
 none hidden, landings complete. In the iOS Simulator the wheel draws its detents correctly; a
 real finger flick on iOS is not verified (simctl cannot send touches).
+
+Later that evening, with the game closed, the owed timings (production build with the wheel's
+nearest-paper snap): slow-4G phone LCP 1.72 to 1.74 s over five runs, CLS 0.000, no long task;
+phone full-scroll blockingDuration 47 to 59 ms over six runs (limit 100), p99 frame interval
+16.8 ms; desktop scroll 0 ms; worst INP at CPU x4 56 ms phone and 64 ms desktop; idle frames,
+timers and running animations zero after load, scroll and every scripted input, and after
+touch gestures in both snapping decks. Touch drags of 21 % and 47 % of a paper came back to
+the paper they left, 53 % and 84 % went on, at 440 x 956 and 390 x 760.
 
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
