@@ -225,7 +225,7 @@ export const PROJECTS = [{
     {
         title: "DALX – On-Device Chest Radiograph Measurement Platform",
         image: project10,
-        description: "Built an on-device chest radiograph measurement platform: a native macOS SwiftUI app over a Python engine running five local deep learning models (HybridGNet, CXAS, RAD-DINO, MedGemma) that extract anatomical measurements from a DICOM with no cloud round-trip. It reports geometry rather than diagnoses — a measurement that cannot be validly computed returns null with a machine-readable reason code instead of a plausible number — and exports structured DICOM SR and PDF. Selected to exhibit at Garuda Spark Expo.",
+        description: "Built an on-device chest radiograph measurement platform: a native macOS SwiftUI app over a Python engine running five local deep learning models (HybridGNet, CXAS, RAD-DINO, MedGemma) that extract anatomical measurements from a DICOM with no cloud round-trip. It reports geometry rather than diagnoses: a measurement that cannot be validly computed returns null with a machine-readable reason code instead of a plausible number. It exports structured DICOM SR and PDF. Selected to exhibit at Garuda Spark Expo.",
         technologies: ["Swift", "SwiftUI", "Python", "PyTorch", "MLX", "FastAPI", "DICOM", "Medical Imaging", "On-Device AI"],
         demo: null,
         github: null,
