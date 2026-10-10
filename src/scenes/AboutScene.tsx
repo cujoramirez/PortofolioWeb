@@ -17,6 +17,7 @@ import Picture, { aboutLadder } from '../components/Picture';
 import { aboutChapters, aboutFacts, quotes, sentences } from '../content/data';
 import { mask as visionMask, edge as visionEdge } from '../data/vision.json';
 import { gsap, ScrollTrigger } from '../lib/gsap';
+import { landAt } from '../lib/jump';
 import { useScene } from '../lib/useScene';
 import { afterLoad } from '../lib/idle';
 import type { AboutRelief } from './aboutRelief';
@@ -43,6 +44,8 @@ const FACTS: [string, string][] = [
 // Sequence: chapter rises, holds, exits; a quote flies through the text column; next chapter.
 const LEAD = HERO_PIN * HERO_DISPERSE;
 const CHAPTER = 0.5;
+/** How long one line of a chapter takes to rise. */
+const RISE = 0.18;
 const QUOTE = 0.3;
 /** How far the silhouette grows to cover the card (from the face centre every corner is inside). */
 const GROW = 7;
@@ -236,17 +239,29 @@ export default function AboutScene() {
     let t = LEAD + REVEAL;
     chapters.forEach((ch, i) => {
       starts.push(t);
+      // Phones: the first chapter's sentences rise as the hero's interface card slides off the same
+      // half of the screen, and its title lands on the photo with the portrait. Waiting for the
+      // reveal left that half empty for a quarter of a screen of scrolling.
+      const early = mobile && i === 0;
+      const enter = early ? LEAD - 0.06 : t;
       // the scrim behind the chapter (about.css) arrives with its first line
-      tl.fromTo(ch, { '--scrim': 0 }, { '--scrim': 1, duration: 0.14, immediateRender: true }, t + 0.02);
+      tl.fromTo(ch, { '--scrim': 0 }, { '--scrim': 1, duration: 0.14, immediateRender: true }, enter + 0.02);
       // Number, title, then one sentence at a time. A sentence is an inline box and takes no
       // transform, so its words rise instead, all from the sentence's one --rise (about.css).
-      ch.querySelectorAll<HTMLElement>('.about__rise').forEach((line, j) => {
+      const lines = [...ch.querySelectorAll<HTMLElement>('.about__rise')];
+      const heads = lines.filter((line) => !line.classList.contains('about__sentence')).length;
+      const body = early ? LEAD - 0.2 - heads * 0.05 : enter;
+      // Every line is up before the chapter leaves: at a fixed 0.05 apart, the fifth sentence of a
+      // chapter was still at half opacity when the exit began.
+      const step = Math.min(0.05, (t + CHAPTER - 0.12 - body - 0.02 - RISE - 0.05) / Math.max(1, lines.length - 1));
+      lines.forEach((line, j) => {
         const sentence = line.classList.contains('about__sentence');
         tl.fromTo(
           line,
-          sentence ? { '--rise': 0 } : { rotateX: -65, z: -120 * k, y: 24, opacity: 0 },
-          { ...(sentence ? { '--rise': 1 } : { rotateX: 0, z: 0, y: 0, opacity: 1 }), duration: 0.18, ease: 'power2.out', immediateRender: true },
-          t + 0.02 + j * 0.05,
+          // on a phone these lines sit on the photo: travelling in depth, the silhouette hid them mid-rise
+          sentence ? { '--rise': 0 } : { rotateX: -65, z: mobile ? 0 : -120 * k, y: 24, opacity: 0 },
+          { ...(sentence ? { '--rise': 1 } : { rotateX: 0, z: 0, y: 0, opacity: 1 }), duration: RISE, ease: 'power2.out', immediateRender: true },
+          (sentence ? body : enter) + 0.02 + j * step,
         );
       });
       if (i < n - 1) {
@@ -290,7 +305,11 @@ export default function AboutScene() {
         .to(card, { rotateY: 180, duration: 0.12, ease: 'power2.out' }, flip + 0.12);
     }
 
-    return () => { live = false; cancelRelief(); relief?.destroy(); unsize(); };
+    // A jump lands on the first chapter with every line up, just before it starts to leave. The
+    // section's top is the middle of the hero's hand-off.
+    const unland = landAt(section.id, () => tl.scrollTrigger, (LEAD + REVEAL + CHAPTER - 0.14) / total);
+
+    return () => { live = false; unland(); cancelRelief(); relief?.destroy(); unsize(); };
   });
 
   return (
