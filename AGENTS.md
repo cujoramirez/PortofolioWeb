@@ -34,7 +34,8 @@ There are no tests configured in this project.
   `--gpu` draws on the Mac's GPU), `shot-webkit.mjs` (same, in Playwright's WebKit: layout and text
   only, it flattens preserve-3d), `shot-safari.mjs` (real Safari via safaridriver: the only true check
   of Safari's 3D; setup in the README; it corrects the viewport after navigation, when Safari applies
-  the saved site zoom), `film.mjs` (captures frames after an action; dev builds expose `window.__gsap`
+  the saved site zoom, and prints the frames Safari made in half a second: at 0 the display is
+  asleep, nothing animates or observes, and the shots are stale), `film.mjs` (captures frames after an action; dev builds expose `window.__gsap`
   to slow time), `perf.mjs` (LCP, CLS, bytes, idle rAF on a slow-4G phone or `--desktop`; `--actions`:
   idle frames, timers, running animations and INP after each input; `--scroll`: frame pacing and long
   animation frames over a full-page scroll), `idle-scroll.mjs` (rAF 1 s after scrolling settles),
@@ -49,7 +50,11 @@ There are no tests configured in this project.
   (`caffeinate -i` for the session, released afterwards).
   Check Safari-sensitive work in Safari too: the owner browses in Safari, often in short windows at
   115 % zoom (about 1190 x 680 CSS px), so every pinned scene must measure its fit rather than assume
-  900 px of height. For real iOS Safari use the Xcode simulator: `xcrun simctl boot <iPhone>`,
+  900 px of height. Real Safari needs the display awake as well as the Mac (`caffeinate -d`).
+  WebDriver pointer actions take window points: under the 115 % zoom multiply CSS coordinates by
+  window width / innerWidth (a click meant for the theme toggle landed on Search). Safari's plain
+  Tab skips links and buttons; Option+Tab visits them. `?tier=low` shows the poster without
+  touching the system's reduced-motion setting. For real iOS Safari use the Xcode simulator: `xcrun simctl boot <iPhone>`,
   `xcrun simctl openurl <udid> "http://localhost:5173/?tier=high&at=papers_350"` (dev-only
   `?at=section_offset` scrolls there), then `xcrun simctl io <udid> screenshot out.png`; shut it down
   afterwards. After any run, `pgrep -fl "Google Chrome.*--headless"` must print nothing (other apps on
@@ -88,7 +93,11 @@ stable `<section>` comes within one viewport; `lib/jump.ts` mounts all of them b
   boxes and landmarks as it passes; also shown under a 1:1 pointer lens on hover (three taps on the
   portrait pin it, an easter egg).
   The name is fitted to the plate's width and to the height above the intro block, from measured glyphs,
-  and the head placed between "Perdana" and "Aditya" (after fonts load, so nothing shifts). On first
+  and the head placed between "Perdana" and "Aditya" (after fonts load, so nothing shifts). After a
+  resize the fit waits for ScrollTrigger's `revert` event: the pinned hero keeps the px size of the
+  last refresh until then, and a fit on the resize event left the name at the old size until a
+  reload. The poster has no pin and refits from a ResizeObserver on the stage. While the fit
+  measures, the hero carries `.is-fitting` (no transitions): see Key Conventions. On first
   paint a CSS-only intro assembles the poster (individual `scale`/`translate` properties, backwards
   fill, so nothing lingers to fight GSAP; the LCP portrait is visible from frame one). The pin's spacer
   (`.hero__spacer`) is prerendered and passed as `pinSpacer`: letting ScrollTrigger wrap the pin would
@@ -219,7 +228,8 @@ The phone Experience deck trims measured still holds; its pin is now 2.80 viewpo
 of 3.56. Other pin lengths stay the same. Focused controls reserve space below the fixed nav and above
 the viewport bottom. A jump to the top retries its focus as the page arrives: the hero hides once it
 has handed over to About, and a hidden heading takes no focus. Dialogs retain their last content for
-CSS exit transitions using `@starting-style`, discrete `display` and `overlay` where supported, and
+CSS exit transitions using `@starting-style`, discrete `display` and `overlay` where supported (Chromium; Safari has no `overlay` and closes at
+once), and
 render nothing before their first open. Scroll lock and native close handling remain counted.
 `lib/projectTransition.ts` morphs a wall image and title into its dialog in Chromium, with shared names
 cleared on completion; other engines and featured 3D cards retain the ordinary dialog animation.
@@ -242,15 +252,18 @@ windows below 620 px tall; its portrait belongs beside the intro there, sized fr
 anchored right so it does not cover the text.
 
 2026-10-10 measured state (production build, this Mac): slow-4G phone LCP 1.73 to 1.75 s (baseline 1.82),
-CLS 0.000 phone / 0.002 desktop, first-load JS 113.0 KB gzip (122.5 KB transferred, limit 125), HTML
+CLS 0.000 phone / 0.002 desktop, first-load JS 113.1 KB gzip (122.7 KB transferred, limit 125), HTML
 15.0 KB, fonts 69.0 KB, new canvas code 7.0 KB of 8, depth maps 4.4 and 3.6 KB. Idle frames, timers and
 running animations are zero after load, scroll and every scripted input. Worst INP at CPU x4: 88 ms
-desktop, 56 ms phone. Phone full-scroll blockingDuration 49 to 68 ms over nine runs (limit 100),
+desktop, 56 ms phone. Phone full-scroll blockingDuration 49 to 70 ms over twelve runs (limit 100),
 desktop 0. Posters meet AA in both themes at 1440 x 900, 1190 x 680 and 390 x 844. Pins: unchanged
-except the phone Experience deck (3.56 to 2.80 viewport heights). Not verified: real Safari after the
-first dark hero check, iOS flick-through and address-bar resizing, Firefox, and playback of real
-footage. Owner input still open: approval of the index label and skip strings. The three
-clips are no longer expected (see App footage).
+except the phone Experience deck (3.56 to 2.80 viewport heights). Real Safari (safaridriver, the
+owner's 115 % zoom) at 1191 x 680 and 1440 x 900 in both themes: every scene at its start, middle
+and end, both relief canvases and the wall displacement live, real pointer clicks on the hero
+buttons, theme toggle, wall cards, dialog close and Search, keyboard open and close with focus back
+on the opener, and the first skip link by Option+Tab. Not verified: iOS flick-through and
+address-bar resizing, Firefox, and playback of real footage. The owner approved the index label
+and the skip strings on 2026-10-10. The three clips are no longer expected (see App footage).
 
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
@@ -322,6 +335,10 @@ Depth grammar: `.persp` (1400/1200/1000 px, origin 50% 40%) around one `.stage` 
   as its start. Put the intro on a child.
 - Drive a group from one value: one tween per sentence or card with CSS deriving each child's
   transform, not a tween per child. Scene-written custom properties sit on their consumer.
+- Under reduced motion every element has a 0.01 ms transition (base.css), so a layout read straight
+  after a style write still sees the old value: the hero's head sat on the "A" of "Aditya" in the
+  poster. Code that writes and then measures suspends transitions on that subtree
+  (`.hero.is-fitting`).
 - Dialogs are native `<dialog>` via `components/Dialog.tsx` (explicit `margin: auto`, focus returns, scroll lock;
   it ignores the close events it causes itself). `lockScroll` is reference-counted: dialogs overlap (the
   menu hands over to the palette, which opens only after the menu has closed); a saved/restored

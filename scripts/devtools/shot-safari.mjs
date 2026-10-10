@@ -75,6 +75,9 @@ try {
     await sleep(350);
   }
   const logs = [`[viewport] ${JSON.stringify(await run('[innerWidth, innerHeight, devicePixelRatio]'))}`];
+  // Safari makes no frames while the display sleeps: rAF, GSAP's ticker and ResizeObserver stall.
+  const frames = await runAsync('new Promise((r) => { let n = 0; const tick = () => { n++; requestAnimationFrame(tick); }; requestAnimationFrame(tick); setTimeout(() => r(n), 500); })');
+  logs.push(`[frames in 0.5 s] ${frames}${frames ? '' : ' (display asleep: these shots show stale states; wake it and hold it with caffeinate -d)'}`);
   const evalJs = opt('eval', null);
   if (evalJs) logs.push(`[eval] ${JSON.stringify(await runAsync(evalJs))}`);
   const files = [];

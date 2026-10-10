@@ -16,8 +16,13 @@ then run from this folder:
   safaridriver can only drive a Safari it launches itself: the owner's Safari must be quit first
   ("Safari was not launched for automation" in `log show` otherwise). Color scheme and reduced motion
   follow macOS. Safari's default page zoom (115 % here) shrinks the CSS viewport: the log prints
-  `[innerWidth, innerHeight, devicePixelRatio]`. Headless Chrome also stalls on View Transitions
-  (the theme toggle); test theme switching with `--reduced`.
+  `[innerWidth, innerHeight, devicePixelRatio]`, then the frames Safari made in half a second. At 0
+  the display is asleep: rAF, GSAP's ticker and ResizeObserver stall, so every scroll-driven state
+  in the shots is stale. Wake it and hold it with `caffeinate -d`. If you drive the pointer through
+  WebDriver actions, coordinates are window points: multiply CSS px by window width / innerWidth
+  under page zoom. Plain Tab skips links and buttons in Safari's default setup; Option+Tab visits
+  them. Headless Chrome also stalls on View Transitions (the theme toggle); test theme switching
+  with `--reduced`.
 
 - `node film.mjs <url> <outPrefix> [--w] [--h] [--mobile] [--eval "setup"] --act "js" [--times 0,300,600] [--slow 0.25]`:
   frames after an action (e.g. opening the menu). `--slow` scales GSAP time via `window.__gsap` (dev only).
