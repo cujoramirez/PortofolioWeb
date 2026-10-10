@@ -8,7 +8,7 @@ This file provides guidance to Codex when working with code in this repository.
 - **Build:** `npm run build` (for local verification prefer `npx vite build --outDir /tmp/pf-dist`, then `npx vite preview --outDir /tmp/pf-dist --port 4173`)
 - **Lint:** `npm run lint`
 - **Type check:** `npm run typecheck`
-- **Images:** `npm run images` (AVIF/WebP ladders into `public/img` + manifest `src/data/images.json`; content-hashed, incremental; on macOS it also renders the résumé PDF's pages, so run it after replacing `public/Gading_Resume.pdf`)
+- **Images:** `npm run images` (AVIF/WebP ladders into `public/img` + manifest `src/data/images.json`; content-hashed, incremental; on macOS it also renders the résumé PDF's pages, so run it after replacing `public/Gading_Resume.pdf`: until then the build warns and phones open the PDF instead of a preview)
 - **Vision data:** `npm run vision` (macOS: runs Apple's Vision framework on the hero portrait, see below)
 - **App footage:** `npm run sequences` (requires ffmpeg; leaves an empty manifest when no clips exist)
 
@@ -402,7 +402,9 @@ edge; a tap enlarges a page 2.6 times around the tapped point and loads the 2000
 slow pull of 110 px springs back and a 90 px flick closes. Click-through 48 of 48, Tab walk 95
 and 78 stops with none hidden, the link map as in the table. Seen in the iOS Simulator (iPhone
 17) and in Playwright's WebKit, where the timed exit was caught mid-way on desktop. Not
-verified: real Safari, a real finger on iOS, pinch.
+verified: real Safari, a real finger on iOS, pinch. The owner answered "proceed" to the question
+of keeping the résumé's page pictures. A copy of the site built with a changed PDF warned and
+sent a phone's résumé link to a new tab; the real build previews it.
 
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
@@ -447,7 +449,7 @@ the link's surroundings say. Every other link leaves for a new tab in one click.
 | Link | A plain click |
 |---|---|
 | Résumé, with a mouse | portal: the PDF itself in a frame |
-| Résumé, on a phone | portal: its pages as pictures (`images.resume`), since no phone can show a PDF in a frame (Android shows nothing, iOS draws page one at full size over its neighbours) |
+| Résumé, on a phone | portal: its pages as pictures (`images.resume`), since no phone can show a PDF in a frame (Android shows nothing, iOS draws page one at full size over its neighbours). The pictures carry the PDF's hash in their names; `vite.config.ts` compares the two and sets `__RESUME_PAGES__`, and when the PDF is newer than its pictures the link opens the PDF in a new tab rather than show old pages |
 | Paper title | portal: authors, the whole description, every keyword, Copy citation |
 | Certificate tile | portal: the certificate at full size |
 | Project demo that is a YouTube video or playlist | portal: the player (`youtube-nocookie.com`, loaded once the visitor opens it) |

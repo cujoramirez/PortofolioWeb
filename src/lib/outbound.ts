@@ -30,10 +30,17 @@ const host = () => import('./portal');
 export const showsPdf = () =>
   window.matchMedia('(hover: hover) and (pointer: fine)').matches && (navigator as Navigator & { pdfViewerEnabled?: boolean }).pdfViewerEnabled !== false;
 
+/**
+ * Whether the résumé has a preview here: its PDF in a frame, or pictures of its pages. The
+ * pictures are left out when they were made from an older PDF (vite.config.ts), and the link
+ * then opens the file as any link would.
+ */
+export const previewsResume = () => showsPdf() || __RESUME_PAGES__;
+
 /** Whether the portal opens for this link. */
 function previews(a: HTMLAnchorElement): boolean {
   if (a.hasAttribute('data-portal-exit') || a.hasAttribute('download')) return false;
-  if (a.origin === location.origin) return a.pathname === LINKS.resume;
+  if (a.origin === location.origin) return a.pathname === LINKS.resume && previewsResume();
   return a.hasAttribute('data-preview');
 }
 

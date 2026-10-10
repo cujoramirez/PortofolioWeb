@@ -1,9 +1,29 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import compression from 'vite-plugin-compression';
 import heroShell from './vite-plugins/heroShell';
 
+/**
+ * Whether the résumé's page pictures were made from the PDF being shipped: their file names
+ * carry its hash (scripts/build-images.mjs). A phone previews the résumé from those pictures;
+ * if the PDF was replaced without `npm run images`, it opens the PDF instead of old pages.
+ */
+function resumePagesCurrent(): boolean {
+    try {
+        const hash = createHash('sha1').update(readFileSync('public/Gading_Resume.pdf')).digest('hex').slice(0, 8);
+        const pages: { avif: string[] }[] = JSON.parse(readFileSync('src/data/images.json', 'utf8')).resume ?? [];
+        const current = pages.length > 0 && pages.every((page) => page.avif.every((file) => file.includes(`-${hash}-`)));
+        if (!current) console.warn('\nThe résumé PDF has changed since its pages were rendered: run `npm run images`. Until then phones open the PDF in a new tab.\n');
+        return current;
+    } catch {
+        return false;
+    }
+}
+
 export default defineConfig({
+    define: { __RESUME_PAGES__: JSON.stringify(resumePagesCurrent()) },
     plugins: [
         react(),
         heroShell(),
