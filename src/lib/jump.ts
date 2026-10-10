@@ -4,7 +4,7 @@
  * to the target's heading (without a second scroll).
  */
 import { ScrollTrigger } from './gsap';
-import { scrollToTarget } from './scroll';
+import { scrollToTarget, unlocked } from './scroll';
 
 type Loader = () => Promise<void>;
 const loaders = new Map<string, Loader>();
@@ -55,13 +55,18 @@ export function focusHeading(target: HTMLElement) {
   window.setTimeout(retry, 200);
 }
 
+/** Mount every scene and measure, so that a jump after this scrolls in the same turn. */
+export async function readyToJump() {
+  if (!loaders.size) return;
+  await loadAllScenes();
+  ScrollTrigger.sort();
+  ScrollTrigger.refresh();
+}
+
 export async function jumpTo(id: string, { immediate = false, url = true } = {}) {
-  const needsLoad = loaders.size > 0;
-  if (needsLoad) {
-    await loadAllScenes();
-    ScrollTrigger.sort();
-    ScrollTrigger.refresh();
-  }
+  // an animated scroll cannot start under a dialog (the menu's jump is instant, behind its veil)
+  if (!immediate) await unlocked();
+  await readyToJump();
   const target = document.getElementById(id);
   if (!target) return;
   // An explicit jump is a link you can copy: the URL names the section, and the top clears it.

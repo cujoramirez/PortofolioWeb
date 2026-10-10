@@ -89,7 +89,11 @@ export const snapAllowed = () => performance.now() >= snapUntil;
 /** A navigation jump must not be pulled back into the deck it just left. */
 function pauseSnaps(immediate: boolean) {
   snapUntil = performance.now() + (immediate ? 750 : 2000);
-  ScrollTrigger.getAll().filter((st) => st.vars.snap).forEach((st) => st.getTween(true)?.kill());
+  ScrollTrigger.getAll().filter((st) => st.vars.snap).forEach((st) => {
+    // 0 once a snap has run, not a tween: `?.kill()` on it threw, and no jump scrolled after that
+    const tween = st.getTween(true);
+    if (tween) tween.kill();
+  });
 }
 
 let gliding = false;
@@ -119,6 +123,17 @@ function holdRefreshUntilLanded() {
 
 let locks = 0;
 let unlockedOverflow = '';
+let waiting: (() => void)[] = [];
+
+/**
+ * Resolves once no dialog holds the page (at once if none does). A scroll animation started under
+ * a dialog dies as the dialog lets go: Lenis resets when it restarts, and a native smooth scroll
+ * stops when the root's overflow changes. A jump picked in the search palette changed the URL and
+ * moved nothing.
+ */
+export function unlocked(): Promise<void> {
+  return locks === 0 ? Promise.resolve() : new Promise((resolve) => waiting.push(resolve));
+}
 
 /**
  * Pause background scrolling while a dialog is open. Counted: dialogs can overlap (the menu hands
@@ -138,6 +153,9 @@ export function lockScroll(): () => void {
     if (--locks > 0) return;
     root.style.overflow = unlockedOverflow;
     lenis?.start();
+    const resume = waiting;
+    waiting = [];
+    resume.forEach((resolve) => resolve());
   };
 }
 
