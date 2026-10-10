@@ -121,11 +121,29 @@ frame, and the browser's clamp left Contact 63 px short on a phone.
   tip into an isometric stack fitted to the top zone (both ends of its slow turn must fit; it is
   centred, and its depth steps scale with it) while the interface settles below as a solid card
   (readable, live). The stack stands up and unwinds through the whole hold while the scan runs.
-  Then it faces you, the name's letters fold away in order (a random scatter flew letters over the
-  face on a narrow screen), the portrait flies into the pinned About card, and the interface card
-  slides off the bottom as About's first chapter rises in the same half (AboutScene starts that
-  chapter's sentences before the hand-off lands, on phones only). The version before 2026-10-10
-  lifted the card away half-way and left half the screen empty twice; the owner called it weird.
+  Then the stack squares up where it stands, sinks back and fades, the name's letters fold away
+  in order (a random scatter flew letters over the face on a narrow screen), and the portrait
+  comes forward out of it into the pinned About card's frame. Docked there, the two panels turn
+  over as one board: the framed portrait and the interface card turn edge-on, and the café photo
+  and About's first chapter come round in their places. Nothing blends: each swap happens while
+  its panel shows only an edge. The turn is split across two timelines, since the portrait and
+  the interface card are the hero's and the card and the chapter are About's; both read its
+  moments from `scenes/handoff.ts` (`TURN_FROM`, `TURN_EDGE`, `SHEET_AHEAD`, `TURN_PERSP`,
+  `inAbout`). The hero's last frame is the edge-on one, so the pin hides with nothing on screen
+  changing. The picture and the overlay turn inside the portrait's box (flat on phones), whose
+  centre is the card's: the portrait itself hinges on the stack's centre. Each turning element
+  carries its own `transformPerspective`, so the turn looks the same in Chrome and iOS; the
+  portrait's is divided by its landing scale to match the card's. A transform's vanishing point
+  is its origin and does not move with `x`/`y`: the interface card's origin is set to where its
+  centre rests. The hero timeline is padded to length 1 (`tl.set({}, {}, 1)`): its times are
+  read as progress, and when the last tween ended at 0.985 everything ran 1.5 % early and the
+  portrait turned out of step with its frame.
+  History, in the owner's words: the version before 2026-10-10 lifted the card away half-way and
+  left half the screen empty twice ("weird"); the next one crossfaded to the photo inside the
+  portrait's silhouette as desktop does, and they wrote "the transition from hero to about is
+  weird on mobile, there has to be a better transition". On a card as wide as the phone that
+  crossfade was two faces at once, then a profile cut off by a frontal outline. Desktop and
+  tablet still use the silhouette reveal.
   The portrait's flight starts from a stated pose (`fromTo`): the stack is placed by `render()`
   after the timeline, so a jump across the hand-off recorded a stale start and the portrait flew in
   from its resting place. One state object
@@ -137,7 +155,8 @@ frame, and the browser's clamp left Contact 63 px short on a phone.
   lighter exploded view. The plate's fade is set from progress in `sync()`: a GSAP opacity tween wrote
   the plate's mid-intro opacity (0) at build time and left it invisible. For the same reason the
   index's first-paint intro sits on its `<ol>`, not on the element GSAP fades.
-  `--handoff` sits on the portrait and on About's `.about__swap`, `--hero-overlap` on the About section.
+  `--handoff` sits on the portrait and on About's `.about__swap` (phones: the portrait only, as a
+  step at the edge-on moment), `--hero-overlap` on the About section.
 - About: turning card (café photo `GadingAdityaPerdana2.jpg` / fact sheet) + three chapters. A chapter
   reads as one paragraph: each sentence rises as its words (inline-block `.about__word` spans, all
   driven by one `--rise` per sentence; a tween per word was 213 targets). A chapter's lines are
@@ -147,7 +166,14 @@ frame, and the browser's clamp left Contact 63 px short on a phone.
   text column between chapters. The card flip swaps faces at 90° (WebKit
   renders `backface-visibility` mirrored). The card is sized in px by the scene and every face layer is
   pinned with insets: Safari 27 does not resolve percentage heights inside an aspect-ratio box (the
-  photo stopped short of the card). Phones: pinned (`.is-pinned`) when a photo card ≥ 200 px tall fits
+  photo stopped short of the card). Phones never show the silhouette stage (see the hero's hand-off above): where the hero
+  hands over (`.is-handed`, read from `--hero-overlap`, which HeroScene sets before this scene
+  builds) the card turns over and the first chapter's text comes round whole as the back of the
+  hero's interface card, its number and title landing on the photo afterwards; that chapter is
+  flat so the stage's perspective is not applied on top of the text's own. Without a hand-off
+  the photo is simply there, and where the page flows it turns in as its card scrolls into
+  view. The card is an `.about__rise`, whose origin is its bottom edge: the turn sets the
+  origin to the middle, or the card hinges on its bottom. Phones: pinned (`.is-pinned`) when a photo card ≥ 200 px tall fits
   above the longest chapter: the card is full width and as tall as that space allows (no dead band),
   the chapter number and title sit on the photo over a scrim, three bars track the chapters, the text
   is below; else it flows and the reveal plays as the card scrolls in. iOS WebKit lessons from this:
@@ -290,6 +316,17 @@ HTML 15.0 KB, pins unchanged (phone hero 1.08, About 2.30, 47 % of the page), cl
 48, Tab walk 95 and 78 stops with none hidden, no dead run on the phone, the phone hero and the
 landings seen in the iOS Simulator. LCP, scroll frames and INP were not re-measured cleanly: a
 game was running on the Mac. Side by side with the previous build under that load they matched.
+
+Still later on 2026-10-10 (phone hand-off as a card turn): first-load JS 113.6 KB gzip (123.1
+transferred), HTML 15.0 KB, slow-4G phone LCP 1.74 to 1.76 s, CLS 0.000, idle frames 0, pins unchanged
+(47 % of the page on a phone), click-through 48 of 48, Tab walk 95 and 78 stops with none
+hidden, no dead run on the phone, every jump landing complete. Seen at 440 x 956 (both themes),
+390 x 844, 390 x 760, 375 x 600, 320 x 568 and in the iOS Simulator (iPhone 17); scrolled
+backwards as well at 440 x 956. The game was still running: phone scroll blockingDuration was 171 to 173 ms against
+170 to 179 ms for the previous build under the same load, with no long frame in the hand-off.
+The `load` event came 0.5 s later than the previous build's on the slow-4G profile; with the
+local analytics 404s blocked the two builds load within 0.07 s of each other (the 404 script
+had landed last in Chrome's six-connection queue).
 
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
