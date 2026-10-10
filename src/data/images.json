@@ -564,5 +564,45 @@
       "width": 1200,
       "height": 740
     }
-  }
+  },
+  "resume": [
+    {
+      "widths": [
+        800,
+        1280,
+        2000
+      ],
+      "avif": [
+        "/img/resume-p1-df0431e3-800.avif",
+        "/img/resume-p1-df0431e3-1280.avif",
+        "/img/resume-p1-df0431e3-2000.avif"
+      ],
+      "webp": [
+        "/img/resume-p1-df0431e3-800.webp",
+        "/img/resume-p1-df0431e3-1280.webp",
+        "/img/resume-p1-df0431e3-2000.webp"
+      ],
+      "width": 2000,
+      "height": 2588
+    },
+    {
+      "widths": [
+        800,
+        1280,
+        2000
+      ],
+      "avif": [
+        "/img/resume-p2-df0431e3-800.avif",
+        "/img/resume-p2-df0431e3-1280.avif",
+        "/img/resume-p2-df0431e3-2000.avif"
+      ],
+      "webp": [
+        "/img/resume-p2-df0431e3-800.webp",
+        "/img/resume-p2-df0431e3-1280.webp",
+        "/img/resume-p2-df0431e3-2000.webp"
+      ],
+      "width": 2000,
+      "height": 2588
+    }
+  ]
 }
