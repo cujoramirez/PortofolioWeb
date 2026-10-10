@@ -41,9 +41,22 @@ const ramp = (v: number, from: number, to: number) => {
   return t * t * (3 - 2 * t);
 };
 const LENS_R = 105;
+/** The classes that change the hero's layout: a fit is good for one viewport size under one set of them. */
+const FIT_CLASSES = ['is-motion', 'is-desktop', 'is-tablet', 'is-mobile', 'is-split'];
+/** Fires once every pin is back in flow, before a refresh measures. GSAP's types leave it out. */
+const REVERT = 'revert' as 'refresh';
 
 /** Fit the name to the plate and aim the portrait's head between the names (see below). */
 function fitHero(section: HTMLElement) {
+  // The reduced-motion reset gives every element a 0.01 ms transition, so a size written by the fit
+  // was not yet in the layout it read next: the head landed on the "A" of Aditya.
+  section.classList.add('is-fitting');
+  measureHero(section);
+  void section.offsetWidth;
+  section.classList.remove('is-fitting');
+}
+
+function measureHero(section: HTMLElement) {
   const name = section.querySelector<HTMLElement>('.hero__name');
   const stage = section.querySelector<HTMLElement>('.hero__stage');
   const portrait = section.querySelector<HTMLElement>('.hero__portrait');
@@ -124,14 +137,34 @@ export default function HeroScene() {
     let ready = false;
     let live = true;
     let fitted = '';
+    // After a resize the pinned hero keeps the px size of the last refresh until ScrollTrigger
+    // reverts it. A fit made before that measured the old stage and stuck until a reload.
+    let stalePin = false;
     const timers: number[] = [];
-    const fit = () => {
+    const fit = (force = false) => {
       if (!ready) return;
-      const key = `${innerWidth}:${innerHeight}:${section.classList.contains('is-motion')}:${section.classList.contains('is-split')}`;
-      if (key === fitted) return;
-      fitted = key;
+      const key = `${innerWidth}:${innerHeight}:${FIT_CLASSES.filter((c) => section.classList.contains(c)).join(' ')}`;
+      if (key === fitted && !force) return;
+      // a first fit against a stale pin still shows, and the next revert measures again
+      fitted = stalePin ? '' : key;
       fitHero(section);
     };
+    const onResize = () => {
+      stalePin = section.classList.contains('is-motion');
+    };
+    const onRefreshInit = () => {
+      if (!stalePin) fit();
+    };
+    const onRevert = () => {
+      stalePin = false;
+      fit();
+    };
+    // The poster has no pin and no refresh: refit when the stage itself changes size.
+    const stage = section.querySelector<HTMLElement>('.hero__stage');
+    const poster = new ResizeObserver(() => {
+      if (!section.classList.contains('is-motion')) fit(true);
+    });
+    if (stage) poster.observe(stage);
     void fontsReady().then(() => {
       ready = true;
       fit();
@@ -140,11 +173,14 @@ export default function HeroScene() {
       section.querySelectorAll<HTMLElement>('.hero__facts li').forEach((li, i) => timers.push(window.setTimeout(() => decrypt(li, 0.8), 150 + i * 140)));
     });
     section.querySelectorAll<HTMLElement>('.hero__actions .btn').forEach((b) => cleanups.push(magnet(b, 0.28)));
-    ScrollTrigger.addEventListener('refreshInit', fit);
-    window.addEventListener('resize', fit);
+    ScrollTrigger.addEventListener('refreshInit', onRefreshInit);
+    ScrollTrigger.addEventListener(REVERT, onRevert);
+    window.addEventListener('resize', onResize);
     cleanups.push(() => {
-      ScrollTrigger.removeEventListener('refreshInit', fit);
-      window.removeEventListener('resize', fit);
+      ScrollTrigger.removeEventListener('refreshInit', onRefreshInit);
+      ScrollTrigger.removeEventListener(REVERT, onRevert);
+      window.removeEventListener('resize', onResize);
+      poster.disconnect();
     });
 
     if (portrait && cv && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {

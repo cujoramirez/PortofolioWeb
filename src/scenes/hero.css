@@ -5,6 +5,11 @@
   position: relative;
   z-index: 2;
 }
+/* While the fit measures (fitHero): a transition would hold the size it has just written. */
+.hero.is-fitting,
+.hero.is-fitting * {
+  transition: none !important;
+}
 
 .hero__pin {
   position: relative;
