@@ -199,8 +199,11 @@ for FightRoom, 67Cam and DALX in `src/assets/footage/` as `.mov` or `.mp4`, then
 (requires ffmpeg and ffprobe). The incremental builder writes 60 desktop frames (long side 960 px) and
 36 phone frames (long side 640 px), AVIF plus WebP, into hashed `public/seq` folders and records them
 in `src/data/sequences.json`. It lowers quality until the heavier of the two formats fits 1.2 MB
-desktop or 500 KB phone, and fails if none does. The manifest is empty until footage is supplied, and
-then every card keeps its still. The player draws only changed indices, caches encoded blobs, decodes
+desktop or 500 KB phone, and fails if none does. The manifest is empty, so every card keeps its
+still and the player chunk is never fetched. On 2026-10-10 the owner said the clips will not come:
+the Mac was cleaned and the apps no longer run as built (DALX still runs, in worse shape). The
+pipeline stays dormant and takes any subset of the three if a clip ever turns up; do not ask for
+the clips again. The player draws only changed indices, caches encoded blobs, decodes
 up to 17 nearby frames with a 32 MB cap, and releases bitmaps when the card leaves. Desktop frames
 follow each featured segment; phone frames follow viewport travel. The footage sits on its own
 rounded plate over the still and under the layer tag (the screen is a 3D layer and cannot clip). A
@@ -246,7 +249,8 @@ desktop, 56 ms phone. Phone full-scroll blockingDuration 49 to 68 ms over nine r
 desktop 0. Posters meet AA in both themes at 1440 x 900, 1190 x 680 and 390 x 844. Pins: unchanged
 except the phone Experience deck (3.56 to 2.80 viewport heights). Not verified: real Safari after the
 first dark hero check, iOS flick-through and address-bar resizing, Firefox, and playback of real
-footage. Owner inputs still open: the three clips, and approval of the index label and skip strings.
+footage. Owner input still open: approval of the index label and skip strings. The three
+clips are no longer expected (see App footage).
 
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
