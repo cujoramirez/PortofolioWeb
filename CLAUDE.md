@@ -497,7 +497,8 @@ its own step; and Escape can reach `close` twice (the dialog's cancel, then its 
 browser overrules the cancel), and a second `history.back()` left the page, so closing is
 guarded. Closed, the portal unmounts after its exit: a video in a closed dialog goes on playing.
 `dialog.portal` is the whole screen and never transforms: its children are fixed against the
-viewport, and a transform on it would carry them. Its strings are in `COPY` in `Portal.tsx`.
+viewport, and a transform on it would carry them. Its strings are in `COPY` in `Portal.tsx`; the
+owner approved them on 2026-10-11.
 Not in it: live data from other sites (a rendered number needs a source in the constants).
 
 **Micro-interactions (`lib/micro.ts`, after React Bits).** `magnet` (buttons, 1:1, settles on leave),

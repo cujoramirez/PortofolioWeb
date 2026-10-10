@@ -21,7 +21,7 @@ import { qrPath } from '../lib/qr';
 import { player } from '../lib/youtube';
 import './portal.css';
 
-/** Interface text new with the portal (2026-10-10). */
+/** The portal's interface text (approved by the owner on 2026-10-11). */
 const COPY = {
   kind: { resume: 'Résumé', paper: 'Paper', certificate: 'Certificate', video: 'Video', site: 'Link' },
   open: 'Open in a new tab',
