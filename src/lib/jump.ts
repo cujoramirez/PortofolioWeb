@@ -63,6 +63,19 @@ export async function readyToJump() {
   ScrollTrigger.refresh();
 }
 
+/**
+ * After an instant jump, every scrubbed scene takes up its new place in this turn. Left to their
+ * scrub, the scenes between the two places all catch up at once for half a second: a quarter of
+ * the frame rate while the warp plays over them.
+ */
+export function landNow() {
+  ScrollTrigger.update();
+  ScrollTrigger.getAll().forEach((st) => {
+    const scrub = st.getTween();
+    if (scrub) scrub.progress(1);
+  });
+}
+
 export async function jumpTo(id: string, { immediate = false, url = true } = {}) {
   // an animated scroll cannot start under a dialog (the menu's jump is instant, behind its veil)
   if (!immediate) await unlocked();

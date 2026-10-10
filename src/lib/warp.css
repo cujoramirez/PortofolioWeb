@@ -1,0 +1,102 @@
+/* Search jumps (lib/warp.ts): a jump to hyperspace. The view rushes forward past the viewer
+   while light streaks out from the middle of the screen, then the destination arrives from a
+   point ahead and stops. View Transitions only: a plain jump without them. The streaks and the
+   glow are the groups of two empty elements. Nothing turns: the first version twisted the page
+   into a hole, and the owner called the rotation goofy. */
+.warp {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+/* the palette is gone from the picture at once: caught mid-fade, its dimmed page went in grey */
+:root[data-vt='warp'] .dialog {
+  transition: none;
+}
+:root[data-vt='warp']::view-transition {
+  background: var(--sunken);
+}
+/* back to front: the glow, the page's own pictures, the streaks */
+:root[data-vt='warp']::view-transition-group(root) {
+  z-index: 2;
+}
+:root[data-vt='warp']::view-transition-old(root),
+:root[data-vt='warp']::view-transition-new(root) {
+  mix-blend-mode: normal;
+}
+:root[data-vt='warp']::view-transition-old(root) {
+  animation: warp-leave 0.4s cubic-bezier(0.7, 0, 0.9, 0.35) both;
+}
+:root[data-vt='warp']::view-transition-new(root) {
+  animation: warp-arrive 0.52s cubic-bezier(0.1, 0.9, 0.2, 1) 0.36s both;
+}
+@keyframes warp-leave {
+  55% {
+    opacity: 1;
+  }
+  to {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+@keyframes warp-arrive {
+  from {
+    transform: scale(0.18);
+    opacity: 0;
+  }
+  22% {
+    opacity: 1;
+  }
+}
+:root[data-vt='warp']::view-transition-new(warp-rays),
+:root[data-vt='warp']::view-transition-new(warp-core) {
+  animation: none;
+}
+/* In front of the page, as light: three sets of rays with different spacings, so no rhythm
+   shows. The ring they are cut to grows with them, so each streak lengthens as it flies out. */
+:root[data-vt='warp']::view-transition-group(warp-rays) {
+  z-index: 3;
+  background:
+    repeating-conic-gradient(from 3deg, transparent 0 4.6deg, var(--secondary) 4.8deg 5.1deg, transparent 5.3deg 9deg),
+    repeating-conic-gradient(from 0deg, transparent 0 6.4deg, var(--accent) 6.6deg 7deg, transparent 7.2deg 13deg),
+    repeating-conic-gradient(from 1deg, transparent 0 16.7deg, var(--ink) 16.8deg 17deg, transparent 17.1deg 23deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 8%, #000 20%, #000 44%, transparent 62%);
+  mask: radial-gradient(circle, transparent 0 8%, #000 20%, #000 44%, transparent 62%);
+  animation: warp-rays 0.86s cubic-bezier(0.45, 0, 0.85, 0.55) both;
+}
+:root[data-theme='dark'][data-vt='warp']::view-transition-group(warp-rays) {
+  mix-blend-mode: plus-lighter;
+}
+@keyframes warp-rays {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  18%,
+  62% {
+    opacity: 1;
+  }
+  to {
+    transform: scale(5.2);
+    opacity: 0;
+  }
+}
+/* the point everything flies to and comes from: a glow in the middle, never the whole screen */
+:root[data-vt='warp']::view-transition-group(warp-core) {
+  z-index: 1;
+  background: radial-gradient(circle closest-side, color-mix(in srgb, var(--secondary) 55%, #fff) 0, var(--accent) 7%, transparent 34%);
+  animation: warp-core 0.86s ease-in-out both;
+}
+@keyframes warp-core {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  42% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}

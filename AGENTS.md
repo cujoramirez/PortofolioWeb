@@ -353,6 +353,18 @@ timers and running animations zero after load, scroll and every scripted input, 
 touch gestures in both snapping decks. Touch drags of 21 % and 47 % of a paper came back to
 the paper they left, 53 % and 84 % went on, at 440 x 956 and 390 x 760.
 
+Later still (search jumps fixed, hyperdrive warp): after a full-page scroll all six jumps tried
+from the palette moved the page on desktop (1440 x 900) and phone (440 x 956), with focus on
+the heading and no console error; the phone menu's rows and its Search path work after a deck
+has snapped. `perf.mjs --actions` has a search-jump action. The game was running again, so
+interaction timings are not comparable: the search jump read 56 to 72 ms on the phone preset and
+128 ms on desktop (the key release waiting on the jump's frame) while the other actions read 232
+to 336 ms, against 32 to 64 ms an hour earlier with the game closed. 0 frames requested in 2.5 s
+after a warp. Frame pacing during the warp could not be measured: headless Chrome delivered a
+frame about every 100 ms after the jump with or without the transition. The warp was looked at
+slowed down in Chrome (desktop, phone, light theme); in Playwright's WebKit 26.6 the jumps land
+and nothing throws, but its screenshots do not show transition frames. Real Safari not run.
+
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
 button's bars fold into an X, rows lean toward a pressing finger 1:1; picking a row flies it at the
@@ -364,6 +376,27 @@ get a small label that follows the pointer 1:1 and fades out in place.
 
 **Command palette (`components/CommandPalette.tsx`, lazy).** ⌘K / Ctrl+K or the nav's Search: sections,
 projects (opens details via an `open-project` event), papers (DOI), links, copy email, résumé, theme.
+A section picked here travels (`lib/warp.ts`, `lib/warp.css`, in the palette's chunk): a jump to
+hyperspace. The view rushes forward past the viewer (scale up, fade) while light streaks out
+from the middle of the screen, then the destination arrives from a point ahead and stops. It is a
+root View Transition scoped by `data-vt='warp'`, like the theme reveal: the jump itself is
+instant, made while the old view is held as a picture. The streaks and the glow are the
+`::view-transition-group`s of two empty elements added with the new state, ordered around the
+page's pictures with `z-index`. Nothing rotates: a first version twisted the page into a black
+hole and the owner wrote "i was hoping more of a hyper drive warp zoom in and out like space
+travel instead of this goofy rotation". Inside the transition `landNow()` puts every scrubbed
+scene at its new place in one turn, and the key press that chose the destination gets a frame of
+its own first (with the picture taken inside it, the press took up to 216 ms to show at a quarter
+of the CPU). Without View Transitions, with motion off, or while another transition runs, it is
+the ordinary jump.
+A jump must not start its scroll under a dialog: `jumpTo` waits for `unlocked()` unless it is
+instant (the menu's jump is, behind its veil). Started under the palette, the scroll died as the
+dialog let go (Lenis resets when it restarts; on touch the root's overflow changes), leaving a
+new URL over an unmoved page. It only ever worked on the first jump of a visit, where loading
+the lazy scenes waited the dialog out; the owner found it after scrolling the whole page ("it
+doesn't teleport or move me there until i refresh"). And `pauseSnaps` must test the snap tween
+before killing it: ScrollTrigger reports a finished one as 0, and `0?.kill()` threw, which
+stopped every jump on a phone once a deck had snapped.
 
 **Micro-interactions (`lib/micro.ts`, after React Bits).** `magnet` (buttons, 1:1, settles on leave),
 `spotlight` (fill + rim glow on clickable cards only: `.has-spot`), `decrypt`/`decryptOnView` (mono labels

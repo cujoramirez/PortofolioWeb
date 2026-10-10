@@ -7,7 +7,8 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import Dialog from './Dialog';
 import { LINKS } from '../content/site';
 import { papers, projects, splitTitle } from '../content/data';
-import { jumpTo, loadAllScenes } from '../lib/jump';
+import { loadAllScenes } from '../lib/jump';
+import { warpTo } from '../lib/warp';
 import { toggleHierarchy } from '../lib/eggs';
 import { currentScheme, setScheme } from '../lib/theme';
 import { toast } from '../lib/toast';
@@ -28,7 +29,7 @@ const open = (href: string) => window.open(href, '_blank', 'noopener');
 function buildCommands(close: () => void): Command[] {
   const go = (id: string) => () => {
     close();
-    void jumpTo(id);
+    void warpTo(id);
   };
   const sections: [string, string][] = [
     ['hero', 'Top'],
