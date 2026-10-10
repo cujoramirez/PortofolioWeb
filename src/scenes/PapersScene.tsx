@@ -256,7 +256,7 @@ export default function PapersScene() {
                 </p>
                 <h3 className="paper__title">
                   {paper.doi ? (
-                    <a className="paper__link" href={`https://doi.org/${paper.doi}`} target="_blank" rel="noopener noreferrer">
+                    <a className="paper__link" href={`https://doi.org/${paper.doi}`} target="_blank" rel="noopener noreferrer" data-preview="">
                       {paper.title}
                     </a>
                   ) : (

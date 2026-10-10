@@ -49,6 +49,20 @@ export const ArrowUpRight = ({ size = 16 }: { size?: number }) => (
   </Icon>
 );
 
+/** Opens here, larger (a link that leaves carries ArrowUpRight instead). */
+export const ExpandIcon = ({ size = 16 }: { size?: number }) => (
+  <Icon size={size}>
+    <path d="M14 5h5v5M19 5l-6 6M10 19H5v-5M5 19l6-6" />
+  </Icon>
+);
+
+/** Plays here. */
+export const PlayIcon = ({ size = 16 }: { size?: number }) => (
+  <Icon size={size}>
+    <path d="M8 5.5v13l10.5-6.5Z" />
+  </Icon>
+);
+
 export const CopyIcon = () => (
   <Icon>
     <rect x="9" y="9" width="11" height="11" rx="2.5" />

@@ -5,7 +5,7 @@
 import { useEffect, useRef } from 'react';
 import Dialog from '../components/Dialog';
 import Picture, { ladder } from '../components/Picture';
-import { ArrowUpRight } from '../components/icons';
+import { ExpandIcon } from '../components/icons';
 import { certificates, featuredCertificates, type Certificate } from '../content/data';
 import { gsap } from '../lib/gsap';
 import { magnet, spotlight } from '../lib/micro';
@@ -16,12 +16,12 @@ import './certificates.css';
 function Tile({ cert, sizes }: { cert: Certificate; sizes: string }) {
   const img = ladder('certificates', cert.image);
   return (
-    <a className="cert card has-spot" href={cert.link} target="_blank" rel="noopener noreferrer" data-cursor="View">
+    <a className="cert card has-spot" href={cert.link} target="_blank" rel="noopener noreferrer" data-cursor="View" data-preview="">
       <span className="cert__plate">{img ? <Picture img={img} sizes={sizes} alt="" className="cert__img" /> : null}</span>
       <span className="cert__text">
         <span className="cert__title">{cert.title}</span>
         <span className="cert__issuer mono">
-          {cert.issuer} <ArrowUpRight size={13} />
+          {cert.issuer} <ExpandIcon size={13} />
         </span>
       </span>
     </a>

@@ -379,6 +379,14 @@ in Playwright's WebKit at 1190 x 680, where Safari gives no focus to a clicked l
 returns to the page rather than the link, as with the site's other dialogs. Not verified: real
 Safari, a real finger on iOS, whether the YouTube player plays (it was only seen loaded).
 
+Later that night (the portal only where it has something to show): first-load JS 113.5 KB gzip
+(123.0 transferred), slow-4G phone LCP 1.74 to 1.76 s, CLS 0.000, portal INP 48 ms at CPU x4 with
+0 frames after. With real pointer and touch events at 1440 x 900 and 440 x 956, each link did
+what the table above says: previews for the résumé (mouse), a paper, a certificate and a video
+demo; one new tab for the profiles, the channel and the phone's résumé. Click-through 48 of 48,
+Tab walk 95 and 78 stops with none hidden. The checks listed for the first version (nesting,
+focus, Back, the pull-down) were rerun on the previews that remain.
+
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
 button's bars fold into an X, rows lean toward a pressing finger 1:1; picking a row flies it at the
@@ -412,25 +420,32 @@ doesn't teleport or move me there until i refresh"). And `pauseSnaps` must test 
 before killing it: ScrollTrigger reports a finished one as 0, and `0?.kill()` threw, which
 stopped every jump on a phone once a deck had snapped.
 
-**Portal: links that leave the page (`lib/outbound.ts`, `lib/portal.ts`, `components/PortalHost.tsx`,
-`components/Portal.tsx`, `lib/qr.ts`).** The owner asked that links stop opening new tabs and keep
-the visitor on the page ("in an elegant and overkill way ... go all out"). A plain click on any
-link to another site, or to the résumé, opens a window over the page that grows out of the link.
-What it can hold is limited by the other sites: LinkedIn, GitHub, Google Scholar, doi.org, NVIDIA,
-Kaggle and freeCodeCamp all refuse to be displayed inside another page, so the window shows what
-this site holds about the destination and states the way out instead of taking it:
-- résumé: the PDF itself in a frame (mouse devices with a PDF viewer). Phones get an outline from
-  the site's data: Chrome on Android shows nothing in such a frame and iOS draws the first page
-  at full size over whatever is beside it;
-- a project's YouTube demo: the video plays in the window (`youtube-nocookie.com`, loaded only
-  once the visitor has opened it; all three allowed embedding on 2026-10-10);
-- a paper: title, venue, authors, description, keywords, and Copy citation;
-- a certificate: its image; a profile: name, role and the matching list (LinkedIn the first
-  three roles, Scholar the papers, GitHub the hero facts);
-- always: the address, Copy link, Open in a new tab, and on mouse devices a QR code of the
-  address to carry on with a phone (`lib/qr.ts`: byte mode, level M, versions 1 to 10; all 28
-  addresses on the site and one string at each version's limit decoded correctly with Apple
-  Vision).
+**Portal: a preview over the page for some links (`lib/outbound.ts`, `lib/portal.ts`,
+`components/PortalHost.tsx`, `components/Portal.tsx`, `lib/youtube.ts`, `lib/qr.ts`).** The owner
+asked that links keep the visitor on the page instead of opening new tabs. A first version put
+every outside link behind a window; for a profile or a channel that window only repeated what the
+page already said, and the owner asked "why would u click twice to go to a channel?". The rule
+since: **the portal opens only where it has the destination itself to show, or more of it than
+the link's surroundings say. Every other link leaves for a new tab in one click.**
+| Link | A plain click |
+|---|---|
+| Résumé, with a mouse | portal: the PDF itself in a frame |
+| Résumé, on a phone | new tab: no phone can show a PDF in a frame (Android shows nothing, iOS draws page one at full size over its neighbours) |
+| Paper title | portal: authors, the whole description, every keyword, Copy citation |
+| Certificate tile | portal: the certificate at full size |
+| Project demo that is a YouTube video or playlist | portal: the player (`youtube-nocookie.com`, loaded once the visitor opens it) |
+| Project demo that is a channel, LinkedIn, GitHub, Google Scholar | new tab |
+A link that opens the portal carries `data-preview` (the résumé is recognised by its path, and
+only where `showsPdf()`); the test is synchronous in the click handler, so every other link is
+left to the browser and `target="_blank"` works as written. The icon says which is which:
+`ArrowUpRight` leaves, `PlayIcon` plays here, `ExpandIcon` opens here larger. A channel's
+uploads could be embedded but were not: the newest upload led the lecture series' demo with a
+conference talk. A playlist address would play (`lib/youtube.ts`). LinkedIn, GitHub, Scholar,
+doi.org and the certificate issuers refuse to be displayed inside another page, which is why a
+paper or a certificate shows this site's own material with the way on stated. Every portal has
+the address, Copy link, Open in a new tab, and on mouse devices a QR code of the address to
+carry on with a phone (`lib/qr.ts`: byte mode, level M, versions 1 to 10; all 28 addresses on
+the site and one string at each version's limit decoded correctly with Apple Vision).
 Motion, all one-shot on transform and opacity: the window scales out of the link's position with
 a little overshoot while streaks fall in behind it and stay as a still field; one light runs once
 round its rim (a conic gradient turned behind a border-wide mask, hidden without
@@ -442,7 +457,7 @@ quarter of the screen and springs back short of that. Open in a new tab is a rea
 `target="_blank"`), and the window flies at the viewer as the tab opens.
 Rules it keeps: a click with a modifier key, a middle click and the context menu do what the
 browser does, and without JavaScript the links are ordinary ones (`target="_blank"` stays in the
-markup). Only the click test is in the first bundle (0.8 KB gzip); the rest is a 5.8 KB chunk
+markup). Only the click test is in the first bundle (0.6 KB gzip); the rest is a 5.1 KB chunk
 fetched when a pointer or the keyboard first reaches such a link, mounted in a React root of its
 own. The portal has a history entry, so Back closes it, as Back would have left the new tab.
 Three things that entry taught: stepping back makes the browser scroll to the section the

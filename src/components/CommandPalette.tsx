@@ -8,7 +8,7 @@ import Dialog from './Dialog';
 import { LINKS } from '../content/site';
 import { papers, projects, splitTitle } from '../content/data';
 import { loadAllScenes } from '../lib/jump';
-import { openOutbound } from '../lib/outbound';
+import { openOutbound, showsPdf } from '../lib/outbound';
 import { warpTo } from '../lib/warp';
 import { toggleHierarchy } from '../lib/eggs';
 import { currentScheme, setScheme } from '../lib/theme';
@@ -25,8 +25,7 @@ interface Command {
   run: () => void;
 }
 
-/** Addresses that leave the page open in the portal, as their links on the page do. */
-const open = (href: string, label = '') => openOutbound(href, label);
+const open = (href: string) => window.open(href, '_blank', 'noopener');
 
 function buildCommands(close: () => void): Command[] {
   const go = (id: string) => () => {
@@ -70,10 +69,11 @@ function buildCommands(close: () => void): Command[] {
         keywords: p.keywords.join(' '),
         run: () => {
           close();
-          open(`https://doi.org/${p.doi}`, p.title);
+          // as its link on the page does: the paper's details open over the page
+          openOutbound(`https://doi.org/${p.doi}`, p.title);
         },
       })),
-    { id: 'resume', group: 'Actions', label: 'Open résumé (PDF)', run: () => (close(), open(LINKS.resume)) },
+    { id: 'resume', group: 'Actions', label: 'Open résumé (PDF)', run: () => (close(), showsPdf() ? openOutbound(LINKS.resume, '') : open(LINKS.resume)) },
     {
       id: 'copy-email',
       group: 'Actions',
@@ -94,9 +94,9 @@ function buildCommands(close: () => void): Command[] {
         close();
       },
     },
-    { id: 'linkedin', group: 'Links', label: 'LinkedIn', run: () => (close(), open(LINKS.linkedin, 'LinkedIn')) },
-    { id: 'github', group: 'Links', label: 'GitHub', run: () => (close(), open(LINKS.github, 'GitHub')) },
-    { id: 'scholar', group: 'Links', label: 'Google Scholar', run: () => (close(), open(LINKS.scholar, 'Google Scholar')) },
+    { id: 'linkedin', group: 'Links', label: 'LinkedIn', run: () => (close(), open(LINKS.linkedin)) },
+    { id: 'github', group: 'Links', label: 'GitHub', run: () => (close(), open(LINKS.github)) },
+    { id: 'scholar', group: 'Links', label: 'Google Scholar', run: () => (close(), open(LINKS.scholar)) },
     {
       id: 'sudo',
       group: 'Hidden',

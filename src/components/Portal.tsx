@@ -1,26 +1,28 @@
 /**
- * The portal: where a link that would leave the page opens instead. A window grows out of the
- * link over the page and holds what this site has on the destination: the résumé itself, a
- * certificate's image, a paper's details, a project, a profile's outline. Other sites do not
- * let themselves be displayed inside a page, so the way out is stated in the window (a new tab,
- * or a code to scan with a phone) rather than taken for the visitor. See lib/outbound.ts.
+ * The portal: a window that grows out of a link over the page, for the links that have the
+ * destination itself to show or more of it than their surroundings say (lib/outbound.ts decides
+ * which). It holds the résumé's PDF, a paper's details, a certificate at full size or a video,
+ * with the way on to the site itself stated in the window rather than taken for the visitor.
+ * A window that only repeated what the page already said was a second click on the way out
+ * (the owner: "why would u click twice to go to a channel?"), so profiles and plain project
+ * links do not open one.
  */
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from 'react';
 import Dialog from './Dialog';
 import Picture, { ladder } from './Picture';
-import SocialIcon from './SocialIcon';
 import { ArrowUpRight, CheckIcon, CloseIcon, CopyIcon } from './icons';
-import { certificates, experiences, firstSentence, papers, projects, splitTitle, type Certificate, type Paper, type Project } from '../content/data';
-import { HERO, LINKS, OWNER, SECTIONS } from '../content/site';
+import { certificates, papers, projects, splitTitle, type Certificate, type Paper, type Project } from '../content/data';
+import { HERO, LINKS } from '../content/site';
 import { decrypt, magnet, spark } from '../lib/micro';
 import { motionAllowed } from '../lib/motion';
 import type { Outbound } from '../lib/outbound';
 import { qrPath } from '../lib/qr';
+import { player } from '../lib/youtube';
 import './portal.css';
 
 /** Interface text new with the portal (2026-10-10). */
 const COPY = {
-  kind: { resume: 'Résumé', profile: 'Profile', paper: 'Paper', certificate: 'Certificate', project: 'Project', video: 'Video', site: 'Link' },
+  kind: { resume: 'Résumé', paper: 'Paper', certificate: 'Certificate', video: 'Video', site: 'Link' },
   open: 'Open in a new tab',
   copy: 'Copy link',
   copied: 'Copied',
@@ -28,113 +30,60 @@ const COPY = {
   download: 'Download',
   scan: 'Scan to open on a phone',
   framed: (host: string) => `Other sites cannot display ${host} inside their pages. This is what this page holds about it.`,
-  noPdf: 'This browser cannot show a PDF inside a page. This is an outline of it.',
 } as const;
 
 type Found =
   | { kind: 'resume' }
-  | { kind: 'profile'; site: string }
   | { kind: 'paper'; paper: Paper }
   | { kind: 'certificate'; cert: Certificate }
-  | { kind: 'project'; project: Project }
-  | { kind: 'video'; id: string; project?: Project }
+  | { kind: 'video'; src: string; project?: Project }
   | { kind: 'site' };
 
 const same = (a: string, b: string) => a.replace(/\/$/, '') === b.replace(/\/$/, '');
 
-/** What this site knows about an address. */
+/** What there is to show for an address. */
 function resolve(href: string): Found {
   const url = new URL(href);
   if (url.origin === location.origin && url.pathname === LINKS.resume) return { kind: 'resume' };
-  // A YouTube video plays here: its player is made to be placed in other pages.
-  const video = url.hostname === 'youtu.be' ? url.pathname.slice(1) : /(^|\.)youtube\.com$/.test(url.hostname) && url.pathname === '/watch' ? url.searchParams.get('v') : null;
-  if (video) return { kind: 'video', id: video, project: projects.find((p) => p.demo === href || p.links.includes(href)) };
-  const site = HERO.socials.find((s) => same(s.href, href));
-  if (site) return { kind: 'profile', site: site.label };
   const paper = papers.find((p) => p.doi && href.includes(p.doi));
   if (paper) return { kind: 'paper', paper };
   const cert = certificates.find((c) => same(c.link, href));
   if (cert) return { kind: 'certificate', cert };
-  const project = projects.find((p) => [p.demo, p.github, ...p.links].some((l) => l && same(l, href)));
-  if (project) return { kind: 'project', project };
+  const src = player(href);
+  if (src) return { kind: 'video', src, project: projects.find((p) => [p.demo, ...p.links].some((l) => l && same(l, href))) };
   return { kind: 'site' };
 }
 
 const step = (i: number) => ({ '--i': i }) as CSSProperties;
-const sectionTitle = (id: string) => SECTIONS.find((s) => s.id === id)?.title ?? '';
 
 function Dossier({ found, label, host }: { found: Found; label: string; host: string }) {
   let title = label || host;
   let body: ReactNode = null;
-  let note: string = COPY.framed(host);
-  if (found.kind === 'resume') {
-    title = OWNER;
-    note = COPY.noPdf;
-    body = (
-      <>
-        <p className="portal__text portal__rise" style={step(2)}>
-          {HERO.role}
-        </p>
-        <section className="portal__rise" style={step(3)}>
-          <h4 className="portal__label mono">{sectionTitle('experience')}</h4>
-          <ol className="portal__list">
-            {experiences.map((x) => (
-              <li key={x.role + x.year}>
-                <span>
-                  {x.role}, {x.company}
-                </span>
-                <span className="mono">{x.year}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      </>
+  if (found.kind === 'video') {
+    const [name, sub] = found.project ? splitTitle(found.project.title) : [label || host, null];
+    return (
+      <div className="portal__dossier">
+        <div className="portal__video portal__rise" style={step(1)}>
+          <iframe
+            src={found.src}
+            title={name}
+            allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        </div>
+        <h3 className="portal__title portal__title--under portal__rise" style={step(2)}>
+          {name}
+        </h3>
+        {sub ? (
+          <p className="portal__text portal__rise" style={step(3)}>
+            {sub}
+          </p>
+        ) : null}
+      </div>
     );
-  } else if (found.kind === 'profile') {
-    title = OWNER;
-    body = (
-      <>
-        <p className="portal__text portal__rise" style={step(3)}>
-          {HERO.role}
-        </p>
-        {found.site === 'Google Scholar' ? (
-          <section className="portal__rise" style={step(4)}>
-            <h4 className="portal__label mono">{sectionTitle('papers')}</h4>
-            <ol className="portal__list">
-              {papers.map((p) => (
-                <li key={p.title}>
-                  <span>{p.title}</span>
-                  <span className="mono">
-                    {p.venue} · {p.year}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </section>
-        ) : found.site === 'LinkedIn' ? (
-          <section className="portal__rise" style={step(4)}>
-            <h4 className="portal__label mono">{sectionTitle('experience')}</h4>
-            <ol className="portal__list">
-              {experiences.slice(0, 3).map((x) => (
-                <li key={x.role + x.year}>
-                  <span>
-                    {x.role}, {x.company}
-                  </span>
-                  <span className="mono">{x.year}</span>
-                </li>
-              ))}
-            </ol>
-          </section>
-        ) : (
-          <ul className="portal__facts mono portal__rise" style={step(4)}>
-            {HERO.facts.map((f) => (
-              <li key={f}>{f}</li>
-            ))}
-          </ul>
-        )}
-      </>
-    );
-  } else if (found.kind === 'paper') {
+  }
+  if (found.kind === 'paper') {
     const p = found.paper;
     title = p.title;
     body = (
@@ -172,57 +121,6 @@ function Dossier({ found, label, host }: { found: Found; label: string; host: st
         ) : null}
       </>
     );
-  } else if (found.kind === 'video') {
-    const [name, sub] = found.project ? splitTitle(found.project.title) : [label || host, null];
-    return (
-      <div className="portal__dossier">
-        <div className="portal__video portal__rise" style={step(1)}>
-          <iframe
-            src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(found.id)}?rel=0&playsinline=1`}
-            title={name}
-            allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-            allowFullScreen
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
-        </div>
-        <h3 className="portal__title portal__title--under portal__rise" style={step(2)}>
-          {name}
-        </h3>
-        {sub ? (
-          <p className="portal__text portal__rise" style={step(3)}>
-            {sub}
-          </p>
-        ) : null}
-      </div>
-    );
-  } else if (found.kind === 'project') {
-    const [name, sub] = splitTitle(found.project.title);
-    const img = ladder('projects', found.project.image);
-    title = name;
-    body = (
-      <>
-        {sub ? (
-          <p className="portal__lead portal__rise" style={step(2)}>
-            {sub}
-          </p>
-        ) : null}
-        {img ? (
-          <figure className="portal__plate portal__rise" style={step(3)}>
-            <Picture img={img} sizes="(min-width: 900px) 720px, 92vw" alt="" className="portal__img" eager />
-          </figure>
-        ) : null}
-        <p className="portal__text portal__rise" style={step(4)}>
-          {firstSentence(found.project.description)}
-        </p>
-        <ul className="chips portal__rise" style={step(5)} aria-label="Technologies">
-          {found.project.technologies.slice(0, 8).map((t) => (
-            <li key={t} className="chip">
-              {t}
-            </li>
-          ))}
-        </ul>
-      </>
-    );
   }
   return (
     <div className="portal__dossier">
@@ -231,7 +129,7 @@ function Dossier({ found, label, host }: { found: Found; label: string; host: st
       </h3>
       {body}
       <p className="portal__framed portal__rise" style={step(6)}>
-        {note}
+        {COPY.framed(host)}
       </p>
     </div>
   );
@@ -258,13 +156,9 @@ export default function Portal({ link, open, onClose }: { link: Outbound | null;
 
   const url = link ? new URL(link.href) : null;
   const host = url?.hostname.replace(/^www\./, '') ?? '';
-  const mouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   // a code to scan is for a screen that is not the phone: beside the dossier, where there is room
-  const wide = mouse && window.matchMedia('(min-width: 768px)').matches;
+  const wide = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 768px)').matches;
   const code = useMemo(() => (link && wide ? qrPath(link.href) : null), [link, wide]);
-  // A PDF in a frame needs a viewer made for one. Phones have none: Chrome on Android shows
-  // nothing, and iOS draws the first page at its full size, over whatever is beside the frame.
-  const pdf = mouse && (navigator as Navigator & { pdfViewerEnabled?: boolean }).pdfViewerEnabled !== false;
 
   const copy = (what: string, text: string) => (event: { currentTarget: HTMLElement }) => {
     const r = event.currentTarget.getBoundingClientRect();
@@ -279,7 +173,7 @@ export default function Portal({ link, open, onClose }: { link: Outbound | null;
     timers.current.push(window.setTimeout(onClose, 420));
   };
   // A frame holds another document: it stays flat, or its text blurs and its clicks land off.
-  const flat = (found?.kind === 'resume' && pdf) || found?.kind === 'video';
+  const flat = found?.kind === 'resume' || found?.kind === 'video';
   // 1:1 with the pointer: the window leans toward it and a light follows it across the glass.
   // Level again when the pointer leaves (portal.css eases only the way back).
   const tilt = (event: PointerEvent<HTMLDivElement>) => {
@@ -328,7 +222,7 @@ export default function Portal({ link, open, onClose }: { link: Outbound | null;
 
   const paper = found?.kind === 'paper' ? found.paper : null;
   const citation = paper ? `${paper.authors} (${paper.year}). ${paper.title}. ${paper.venue}. https://doi.org/${paper.doi}` : '';
-  const name = found?.kind === 'profile' ? found.site : found?.kind === 'resume' ? HERO.resume.label : link?.label || host;
+  const name = found?.kind === 'resume' ? HERO.resume.label : link?.label || host;
   const shown = url ? `${host}${url.pathname.replace(/\/$/, '')}${url.search}` : '';
 
   return (
@@ -345,10 +239,7 @@ export default function Portal({ link, open, onClose }: { link: Outbound | null;
               </span>
               <span className="portal__glare" aria-hidden="true" />
               <header className="portal__bar" onPointerDown={pull} onPointerMove={pull} onPointerUp={pull} onPointerCancel={pull}>
-                <span className="portal__site">
-                  {found.kind === 'profile' ? <SocialIcon name={found.site} size={18} /> : null}
-                  <span>{found.kind === 'profile' ? found.site : COPY.kind[found.kind]}</span>
-                </span>
+                <span className="portal__site">{COPY.kind[found.kind]}</span>
                 <span className="portal__address mono" title={link.href} ref={address} data-text={shown}>
                   {shown}
                 </span>
@@ -360,7 +251,8 @@ export default function Portal({ link, open, onClose }: { link: Outbound | null;
                 </button>
               </header>
               <div className="portal__body">
-                {found.kind === 'resume' && pdf ? (
+                {/* the résumé only opens here where a frame can show a PDF (lib/outbound.ts) */}
+                {found.kind === 'resume' ? (
                   <iframe className="portal__pdf" src={`${LINKS.resume}#view=FitH`} title={HERO.resume.label} />
                 ) : (
                   <Dossier found={found} label={link.label} host={host} />

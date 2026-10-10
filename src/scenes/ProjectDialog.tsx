@@ -1,17 +1,20 @@
 /** Full detail for one project: image, full description, every technology, and its links. */
 import Dialog from '../components/Dialog';
 import Picture, { ladder } from '../components/Picture';
-import { ArrowUpRight } from '../components/icons';
+import { ArrowUpRight, PlayIcon } from '../components/icons';
 import { isIllustration, splitTitle, type Project } from '../content/data';
+import { player } from '../lib/youtube';
 
 export function ProjectLinks({ project }: { project: Project }) {
   const extra = project.links.filter((l) => l !== project.demo && l !== project.github);
   if (!project.demo && !project.github && !extra.length) return null;
+  // a demo on YouTube plays in the portal; any other link leaves for a new tab
+  const plays = Boolean(project.demo && player(project.demo));
   return (
     <p className="project-links">
       {project.demo ? (
-        <a className="btn btn--primary" href={project.demo} target="_blank" rel="noopener noreferrer">
-          Live demo <ArrowUpRight />
+        <a className="btn btn--primary" href={project.demo} target="_blank" rel="noopener noreferrer" data-preview={plays ? '' : undefined}>
+          Live demo {plays ? <PlayIcon /> : <ArrowUpRight />}
         </a>
       ) : null}
       {project.github ? (
