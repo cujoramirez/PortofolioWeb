@@ -200,7 +200,16 @@ frame, and the browser's clamp left Contact 63 px short on a phone.
   planes cut into each other in 3D). Papers: deck → fan → grid (FLIP from the resting grid); its pin
   centres with auto margins so a short window never slides the heading under the nav. Phones: a picker
   wheel (`.is-drum`): heading on top, papers on a horizontal cylinder filling the rest (masked edges,
-  dimmed neighbours), each with its gist (3 lines) and two keywords, snapping per paper; measured in
+  dimmed neighbours), each with its gist (3 lines) and two keywords. The wheel has a detent on every
+  paper: the paper in front stays square and at full strength for its whole stretch of scroll, the
+  scroll pulls the wheel off it 1:1 but only 28 % of the way (so it answers the finger), and past
+  half way the wheel lets go and clicks to the next paper on a spring (`slip`, which keeps the
+  drawn position continuous through the click). The scroll itself then pages: carried 30 % of a
+  paper it goes on to the next one in its direction, less than that it settles back, and the
+  wheel clicks as that snap starts rather than when the scroll gets half way. A jump of more than
+  one paper just arrives. Before 2026-10-10 the wheel turned in proportion to the scroll and
+  rested between two papers ("make this more tactile and snappy, so it's more readable it
+  snaps!"). The papers are measured in
   flow *before* the drum stacks them (plain CSS transforms: GSAP's origin smoothing broke a z origin).
   Size phone layouts for real iPhone Safari viewports (~390-402 × 740-760), not only 440 × 956.
 - Certificates: tiles flip in; `#all-certificates` archive. Contact (all variants): plates converge under one card;
@@ -326,6 +335,14 @@ to 264 ms against 281 ms for the previous build, again in the same minutes, so t
 is unverified. CLS 0.000 (one run of twelve read 0.001 and listed no shift source), idle
 frames 0.
 
+The same evening (phone Papers wheel with detents, snap fixed): after touch gestures of 80 to 900 px
+the wheel came to rest flat on a paper every time at 440 x 956 and 390 x 760, and the page
+requested 0 frames in 2.5 s while resting there (150 before, in Papers and in the Experience
+deck). The Experience deck's snap to each role, which had not fired on touch, fires too. Pins
+unchanged, first-load JS 112.8 KB gzip, click-through 48 of 48, Tab walk 95 and 78 stops with
+none hidden, landings complete. In the iOS Simulator the wheel draws its detents correctly; a
+real finger flick on iOS is not verified (simctl cannot send touches).
+
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
 button's bars fold into an X, rows lean toward a pressing finger 1:1; picking a row flies it at the
@@ -359,6 +376,13 @@ perpetual empty rAF loop, pushes its 250 ms sync poll out, and sets `autoSleep: 
 Lenis only while it is smoothing (`lib/lenisLoop.ts`, kicked by wheel/touch/keys/`scrollTo`) and bridges
 `lenis.on('scroll', ScrollTrigger.update)`. Never add Lenis to `gsap.ticker`, never add looping or
 auto-playing animation, and re-measure with `perf.mjs` + `idle-scroll.mjs` (both must report 0).
+With the poll gone, ScrollTrigger's velocity samples stop at the last scroll event and go on
+reading "still moving" for seconds, and its `snap` waits for stillness, polling on the ticker.
+After a touch scroll that stopped inside a snapping deck (phone Papers, phone Experience) the
+deck rested between two cards and the page requested 150 frames in 2.5 s. `lib/gsap.ts` now takes
+two more readings, 60 and 115 ms after the last scroll event; the snap then fires and the page
+goes quiet. `idle-scroll.mjs` never caught this: by default it scrolls 9000 px, which stops short
+of the decks. Check a snapping deck with a touch gesture (`Input.synthesizeScrollGesture`).
 
 **Data (`src/constants/index.js`).** All facts (experiences, projects, papers, certificates, about text, quotes)
 are frozen content; edit presentation, not copy. The curation lists (`FEATURED_*`, `MORE_WORK_TITLES`) may change. Image fields are keys into

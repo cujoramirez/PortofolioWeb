@@ -27,4 +27,20 @@ gsap.config({ autoSleep: 10, nullTargetWarn: false });
 if (import.meta.env.DEV) (window as unknown as { __gsap: typeof gsap }).__gsap = gsap;
 ScrollTrigger.config({ ignoreMobileResize: true, syncInterval: 2 ** 31 - 1 });
 
+// With that poll gone, ScrollTrigger's velocity samples stop at the last scroll event and go on
+// reading "still moving" for seconds. Its snap waits for stillness: after a touch scroll a deck
+// rested between two cards. Two more readings, each over 50 ms after the last, settle it.
+let settling = 0;
+window.addEventListener(
+  'scroll',
+  () => {
+    window.clearTimeout(settling);
+    settling = window.setTimeout(() => {
+      ScrollTrigger.update();
+      settling = window.setTimeout(() => ScrollTrigger.update(), 55);
+    }, 60);
+  },
+  { passive: true },
+);
+
 export { gsap, ScrollTrigger, SplitText };

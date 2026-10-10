@@ -30,9 +30,9 @@ export default function PapersScene() {
     const cards = q('.paper') as HTMLElement[];
 
     if (variant === 'mobile') {
-      // A picker wheel: the papers sit around a horizontal cylinder that turns as you scroll (snapping
-      // to each paper), under the heading, the one before and the one after visible dimmed above and
-      // below, each with its gist and keywords. Pinned when a paper fits; otherwise a stack that rises.
+      // A picker wheel: the papers sit around a horizontal cylinder under the heading, the one before
+      // and the one after visible dimmed above and below, each with its gist and keywords. The wheel
+      // has a detent on every paper (see below). Pinned when a paper fits; otherwise a stack that rises.
       const head = q('.papers__head')[0] as HTMLElement;
       const grid = q('.papers__grid')[0] as HTMLElement;
       const count = q('.papers__count')[0] as HTMLElement;
@@ -49,53 +49,105 @@ export default function PapersScene() {
         grid.style.height = `${tallest}px`;
         // the drum's axis sits behind the front paper, far enough that neighbours just clear it
         const R = tallest / 2 / Math.tan(((step / 2) * Math.PI) / 180) + 16;
-        const state = { p: 0 };
+        /*
+         * Detents. A paper sits square in front and readable for the whole of its stretch of
+         * scroll. The scroll pulls the wheel off it 1:1 but only GIVE of the way, so it answers
+         * the finger; past half way the wheel lets go and clicks round to the next paper on a
+         * spring. Turning in proportion to the scroll, it rested between two papers.
+         */
+        const GIVE = 0.28;
+        /** `aim`: where the scroll puts the wheel. `slip`: what a click still has to travel. */
+        const wheel = { at: 0, aim: 0, slip: 0, p: 0 };
         let shown = -1;
+        let u = 0;
+        /** The paper a snap is carrying the scroll to: the wheel clicks to it as the snap starts. */
+        let held: number | null = null;
+        let goal = 0;
         // plain CSS here: a native 3D transform-origin (the axis R behind each paper) is exact
         cards.forEach((card) => (card.style.transformOrigin = `50% 50% ${-R.toFixed(1)}px`));
-        const paint = () =>
+        const paint = () => {
+          wheel.p = wheel.aim - wheel.slip;
           cards.forEach((card, i) => {
-            const a = (i - state.p) * step;
+            const a = (i - wheel.p) * step;
             const off = Math.abs(a);
             card.style.transform = `rotateX(${(-a).toFixed(2)}deg)`;
-            // the neighbours stay in view, dimmed, like a picker wheel
-            card.style.opacity = off > 58 ? '0' : Math.max(0, 1 - (off / step) * 0.72).toFixed(3);
+            // Full strength within the detent's give; the neighbours stay in view, dimmed, like a
+            // picker wheel.
+            const dim = Math.max(0, off / step - GIVE / 2) / (1 - GIVE / 2);
+            card.style.opacity = off > 58 ? '0' : Math.max(0, 1 - dim * 0.72).toFixed(3);
             card.style.visibility = off > 58 ? 'hidden' : 'visible';
             card.style.pointerEvents = off < step / 2 ? 'auto' : 'none';
           });
-        const update = () => {
-          paint();
-          const i = Math.round(state.p);
-          if (i !== shown) {
-            shown = i;
-            count.textContent = `${String(i + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`;
-          }
-          bars.forEach((bar, b) => bar.style.setProperty('--f', Math.min(1, Math.max(0, state.p - b + 1)).toFixed(3)));
+          bars.forEach((bar, b) => bar.style.setProperty('--f', Math.min(1, Math.max(0, wheel.p - b + 1)).toFixed(3)));
         };
-        update();
-        const turn = gsap.to(state, {
-          p: n - 1,
-          ease: 'none',
-          onUpdate: update,
-          scrollTrigger: {
-            // a refresh restores progress without onUpdate: repaint from the restored state
-            onRefresh: update,
-            trigger: section,
-            start: 'top top',
-            end: () => `+=${(n - 1) * 0.5 * window.innerHeight}`,
-            pin: q('.papers__pin')[0],
-            scrub: 0.5,
-            snap: { snapTo: (value: number, self?: ScrollTrigger) => snapAllowed() ? gsap.utils.snap(1 / (n - 1), value) : self?.progress ?? value, duration: { min: 0.15, max: 0.4 }, delay: 0.05, ease: 'power1.inOut' },
-            invalidateOnRefresh: true,
+        /** Put the wheel where `u` (0 to n - 1, from the scroll) says. `click` springs to a new paper. */
+        const follow = (click: boolean) => {
+          const at = held ?? Math.round(u);
+          const aim = at + GIVE * (u - at);
+          // one paper at a time is a scroll; more at once is a jump, which just arrives
+          if (click && Math.abs(at - wheel.at) === 1) {
+            // carry on from where the wheel is drawn, and spring the rest of the way
+            wheel.slip += aim - wheel.aim;
+            gsap.to(wheel, { slip: 0, duration: 0.45, ease: 'back.out(1.7)', overwrite: true, onUpdate: paint });
+          } else if (at !== wheel.at || !click) {
+            gsap.killTweensOf(wheel);
+            wheel.slip = 0;
+          }
+          if (at !== shown) {
+            shown = at;
+            count.textContent = `${String(at + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`;
+          }
+          wheel.at = at;
+          wheel.aim = aim;
+          paint();
+        };
+        follow(false);
+        const hold = (paper: number | null) => {
+          held = paper;
+          follow(true);
+        };
+        const page = 1 / (n - 1);
+        const turn = ScrollTrigger.create({
+          trigger: section,
+          start: 'top top',
+          end: () => `+=${(n - 1) * 0.5 * window.innerHeight}`,
+          pin: q('.papers__pin')[0],
+          onUpdate: (self) => {
+            u = self.progress * (n - 1);
+            follow(true);
+          },
+          // a refresh restores progress without onUpdate: repaint from the restored state
+          onRefresh: (self) => {
+            u = self.progress * (n - 1);
+            held = null;
+            follow(false);
+          },
+          snap: {
+            // Paging: a scroll that has carried a paper 30 % of the way goes on to the next one in
+            // its direction; less than that, or a scroll that turned back, settles on the nearest.
+            snapTo: (value: number, self?: ScrollTrigger) => {
+              if (!snapAllowed()) return self?.progress ?? value;
+              const near = gsap.utils.snap(page, value);
+              const off = (value - near) / page;
+              const dir = self?.direction ?? 0;
+              return (goal = Math.abs(off) < 0.3 || off * dir <= 0 ? near : Math.min(1, Math.max(0, near + dir * page)));
+            },
+            onStart: () => hold(Math.round(goal / page)),
+            onComplete: () => hold(null),
+            onInterrupt: () => hold(null),
+            duration: { min: 0.14, max: 0.3 },
+            delay: 0.03,
+            ease: 'power2.out',
           },
         });
         // Tab to a paper turns the drum to it
-        const unfocus = showOnFocus(section, () => turn.scrollTrigger, (el) => {
+        const unfocus = showOnFocus(section, () => turn, (el) => {
           const i = cards.findIndex((card) => card.contains(el));
           return i < 0 ? null : i / (n - 1);
         });
         return () => {
           unfocus();
+          gsap.killTweensOf(wheel);
           section.classList.remove('is-drum');
           grid.style.removeProperty('height');
           cards.forEach((card) => {
