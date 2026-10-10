@@ -1,7 +1,7 @@
 /**
  * Links that leave the page, and the portal (components/Portal.tsx). The portal opens over the
  * page only where it has the destination itself to show, or more of it than the link's
- * surroundings already say: the résumé's PDF, a paper's details, a certificate at full size, a
+ * surroundings already say: the résumé, a paper's details, a certificate at full size, a
  * video. Such a link is marked `data-preview`. Every other link leaves for a new tab as an
  * ordinary link does: a window that repeats what is already on screen is only a second click.
  * A click with a modifier key, a middle click and the context menu always keep the browser's
@@ -23,9 +23,9 @@ export interface Outbound {
 const host = () => import('./portal');
 
 /**
- * Whether the résumé can be shown in a frame. That takes a PDF viewer made for one, and phones
- * have none: Chrome on Android shows nothing, and iOS draws the first page at its full size
- * over whatever is beside the frame. There the link opens the file as any link would.
+ * Whether the résumé's PDF can be shown in a frame. That takes a PDF viewer made for one, and
+ * phones have none: Chrome on Android shows nothing, and iOS draws the first page at its full
+ * size over whatever is beside the frame. There the portal shows the pages as pictures.
  */
 export const showsPdf = () =>
   window.matchMedia('(hover: hover) and (pointer: fine)').matches && (navigator as Navigator & { pdfViewerEnabled?: boolean }).pdfViewerEnabled !== false;
@@ -33,7 +33,7 @@ export const showsPdf = () =>
 /** Whether the portal opens for this link. */
 function previews(a: HTMLAnchorElement): boolean {
   if (a.hasAttribute('data-portal-exit') || a.hasAttribute('download')) return false;
-  if (a.origin === location.origin) return a.pathname === LINKS.resume && showsPdf();
+  if (a.origin === location.origin) return a.pathname === LINKS.resume;
   return a.hasAttribute('data-preview');
 }
 

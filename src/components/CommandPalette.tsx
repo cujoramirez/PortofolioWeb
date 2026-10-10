@@ -8,7 +8,7 @@ import Dialog from './Dialog';
 import { LINKS } from '../content/site';
 import { papers, projects, splitTitle } from '../content/data';
 import { loadAllScenes } from '../lib/jump';
-import { openOutbound, showsPdf } from '../lib/outbound';
+import { openOutbound } from '../lib/outbound';
 import { warpTo } from '../lib/warp';
 import { toggleHierarchy } from '../lib/eggs';
 import { currentScheme, setScheme } from '../lib/theme';
@@ -73,7 +73,7 @@ function buildCommands(close: () => void): Command[] {
           openOutbound(`https://doi.org/${p.doi}`, p.title);
         },
       })),
-    { id: 'resume', group: 'Actions', label: 'Open résumé (PDF)', run: () => (close(), showsPdf() ? openOutbound(LINKS.resume, '') : open(LINKS.resume)) },
+    { id: 'resume', group: 'Actions', label: 'Open résumé (PDF)', run: () => (close(), openOutbound(LINKS.resume, '')) },
     {
       id: 'copy-email',
       group: 'Actions',

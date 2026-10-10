@@ -7,15 +7,16 @@
  * (the owner: "why would u click twice to go to a channel?"), so profiles and plain project
  * links do not open one.
  */
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
 import Dialog from './Dialog';
-import Picture, { ladder } from './Picture';
+import Picture, { ladder, type Ladder } from './Picture';
 import { ArrowUpRight, CheckIcon, CloseIcon, CopyIcon } from './icons';
 import { certificates, papers, projects, splitTitle, type Certificate, type Paper, type Project } from '../content/data';
 import { HERO, LINKS } from '../content/site';
 import { decrypt, magnet, spark } from '../lib/micro';
 import { motionAllowed } from '../lib/motion';
-import type { Outbound } from '../lib/outbound';
+import { showsPdf, type Outbound } from '../lib/outbound';
+import images from '../data/images.json';
 import { qrPath } from '../lib/qr';
 import { player } from '../lib/youtube';
 import './portal.css';
@@ -29,6 +30,8 @@ const COPY = {
   cite: 'Copy citation',
   download: 'Download',
   scan: 'Scan to open on a phone',
+  zoomIn: 'Zoom in',
+  zoomOut: 'Zoom out',
   framed: (host: string) => `Other sites cannot display ${host} inside their pages. This is what this page holds about it.`,
 } as const;
 
@@ -55,6 +58,68 @@ function resolve(href: string): Found {
 }
 
 const step = (i: number) => ({ '--i': i }) as CSSProperties;
+
+/**
+ * A picture that a tap enlarges around the point that was tapped, and a second tap fits again.
+ * Enlarged, it scrolls under the finger as any page does. On a phone a certificate or a page of
+ * the résumé is too small to read at the width of the screen.
+ */
+function Zoomable({ by, className, children }: { by: number; className?: string; children: (zoomed: boolean) => ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [zoomed, setZoomed] = useState(false);
+  const at = useRef<{ fx: number; fy: number; x: number; y: number } | null>(null);
+  const toggle = (event: MouseEvent<HTMLButtonElement>) => {
+    const frame = box.current?.getBoundingClientRect();
+    if (!frame) return;
+    const inner = event.currentTarget.getBoundingClientRect();
+    // a key press has no position: the middle of what is in view
+    const [x, y] = event.detail ? [event.clientX, event.clientY] : [frame.left + frame.width / 2, frame.top + frame.height / 2];
+    at.current = { fx: (x - inner.left) / inner.width, fy: (y - inner.top) / inner.height, x: x - frame.left, y: y - frame.top };
+    setZoomed((z) => !z);
+  };
+  useLayoutEffect(() => {
+    const el = box.current;
+    const inner = el?.firstElementChild as HTMLElement | null;
+    const p = at.current;
+    if (!el || !inner || !p) return;
+    // the tapped point stays under the finger
+    el.scrollLeft = p.fx * inner.offsetWidth - p.x;
+    el.scrollTop = p.fy * inner.offsetHeight - p.y;
+    if (!motionAllowed()) return;
+    // The layout has already changed size. Only a transform plays: from the size it had.
+    inner.style.transformOrigin = `${(p.fx * 100).toFixed(2)}% ${(p.fy * 100).toFixed(2)}%`;
+    inner.animate([{ transform: `scale(${zoomed ? 1 / by : by})` }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(0.2, 0.9, 0.3, 1)' });
+  }, [zoomed, by]);
+  return (
+    <div ref={box} className={`portal__zoom${className ? ` ${className}` : ''}`}>
+      <button type="button" className="portal__zoom-inner" aria-pressed={zoomed} aria-label={zoomed ? COPY.zoomOut : COPY.zoomIn} style={{ width: zoomed ? `${by * 100}%` : undefined }} onClick={toggle}>
+        {children(zoomed)}
+      </button>
+    </div>
+  );
+}
+
+const resumePages: Ladder[] = images.resume;
+
+/** The résumé as pictures of its pages, where the PDF itself cannot be shown (lib/outbound.ts). */
+function Pages() {
+  return (
+    <Zoomable by={2.6} className="portal__pages">
+      {(zoomed) =>
+        resumePages.map((page, i) => (
+          <Picture
+            key={page.avif[0]}
+            img={page}
+            sizes={zoomed ? '(min-width: 768px) 2000px, 260vw' : '(min-width: 768px) 820px, 100vw'}
+            alt={`${COPY.kind.resume} ${i + 1} / ${resumePages.length}`}
+            className="portal__page"
+            eager={i === 0}
+          />
+        ))
+      }
+    </Zoomable>
+  );
+}
 
 function Dossier({ found, label, host }: { found: Found; label: string; host: string }) {
   let title = label || host;
@@ -115,8 +180,8 @@ function Dossier({ found, label, host }: { found: Found; label: string; host: st
           {found.cert.issuer}
         </p>
         {img ? (
-          <figure className="portal__plate portal__rise" style={step(3)}>
-            <Picture img={img} sizes="(min-width: 900px) 720px, 92vw" alt="" className="portal__img" eager />
+          <figure className="portal__plate portal__rise" style={{ ...step(3), '--ratio': img.width / img.height } as CSSProperties}>
+            <Zoomable by={2.2}>{(zoomed) => <Picture img={img} sizes={zoomed ? '(min-width: 900px) 1580px, 200vw' : '(min-width: 900px) 720px, 92vw'} alt="" className="portal__img" eager />}</Zoomable>
           </figure>
         ) : null}
       </>
@@ -139,6 +204,8 @@ export default function Portal({ link, open, onClose }: { link: Outbound | null;
   const found = useMemo(() => (link ? resolve(link.href) : null), [link]);
   const [copied, setCopied] = useState('');
   const [launching, setLaunching] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const going = useRef(false);
   const timers = useRef<number[]>([]);
   const address = useRef<HTMLSpanElement>(null);
   const exit = useRef<HTMLAnchorElement>(null);
@@ -147,6 +214,19 @@ export default function Portal({ link, open, onClose }: { link: Outbound | null;
     setCopied('');
     setLaunching(false);
   }, [link]);
+  useEffect(() => {
+    if (!open) return;
+    going.current = false;
+    setLeaving(false);
+  }, [open, link]);
+  // Its exit plays before it closes (portal.css, .is-leaving), timed here: Safari cannot
+  // transition a dialog that is closing, and showed none.
+  const leave = useCallback(() => {
+    if (going.current) return;
+    going.current = true;
+    setLeaving(true);
+    timers.current.push(window.setTimeout(onClose, motionAllowed() ? 240 : 0));
+  }, [onClose]);
   // the address prints itself once, and the way out leans toward the pointer
   useEffect(() => {
     if (!open || !link) return undefined;
@@ -193,31 +273,35 @@ export default function Portal({ link, open, onClose }: { link: Outbound | null;
     el.style.setProperty('--tx', '0');
     el.style.setProperty('--ty', '0');
   };
-  // Touch: the bar is a handle. The window follows the finger down 1:1; let go past a quarter
-  // of the screen and it closes, short of that it springs back.
-  const drag = useRef<{ id: number; from: number } | null>(null);
+  // Touch: the bar is a handle. The window follows the finger down 1:1. Let go past a third of
+  // its height, or with a flick, and it closes; short of that it springs back.
+  const drag = useRef<{ id: number; from: number; t: number; y: number; v: number } | null>(null);
   const pull = (event: PointerEvent<HTMLElement>) => {
     const win = event.currentTarget.parentElement;
-    if (!win) return;
+    const sheet = win?.closest('dialog');
+    if (!win || !sheet) return;
     if (event.type === 'pointerdown') {
       if (event.pointerType === 'mouse' || (event.target as Element).closest('button')) return;
-      drag.current = { id: event.pointerId, from: event.clientY };
+      drag.current = { id: event.pointerId, from: event.clientY, t: event.timeStamp, y: event.clientY, v: 0 };
       event.currentTarget.setPointerCapture(event.pointerId);
       win.removeAttribute('data-level');
       return;
     }
-    if (!drag.current || drag.current.id !== event.pointerId) return;
-    const by = Math.max(0, event.clientY - drag.current.from);
+    const d = drag.current;
+    if (!d || d.id !== event.pointerId) return;
+    const by = Math.max(0, event.clientY - d.from);
     if (event.type === 'pointermove') {
-      win.style.setProperty('--dy', `${by.toFixed(0)}px`);
-      win.style.setProperty('--drag', Math.min(1, by / innerHeight).toFixed(3));
+      // speed over the last stretch of the gesture, in px per ms
+      if (event.timeStamp - d.t > 16) Object.assign(d, { v: (event.clientY - d.y) / (event.timeStamp - d.t), t: event.timeStamp, y: event.clientY });
+      sheet.style.setProperty('--dy', `${by.toFixed(0)}px`);
+      sheet.style.setProperty('--drag', Math.min(1, by / win.offsetHeight).toFixed(3));
       return;
     }
     drag.current = null;
-    if (event.type === 'pointerup' && by > innerHeight * 0.25) return onClose();
     win.setAttribute('data-level', '');
-    win.style.setProperty('--dy', '0px');
-    win.style.setProperty('--drag', '0');
+    if (event.type === 'pointerup' && (by > win.offsetHeight / 3 || (d.v > 0.6 && by > 24))) return leave();
+    sheet.style.setProperty('--dy', '0px');
+    sheet.style.setProperty('--drag', '0');
   };
 
   const paper = found?.kind === 'paper' ? found.paper : null;
@@ -226,7 +310,7 @@ export default function Portal({ link, open, onClose }: { link: Outbound | null;
   const shown = url ? `${host}${url.pathname.replace(/\/$/, '')}${url.search}` : '';
 
   return (
-    <Dialog open={open} onClose={onClose} title={name} hideTitle className={`portal${found ? ` portal--${found.kind}` : ''}`}>
+    <Dialog open={open} onClose={leave} title={name} hideTitle className={`portal${found ? ` portal--${found.kind}` : ''}${leaving ? ' is-leaving' : ''}`}>
       {link && found ? (
         <>
           <div className="portal__space" aria-hidden="true">
@@ -246,16 +330,17 @@ export default function Portal({ link, open, onClose }: { link: Outbound | null;
                 <button type="button" className="icon-btn" aria-label={copied === 'link' ? COPY.copied : COPY.copy} title={COPY.copy} onClick={copy('link', link.href)}>
                   {copied === 'link' ? <CheckIcon /> : <CopyIcon />}
                 </button>
-                <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
+                <button type="button" className="icon-btn" aria-label="Close" onClick={leave}>
                   <CloseIcon />
                 </button>
               </header>
               <div className="portal__body">
-                {/* the résumé only opens here where a frame can show a PDF (lib/outbound.ts) */}
-                {found.kind === 'resume' ? (
+                {found.kind !== 'resume' ? (
+                  <Dossier found={found} label={link.label} host={host} />
+                ) : showsPdf() ? (
                   <iframe className="portal__pdf" src={`${LINKS.resume}#view=FitH`} title={HERO.resume.label} />
                 ) : (
-                  <Dossier found={found} label={link.label} host={host} />
+                  <Pages />
                 )}
                 <aside className="portal__aside">
                   {code ? (

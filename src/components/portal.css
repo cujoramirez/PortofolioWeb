@@ -1,6 +1,8 @@
-/* The portal (Portal.tsx): a window that grows out of a link over the page. The dialog itself is
-   the whole screen and stays still, because its children are placed against the viewport: a
-   transform on it would carry them along. Everything moves once, on transform and opacity. */
+/* The portal (Portal.tsx): a preview over the page. With room it is a window that grows out of
+   the link; on a phone it is a sheet that rises from the bottom edge, where the thumb is, and
+   is pulled back down. The dialog itself is the whole screen and stays still, because its
+   children are placed against the viewport: a transform on it would carry them along.
+   Everything moves once, on transform and opacity. */
 
 .dialog.portal,
 .dialog.portal[open] {
@@ -22,11 +24,10 @@
     transform: none;
   }
 }
-.portal::backdrop {
-  background: rgb(3 4 9 / 0.8);
-}
+/* the dimming is on .portal__space: a ::backdrop cannot be faded out before the dialog closes */
+.portal::backdrop,
 :root[data-theme='light'] .portal::backdrop {
-  background: rgb(15 17 21 / 0.58);
+  background: transparent;
 }
 /* its own bar replaces the dialog's */
 .portal > .dialog__head {
@@ -40,6 +41,24 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  background: rgb(3 4 9 / 0.8);
+  /* lifts as the sheet is pulled down (--drag from Portal.tsx, on the dialog) */
+  opacity: calc(1 - var(--drag, 0) * 0.9);
+}
+:root[data-theme='light'] .portal__space {
+  background: rgb(15 17 21 / 0.58);
+}
+.portal[open] .portal__space {
+  animation: portal-dim 0.3s var(--ease-out) backwards;
+}
+@keyframes portal-dim {
+  from {
+    opacity: 0;
+  }
+}
+.portal.is-leaving .portal__space {
+  opacity: 0;
+  transition: opacity 0.24s var(--ease-hover);
 }
 .portal__rays {
   position: absolute;
@@ -209,14 +228,14 @@
     opacity: 0;
   }
 }
-/* Closing, where a closed dialog can still be drawn: back into the link it came from. */
-@supports (transition-behavior: allow-discrete) and (overlay: auto) {
-  .dialog.portal {
-    transition: opacity 0.3s var(--ease-out) 0.04s, display 0.34s allow-discrete, overlay 0.34s allow-discrete;
-  }
-  .portal:not([open]) .portal__stage {
+/* Leaving (.is-leaving, timed by Portal.tsx before the dialog closes): back into the link. */
+.portal.is-leaving .portal__stage {
+  animation: portal-close 0.24s cubic-bezier(0.6, 0, 0.85, 0.3) both;
+}
+@keyframes portal-close {
+  to {
     transform: scale(0.04);
-    transition: transform 0.32s cubic-bezier(0.6, 0, 0.85, 0.3);
+    opacity: 0;
   }
 }
 
@@ -237,10 +256,10 @@
     content: '';
     position: absolute;
     left: 50%;
-    top: 4px;
-    width: 36px;
+    top: 6px;
+    width: 40px;
     height: 4px;
-    margin-left: -18px;
+    margin-left: -20px;
     border-radius: 2px;
     background: var(--hairline-strong);
   }
@@ -307,12 +326,49 @@
   background: var(--sunken);
   overflow: hidden;
 }
-.portal__img {
+/* a certificate at its own shape, short enough that the window need not scroll to show it */
+.portal__plate {
+  width: 100%;
+  max-width: calc(min(40dvh, 300px) * var(--ratio, 1.5));
+  aspect-ratio: var(--ratio, 1.5);
+}
+.portal__plate .portal__zoom {
+  height: 100%;
+}
+.portal__img,
+.portal__page {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 46vh;
-  object-fit: contain;
+}
+/* Zoomable (Portal.tsx): the box scrolls, the button inside it is the picture and grows */
+.portal__zoom {
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.portal__zoom-inner {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+.portal__zoom-inner[aria-pressed='true'] {
+  cursor: zoom-out;
+}
+.portal__zoom-inner:focus-visible {
+  outline-offset: -4px;
+}
+/* the résumé's pages, one under the other */
+.portal__pages {
+  background: var(--sunken);
+}
+.portal__pages picture + picture .portal__page {
+  margin-top: 8px;
+}
+.portal__page {
+  background: #fff;
 }
 .portal__framed {
   max-width: 62ch;
@@ -442,18 +498,43 @@
   }
 }
 
-/* Phones: the window is the screen, the way out sits under the thumb, and there is no code to
-   scan (the phone is already in the hand). */
+/* Phones: a sheet. It rises from the bottom edge with a little spring, as tall as what it holds
+   and never the whole screen, so the page stays in sight above it. The way on sits under the
+   thumb, and there is no code to scan (the phone is already in the hand). */
 @media (max-width: 767px) {
   .portal__stage {
-    padding: 8px;
+    place-items: end center;
+    padding: 0;
+    perspective: none;
+  }
+  .portal[open] .portal__stage,
+  .portal.is-leaving .portal__stage {
+    animation: none;
   }
   .portal__window {
-    height: 100%;
-    border-radius: 22px;
+    width: 100%;
+    height: auto;
+    max-height: calc(100dvh - 52px);
+    border-width: 1px 0 0;
+    border-radius: 26px 26px 0 0;
+    /* solid below its foot: springing past the edge shows no gap */
+    box-shadow: var(--shadow-near), 0 96px 0 var(--elevated);
+    /* it only follows the finger down: a sheet edge to edge does not lean or shrink */
+    transform: translateY(var(--dy, 0px));
+  }
+  /* what scrolls inside takes all the height there is */
+  .portal--resume .portal__window {
+    height: calc(100dvh - 52px);
+  }
+  .portal[open] .portal__window {
+    animation: portal-rise 0.5s cubic-bezier(0.2, 1.16, 0.3, 1) backwards;
+  }
+  .portal.is-leaving .portal__window {
+    transform: translateY(calc(100% + 40px));
+    transition: transform 0.24s cubic-bezier(0.4, 0, 1, 1);
   }
   .portal__bar {
-    padding-left: 14px;
+    padding: 16px 10px 10px 14px;
   }
   .portal__site {
     display: none;
@@ -461,6 +542,9 @@
   .portal__body {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .portal__dossier {
+    justify-content: flex-start;
   }
   .portal__aside {
     flex-direction: row;
@@ -471,6 +555,11 @@
   }
   .portal__aside .btn {
     flex: 1 1 auto;
+  }
+}
+@keyframes portal-rise {
+  from {
+    transform: translateY(100%);
   }
 }
 @media (prefers-reduced-transparency: reduce) {

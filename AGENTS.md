@@ -8,14 +8,19 @@ This file provides guidance to Codex when working with code in this repository.
 - **Build:** `npm run build` (for local verification prefer `npx vite build --outDir /tmp/pf-dist`, then `npx vite preview --outDir /tmp/pf-dist --port 4173`)
 - **Lint:** `npm run lint`
 - **Type check:** `npm run typecheck`
-- **Images:** `npm run images` (AVIF/WebP ladders into `public/img` + manifest `src/data/images.json`; content-hashed, incremental)
+- **Images:** `npm run images` (AVIF/WebP ladders into `public/img` + manifest `src/data/images.json`; content-hashed, incremental; on macOS it also renders the résumé PDF's pages, so run it after replacing `public/Gading_Resume.pdf`)
 - **Vision data:** `npm run vision` (macOS: runs Apple's Vision framework on the hero portrait, see below)
 - **App footage:** `npm run sequences` (requires ffmpeg; leaves an empty manifest when no clips exist)
 
 There are no tests configured in this project.
 
 **Utility scripts (`scripts/`, run with `node`):**
-- `build-images.mjs` — responsive image ladders (hero portrait keeps its alpha channel)
+- `build-images.mjs` — responsive image ladders (hero portrait keeps its alpha channel), and the
+  résumé's pages as pictures: `resume-pages.swift` (PDFKit) renders each page of
+  `public/Gading_Resume.pdf` at 2000 px, named after the PDF's hash so an unchanged PDF renders
+  nothing; without Swift the pages in the manifest stay. Its pruning skips `vision-*` and
+  `depth-*`, which belong to the vision build: it deleted both depth maps the first time it ran
+  after they existed.
 - `generate-og.mjs` — social preview `public/og-image.jpg` (`--favicons` also rebuilds icons)
 - `generate-project-covers.mjs` — schematic cover illustrations (`src/assets/projects/cover-*.jpg`) for
   projects whose screenshots were lost; the detail dialog labels them "Illustration". Run `npm run images` after.
@@ -387,6 +392,18 @@ demo; one new tab for the profiles, the channel and the phone's résumé. Click-
 Tab walk 95 and 78 stops with none hidden. The checks listed for the first version (nesting,
 focus, Back, the pull-down) were rerun on the previews that remain.
 
+2026-10-11 (the phone sheet, the résumé's pages, zoom): first-load JS 113.5 KB gzip (123.0
+transferred), slow-4G phone LCP 1.72 to 1.74 s, CLS 0.000, portal INP 40 ms on both presets at
+CPU x4 with 0 frames after. Résumé pages: 60, 110 and 170 KB each in AVIF at 800, 1280 and
+2000 px, fetched only when the preview opens. With touch events at 440 x 956 and 390 x 760: the
+sheet stands 52 px below the top for the résumé and at its content's height otherwise (a paper
+757 px, a certificate 687, a video 468 on the larger phone), the way on 12 px above the bottom
+edge; a tap enlarges a page 2.6 times around the tapped point and loads the 2000 px picture; a
+slow pull of 110 px springs back and a 90 px flick closes. Click-through 48 of 48, Tab walk 95
+and 78 stops with none hidden, the link map as in the table. Seen in the iOS Simulator (iPhone
+17) and in Playwright's WebKit, where the timed exit was caught mid-way on desktop. Not
+verified: real Safari, a real finger on iOS, pinch.
+
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
 button's bars fold into an X, rows lean toward a pressing finger 1:1; picking a row flies it at the
@@ -430,14 +447,14 @@ the link's surroundings say. Every other link leaves for a new tab in one click.
 | Link | A plain click |
 |---|---|
 | Résumé, with a mouse | portal: the PDF itself in a frame |
-| Résumé, on a phone | new tab: no phone can show a PDF in a frame (Android shows nothing, iOS draws page one at full size over its neighbours) |
+| Résumé, on a phone | portal: its pages as pictures (`images.resume`), since no phone can show a PDF in a frame (Android shows nothing, iOS draws page one at full size over its neighbours) |
 | Paper title | portal: authors, the whole description, every keyword, Copy citation |
 | Certificate tile | portal: the certificate at full size |
 | Project demo that is a YouTube video or playlist | portal: the player (`youtube-nocookie.com`, loaded once the visitor opens it) |
 | Project demo that is a channel, LinkedIn, GitHub, Google Scholar | new tab |
-A link that opens the portal carries `data-preview` (the résumé is recognised by its path, and
-only where `showsPdf()`); the test is synchronous in the click handler, so every other link is
-left to the browser and `target="_blank"` works as written. The icon says which is which:
+A link that opens the portal carries `data-preview` (the résumé is recognised by its path); the
+test is synchronous in the click handler, so every other link is left to the browser and
+`target="_blank"` works as written. The icon says which is which:
 `ArrowUpRight` leaves, `PlayIcon` plays here, `ExpandIcon` opens here larger. A channel's
 uploads could be embedded but were not: the newest upload led the lecture series' demo with a
 conference talk. A playlist address would play (`lib/youtube.ts`). LinkedIn, GitHub, Scholar,
@@ -446,18 +463,29 @@ paper or a certificate shows this site's own material with the way on stated. Ev
 the address, Copy link, Open in a new tab, and on mouse devices a QR code of the address to
 carry on with a phone (`lib/qr.ts`: byte mode, level M, versions 1 to 10; all 28 addresses on
 the site and one string at each version's limit decoded correctly with Apple Vision).
+On a phone the portal is a sheet, not the desktop window made small (the owner asked what the
+best move for mobile was; the case for a preview is stronger there, where a new tab costs a trip
+through the tab switcher and a YouTube link jumps to its app). It rises from the bottom edge with
+a little spring, is as tall as what it holds and never the whole screen, so the page stays in
+sight above it, and keeps the way on under the thumb. The bar is a handle: the sheet follows the
+finger down 1:1 while the dimming lifts, closes past a third of its height or on a flick
+(0.6 px/ms), and springs back short of that. A certificate and the résumé's pages are too small
+to read at a phone's width, so a tap enlarges them around the tapped point and they scroll
+natively (`Zoomable`: the layout changes size at once and a transform plays from the old size).
+The exit is timed in script (`.is-leaving`, 240 ms, then the dialog closes) and the dimming sits
+on `.portal__space` rather than `::backdrop`: Safari cannot transition a closing dialog, and
+this way the window leaves the same in every engine.
 Motion, all one-shot on transform and opacity: the window scales out of the link's position with
 a little overshoot while streaks fall in behind it and stay as a still field; one light runs once
 round its rim (a conic gradient turned behind a border-wide mask, hidden without
 `mask-composite`); the dossier's lines stand up in turn; the address resolves out of scrambled
 glyphs; the QR code prints from the top under a scan line (a clip sliding against its content).
 The window leans toward a mouse 1:1 and a light follows the pointer; a window that holds a frame
-stays flat. On touch the bar is a handle: the window follows the finger down 1:1, closes past a
-quarter of the screen and springs back short of that. Open in a new tab is a real link (it keeps
-`target="_blank"`), and the window flies at the viewer as the tab opens.
+stays flat. Open in a new tab is a real link (it keeps `target="_blank"`), and the window flies
+at the viewer as the tab opens.
 Rules it keeps: a click with a modifier key, a middle click and the context menu do what the
 browser does, and without JavaScript the links are ordinary ones (`target="_blank"` stays in the
-markup). Only the click test is in the first bundle (0.6 KB gzip); the rest is a 5.1 KB chunk
+markup). Only the click test is in the first bundle (0.6 KB gzip); the rest is a 5.9 KB chunk
 fetched when a pointer or the keyboard first reaches such a link, mounted in a React root of its
 own. The portal has a history entry, so Back closes it, as Back would have left the new tab.
 Three things that entry taught: stepping back makes the browser scroll to the section the
