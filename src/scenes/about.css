@@ -259,9 +259,10 @@
 .is-motion .about__face--front::after {
   opacity: var(--solid, 1);
 }
-/* the café photo arrives inside the hero portrait's silhouette as the portrait fades out (phones
-   turn the card over instead, and AboutScene shows the photo at the edge-on moment) */
-.is-motion:not(.is-mobile) .about__swap {
+/* the café photo arrives inside the hero portrait's silhouette as the portrait fades out (without
+   a hero hand-off, e.g. a short phone, --handoff is unset and the silhouette simply shows) */
+.is-motion:not(.is-mobile) .about__swap,
+.is-pinned .about__swap {
   opacity: var(--handoff, 1);
 }
 .is-motion .about__reveal {
@@ -297,12 +298,6 @@
 .is-motion .about__frame {
   display: block;
   pointer-events: none;
-}
-/* Phones have no silhouette stage, and a frame only where the hero hands its portrait over. */
-.is-mobile .about__tint,
-.is-mobile .about__edge,
-.is-mobile:not(.is-handed) .about__frame {
-  display: none;
 }
 .about__frame i {
   position: absolute;
@@ -430,11 +425,6 @@
 .is-pinned .about__face--back {
   display: none;
 }
-/* the card's surface, faint under the docked portrait (--fill, AboutScene) and solid once the
-   photo is round */
-.is-pinned .about__plate {
-  opacity: max(var(--solid, 1), calc(var(--fill, 0) * 0.6));
-}
 /* a scrim for the title (and the bars), once the photo has filled the card */
 .is-pinned .about__swap::after {
   content: '';
@@ -506,12 +496,6 @@
   font-size: 1rem;
   line-height: 1.62;
   transform-style: preserve-3d;
-}
-/* The first chapter's text turns in with a viewing distance of its own (AboutScene). Flat, so
-   the stage's perspective cannot be applied on top of it: engines differ on passing that down
-   (see hero.css). */
-.is-handed article.about__chapter:first-of-type {
-  transform-style: flat;
 }
 .is-pinned .about__rise,
 .is-pinned .about__word {

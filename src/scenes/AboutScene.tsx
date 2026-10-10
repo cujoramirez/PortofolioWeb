@@ -10,10 +10,7 @@
  *      the card; the frame gives way to the card's surface and shadow.
  * Then each chapter's sentences rise into place, the outgoing chapter tilts back, and a quote
  * flies through between chapters. The card tilts per chapter and flips to its fact sheet in
- * chapter 3.
- * Phones: the card turns over instead. The hero's portrait docks in the frame, the two turn
- * edge-on together, and the photo comes round in its place (see addTurn). Without a hero hand-off
- * the photo is simply there, or turns in as its card scrolls into view where the page flows.
+ * chapter 3. Phones: not pinned; each block rises once as it enters.
  */
 import { Fragment, useRef, type CSSProperties } from 'react';
 import Picture, { aboutLadder } from '../components/Picture';
@@ -24,7 +21,7 @@ import { landAt } from '../lib/jump';
 import { useScene } from '../lib/useScene';
 import { afterLoad } from '../lib/idle';
 import type { AboutRelief } from './aboutRelief';
-import { HERO_DISPERSE, HERO_PIN, SHEET_AHEAD, TURN_EDGE, TURN_FROM, TURN_PERSP, inAbout } from './handoff';
+import { HERO_DISPERSE, HERO_PIN } from './handoff';
 import Metrics from './Metrics';
 import './about.css';
 
@@ -116,44 +113,16 @@ export default function AboutScene() {
       ScrollTrigger.addEventListener('refreshInit', size);
     }
 
-    // A phone whose hero hands its portrait over: HeroScene, built first, has set the overlap.
-    const handed = mobile && pinned && !!section.style.getPropertyValue('--hero-overlap');
-    section.classList.toggle('is-handed', handed);
-    // phones never mask the photo with the silhouette (see addTurn)
-    const [photo] = q('.about__reveal') as HTMLElement[];
-    photo.classList.toggle('is-open', mobile);
-    const unphone = () => {
-      section.classList.remove('is-handed');
-      photo.classList.remove('is-open');
-    };
-
     // A ScrollTrigger refresh restores progress without onUpdate: these repaint from the state.
     const repaint: (() => void)[] = [];
     const onRefresh = () => repaint.forEach((fn) => fn());
 
-    // The photo starts framed like the hero portrait that landed on it (1.3x, heads aligned), then
-    // eases out to the full frame. Worked out for any card shape: the portrait lands centred at
-    // the card's height (cutout head at 49% / 24% of it); the photo is object-fit: cover at
-    // 55% / 35%, its head at about 57% / 41% of the image.
-    const Z = 1.3;
-    const zoomFrom = () => {
-      const W = card.offsetWidth;
-      const H = card.offsetHeight;
-      const ratio = aboutLadder.width / aboutLadder.height;
-      // rendered image size under object-fit: cover
-      const ih = Math.max(H, W / ratio);
-      const iw = ih * ratio;
-      const offX = (W - iw) * 0.55;
-      const offY = (H - ih) * 0.35;
-      const pw = H * 0.75;
-      return { x: (W - pw) / 2 + 0.49 * pw - Z * (offX + 0.57 * iw), y: 0.24 * H - Z * (offY + 0.41 * ih) };
-    };
-
     /** The reveal (see the header), placed so the silhouette starts growing at `at`. */
-    const addReveal = (tl: gsap.core.Timeline, at: number) => {
+    const addReveal = (tl: gsap.core.Timeline, at: number, swapIn: boolean) => {
       // 1: the frame draws itself (on desktop while the portrait is in flight)
       tl.fromTo(q('.about__frame i'), { scale: 0 }, { scale: 1, duration: 0.07, stagger: 0.045, ease: 'power1.inOut', immediateRender: true }, at - 0.27);
-      // 2: the café photo inside the silhouette (CSS, in step with the hero's --handoff)
+      // 2: the café photo inside the silhouette (desktop: CSS, in step with the hero's --handoff)
+      if (swapIn) tl.fromTo(q('.about__swap'), { opacity: 0 }, { opacity: 1, duration: 0.07, immediateRender: true }, at - 0.08);
       // 3: the silhouette grows from the face; its content is counter-scaled so the photo stays put
       const [reveal] = q('.about__reveal') as HTMLElement[];
       const [counter] = q('.about__counter') as HTMLElement[];
@@ -175,6 +144,23 @@ export default function AboutScene() {
         .fromTo(q('.about__edge'), { opacity: 1 }, { opacity: 0, duration: 0.22, ease: 'power1.in', immediateRender: true }, at + 0.06)
         .fromTo(q('.about__frame'), { opacity: 1 }, { opacity: 0, duration: 0.12, immediateRender: true }, at + 0.2)
         .fromTo(card, { '--solid': 0 }, { '--solid': 1, duration: 0.14, immediateRender: true }, at + 0.18);
+      // The photo starts framed like the hero portrait that landed on it (1.3x, heads aligned), then
+      // eases out to the full frame. Worked out for any card shape: the portrait lands centred at
+      // the card's height (cutout head at 49% / 24% of it); the photo is object-fit: cover at
+      // 55% / 35%, its head at about 57% / 41% of the image.
+      const Z = 1.3;
+      const zoomFrom = () => {
+        const W = card.offsetWidth;
+        const H = card.offsetHeight;
+        const ratio = aboutLadder.width / aboutLadder.height;
+        // rendered image size under object-fit: cover
+        const ih = Math.max(H, W / ratio);
+        const iw = ih * ratio;
+        const offX = (W - iw) * 0.55;
+        const offY = (H - ih) * 0.35;
+        const pw = H * 0.75;
+        return { x: (W - pw) / 2 + 0.49 * pw - Z * (offX + 0.57 * iw), y: 0.24 * H - Z * (offY + 0.41 * ih) };
+      };
       tl.fromTo(
         q('.about__img'),
         { scale: Z, x: () => zoomFrom().x, y: () => zoomFrom().y, transformOrigin: '0 0' },
@@ -183,42 +169,14 @@ export default function AboutScene() {
       );
     };
 
-    /*
-     * Phones: the card turns over. The frame draws while the hero's portrait is in flight; once it
-     * has docked, the frame and the portrait turn edge-on together (HeroScene turns the portrait,
-     * in step, see handoff.ts) and the photo comes round in their place. The two pictures are
-     * never on screen together: they swap while the card shows only its edge. Until 2026-10-10
-     * phones crossfaded to the photo inside the portrait's silhouette, as desktop does. On a card
-     * as wide as the screen that was two faces at once, then a profile cut off by a frontal outline.
-     */
-    const addTurn = (tl: gsap.core.Timeline) => {
-      const [from, edge] = [inAbout(TURN_FROM), inAbout(TURN_EDGE)];
-      // about its middle (as a line that rises, the card would hinge on its bottom edge)
-      const flat = { rotationY: 0, scale: 1, transformPerspective: TURN_PERSP, transformOrigin: '50% 50%' };
-      tl.fromTo(q('.about__frame i'), { scale: 0 }, { scale: 1, duration: 0.06, stagger: 0.035, ease: 'power1.inOut', immediateRender: true }, 0.01)
-        // the card's surface shows faintly under the portrait: what turns is a card, not an outline
-        .fromTo(q('.about__plate'), { '--fill': 0 }, { '--fill': 1, duration: 0.08, immediateRender: true }, from - 0.1)
-        .fromTo(card, flat, { ...flat, rotationY: 90, duration: edge - from, ease: 'power2.in', immediateRender: false }, from)
-        .fromTo(q('.about__swap'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.001, immediateRender: true }, edge)
-        // it comes round a little further off and settles forward
-        .fromTo(card, { rotationY: -90, scale: 0.92 }, { rotationY: 0, scale: 1, duration: 0.13, ease: 'power2.out', immediateRender: false }, edge)
-        .fromTo(
-          q('.about__img'),
-          { scale: Z, x: () => zoomFrom().x, y: () => zoomFrom().y, transformOrigin: '0 0' },
-          { scale: 1, x: 0, y: 0, duration: 0.3, ease: 'power2.inOut', immediateRender: true },
-          edge,
-        )
-        .fromTo(card, { '--solid': 0 }, { '--solid': 1, duration: 0.12, immediateRender: true }, edge + 0.08)
-        .fromTo(q('.about__frame'), { opacity: 1 }, { opacity: 0, duration: 0.1, immediateRender: true }, edge + 0.12);
-    };
-
     if (!pinned) {
-      // flowing phone layout: the photo turns in as its card scrolls up into view; blocks rise once
-      gsap.fromTo(
-        front,
-        { rotationY: -70, scale: 0.94, opacity: 0, transformPerspective: TURN_PERSP },
-        { rotationY: 0, scale: 1, opacity: 1, ease: 'power2.out', scrollTrigger: { trigger: card, start: 'top 92%', end: 'top 40%', scrub: 0.6 } },
-      );
+      // flowing phone layout: the reveal plays as the card scrolls up into view; blocks rise once
+      const reveal = gsap.timeline({
+        defaults: { ease: 'none' },
+        scrollTrigger: { trigger: card, start: 'top 92%', end: 'top 20%', scrub: 0.6, onRefresh },
+      });
+      addReveal(reveal, 0.3, true);
+      reveal.set({}, {}, 0.66);
       q('.about__rise')
         .filter((el) => el !== card)
         .forEach((el) => {
@@ -227,7 +185,7 @@ export default function AboutScene() {
           if (el.classList.contains('about__sentence')) gsap.fromTo(el, { '--rise': 0 }, { '--rise': 1, ...rise });
           else gsap.from(el, { y: 36, rotateX: -35, opacity: 0, ...rise });
         });
-      return () => { unphone(); unsize(); };
+      return unsize;
     }
 
     const n = chapters.length;
@@ -253,7 +211,7 @@ export default function AboutScene() {
     let reliefReady = false;
     let reliefPending = false;
     const counter = q('.about__counter')[0] as HTMLElement;
-    const reveal = photo;
+    const reveal = q('.about__reveal')[0] as HTMLElement;
     const updateRelief = () => {
       // The growing silhouette allocates a large layer; the canvas waits until identity returns.
       const img = counter.querySelector('.about__img');
@@ -281,43 +239,29 @@ export default function AboutScene() {
     let t = LEAD + REVEAL;
     chapters.forEach((ch, i) => {
       starts.push(t);
-      // Phones: the first chapter does not wait for the reveal's slot. Where the hero hands over,
-      // its text is the other side of the hero's interface card: it comes round whole as that card
-      // turns away (addTurn), and its number and title land on the photo once the photo is round.
-      // Without a hand-off the photo is already there and the chapter starts with the pin.
+      // Phones: the first chapter's sentences rise as the hero's interface card slides off the same
+      // half of the screen, and its title lands on the photo with the portrait. Waiting for the
+      // reveal left that half empty for a quarter of a screen of scrolling.
       const early = mobile && i === 0;
-      const turned = early && handed;
-      const body = !early ? t : handed ? inAbout(TURN_EDGE - SHEET_AHEAD) : 0.06;
-      const head = !early ? t : handed ? inAbout(TURN_EDGE) + 0.08 : 0;
+      const enter = early ? LEAD - 0.06 : t;
       // the scrim behind the chapter (about.css) arrives with its first line
-      tl.fromTo(ch, { '--scrim': 0 }, { '--scrim': 1, duration: 0.14, immediateRender: true }, Math.min(body, head) + 0.02);
-      if (turned) {
-        const [text] = ch.querySelectorAll<HTMLElement>('.about__text');
-        tl.fromTo(text, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.001, immediateRender: true }, body).fromTo(
-          text,
-          { rotationY: -90, transformPerspective: TURN_PERSP },
-          { rotationY: 0, duration: 0.13, ease: 'power2.out', immediateRender: true },
-          body,
-        );
-      }
+      tl.fromTo(ch, { '--scrim': 0 }, { '--scrim': 1, duration: 0.14, immediateRender: true }, enter + 0.02);
       // Number, title, then one sentence at a time. A sentence is an inline box and takes no
       // transform, so its words rise instead, all from the sentence's one --rise (about.css).
-      const lines = [...ch.querySelectorAll<HTMLElement>('.about__rise')].filter((line) => !turned || !line.classList.contains('about__sentence'));
+      const lines = [...ch.querySelectorAll<HTMLElement>('.about__rise')];
       const heads = lines.filter((line) => !line.classList.contains('about__sentence')).length;
+      const body = early ? LEAD - 0.2 - heads * 0.05 : enter;
       // Every line is up before the chapter leaves: at a fixed 0.05 apart, the fifth sentence of a
       // chapter was still at half opacity when the exit began.
-      const last = (early ? lines.length - heads : lines.length) - 1;
-      const step = Math.min(0.05, (t + CHAPTER - 0.12 - body - 0.02 - RISE - 0.05) / Math.max(1, last));
+      const step = Math.min(0.05, (t + CHAPTER - 0.12 - body - 0.02 - RISE - 0.05) / Math.max(1, lines.length - 1));
       lines.forEach((line, j) => {
         const sentence = line.classList.contains('about__sentence');
-        // early: the two heads keep their own beat, and the sentences count from the first of them
-        const at = !early ? body + j * step : sentence ? body + (j - heads) * step : head + j * 0.05;
         tl.fromTo(
           line,
-          // on a phone these lines sit on the photo: no travel in depth, the card is right behind them
+          // on a phone these lines sit on the photo: travelling in depth, the silhouette hid them mid-rise
           sentence ? { '--rise': 0 } : { rotateX: -65, z: mobile ? 0 : -120 * k, y: 24, opacity: 0 },
           { ...(sentence ? { '--rise': 1 } : { rotateX: 0, z: 0, y: 0, opacity: 1 }), duration: RISE, ease: 'power2.out', immediateRender: true },
-          at + 0.02,
+          (sentence ? body : enter) + 0.02 + j * step,
         );
       });
       if (i < n - 1) {
@@ -337,10 +281,9 @@ export default function AboutScene() {
     });
     tl.set({}, {}, total);
 
-    // Desktop and tablet: the frame draws during the hero portrait's flight and the silhouette swap
-    // follows the hero's --handoff (CSS). Phones turn the card over instead.
-    if (!mobile) addReveal(tl, LEAD);
-    else if (handed) addTurn(tl);
+    // The frame draws during the hero portrait's flight and the silhouette swap follows the hero's
+    // --handoff (CSS), on phones too when About pins under the hero.
+    addReveal(tl, LEAD, false);
 
     if (mobile) {
       // phones: the card stays flat (the title sits on it) and its bars track the chapters
@@ -366,7 +309,7 @@ export default function AboutScene() {
     // section's top is the middle of the hero's hand-off.
     const unland = landAt(section.id, () => tl.scrollTrigger, (LEAD + REVEAL + CHAPTER - 0.14) / total);
 
-    return () => { live = false; unland(); cancelRelief(); relief?.destroy(); unphone(); unsize(); };
+    return () => { live = false; unland(); cancelRelief(); relief?.destroy(); unsize(); };
   });
 
   return (
