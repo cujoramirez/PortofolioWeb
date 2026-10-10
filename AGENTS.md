@@ -116,25 +116,45 @@ frame, and the browser's clamp left Contact 63 px short on a phone.
   from the face (masked layer scaled up, content counter-scaled: transforms only) until the photo fills
   the card. About pins *under* the pinned hero (negative margin `--hero-overlap`) so the card is
   stationary during the hand-off (`scenes/handoff.ts`).
-  Phones (same pin length as About's phone pin, 0.9): two zones, held from the first frame to
-  About's first chapter, the picture on top and a text sheet below. The plate, name and portrait
-  tip into an isometric stack fitted to the top zone (both ends of its slow turn must fit; it is
-  centred, and its depth steps scale with it) while the interface settles below as a solid card
-  (readable, live). The stack stands up and unwinds through the whole hold while the scan runs.
-  Then it faces you, the name's letters fold away in order (a random scatter flew letters over the
-  face on a narrow screen), the portrait flies into the pinned About card, and the interface card
-  slides off the bottom as About's first chapter rises in the same half (AboutScene starts that
-  chapter's sentences before the hand-off lands, on phones only). The version before 2026-10-10
-  lifted the card away half-way and left half the screen empty twice; the owner called it weird.
-  The portrait's flight starts from a stated pose (`fromTo`): the stack is placed by `render()`
-  after the timeline, so a jump across the hand-off recorded a stale start and the portrait flew in
-  from its resting place. One state object
-  drives the rigid stack: shared hinge per element, layers offset along the *tilted plane's normal*
-  (a plain z offset only shrinks them). The phone stack is drawn without perspective
-  (`perspective: none`) and fitted by projecting its real corners: iOS passes `perspective` only
-  through an element that has a transform of its own, so a perspective-based fit clipped there. Name split
-  as `words,chars` (unbreakable `.hero__word`), else min-content wraps per letter. Short phones get a
-  lighter exploded view. The plate's fade is set from progress in `sync()`: a GSAP opacity tween wrote
+  Phones (same pin length as About's phone pin, 0.9): read upright, with no layer stack. One
+  picture on top and one text card below, from the first frame to About's first chapter. The name
+  sinks back into the plate and fades, the portrait steps forward until it fills the place of the
+  pinned About card (the same box, so nothing moves at the hand-off), and the interface rises
+  under it as a card, in step with the portrait's foot so it never climbs over the picture. Under
+  an About card that card is a bottom sheet taking the rest of the screen (`--pad` on
+  `.hero__ui`). The Vision scan then crosses the portrait at full width at the pace of the scroll:
+  the segmentation fills in behind the beam (`.cv-seg` is a clip that slides down while its
+  content slides back, driven by `--wipe`; it trails the beam by the 0.07 of the height the
+  relief can bend it), the face's box and landmarks arrive once the beam has cleared the face,
+  and the person's box once it has cleared the person. The depth relief turns the picture by a
+  virtual 24 degrees to either side through the scan (the portrait itself stays square), and its
+  canvas is drawn for the scaled-up size (`zoom`): at the resting size it was soft. Then About's
+  frame draws around the standing portrait, the café photo arrives inside the silhouette as on
+  desktop, and the interface sheet slides off the bottom as About's first chapter rises in the
+  same half (AboutScene starts that chapter's sentences before the hand-off lands, on phones
+  only). The pose comes from About's card, and About sizes that card on `refreshInit` after the
+  hero's listener has run: `fit()` is only marked stale there and computed by the first tween
+  value that asks for it. Where About does not pin on a phone (or has not mounted) there is no
+  card: the portrait fills the plate, and at the end of the pin the hero keeps its last frame and
+  scrolls away. Hidden, as it was until then, it left a screen of nothing before About arrived
+  (375 x 667). Short phones (no room for the interface card under a 200 px picture) get the same
+  reading in a 0.85 pin with the interface in the page flow. The mobile variant also covers wide
+  windows under 620 px tall: those keep the wide layout and a lighter exploded stack
+  (`shortWide`), drawn without perspective (`perspective: none`: iOS passes `perspective` only
+  through an element that has a transform of its own). Phones do not split the name into
+  characters (nothing scatters), so CSS gives its lines the one gradient the split paints: each
+  line shows its part of a gradient the size of the name's box. The markup has two lines and the
+  first wraps into two rows, which the offsets assume. At rest the portrait is 66 % of the plate,
+  or less where the name's three rows reach further down: on a 320 px phone the head covered the
+  end of "Perdana".
+  History, in the owner's words. The first phone hero lifted a card away half-way and left half
+  the screen empty twice ("weird"). The two-zone rebuild kept a tilted isometric stack of plate,
+  name and portrait ("the transition from hero to about is weird on mobile"). A card turn then
+  replaced the silhouette hand-off, which was the wrong part: "NOOOO the previous transition was
+  better, what i meant is the hero section as we scroll it's ass on mobile like why is it like
+  this? so unnecessary, create a specialized one for mobile". The silhouette hand-off stays, and
+  the stack does not come back on phones: fitted to one it was a small tilted thumbnail.
+  The plate's fade is set from progress in `sync()`: a GSAP opacity tween wrote
   the plate's mid-intro opacity (0) at build time and left it invisible. For the same reason the
   index's first-paint intro sits on its `<ol>`, not on the element GSAP fades.
   `--handoff` sits on the portrait and on About's `.about__swap`, `--hero-overlap` on the About section.
@@ -266,7 +286,7 @@ reuse geometry while viewport and font state are unchanged; and a custom propert
 on the element that reads it, never on `<html>`, where every write restyles the whole document
 (`--handoff` and `--hero-overlap` there cost two 1900-element recalcs per refresh; phone scroll
 blocking was 85 to 102 ms with them and 49 to 68 ms without). Hero relief reuses its canvas size and
-does no layout reads after its strength reaches zero. The lighter hero stack also runs in wide
+does no layout reads after its strength reaches zero. The lighter hero stack runs only in wide
 windows below 620 px tall; its portrait belongs beside the intro there, sized from the fitted name and
 anchored right so it does not cover the text.
 
@@ -290,6 +310,21 @@ HTML 15.0 KB, pins unchanged (phone hero 1.08, About 2.30, 47 % of the page), cl
 48, Tab walk 95 and 78 stops with none hidden, no dead run on the phone, the phone hero and the
 landings seen in the iOS Simulator. LCP, scroll frames and INP were not re-measured cleanly: a
 game was running on the Mac. Side by side with the previous build under that load they matched.
+
+Still later on 2026-10-10 (phone hero read upright, silhouette hand-off restored): first-load JS
+112.8 KB gzip (122.3 transferred), HTML 15.1 KB, effects 7.0 KB of 8, pins unchanged (48 % of the
+page at 440 x 956, the same as the build before), no dead run in the phone hero or About at
+440 x 956 and 390 x 844, click-through 48 of 48, Tab walk 95 and 78 stops with none hidden, every
+jump landing complete. Desktop, tablet and short wide hero frames are pixel-identical to the
+previous build up to the dispersal, whose letter scatter is random. Seen at 440 x 956 (both
+themes, down and back up, and at device pixel ratio 3), 390 x 844, 390 x 760, 360 x 740,
+375 x 667 (About flows), 375 x 600 and 320 x 568 (short), and in the iOS Simulator (iPhone 17).
+The game was still running. Slow-4G phone LCP read 1.73 to 1.75 s in a quieter spell (one run
+1.91) and 2.02 to 2.23 s later, against 2.09 to 2.26 s for the previous build in those later
+minutes: the 2.0 s budget held only in the quieter spell. Phone scroll blockingDuration was 243
+to 264 ms against 281 ms for the previous build, again in the same minutes, so the 100 ms limit
+is unverified. CLS 0.000 (one run of twelve read 0.001 and listed no shift source), idle
+frames 0.
 
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the

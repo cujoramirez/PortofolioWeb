@@ -459,8 +459,10 @@
     word-spacing: normal;
   }
   .hero__portrait {
-    /* starts below the name so no letters are covered on a narrow screen */
-    --portrait-h: 66%;
+    /* Starts below the name so no letters are covered: 66% of the plate, or less on a small
+       phone, where three lines of the name (22px down, 0.9 line-height) reach further into it.
+       The cutout's hair starts 12% down its box. */
+    --portrait-h: min(66%, (100% - 22px - clamp(3.5rem, 15vw, 5.25rem) * 2.7) / 0.88);
     align-self: end;
     justify-self: end;
     left: auto;
@@ -493,6 +495,17 @@
    HeroScene, is what its surface gains above and below the text. No layer tags: there is no
    stack to name (HeroScene, "read upright"). */
 @media (max-width: 767px) {
+  /* One gradient over the whole name, as the character split paints it on wider screens. Each
+     line shows its part of a gradient the size of the name's box: three rows of 0.9em (the first
+     line wraps into two) with 22px 20px around them. */
+  .hero.is-motion .hero__line {
+    background-position: -20px -22px;
+    background-size: calc(100% + 40px) calc(2.7em + 44px);
+    background-repeat: no-repeat;
+  }
+  .hero.is-motion .hero__line:nth-child(2) {
+    background-position-y: calc(-22px - 1.8em);
+  }
   .hero.is-motion .hero__ui {
     isolation: isolate;
   }
