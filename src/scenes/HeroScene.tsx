@@ -13,8 +13,9 @@
  *   0.45-0.75  hold the exploded stack; tags and overlay fade
  *   0.75-1.00  disperse: interface rises, the name scatters in z, the backdrop recedes, and the
  *              portrait flies into the About card and crossfades into its photo (see handoff.ts)
- * Phones: see "the show" below (an isometric exploded stack, the interface as a card, the Vision
- * scan, and the same hand-off to the About card); short phones get a lighter exploded view.
+ * Phones: see "two zones" below (an isometric exploded stack, the interface as a card, the Vision
+ * scan, then the portrait docks in the About card and turns over with it); short phones get a
+ * lighter exploded view.
  */
 import { useEffect, useRef } from 'react';
 import { gsap, ScrollTrigger, SplitText } from '../lib/gsap';
@@ -23,7 +24,7 @@ import { showOnFocus } from '../lib/focusStep';
 import { fontsReady } from '../lib/fonts';
 import { refreshSoon } from '../lib/scroll';
 import { useScene } from '../lib/useScene';
-import { HERO_DISPERSE, HERO_PIN, leadPx, offsetWithin } from './handoff';
+import { HERO_DISPERSE, HERO_PIN, SHEET_AHEAD, TURN_EDGE, TURN_FROM, TURN_PERSP, leadPx, offsetWithin } from './handoff';
 import type { Relief } from './heroRelief';
 import { afterLoad } from '../lib/idle';
 
@@ -363,12 +364,15 @@ export default function HeroScene() {
       }
       // The backdrop fades during the dispersal. Set from progress, not tweened: a tween wrote the
       // plate's opacity mid-way through its CSS intro (0) at build time and left it invisible.
-      const fade = Math.min(1, Math.max(0, (tl.progress() - HOLD_END) / (HERO_DISPERSE * 0.85)));
+      // phones: gone before the portrait docks, so the frame it docks in is the only plane left
+      const fade = Math.min(1, Math.max(0, (tl.progress() - HOLD_END) / (HERO_DISPERSE * (mobile ? 0.5 : 0.85))));
       plate.style.opacity = fade > 0 ? (1 - fade).toFixed(3) : '';
-      const h = Math.round(Math.min(1, Math.max(0, (tl.progress() - 0.9) / 0.09)) * 100) / 100;
+      // Phones do not crossfade: the portrait is opaque until it is edge-on, and AboutScene shows
+      // the photo from that moment.
+      const h = mobile ? Number(tl.progress() >= TURN_EDGE) : Math.round(Math.min(1, Math.max(0, (tl.progress() - 0.9) / 0.09)) * 100) / 100;
       if (h !== handoff) {
         handoff = h;
-        [portrait, swapLayer()].forEach((el) => el?.style.setProperty('--handoff', String(h)));
+        (mobile ? [portrait] : [portrait, swapLayer()]).forEach((el) => el?.style.setProperty('--handoff', String(h)));
       }
       const done = tl.progress() > 0.995;
       if (done !== handed) {
@@ -432,7 +436,7 @@ export default function HeroScene() {
     const fold = (chars: Element[]) =>
       tl.to(
         chars,
-        { rotationX: -92, yPercent: -36, opacity: 0, transformOrigin: '50% 0%', duration: D * 0.24, ease: 'power2.in', stagger: { amount: D * 0.2, from: 'end' } },
+        { rotationX: -92, yPercent: -36, opacity: 0, transformOrigin: '50% 0%', duration: D * 0.2, ease: 'power2.in', stagger: { amount: D * 0.14, from: 'end' } },
         HOLD_END + 0.01,
       );
     /** Split the name and add its exit to the running timeline, then re-measure. */
@@ -514,12 +518,15 @@ export default function HeroScene() {
      *              (each layer displaced along the tilted plane's normal, drawn as a dashed plane,
      *              tagged); the interface settles below as a card, readable and live;
      *   0.20-0.75  the stack stands up slowly and unwinds while the Vision scan sweeps the portrait;
-     *   0.75-1.00  it faces you, the name folds away, the backdrop fades, the portrait flies into
-     *              the About card above, and the interface card slides down off the screen as
-     *              About's first chapter rises in its place (see AboutScene).
+     *   0.75-0.90  the stack squares up where it stands, sinks back and fades, the name folds
+     *              away, and the portrait comes forward out of it into the About card's frame;
+     *   0.90-0.985 docked, the portrait turns edge-on with that frame while the interface card
+     *              turns away below; the photo and About's first chapter take their places
+     *              (AboutScene, in step: see handoff.ts).
      * One state object drives the stack. It is drawn without perspective (hero.css): `zb` only keeps
      * the stack behind the interface card, and (ox, oy) is where its hinge sits on screen.
      */
+    const [picture] = q('.hero__portrait > picture') as HTMLElement[];
     const [tBackdrop, tType, tPortrait, tInterface] = tags;
     const PORTRAIT_D = 150;
     /** z of the stack while apart: behind the interface card. */
@@ -539,7 +546,7 @@ export default function HeroScene() {
     const POSE_A = { a: 58, c: -24 };
     const POSE_B = { a: 42, c: -8 };
     const st = { a: 0, c: 0, s: 1, zb: 0, lift: 0, spread: 0, ox: 0, oy: 0 };
-    const geo = { plateC: 0, s: 0.6, a: { ox: 0, oy: 0 }, b: { ox: 0, oy: 0 }, uiY: 0, uiOut: 0 };
+    const geo = { plateC: 0, s: 0.6, a: { ox: 0, oy: 0 }, b: { ox: 0, oy: 0 }, uiY: 0 };
     const RAD = Math.PI / 180;
     let measured = '';
 
@@ -554,11 +561,13 @@ export default function HeroScene() {
       const pl = offsetWithin(plate, persp);
       const perspTop = offsetWithin(persp, pin).top;
       geo.plateC = pl.top + pl.height / 2;
-      // the interface card rests on the bottom edge, and leaves through it
+      // the interface card rests on the bottom edge
       const uiBox = offsetWithin(ui, pin);
       const sheetTop = vh - 14 - ui.offsetHeight;
       geo.uiY = sheetTop - uiBox.top;
-      geo.uiOut = vh + 40 - uiBox.top;
+      // It turns about its own middle. A transform's vanishing point is its origin, which does not
+      // move with `y`: the origin goes where the card's centre rests.
+      gsap.set(ui, { transformOrigin: `50% ${ui.offsetHeight / 2 + geo.uiY}px` });
       // Fit the exploded stack by projecting it. Each layer's corners go through the steps the render
       // applies (scale about the hinge, tilt, turn, rise along the plane's normal by the layer's
       // depth), and the scale is the largest whose outline fits the top zone in both poses. There
@@ -656,21 +665,33 @@ export default function HeroScene() {
       // it stands up and unwinds through the whole hold, so the scan is never over a still picture
       .to(st, { ...POSE_B, ox: () => geo.b.ox, oy: () => geo.b.oy, duration: HOLD_END - IN, ease: 'sine.inOut' }, IN);
     addScan(0.26, 0.3);
+    // The turn. The portrait is scaled to the card by then, so its own viewing distance is divided
+    // by that scale to match the card's (AboutScene turns the frame with TURN_PERSP).
+    const turned = (persp: () => number) => ({ rotationY: 0, transformPerspective: persp });
+    const quarter = { rotationY: 90, duration: TURN_EDGE - TURN_FROM, ease: 'power2.in', immediateRender: false };
+    const docked = turned(() => TURN_PERSP / landing().scale);
+    const sheet = turned(() => TURN_PERSP);
     tl.to(tags, { opacity: 0, duration: 0.05 }, HOLD_END - 0.04)
       .to(planes, { '--planes': 0, duration: 0.06 }, HOLD_END - 0.03)
-      // back together facing you, then the hand-off
-      .to(st, { a: 0, c: 0, s: 1, zb: 0, lift: 0, spread: 0, duration: D, ease: 'power2.inOut' }, HOLD_END)
+      // The stack squares up where it stands and sinks back. It used to grow back to full size
+      // here, across both zones, on its way out.
+      .to(st, { a: 0, c: 0, spread: 0, s: () => geo.s * 0.9, duration: D * 0.6, ease: 'power2.inOut' }, HOLD_END)
       // From the pose the stack holds at this point, stated rather than read off the element: the
       // stack is placed by render(), after the timeline. A jump that crossed this point took the
       // portrait's start from wherever it last was, and it flew in from its resting place.
       .fromTo(
         portrait,
         { rotateX: POSE_B.a, rotation: POSE_B.c, scale: () => geo.s, x: () => held().x, y: () => held().y, z: () => held().z },
-        { x: () => landing().x, y: () => landing().y, scale: () => landing().scale, z: 0, rotateX: 0, rotation: 0, duration: D, ease: 'power2.inOut', immediateRender: false },
+        { x: () => landing().x, y: () => landing().y, scale: () => landing().scale, z: 0, rotateX: 0, rotation: 0, duration: TURN_FROM - HOLD_END, ease: 'power2.inOut', immediateRender: false },
         HOLD_END,
       )
-      // the card leaves through the bottom edge; About's first chapter is rising behind it
-      .to([ui, tInterface], { y: () => geo.uiOut, duration: 0.15, ease: 'power1.in' }, 0.85);
+      // The picture and its overlay turn inside the portrait's box, whose centre is the card's:
+      // the portrait itself hinges on the stack's centre, and a turn about that would swing wide.
+      .fromTo([picture, ...cv], docked, { ...docked, ...quarter }, TURN_FROM)
+      // the interface card turns away a touch ahead; About's first chapter is its other side
+      .fromTo(ui, sheet, { ...sheet, ...quarter }, TURN_FROM - SHEET_AHEAD)
+      // the timeline is one pin long: its times are read as progress here and in AboutScene
+      .set({}, {}, 1);
     splitName(fold);
     render();
     // at rest the interface is below the fold and the pin holds it there: it shows while its card is up
@@ -680,6 +701,8 @@ export default function HeroScene() {
       cleanups.forEach((fn) => fn());
       clearHandoff();
       tags.forEach((t) => ['left', 'top', 'right', 'bottom'].forEach((key) => t.style.removeProperty(key)));
+      // set from a refresh listener too, outside the context that reverts this build
+      ui.style.removeProperty('transform-origin');
     };
 
     /** Short phones: a lighter exploded view in a short pin; the interface stays in the page flow. */

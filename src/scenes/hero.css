@@ -473,6 +473,12 @@
 .hero.is-motion.is-mobile .hero__persp {
   perspective: none;
 }
+/* The picture and its overlay turn inside the portrait before it hands over to About. Flattened
+   into the portrait they stay in paint order; as planes of the stage's 3D space the two are
+   coplanar, which Safari sorts its own way. */
+.hero.is-motion.is-mobile .hero__portrait {
+  transform-style: flat;
+}
 @media (max-width: 767px) {
   .hero.is-motion .hero__tag {
     display: inline-flex;
