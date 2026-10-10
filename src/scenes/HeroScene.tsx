@@ -13,8 +13,9 @@
  *   0.45-0.75  hold the exploded stack; tags and overlay fade
  *   0.75-1.00  disperse: interface rises, the name scatters in z, the backdrop recedes, and the
  *              portrait flies into the About card and crossfades into its photo (see handoff.ts)
- * Phones: see "the show" below (an isometric exploded stack, the interface as a card, the Vision
- * scan, and the same hand-off to the About card); short phones get a lighter exploded view.
+ * Phones: see "read upright" below (the name leaves, the portrait steps forward at full width,
+ * the Vision scan reads it, and the same hand-off to the About card). No layer stack: tilted to
+ * fit a phone it was a thumbnail. Short phones get the same in a short pin.
  */
 import { useEffect, useRef } from 'react';
 import { gsap, ScrollTrigger, SplitText } from '../lib/gsap';
@@ -35,6 +36,8 @@ const TILT = 12;
 /** Where the stage has drifted to by the end of the hold: a slow turn that lets the relief show. */
 const TURN_END = -18;
 const TILT_END = 9;
+/** Phones: how far the relief turns the portrait to either side (degrees) while it is read. */
+const SWAY = 24;
 /** 0 below `from`, 1 above `to`, smooth between. */
 const ramp = (v: number, from: number, to: number) => {
   const t = Math.min(1, Math.max(0, (v - from) / (to - from)));
@@ -232,7 +235,6 @@ export default function HeroScene() {
     // The pin's spacer is in the prerendered markup: ScrollTrigger would otherwise wrap the pin in a
     // new element, re-inserting the LCP portrait (a second, later LCP entry) when the script runs.
     const [spacer] = q('.hero__spacer') as HTMLElement[];
-    const [persp] = q('.hero__persp') as HTMLElement[];
     const [stage] = q('.hero__stage');
     const [plate] = q('.hero__plate') as HTMLElement[];
     const [name] = q('.hero__name') as HTMLElement[];
@@ -242,15 +244,99 @@ export default function HeroScene() {
     const front = [ui, ...(q('.hero__index') as HTMLElement[])];
     const tags = q('.hero__tag') as HTMLElement[];
     const cv = q('.hero__portrait > .hero__cv') as HTMLElement[];
-    const cvFill = q('.hero__portrait > .hero__cv > .cv-mask, .hero__portrait > .hero__cv > .cv-edge');
+    const cvFill = q('.hero__portrait > .hero__cv .cv-mask, .hero__portrait > .hero__cv .cv-edge');
     const cvMarks = q('.hero__portrait > .hero__cv > .cv-svg');
     const scan = q('.hero__portrait > .hero__cv > .cv-scan');
     const root = document.documentElement;
     const mobile = variant === 'mobile';
 
-    // Phones need room for the interface card under a strip for the stack; short ones get a lighter
-    // exploded view that never hides the interface.
-    if (mobile && ui.offsetHeight + 80 + 200 > window.innerHeight) return phoneLite();
+    // The mobile variant also covers wide windows too short to pin the desktop scene. Those keep
+    // the wide layout and a lighter exploded view; the rest of this is for the stacked layout.
+    if (mobile && !window.matchMedia('(max-width: 767px)').matches) return shortWide();
+
+    /** The About card's front face in its own pin, which lies over this one: null until About has mounted, and where it does not pin. */
+    const cardBox = () => {
+      const card = document.querySelector<HTMLElement>('#about.is-motion:is(.is-desktop, .is-tablet, .is-pinned) [data-handoff]');
+      const aboutPin = card?.closest<HTMLElement>('.about__pin');
+      return card && aboutPin ? offsetWithin(card, aboutPin) : null;
+    };
+
+    // Phones. Where the portrait stands once it has stepped forward (offsets from rest and a
+    // scale, about its foot), and where the interface card rests and leaves to.
+    const geo = { x: 0, y: 0, s: 1, uiY: 0, uiOut: 0, card: false };
+    /** Whether this hero hands over to a pinned About card (not on short phones). */
+    let handing = true;
+    let fitted = '';
+    let stale = true;
+    // About sizes its card on the same event, after this listener: the fit waits for the first
+    // tween value that asks for it.
+    const unfit = () => { stale = true; };
+    const fit = () => {
+      if (!stale) return geo;
+      stale = false;
+      const box = handing ? cardBox() : null;
+      // Lazy pins refresh the whole page; this only changes with the viewport, the font or the card.
+      const key = `${innerWidth}:${innerHeight}:${document.fonts.status}:${box ? `${box.top}:${box.height}` : ''}`;
+      if (key === fitted) return geo;
+      fitted = key;
+      const vh = window.innerHeight;
+      const pl = offsetWithin(plate, pin);
+      const from = offsetWithin(portrait, pin);
+      const uiTop = offsetWithin(ui, pin).top;
+      // The interface card rests on the bottom edge. Under an About card it takes the rest of the
+      // screen, its text centred: `pad` is what its surface (hero.css) gains above and below the text.
+      const pad = box ? Math.max(0, (vh - 6 - (box.top + box.height - 14) - ui.offsetHeight - 2) / 2) : 0;
+      const sheetTop = pad ? box!.top + box!.height - 20 + pad : vh - 14 - ui.offsetHeight;
+      ui.style.setProperty('--pad', `${pad.toFixed(1)}px`);
+      geo.uiY = sheetTop - uiTop;
+      // with no card to hand over to, it stays, and the hero scrolls away as it stands
+      geo.uiOut = box ? vh + 40 + pad - uiTop : geo.uiY;
+      geo.card = !!box;
+      // The portrait fills the About card it hands over to, so nothing has to move at the hand-off.
+      // Without one it fills the plate, down to a little behind the interface card.
+      const to = box ?? { left: pl.left + 4, top: pl.top + 8, width: pl.width - 8, height: Math.min(pl.height, handing ? sheetTop + 28 - pl.top : Infinity) - 8 };
+      // 3:4, as the picture is
+      const h = Math.min(to.height, to.width / 0.75);
+      geo.s = h / from.height;
+      geo.x = to.left + to.width / 2 - (from.left + from.width / 2);
+      geo.y = to.top + to.height - (from.top + from.height);
+      return geo;
+    };
+    /**
+     * Phones: the name sinks back into the plate and the portrait steps forward into its place
+     * over `len`. It keeps coming, slowly, until `until`: the scan is never over a still picture.
+     */
+    const stepForward = (t: gsap.core.Timeline, len: number, until: number) => {
+      gsap.set(portrait, { transformOrigin: '50% 100%' });
+      ScrollTrigger.addEventListener('refreshInit', unfit);
+      return t
+        // gone before the head reaches its last line
+        .to(name, { scale: 0.88, y: -18, transformOrigin: '0% 40%', duration: len * 0.5, ease: 'power1.in' }, 0)
+        .to(name, { opacity: 0, duration: len * 0.36 }, 0)
+        .to(portrait, { x: () => fit().x, y: () => fit().y, scale: () => fit().s * 0.96, duration: len - 0.01, ease: 'power2.inOut' }, 0.01)
+        .to(portrait, { scale: () => fit().s, duration: until - len, ease: 'sine.inOut' }, len);
+    };
+    /**
+     * Phones: the scan at full width. The beam crosses the portrait at the pace of the scroll and
+     * the segmentation fills in behind it (--wipe, hero.css); the face's box and landmarks arrive
+     * once the beam has cleared the face, the person's box once it has cleared the person.
+     */
+    const read = (t: gsap.core.Timeline, at: number, len: number) => {
+      const group = (cls: string) => q(`.hero__portrait > .hero__cv .${cls}`);
+      /** When the beam's lower edge is `y` of the way down the portrait: it travels 1.16 heights. */
+      const pop = (cls: string, y: number) =>
+        t.fromTo(group(cls), { opacity: 0 }, { opacity: 1, duration: len * 0.06, immediateRender: true }, at + (len * y) / 1.16);
+      t.to(cv, { opacity: 1, duration: 0.02 }, at)
+        .fromTo(scan, { yPercent: -100, opacity: 1 }, { yPercent: 625, duration: len, immediateRender: true }, at)
+        // trailing the beam's edge by the most the relief bends it (0.07 of the height, heroRelief)
+        .fromTo(group('cv-seg'), { '--wipe': -0.07 }, { '--wipe': 1.09, duration: len, immediateRender: true }, at)
+        .to(scan, { opacity: 0, duration: len * 0.1 }, at + len * 0.84);
+      pop('cv-face', 0.5);
+      pop('cv-landmarks', 0.53);
+      pop('cv-person', 0.95);
+    };
+    // No room for the interface card under a portrait of useful size: it stays in the page's flow.
+    if (mobile && ui.offsetHeight + 80 + 200 > window.innerHeight) return phoneCompact();
 
     // pin length factor: phones pin at near desktop length (the About phone pin uses the same)
     const kLen = mobile ? 0.9 : k;
@@ -277,25 +363,19 @@ export default function HeroScene() {
     ScrollTrigger.addEventListener('refreshInit', setOverlap);
     cleanups.push(() => ScrollTrigger.removeEventListener('refreshInit', setOverlap));
 
-    // The portrait scales about its transform origin (ox, oy); the landing keeps its top-left
-    // corner on the About card's front face (measured untransformed).
-    const origin = { x: 0, y: 0 };
+    // Desktop and tablet: the flight ends with the portrait's top-left corner (its transform
+    // origin) on the About card's front face, at the card's height.
     const landing = () => {
-      const card = document.querySelector<HTMLElement>('#about.is-motion:is(.is-desktop, .is-tablet, .is-pinned) [data-handoff]');
-      const aboutPin = card?.closest<HTMLElement>('.about__pin');
+      const to = cardBox();
       const from = offsetWithin(portrait, pin);
-      if (!card || !aboutPin) return { x: -from.width * 0.35, y: from.height * 0.1, scale: 0.6 };
-      const to = offsetWithin(card, aboutPin);
+      if (!to) return { x: -from.width * 0.35, y: from.height * 0.1, scale: 0.6 };
       const s = to.height / from.height;
-      // centred across the card (a phone's card is wider than the 3:4 portrait)
-      const dx = (to.width - from.width * s) / 2;
-      return { x: to.left + dx - from.left - origin.x * (1 - s), y: to.top - from.top - origin.y * (1 - s), scale: s };
+      return { x: to.left + (to.width - from.width * s) / 2 - from.left, y: to.top - from.top, scale: s };
     };
 
-    // On phones the name wraps at its natural (min-content) width: characters stay inside unbreakable
-    // words (.hero__word), or the min-content of single characters would be one letter wide.
-    // Created once the web fonts are in (splitName below): on a slow connection this build step
-    // runs while they are still downloading, and SplitText warns about a split made in the fallback.
+    // Desktop and tablet split the name into characters, so its exit can scatter them. Created once
+    // the web fonts are in (splitName below): on a slow connection this build step runs while they
+    // are still downloading, and SplitText warns about a split made in the fallback.
     let split: SplitText | null = null;
     // Each character shows its own slice of the name's gradient (so it survives the scatter). Measured
     // from layout offsets (through positioned words), never from on-screen boxes: a refresh can run
@@ -323,7 +403,6 @@ export default function HeroScene() {
 
     let handed = false;
     let handoff = -1;
-    let render = () => {};
     let relief: Relief | null = null;
     let reliefReady = false;
     let reliefPending = false;
@@ -344,33 +423,39 @@ export default function HeroScene() {
     });
     // Crossfade the flying portrait into the About card photo over the last stretch of the flight.
     function sync() {
-      render();
       // About mounts on the first scroll too; let that layout settle before compiling the relief.
       if (reliefReady && !reliefPending && tl.progress() > 0.12 && tl.progress() < HOLD_END) startRelief();
       if (relief) {
-        // none at rest, full through the exploded view, gone again before the portrait flies off
+        // none at rest, full while the stack is apart (phones: while the portrait is read), gone
+        // again before the portrait flies off
         const p = tl.progress();
-        const strength = ramp(p, 0.03, 0.38) * (1 - ramp(p, 0.66, 0.74));
+        const strength = (mobile ? ramp(p, 0.1, 0.26) : ramp(p, 0.03, 0.38)) * (1 - ramp(p, 0.66, 0.74));
         const beam = scan[0];
         relief.update(
-          mobile ? st.a : Number(gsap.getProperty(stage, 'rotationX')),
-          mobile ? 0 : Number(gsap.getProperty(stage, 'rotationY')),
+          mobile ? 0 : Number(gsap.getProperty(stage, 'rotationX')),
+          // A phone's portrait stays square to the screen. The relief alone turns it, as if the
+          // camera moved from one side of it to the other during the scan.
+          mobile ? SWAY * (1 - 2 * ramp(p, 0.2, 0.7)) : Number(gsap.getProperty(stage, 'rotationY')),
           strength,
           // .cv-scan is 16 % of the portrait tall and travels by its own height
           (Number(gsap.getProperty(beam, 'yPercent')) / 100 + 1) * 0.16,
           Number(gsap.getProperty(beam, 'opacity')),
         );
       }
+      // A phone hands over only to an About card that is there and pinned. Where About flows (or
+      // has not mounted) the hero keeps its last frame and scrolls away with the page: hidden, it
+      // left a screen of nothing before About arrived.
+      const taken = !mobile || fit().card;
       // The backdrop fades during the dispersal. Set from progress, not tweened: a tween wrote the
       // plate's opacity mid-way through its CSS intro (0) at build time and left it invisible.
-      const fade = Math.min(1, Math.max(0, (tl.progress() - HOLD_END) / (HERO_DISPERSE * 0.85)));
+      const fade = taken ? Math.min(1, Math.max(0, (tl.progress() - HOLD_END) / (HERO_DISPERSE * 0.85))) : 0;
       plate.style.opacity = fade > 0 ? (1 - fade).toFixed(3) : '';
-      const h = Math.round(Math.min(1, Math.max(0, (tl.progress() - 0.9) / 0.09)) * 100) / 100;
+      const h = taken ? Math.round(Math.min(1, Math.max(0, (tl.progress() - 0.9) / 0.09)) * 100) / 100 : 0;
       if (h !== handoff) {
         handoff = h;
         [portrait, swapLayer()].forEach((el) => el?.style.setProperty('--handoff', String(h)));
       }
-      const done = tl.progress() > 0.995;
+      const done = taken && tl.progress() > 0.995;
       if (done !== handed) {
         handed = done;
         root.classList.toggle('hero-handed', done);
@@ -382,7 +467,7 @@ export default function HeroScene() {
     const startRelief = () => {
       reliefPending = true;
       void import('./heroRelief')
-        .then((m) => live ? m.mountRelief(portrait) : null)
+        .then((m) => live ? m.mountRelief(portrait, () => (mobile ? fit().s : 1)) : null)
         .then((mounted) => {
           if (!live) return mounted?.destroy();
           relief = mounted;
@@ -427,19 +512,11 @@ export default function HeroScene() {
         },
         HOLD_END + 0.01,
       );
-    // Phones: the letters fold away in reading order, last first, and are gone before the portrait
-    // crosses them. The scatter flew random letters over the face on a narrow screen.
-    const fold = (chars: Element[]) =>
-      tl.to(
-        chars,
-        { rotationX: -92, yPercent: -36, opacity: 0, transformOrigin: '50% 0%', duration: D * 0.24, ease: 'power2.in', stagger: { amount: D * 0.2, from: 'end' } },
-        HOLD_END + 0.01,
-      );
     /** Split the name and add its exit to the running timeline, then re-measure. */
     const splitName = (leave: (chars: Element[]) => void) =>
       void fontsReady().then(() => {
         if (!live) return;
-        split = SplitText.create(name, { type: mobile ? 'words,chars' : 'chars', charsClass: 'hero__char', wordsClass: 'hero__word' });
+        split = SplitText.create(name, { type: 'chars', charsClass: 'hero__char' });
         section.classList.add('is-split');
         paintGradient();
         leave(split.chars);
@@ -508,182 +585,56 @@ export default function HeroScene() {
     }
 
     /*
-     * Phones: two zones, held from the first frame to About's first chapter. The picture is on top
-     * and the text sheet below.
-     *   0.00-0.20  the plate, name and portrait tip into an isometric stack that fills the top zone
-     *              (each layer displaced along the tilted plane's normal, drawn as a dashed plane,
-     *              tagged); the interface settles below as a card, readable and live;
-     *   0.20-0.75  the stack stands up slowly and unwinds while the Vision scan sweeps the portrait;
-     *   0.75-1.00  it faces you, the name folds away, the backdrop fades, the portrait flies into
-     *              the About card above, and the interface card slides down off the screen as
-     *              About's first chapter rises in its place (see AboutScene).
-     * One state object drives the stack. It is drawn without perspective (hero.css): `zb` only keeps
-     * the stack behind the interface card, and (ox, oy) is where its hinge sits on screen.
+     * Phones: read upright. One picture on top and one text card below, from the first frame to
+     * About's first chapter.
+     *   0.00-0.22  the name sinks back into the plate, the portrait steps forward until it fills
+     *              the About card's place, and the interface rises below it as a card, readable
+     *              and live;
+     *   0.14-0.74  the Vision scan crosses the portrait at full width: segmentation behind the
+     *              beam, then the face's box and landmarks, then the person's box;
+     *   0.75-1.00  the About card's frame draws around the portrait, which already stands where
+     *              that card is, the backdrop fades, and the interface card slides down off the
+     *              screen as About's first chapter rises in its place (see AboutScene).
+     * No layer stack as on the wide layouts: fitted to a phone it was a small tilted thumbnail.
      */
-    const [tBackdrop, tType, tPortrait, tInterface] = tags;
-    const PORTRAIT_D = 150;
-    /** z of the stack while apart: behind the interface card. */
-    const BEHIND = -260;
-    // depth of each layer above the plate, in px at full size (it scales with the stack)
-    const rigid: { el: HTMLElement; d: number }[] = [
-      { el: plate, d: 0 },
-      { el: tBackdrop, d: 3 },
-      { el: name, d: 70 },
-      { el: tType, d: 73 },
-      { el: portrait, d: PORTRAIT_D },
-      { el: tPortrait, d: PORTRAIT_D + 3 },
-    ];
-    const planes = [plate, name, portrait];
-    // Poses (tilt a, turn c, degrees): tipped back and turned as it comes apart, then nearly square
-    // to the screen and standing taller by the end of the scan.
-    const POSE_A = { a: 58, c: -24 };
-    const POSE_B = { a: 42, c: -8 };
-    const st = { a: 0, c: 0, s: 1, zb: 0, lift: 0, spread: 0, ox: 0, oy: 0 };
-    const geo = { plateC: 0, s: 0.6, a: { ox: 0, oy: 0 }, b: { ox: 0, oy: 0 }, uiY: 0, uiOut: 0 };
-    const RAD = Math.PI / 180;
-    let measured = '';
-
-    const measure = () => {
-      // Lazy pins refresh the whole page; the rigid stack only needs new geometry after a resize
-      // or its font/split changes. Rewriting every hinge otherwise forces repeated layouts.
-      const key = `${innerWidth}:${innerHeight}:${document.fonts.status}:${section.classList.contains('is-split')}`;
-      if (key === measured) return;
-      measured = key;
-      const vh = window.innerHeight;
-      const vw = window.innerWidth;
-      const pl = offsetWithin(plate, persp);
-      const perspTop = offsetWithin(persp, pin).top;
-      geo.plateC = pl.top + pl.height / 2;
-      // the interface card rests on the bottom edge, and leaves through it
-      const uiBox = offsetWithin(ui, pin);
-      const sheetTop = vh - 14 - ui.offsetHeight;
-      geo.uiY = sheetTop - uiBox.top;
-      geo.uiOut = vh + 40 - uiBox.top;
-      // Fit the exploded stack by projecting it. Each layer's corners go through the steps the render
-      // applies (scale about the hinge, tilt, turn, rise along the plane's normal by the layer's
-      // depth), and the scale is the largest whose outline fits the top zone in both poses. There
-      // is no perspective term: the phone stack is drawn without one (see hero.css).
-      const hinge = { x: pl.left + pl.width / 2, y: geo.plateC };
-      const outline = rigid.filter(({ el }) => planes.includes(el)).map(({ el, d }) => {
-        const b = offsetWithin(el, persp);
-        return { d, xs: [b.left - hinge.x, b.left + b.width - hinge.x], ys: [b.top - hinge.y, b.top + b.height - hinge.y] };
-      });
-      const extent = (pose: { a: number; c: number }, s: number) => {
-        const [ca, sa, cc, sc] = [Math.cos(pose.a * RAD), Math.sin(pose.a * RAD), Math.cos(pose.c * RAD), Math.sin(pose.c * RAD)];
-        const e = { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity };
-        for (const { d, xs, ys } of outline) {
-          for (const px of xs) {
-            for (const py of ys) {
-              const y = py * s * ca;
-              const X = px * s * cc - y * sc + d * s * sa * sc;
-              const Y = px * s * sc + y * cc - d * s * sa * cc;
-              e.x0 = Math.min(e.x0, X);
-              e.x1 = Math.max(e.x1, X);
-              e.y0 = Math.min(e.y0, Y);
-              e.y1 = Math.max(e.y1, Y);
-            }
-          }
-        }
-        return e;
-      };
-      // the zone: under the nav, down to a little behind the card's top edge (the card is in front)
-      const [y0, y1] = [perspTop + 4, sheetTop + 44];
-      const fits = (s: number) => [POSE_A, POSE_B].every((pose) => {
-        const e = extent(pose, s);
-        return e.x1 - e.x0 <= vw - 28 && e.y1 - e.y0 <= y1 - y0;
-      });
-      let [lo, hi] = [0.34, 1];
-      if (fits(hi)) lo = hi;
-      else for (let i = 0; i < 18; i++) {
-        const mid = (lo + hi) / 2;
-        if (fits(mid)) lo = mid;
-        else hi = mid;
-      }
-      geo.s = lo;
-      // the hinge goes where each pose's outline sits centred in the zone
-      const centre = (pose: { a: number; c: number }) => {
-        const e = extent(pose, lo);
-        return { ox: vw / 2 - hinge.x - (e.x0 + e.x1) / 2, oy: (y0 + y1) / 2 - perspTop - (e.y0 + e.y1) / 2 - geo.plateC };
-      };
-      [geo.a, geo.b] = [centre(POSE_A), centre(POSE_B)];
-      // one shared hinge for the rigid stack: the plate's centre, in each element's own box
-      const cx = plate.offsetLeft + plate.offsetWidth / 2;
-      const cy = plate.offsetTop + plate.offsetHeight / 2;
-      rigid.forEach(({ el }) => gsap.set(el, { transformOrigin: `${cx - el.offsetLeft}px ${cy - el.offsetTop}px` }));
-      origin.x = cx - portrait.offsetLeft;
-      origin.y = cy - portrait.offsetTop;
-      // each tag sits on the edge of its own layer (the interface tag on the card)
-      const put = (tag: HTMLElement, left: number, t: number) => Object.assign(tag.style, { left: `${left}px`, top: `${t}px`, right: 'auto', bottom: 'auto' });
-      // the backdrop's tag goes on the open floor under the name, clear of the portrait's tag
-      put(tBackdrop, plate.offsetLeft + 16, plate.offsetTop + plate.offsetHeight * 0.6);
-      put(tType, name.offsetLeft + 16, name.offsetTop + name.offsetHeight - 4);
-      put(tPortrait, portrait.offsetLeft + portrait.offsetWidth - tPortrait.offsetWidth - 22, portrait.offsetTop - 7);
-      put(tInterface, ui.offsetLeft + 12, ui.offsetTop - 22);
-    };
-    measure();
-    ScrollTrigger.addEventListener('refreshInit', measure);
-    cleanups.push(() => ScrollTrigger.removeEventListener('refreshInit', measure));
-
-    render = () => {
-      // the tilted plane's normal: rotateX(a) then rotate(c), as GSAP composes them
-      const nx = Math.sin(st.a * RAD) * Math.sin(st.c * RAD);
-      const ny = -Math.sin(st.a * RAD) * Math.cos(st.c * RAD);
-      const nz = Math.cos(st.a * RAD);
-      const handing = tl.progress() > HOLD_END;
-      rigid.forEach(({ el, d }) => {
-        if (handing && el === portrait) return;
-        const t = d * st.spread * st.s;
-        gsap.set(el, { rotateX: st.a, rotation: st.c, scale: st.s, x: st.lift * st.ox + t * nx, y: st.lift * st.oy + t * ny, z: st.zb + t * nz });
-      });
-    };
-
-    /** Where the portrait sits at the end of the hold (POSE_B, fully apart). */
-    const held = () => {
-      const t = PORTRAIT_D * geo.s;
-      const [sa, ca, sc, cc] = [Math.sin(POSE_B.a * RAD), Math.cos(POSE_B.a * RAD), Math.sin(POSE_B.c * RAD), Math.cos(POSE_B.c * RAD)];
-      return { x: geo.b.ox + t * sa * sc, y: geo.b.oy - t * sa * cc, z: BEHIND + t * ca };
-    };
-
-    const IN = 0.2;
-    // apart: into the isometric stack; the interface card settles
-    tl.to(st, { ...POSE_A, s: () => geo.s, ox: () => geo.a.ox, oy: () => geo.a.oy, zb: BEHIND, lift: 1, duration: IN, ease: 'power2.inOut' }, 0)
-      // the layers pop apart with a little overshoot, like a physical stack
-      .to(st, { spread: 1, duration: IN * 0.9, ease: 'back.out(1.6)' }, IN * 0.25)
-      .to([ui, tInterface], { y: () => geo.uiY, duration: IN, ease: 'power3.out' }, 0.02)
-      .to(ui, { '--sheet': 1, duration: 0.1 }, 0.05)
-      .to(planes, { '--planes': 1, duration: 0.08 }, 0.1)
-      .to([tBackdrop, tType, tPortrait, tInterface], { opacity: 1, duration: 0.06, stagger: 0.02 }, 0.1)
-      // it stands up and unwinds through the whole hold, so the scan is never over a still picture
-      .to(st, { ...POSE_B, ox: () => geo.b.ox, oy: () => geo.b.oy, duration: HOLD_END - IN, ease: 'sine.inOut' }, IN);
-    addScan(0.26, 0.3);
-    tl.to(tags, { opacity: 0, duration: 0.05 }, HOLD_END - 0.04)
-      .to(planes, { '--planes': 0, duration: 0.06 }, HOLD_END - 0.03)
-      // back together facing you, then the hand-off
-      .to(st, { a: 0, c: 0, s: 1, zb: 0, lift: 0, spread: 0, duration: D, ease: 'power2.inOut' }, HOLD_END)
-      // From the pose the stack holds at this point, stated rather than read off the element: the
-      // stack is placed by render(), after the timeline. A jump that crossed this point took the
-      // portrait's start from wherever it last was, and it flew in from its resting place.
-      .fromTo(
-        portrait,
-        { rotateX: POSE_B.a, rotation: POSE_B.c, scale: () => geo.s, x: () => held().x, y: () => held().y, z: () => held().z },
-        { x: () => landing().x, y: () => landing().y, scale: () => landing().scale, z: 0, rotateX: 0, rotation: 0, duration: D, ease: 'power2.inOut', immediateRender: false },
-        HOLD_END,
-      )
+    const IN = 0.22;
+    stepForward(tl, IN, HOLD_END);
+    // The card is solid before it moves, and rises in step with the portrait: its top edge and
+    // the portrait's foot start and end together, so it never climbs over the picture.
+    tl.to(ui, { '--sheet': 1, duration: 0.04 }, 0)
+      .to(ui, { y: () => fit().uiY, duration: IN - 0.01, ease: 'power2.inOut' }, 0.01)
       // the card leaves through the bottom edge; About's first chapter is rising behind it
-      .to([ui, tInterface], { y: () => geo.uiOut, duration: 0.15, ease: 'power1.in' }, 0.85);
-    splitName(fold);
-    render();
+      .to(ui, { y: () => fit().uiOut, duration: 0.15, ease: 'power1.in' }, 0.85)
+      // with nothing to hand over to, the portrait keeps coming to the end of the pin
+      .to(portrait, { scale: () => fit().s * (fit().card ? 1 : 1.03), duration: D, ease: 'sine.out' }, HOLD_END);
+    read(tl, 0.14, 0.6);
     // at rest the interface is below the fold and the pin holds it there: it shows while its card is up
     cleanups.push(showOnFocus(section, () => tl.scrollTrigger, (el) => (ui.contains(el) ? [0.25, 0.8] : null)));
 
     return () => {
       cleanups.forEach((fn) => fn());
+      ScrollTrigger.removeEventListener('refreshInit', unfit);
+      ui.style.removeProperty('--pad');
       clearHandoff();
-      tags.forEach((t) => ['left', 'top', 'right', 'bottom'].forEach((key) => t.style.removeProperty(key)));
     };
 
-    /** Short phones: a lighter exploded view in a short pin; the interface stays in the page flow. */
-    function phoneLite() {
+    /** Short phones: the same reading in a short pin, with nothing handed over. */
+    function phoneCompact() {
+      handing = false;
+      const short = gsap.timeline({
+        defaults: { ease: 'none' },
+        scrollTrigger: { trigger: section, start: 'top top', end: () => `+=${window.innerHeight * 0.85}`, pin, pinSpacer: spacer, scrub: 0.6, invalidateOnRefresh: true },
+      });
+      stepForward(short, 0.26, 1);
+      read(short, 0.2, 0.7);
+      return () => {
+        ScrollTrigger.removeEventListener('refreshInit', unfit);
+        ui.style.removeProperty('--pad');
+      };
+    }
+
+    /** Wide windows too short for the desktop pin: a lighter exploded view in a short pin. */
+    function shortWide() {
       const [tB, tT, tP, tI] = tags;
       const lanes = [plate, name, portrait];
       const stack = [...lanes, tB, tT, tP];
@@ -709,11 +660,9 @@ export default function HeroScene() {
         .to([name, tT], { z: (i: number) => 36 + i * 2, y: -26, duration: 0.42, ease: 'power2.inOut' }, 0)
         .to([portrait, tP], { z: (i: number) => 110 + i * 2, y: 18, x: () => -plate.offsetWidth * 0.07, duration: 0.42, ease: 'power2.inOut' }, 0)
         .to(tB, { z: -68, duration: 0.42, ease: 'power2.inOut' }, 0)
-        .to(lanes, { '--planes': 1, duration: 0.16 }, 0.2)
         .to([tB, tT, tP], { opacity: 1, duration: 0.12, stagger: 0.04 }, 0.24)
         .to(cv, { opacity: 1, duration: 0.16 }, 0.22)
         .to([...cv, tB, tT, tP], { opacity: 0, duration: 0.1 }, 0.7)
-        .to(lanes, { '--planes': 0, duration: 0.1 }, 0.7)
         .to(stack, { rotateX: 0, scale: 1, z: 0, y: 0, x: 0, duration: 0.3, ease: 'power2.inOut' }, 0.7);
       return () => {
         ScrollTrigger.removeEventListener('refreshInit', place);

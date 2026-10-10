@@ -66,8 +66,7 @@ export function visionMarkup(v: VisionData): string {
     parts.push(`<g class="cv-landmarks">${lines}${dots}</g>`);
   }
   return `<div class="hero__cv" aria-hidden="true">
-<span class="cv-mask" style="--m:url(${v.mask})"></span>
-<span class="cv-edge" style="--m:url(${v.edge})"></span>
+<span class="cv-seg"><span><span class="cv-mask" style="--m:url(${v.mask})"></span><span class="cv-edge" style="--m:url(${v.edge})"></span></span></span>
 <span class="cv-scan"></span>
 <svg class="cv-svg" viewBox="0 0 ${v.width} ${v.height}" preserveAspectRatio="xMidYMax meet">${parts.join('')}</svg>
 </div>`;

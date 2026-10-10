@@ -47,7 +47,8 @@ export interface Relief {
   destroy(): void;
 }
 
-export async function mountRelief(portrait: HTMLElement): Promise<Relief | null> {
+/** `zoom`: how far the scene scales the portrait up while the relief shows (phones), so the canvas is drawn for the size it is seen at. */
+export async function mountRelief(portrait: HTMLElement, zoom: () => number = () => 1): Promise<Relief | null> {
   const img = portrait.querySelector<HTMLImageElement>('.hero__img');
   const overlay = portrait.querySelector<HTMLElement>(':scope > .hero__cv');
   const svg = overlay?.querySelector<SVGSVGElement>('.cv-svg');
@@ -136,11 +137,12 @@ export async function mountRelief(portrait: HTMLElement): Promise<Relief | null>
   const resize = () => {
     const w = portrait.offsetWidth;
     const h = portrait.offsetHeight;
-    const key = `${w}:${h}:${devicePixelRatio}`;
+    const z = Math.max(1, zoom());
+    const key = `${w}:${h}:${z.toFixed(2)}:${devicePixelRatio}`;
     if (key === sized) return;
     sized = key;
     boxRatio = w / Math.max(1, h);
-    quad.size(w, h, 2);
+    quad.size(w * z, h * z, 2);
     marks.width = canvas.width;
     marks.height = canvas.height;
     const scale = Math.min(w / width, h / height);

@@ -95,10 +95,6 @@
 .hero__line {
   display: block;
 }
-/* split words (phones) never break inside */
-.hero__word {
-  white-space: nowrap;
-}
 /* The head (about 1.6em wide) sits in a wide gap between the first and middle name */
 .hero__line:first-child {
   word-spacing: 1.87em;
@@ -138,10 +134,27 @@
 .hero.has-cv .hero__cv {
   display: block;
 }
+/* The segmentation's two layers share a clip. Phones paint them in behind the scan beam: the
+   clip slides down while its content slides back by as much (--wipe 0 -> 1 on .cv-seg, from
+   HeroScene), so only transforms change. */
+.cv-seg,
+.cv-seg > span,
 .cv-mask,
 .cv-edge {
   position: absolute;
   inset: 0;
+}
+.cv-seg {
+  overflow: hidden;
+}
+.hero.is-mobile .cv-seg {
+  transform: translateY(calc((clamp(0, var(--wipe, 1), 1) - 1) * 100%));
+}
+.hero.is-mobile .cv-seg > span {
+  transform: translateY(calc((1 - clamp(0, var(--wipe, 1), 1)) * 100%));
+}
+.cv-mask,
+.cv-edge {
   -webkit-mask: var(--m) center / 100% 100% no-repeat;
   mask: var(--m) center / 100% 100% no-repeat;
 }
@@ -217,8 +230,13 @@
 }
 /* easter egg: three taps on the portrait pin the detections on (over the timeline's inline opacity) */
 .hero.show-cv .hero__portrait > .hero__cv,
-.hero.show-cv .hero__portrait > .hero__cv > * {
+.hero.show-cv .hero__portrait > .hero__cv * {
   opacity: 1 !important;
+}
+/* both show the whole segmentation, whatever the scan has reached */
+.hero__lens-inner .cv-seg,
+.hero.show-cv .cv-seg {
+  --wipe: 1 !important;
 }
 /* the scan beam: a band of light that sweeps the portrait once as the model "reads" it */
 .hero__cv {
@@ -463,42 +481,25 @@
   }
 }
 
-/* Phones in motion: the exploded view. Tags are placed on their layers by HeroScene; each layer is
-   drawn as a dashed plane while apart (--planes 0 -> 1, tweened on the layer). */
-/* No perspective on the phone stack, in any engine (keyed on the variant, which short wide windows
-   get too). iOS WebKit never applied it here: it passes `perspective` down only through an element
-   with a transform of its own, and this stage has none (its layers carry them). So an iPhone drew
-   the stack isometric while Chrome foreshortened it and drew it a fifth smaller. HeroScene fits
-   the stack to this flat projection. */
+/* Wide windows too short for the desktop pin run the mobile variant with a lighter stack, drawn
+   without perspective in every engine. iOS WebKit never applied it: it passes `perspective` down
+   only through an element with a transform of its own, and this stage has none (its layers carry
+   them), so an iPhone in landscape drew the stack isometric while Chrome foreshortened it. */
 .hero.is-motion.is-mobile .hero__persp {
   perspective: none;
 }
+/* Phones in motion: the interface rises as a card in front of the portrait (--sheet 0 -> 1,
+   tweened on it). Under the About card it takes the rest of the screen: --pad, measured by
+   HeroScene, is what its surface gains above and below the text. No layer tags: there is no
+   stack to name (HeroScene, "read upright"). */
 @media (max-width: 767px) {
-  .hero.is-motion .hero__tag {
-    display: inline-flex;
-  }
-  .hero.is-motion .hero__name::after,
-  .hero.is-motion .hero__portrait::after {
-    content: '';
-    position: absolute;
-    inset: 4px;
-    border: 1px dashed color-mix(in srgb, var(--accent) 65%, transparent);
-    border-radius: 16px;
-    background: color-mix(in srgb, var(--accent) 5%, transparent);
-    opacity: var(--planes, 0);
-    pointer-events: none;
-  }
-  .hero.is-motion .hero__plate {
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) calc(var(--planes, 0) * 60%), transparent);
-  }
-  /* the interface rises as a card in front of the stack (--sheet 0 -> 1, tweened on it) */
   .hero.is-motion .hero__ui {
     isolation: isolate;
   }
   .hero.is-motion .hero__ui::before {
     content: '';
     position: absolute;
-    inset: 6px -6px -8px;
+    inset: calc(6px - var(--pad, 0px)) -6px calc(-8px - var(--pad, 0px));
     z-index: -1;
     border: 1px solid var(--hairline);
     border-radius: 22px;
