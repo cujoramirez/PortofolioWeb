@@ -81,7 +81,15 @@ the URL hash; archive dialogs retain their push/pop history. The active theme up
 Papers → Certificates → Contact (section ids `#hero #about #disciplines #toolbox #projects #experience
 #papers #certificates #contact`). Each below-the-fold scene is a lazy chunk mounted by `components/SceneSlot.tsx` when its
 stable `<section>` comes within one viewport; `lib/jump.ts` mounts all of them before a far jump
-(nav links, `g` + letter shortcuts, deep-link hashes), then refreshes ScrollTrigger and scrolls.
+(nav links, `g` + letter shortcuts, deep-link hashes, a hash typed into the address bar), then
+refreshes ScrollTrigger and scrolls. A pinned scene's first pixel is a transitional state (About
+mid hand-off, Contact's empty card, What I do still stacked), so each one names where a jump lands
+with `landAt`: About on its first chapter with every line up, What I do on the assembled grid
+(phones: the squared deck), Papers on the grid (desktop), Contact on the finished card. The owner
+reported the old landings as "the wrong y axis". Scroll anchoring is off (`overflow-anchor: none`):
+Chrome answered a phone jump by scrolling 44 px back as the pins behind it changed state. An
+instant jump holds its target for a few frames: a pin changing state shortens the page for a
+frame, and the browser's clamp left Contact 63 px short on a phone.
 - Hero: four layers (plate, name, portrait, interface) explode in z, hold, then disperse; layer tags name
   them, each pinned to the visible edge of its own layer's content (their offsets read `--portrait-h`
   and `--head-x`, which therefore live on `.hero__stage`). The plate's right third holds an index of
@@ -108,10 +116,19 @@ stable `<section>` comes within one viewport; `lib/jump.ts` mounts all of them b
   from the face (masked layer scaled up, content counter-scaled: transforms only) until the photo fills
   the card. About pins *under* the pinned hero (negative margin `--hero-overlap`) so the card is
   stationary during the hand-off (`scenes/handoff.ts`).
-  Phones ("the show", same pin length as About's phone pin, 0.9): the poster turns into an isometric
-  exploded stack while the interface rises as a solid card in front (readable, live); the stack orbits
-  while the scan runs; the card lifts away and the stack takes the screen; then it swings back, the
-  name scatters and the portrait flies into the pinned About card (same hand-off). One state object
+  Phones (same pin length as About's phone pin, 0.9): two zones, held from the first frame to
+  About's first chapter, the picture on top and a text sheet below. The plate, name and portrait
+  tip into an isometric stack fitted to the top zone (both ends of its slow turn must fit; it is
+  centred, and its depth steps scale with it) while the interface settles below as a solid card
+  (readable, live). The stack stands up and unwinds through the whole hold while the scan runs.
+  Then it faces you, the name's letters fold away in order (a random scatter flew letters over the
+  face on a narrow screen), the portrait flies into the pinned About card, and the interface card
+  slides off the bottom as About's first chapter rises in the same half (AboutScene starts that
+  chapter's sentences before the hand-off lands, on phones only). The version before 2026-10-10
+  lifted the card away half-way and left half the screen empty twice; the owner called it weird.
+  The portrait's flight starts from a stated pose (`fromTo`): the stack is placed by `render()`
+  after the timeline, so a jump across the hand-off recorded a stale start and the portrait flew in
+  from its resting place. One state object
   drives the rigid stack: shared hinge per element, layers offset along the *tilted plane's normal*
   (a plain z offset only shrinks them). The phone stack is drawn without perspective
   (`perspective: none`) and fitted by projecting its real corners: iOS passes `perspective` only
@@ -123,7 +140,9 @@ stable `<section>` comes within one viewport; `lib/jump.ts` mounts all of them b
   `--handoff` sits on the portrait and on About's `.about__swap`, `--hero-overlap` on the About section.
 - About: turning card (café photo `GadingAdityaPerdana2.jpg` / fact sheet) + three chapters. A chapter
   reads as one paragraph: each sentence rises as its words (inline-block `.about__word` spans, all
-  driven by one `--rise` per sentence; a tween per word was 213 targets). A scrim behind each chapter
+  driven by one `--rise` per sentence; a tween per word was 213 targets). A chapter's lines are
+  paced to be up before it leaves: at a fixed 0.05 apart, the fifth sentence was still at half
+  opacity when the exit began. A scrim behind each chapter
   (`--scrim`) keeps its text at 4.5:1 over the brightest band of the backdrop. Quotes fly through the
   text column between chapters. The card flip swaps faces at 90° (WebKit
   renders `backface-visibility` mirrored). The card is sized in px by the scene and every face layer is
@@ -263,7 +282,14 @@ and end, both relief canvases and the wall displacement live, real pointer click
 buttons, theme toggle, wall cards, dialog close and Search, keyboard open and close with focus back
 on the opener, and the first skip link by Option+Tab. Not verified: iOS flick-through and
 address-bar resizing, Firefox, and playback of real footage. The owner approved the index label
-and the skip strings on 2026-10-10. The three clips are no longer expected (see App footage).
+and the skip strings on 2026-10-10, and decided to keep the pinned share and the dormant footage
+code. The three clips are no longer expected (see App footage).
+
+Later on 2026-10-10 (jump landings, phone hero): first-load JS 113.4 KB gzip (122.9 transferred),
+HTML 15.0 KB, pins unchanged (phone hero 1.08, About 2.30, 47 % of the page), click-through 48 of
+48, Tab walk 95 and 78 stops with none hidden, no dead run on the phone, the phone hero and the
+landings seen in the iOS Simulator. LCP, scroll frames and INP were not re-measured cleanly: a
+game was running on the Mac. Side by side with the previous build under that load they matched.
 
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
