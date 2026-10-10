@@ -66,7 +66,21 @@ export function scrollToTarget(target: HTMLElement | number, { immediate = false
   const smooth = !immediate && motionAllowed();
   if (smooth) holdRefreshUntilLanded();
   window.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' });
+  // A pin that changes state under an instant jump shortens the page for a frame or two and the
+  // browser clamps the scroll: a phone landed 63 px short of Contact. Hold the target for a few
+  // frames, unless another jump has started.
+  if (smooth) return;
+  const jump = ++jumps;
+  let frames = 8;
+  const hold = () => {
+    if (jump !== jumps) return;
+    if (Math.abs(window.scrollY - top) > 1) window.scrollTo(0, top);
+    if (--frames > 0) requestAnimationFrame(hold);
+  };
+  requestAnimationFrame(hold);
 }
+
+let jumps = 0;
 
 let snapUntil = 0;
 

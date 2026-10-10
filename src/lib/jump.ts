@@ -16,6 +16,24 @@ export function registerSceneLoader(id: string, load: Loader): () => void {
   };
 }
 
+/**
+ * Where a jump to a section lands. A pinned scene starts on a transitional state (About mid
+ * hand-off, Contact's empty card, What I do still stacked): it names the place in its own scroll
+ * range where it first reads complete.
+ */
+const landings = new Map<string, () => number | null>();
+
+export function landAt(id: string, trigger: () => ScrollTrigger | undefined, progress: number): () => void {
+  const at = () => {
+    const st = trigger();
+    return st ? st.start + (st.end - st.start) * progress : null;
+  };
+  landings.set(id, at);
+  return () => {
+    if (landings.get(id) === at) landings.delete(id);
+  };
+}
+
 export async function loadAllScenes() {
   await Promise.all([...loaders.values()].map((load) => load()));
 }
@@ -49,9 +67,10 @@ export async function jumpTo(id: string, { immediate = false, url = true } = {})
   // An explicit jump is a link you can copy: the URL names the section, and the top clears it.
   // Replaced, not pushed, so Back still leaves the page. Scrolling never writes the hash.
   if (url) history.replaceState(null, '', id === 'hero' ? location.pathname + location.search : `#${id}`);
-  // A scene can ask to land a little past its top (About waits out the hero's hand-off).
+  // Without a landing of its own, a section can still ask to start a little past its top (a flowing
+  // About waits out the hero's hand-off).
   const offset = Number(target.dataset.jumpOffset ?? 0);
-  const top = id === 'hero' ? 0 : target.getBoundingClientRect().top + window.scrollY + offset;
+  const top = id === 'hero' ? 0 : landings.get(id)?.() ?? target.getBoundingClientRect().top + window.scrollY + offset;
   scrollToTarget(top, { immediate });
   focusHeading(target);
 }

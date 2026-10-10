@@ -67,6 +67,13 @@ export default function App() {
     // and stand on the overlay's section, leaving the hash for useHashDialog.
     if (OVERLAY_HOME[hash]) void jumpTo(OVERLAY_HOME[hash], { immediate: true, url: false });
     else if (hash && document.getElementById(hash)) void jumpTo(hash, { immediate: true });
+    // A hash typed into the address bar scrolls natively, to the section's first pixel and past
+    // scenes that have not mounted: land it where a jump would.
+    const onHash = () => {
+      const id = decodeURIComponent(location.hash.slice(1));
+      if (!OVERLAY_HOME[id] && document.getElementById(id)?.matches('section')) void jumpTo(id, { immediate: true, url: false });
+    };
+    window.addEventListener('hashchange', onHash);
     // dev only: ?at=papers_350 opens the page scrolled to a scene (the iOS Simulator cannot scroll)
     if (import.meta.env.DEV) {
       const at = /^([a-z]+)(?:_(-?\d+))?$/.exec(new URLSearchParams(location.search).get('at') ?? '');
@@ -96,6 +103,7 @@ export default function App() {
       undoEggs?.();
       stop();
       window.removeEventListener('load', onLoad);
+      window.removeEventListener('hashchange', onHash);
       ScrollTrigger.killAll();
     };
   }, []);

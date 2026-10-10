@@ -10,6 +10,7 @@ import { firstSentence, papers, scholarUrl } from '../content/data';
 import { gsap, ScrollTrigger } from '../lib/gsap';
 import { spotlight } from '../lib/micro';
 import { showOnFocus } from '../lib/focusStep';
+import { landAt } from '../lib/jump';
 import { useScene } from '../lib/useScene';
 import { snapAllowed } from '../lib/scroll';
 import './papers.css';
@@ -166,8 +167,10 @@ export default function PapersScene() {
       0.6,
     );
     tl.from(q('.papers__foot'), { opacity: 0, y: 16, duration: 0.15 }, 0.88);
-    // until the grid has landed the papers are a stacked deck: Tab to one goes to the grid
-    return showOnFocus(section, () => tl.scrollTrigger, () => 1);
+    // until the grid has landed the papers are a stacked deck: Tab to one goes to the grid, and so does a jump
+    const unfocus = showOnFocus(section, () => tl.scrollTrigger, () => 1);
+    const unland = landAt(section.id, () => tl.scrollTrigger, 1);
+    return () => { unfocus(); unland(); };
   });
 
   return (

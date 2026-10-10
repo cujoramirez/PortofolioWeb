@@ -8,6 +8,7 @@
 import { useRef } from 'react';
 import { DISCIPLINES } from '../content/disciplines';
 import { gsap } from '../lib/gsap';
+import { landAt } from '../lib/jump';
 import { useScene } from '../lib/useScene';
 import { DesignMotif, PipelineMotif, ResearchMotif, VitMotif } from './disciplineMotifs';
 import './disciplines.css';
@@ -83,7 +84,9 @@ export default function DisciplinesScene() {
           plates.slice(i + 1).forEach((plate, d) => tl.to(plate, { ...slot(d), duration: 0.42, ease: 'power2.out' }, at + 0.14));
         }
         tl.set({}, {}, 0.9 + (n - 1) * deal);
-        return () => section.classList.remove('is-deck');
+        // a jump lands on the squared-up deck, its first plate readable
+        const unland = landAt(section.id, () => tl.scrollTrigger, 0.6 / (0.9 + (n - 1) * deal));
+        return () => { unland(); section.classList.remove('is-deck'); };
       }
       section.classList.remove('is-deck');
     }
@@ -138,7 +141,9 @@ export default function DisciplinesScene() {
       )
       .fromTo(callouts, { opacity: 1 }, { opacity: 0, duration: 0.1, immediateRender: true }, 0.16)
       .set({}, {}, 1);
-    return () => section.classList.remove('is-row');
+    // a jump lands on the assembled grid, not on the stack it starts as
+    const unland = landAt(section.id, () => tl.scrollTrigger, 1);
+    return () => { unland(); section.classList.remove('is-row'); };
   });
 
   return (

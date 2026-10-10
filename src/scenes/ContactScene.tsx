@@ -10,6 +10,7 @@ import { spark } from '../lib/micro';
 import { LINKS } from '../content/site';
 import { gsap } from '../lib/gsap';
 import { showOnFocus } from '../lib/focusStep';
+import { landAt } from '../lib/jump';
 import { useScene } from '../lib/useScene';
 import './contact.css';
 
@@ -89,7 +90,9 @@ export default function ContactScene() {
     );
     tl.set({}, {}, 1);
     // the card's controls exist from the start but show only once it has assembled
-    return showOnFocus(section, () => tl.scrollTrigger, () => 1);
+    const unfocus = showOnFocus(section, () => tl.scrollTrigger, () => 1);
+    const unland = landAt(section.id, () => tl.scrollTrigger, 1);
+    return () => { unfocus(); unland(); };
   });
 
   return (

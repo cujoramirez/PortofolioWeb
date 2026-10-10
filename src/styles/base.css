@@ -23,6 +23,9 @@ html {
   overflow-x: clip;
   /* keyboard focus and scrollIntoView stop below the fixed nav instead of under it */
   scroll-padding-top: calc(var(--nav-top) + var(--nav-h) + 12px);
+  /* Off: pins position this page, and Chrome's anchoring answered a jump on a phone by scrolling
+     44 px back as the pins behind it changed state. Safari has none. */
+  overflow-anchor: none;
   scrollbar-width: thin;
   scrollbar-color: var(--hairline-strong) transparent;
 }
