@@ -614,7 +614,7 @@ html.lenis body {
   transform: rotate(var(--r)) translateX(var(--d, 8px)) scaleX(calc(1 - var(--l, 0)));
 }
 
-/* Heading reveal: words rise from behind their own mask (SplitText names it .hw-mask);
+/* Heading reveal: words rise from behind their own mask (.hw-mask, made by lib/split.ts);
    the mask extends below the baseline so descenders (g, j, p, y) are never clipped */
 .hw {
   display: inline-block;

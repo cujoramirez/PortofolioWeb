@@ -12,12 +12,11 @@
  */
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { SplitText } from 'gsap/SplitText';
 
 const raf = window.requestAnimationFrame;
 window.requestAnimationFrame = () => 0;
 try {
-  gsap.registerPlugin(ScrollTrigger, SplitText);
+  gsap.registerPlugin(ScrollTrigger);
 } finally {
   window.requestAnimationFrame = raf;
 }
@@ -43,4 +42,4 @@ window.addEventListener(
   { passive: true },
 );
 
-export { gsap, ScrollTrigger, SplitText };
+export { gsap, ScrollTrigger };

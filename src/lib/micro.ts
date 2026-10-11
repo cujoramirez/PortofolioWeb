@@ -7,8 +7,9 @@
  *  - reduced motion and the low tier get the resting state.
  */
 import { fontsReady } from './fonts';
-import { gsap, ScrollTrigger, SplitText } from './gsap';
+import { gsap, ScrollTrigger } from './gsap';
 import { motionAllowed } from './motion';
+import { split } from './split';
 
 const fine = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
@@ -142,9 +143,9 @@ export function revealHeading(heading: HTMLElement): () => void {
   // split once the web fonts are in: a scene can mount while they are still downloading
   void fontsReady().then(() => {
     if (!live) return;
-    const split = SplitText.create(heading, { type: 'words', mask: 'words', wordsClass: 'hw' });
+    const words = split(heading, 'words', 'hw', 'hw-mask');
     const tween = gsap.fromTo(
-      split.words,
+      words.parts,
       { yPercent: 105, rotate: 4 },
       {
         yPercent: 0,
@@ -165,7 +166,7 @@ export function revealHeading(heading: HTMLElement): () => void {
     undo = () => {
       tween.scrollTrigger?.kill();
       tween.kill();
-      split.revert();
+      words.revert();
     };
   });
   return () => {

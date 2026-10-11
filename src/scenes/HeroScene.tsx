@@ -18,11 +18,12 @@
  * fit a phone it was a thumbnail. Short phones get the same in a short pin.
  */
 import { useEffect, useRef } from 'react';
-import { gsap, ScrollTrigger, SplitText } from '../lib/gsap';
+import { gsap, ScrollTrigger } from '../lib/gsap';
 import { decrypt, magnet } from '../lib/micro';
 import { showOnFocus } from '../lib/focusStep';
 import { fontsReady } from '../lib/fonts';
 import { refreshSoon } from '../lib/scroll';
+import { split, type Split } from '../lib/split';
 import { useScene } from '../lib/useScene';
 import { HERO_DISPERSE, HERO_PIN, leadPx, offsetWithin } from './handoff';
 import type { Relief } from './heroRelief';
@@ -377,16 +378,16 @@ export default function HeroScene() {
 
     // Desktop and tablet split the name into characters, so its exit can scatter them. Created once
     // the web fonts are in (splitName below): on a slow connection this build step runs while they
-    // are still downloading, and SplitText warns about a split made in the fallback.
-    let split: SplitText | null = null;
+    // are still downloading, and letters measured in the fallback font get the wrong slices.
+    let letters: Split | null = null;
     // Each character shows its own slice of the name's gradient (so it survives the scatter). Measured
     // from layout offsets (through positioned words), never from on-screen boxes: a refresh can run
     // this mid-choreography, and transformed boxes cut the glyphs out of their gradient.
     const paintGradient = () => {
-      if (!split) return;
+      if (!letters) return;
       const w = `${name.offsetWidth}px`;
       const h = `${name.offsetHeight}px`;
-      (split.chars as HTMLElement[]).forEach((c) => {
+      letters.parts.forEach((c) => {
         const o = offsetWithin(c, name);
         c.style.setProperty('--gx', `${-o.left}px`);
         c.style.setProperty('--gy', `${-o.top}px`);
@@ -400,7 +401,7 @@ export default function HeroScene() {
       live = false;
       section.removeEventListener('hero:fit', paintGradient);
       section.classList.remove('is-split');
-      split?.revert();
+      letters?.revert();
     });
 
     let handed = false;
@@ -518,10 +519,10 @@ export default function HeroScene() {
     const splitName = (leave: (chars: Element[]) => void) =>
       void fontsReady().then(() => {
         if (!live) return;
-        split = SplitText.create(name, { type: 'chars', charsClass: 'hero__char' });
+        letters = split(name, 'chars', 'hero__char');
         section.classList.add('is-split');
         paintGradient();
-        leave(split.chars);
+        leave(letters.parts);
         refreshSoon();
       });
 
