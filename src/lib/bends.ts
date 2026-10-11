@@ -57,8 +57,16 @@ void main() {
     cover = max(cover, w);
   }
   vec3 col = clamp(sumCol, 0.0, 1.0) * 1.35;
+  CAP
   gl_FragColor = vec4(col * cover, cover);
 }`;
+
+// Above 1, `col * cover` is a premultiplied pixel brighter than its own alpha, which is not a
+// colour: what a browser makes of one is its own business. Chrome and Safari add it as light,
+// and the look was tuned on that. Firefox drew the light theme's bands yellow and red, so there
+// no channel goes above the coverage (bands a shade dimmer at their edges, 16 of 255 at most).
+const GECKO = typeof CSS !== 'undefined' && CSS.supports('-moz-appearance', 'none');
+const FRAGMENT = FRAG.replace('CAP', GECKO ? 'col = min(col, 1.0);' : '');
 
 const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
 
@@ -75,7 +83,7 @@ export function startBends(canvas: HTMLCanvasElement): (() => void) | null {
   const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, powerPreference: 'low-power' });
   if (!gl) return null;
   const vs = compile(gl, gl.VERTEX_SHADER, VERT);
-  const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
+  const fs = compile(gl, gl.FRAGMENT_SHADER, FRAGMENT);
   const program = gl.createProgram();
   if (!vs || !fs || !program) return null;
   gl.attachShader(program, vs);
