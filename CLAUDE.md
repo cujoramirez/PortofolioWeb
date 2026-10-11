@@ -748,6 +748,16 @@ and small accent text; filled buttons use `--accent-fill` `#2563eb` (white text 
 glass is denser than other controls' (labels over a white certificate measured 2.54:1 at the shared
 tint). The only gradient text is the hero name (ink → blue → cyan; per-character slices
 once split). `[data-theme]` is set pre-paint; choosing the OS scheme stores nothing (= system).
+The light theme declares `color-scheme: only light` (after a plain `light` for engines without
+the keyword). With `light` alone, a browser that darkens pages by itself repainted the light
+theme: Chromium's forced dark, which Mi Browser's dark mode and Chrome's "dark theme for sites"
+use, turned every surface dark, inverted the text, and left the name's gradient ink black on
+it, since a gradient clipped to text counts as a background. The owner hit it on a Xiaomi phone
+after switching to light ("light mode is broken on mi browser"). `only` opts that theme out;
+the dark theme was never touched. Reproduce in headless Chrome with CDP
+`Emulation.setAutoDarkModeOverride({ enabled: true })`, a dark `prefers-color-scheme` and
+`localStorage.theme = 'light'`. Checked that way only: whether Mi Browser's own engine honours
+the keyword (Chromium 96 and later do) is for the owner's phone to show.
 Type: Sora (display 600–800), DM Sans (body), JetBrains Mono 500 (dates, labels), with metric-matched local
 fallbacks ('Sora Fallback', 'DM Sans Fallback') so the font swap does not shift layout. Hero name
 `clamp(3.5rem, 10vw, 10rem)`; its gradient sits on each `.hero__line` (WebKit ignores background-clip text

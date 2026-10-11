@@ -111,6 +111,7 @@
     --shadow-mid: 0 24px 48px -24px rgb(15 23 42 / 0.2), 0 8px 16px -12px rgb(15 23 42 / 0.12);
     --shadow-far: 0 10px 24px -16px rgb(15 23 42 / 0.14);
     color-scheme: light;
+    color-scheme: only light;
   }
 }
 
@@ -138,7 +139,12 @@
   --shadow-near: 0 40px 80px -28px rgb(15 23 42 / 0.26), 0 16px 32px -18px rgb(15 23 42 / 0.18);
   --shadow-mid: 0 24px 48px -24px rgb(15 23 42 / 0.2), 0 8px 16px -12px rgb(15 23 42 / 0.12);
   --shadow-far: 0 10px 24px -16px rgb(15 23 42 / 0.14);
+  /* `only`: a browser that darkens pages by itself (Chromium's forced dark: Mi Browser's dark
+     mode, Chrome's dark theme for sites) then leaves this theme alone. Without it the light
+     theme's surfaces were repainted dark and the name's gradient ink stayed black on them. The
+     plain value comes first, for engines that do not know the keyword. */
   color-scheme: light;
+  color-scheme: only light;
 }
 
 /* HIG: honour Increase Contrast */
