@@ -37,7 +37,8 @@ There are no tests configured in this project.
   headless page reports `hidden`, produces no frames, and every idle check then reads a false 0.
   `shot.mjs` (screenshots at scroll offsets; add `?tier=high`, headless counts as a low-tier device;
   `--gpu` draws on the Mac's GPU), `shot-webkit.mjs` (same, in Playwright's WebKit: layout and text
-  only, it flattens preserve-3d), `shot-safari.mjs` (real Safari via safaridriver: the only true check
+  only, it flattens preserve-3d, exactly as Safari's view-transition snapshots do, which makes it
+  the way to see those), `shot-safari.mjs` (real Safari via safaridriver: the only true check
   of Safari's 3D; setup in the README; it corrects the viewport after navigation, when Safari applies
   the saved site zoom, and prints the frames Safari made in half a second: at 0 the display is
   asleep, nothing animates or observes, and the shots are stale), `film.mjs` (captures frames after an action; dev builds expose `window.__gsap`
@@ -130,8 +131,12 @@ lines, and neither package is a dependency now. `lib/split.ts` replaced GSAP's S
 on the wire, with the same boxes (the hero name and all seven headings compared byte for byte,
 styles included). The cursor label waits for the first mouse move. Sized as Vercel sends it,
 that build is 110.8 KB for the three first-load scripts, and adds up to about 120 KB of script
-in a phone load and 123 on desktop. Those two are sums of measured parts, not a reading: take
-one from the next preview. To get Speed Insights back, the room has to come from somewhere
+in a phone load and 123 on desktop. Read from the owner's second preview: 120.5 KB on the phone
+profile and 123.1 to 123.4 on desktop, as summed. The fixes after it (fonts, the flat stand-in,
+the index) add 0.7 KB, so desktop has about 1 KB of room. LCP there read 1.75 to 1.77 s through
+the relay and 2.2 to 2.3 s loaded directly, where every request also passes Vercel's sign-in
+layer and the tool's interception: neither is the public site's figure, which has to be read
+from gadingap.com once it is live. To get Speed Insights back, the room has to come from somewhere
 else; smooth scrolling fetched on the first input (5.9 KB) is what is left. The HTML has no
 room: 15.9 KB compressed of 16.
 The old site's nine `VITE_FIREBASE_*` and `VITE_ENABLE_*` variables were removed from the Vercel
@@ -145,7 +150,13 @@ the entry CSS. So the hero paints before any JS; `src/scenes/HeroScene.tsx` only
 that static DOM. `src/main.tsx` mounts `<App/>` (`src/App.tsx`), which portals `<Nav/>` into `#nav-root`.
 The shell also emits the remaining sections as semantic text in `<noscript>`. Fonts are self-hosted
 Latin WOFF2 subsets; the build gates their CSS until the portrait loads so they do not compete for LCP
-bandwidth. Splits wait for `fontsReady()`, which accounts for that gate. Explicit section jumps replace
+bandwidth. Splits wait for `fontsReady()`, which accounts for that gate: it watches the gate
+open, then loads every declared face. It must not wait for the font set's `loadingdone` event.
+Safari never fires one, so wherever the scripts beat the portrait (any real network, never
+localhost) nothing behind that promise ran: the hero name was not split and did not scatter, as
+the owner saw on a Vercel preview. Chrome fires one early, for the local fallbacks, and split
+the name in the fallback font. Reproduce with the portrait held back 1.5 s in Playwright's
+WebKit. Explicit section jumps replace
 the URL hash; archive dialogs retain their push/pop history. The active theme updates `theme-color`.
 
 **Scenes (`src/scenes/`), in order:** Hero → About → What I do → Toolbox → Projects → Experience →
@@ -174,7 +185,12 @@ frame, and the browser's clamp left Contact 63 px short on a phone.
   the sections with their counts (`content/heroIndex.ts`: every count is an array length), part of the
   interface layer and hidden below 1100 px or where it would overlap. In the exploded view the stage
   turns 24 degrees and tilts 12, then drifts to 18 and 9 through the hold; the name and interface slide
-  by `(z - Z[2]) * tan(angle)` so whole words stay clear of the head. The portrait carries the Apple Vision overlay (segmentation, person/face boxes, landmarks; no
+  by `(z - Z[2]) * tan(angle)` so whole words stay clear of the head. The index is the nearest
+  layer and the furthest right, where a px of slide is up to two on screen: part-way into the
+  turn a wide window drew it past its right edge (43 px at 1512 x 859, the owner's Safari at
+  100 % zoom, with the counts out of sight). Its slide therefore follows the turn in quarters,
+  each measured at build and stepped back inside the window; checked from 1100 to 2560 px wide.
+  The portrait carries the Apple Vision overlay (segmentation, person/face boxes, landmarks; no
   caption, the owner removed it): a scan beam (`.cv-scan`) sweeps the portrait, segmentation first, then
   boxes and landmarks as it passes; also shown under a 1:1 pointer lens on hover (three taps on the
   portrait pin it, an easter egg).
@@ -275,7 +291,8 @@ frame, and the browser's clamp left Contact 63 px short on a phone.
   and away (opaque until mostly gone, so texts never overlap), snapping to each role, a shared `.meter`
   ("02 / 05" + bars) under the heading. Short phones get `.is-compact` (one sentence, two wins, four
   chips) and a scale down to 0.8; below that a flat sticky stack (never tilt stacked cards: two tilted
-  planes cut into each other in 3D). Papers: deck → fan → grid (FLIP from the resting grid); its pin
+  planes cut into each other in 3D). Both layouts register a flat stand-in for Safari's
+  snapshots (`lib/flat.ts`, see Key Conventions). Papers: deck → fan → grid (FLIP from the resting grid); its pin
   centres with auto margins so a short window never slides the heading under the nav. The pin
   holds only what fits the window, measured as What I do does: the grid of 3 + 2, else one row
   of five (`.is-row`, 1100 px wide or more), else the scene flows and each card rises once
@@ -743,6 +760,16 @@ Depth grammar: `.persp` (1400/1200/1000 px, origin 50% 40%) around one `.stage` 
   cleanup cleared the inline transform, the next build read the angle still easing away as the
   card's resting pose and the paper stayed edge-on. A cleanup that clears a transitioned
   property sets `transition: none` first and forces a layout before restoring it.
+- Safari paints 3D flattened inside a view-transition snapshot (the theme reveal, the search
+  warp): an element keeps its own turn, loses its depth, and DOM order replaces depth order.
+  Most scenes survive that for under a second. The Experience corridor did not: its cards are
+  900 px apart in depth and opaque, and the far, dimmed ones were drawn full size over the one
+  in front (the owner: "the cards are dark when transitioning"); on a phone the deck showed its
+  last card on top. A scene whose picture depends on depth registers a stand-in with
+  `onSnapshot` (`lib/flat.ts`): `flatPoses` places each box in 2D where it really appears,
+  within 0.1 px, and a `--near` z-index restores the order. `forSnapshot()` wraps both root
+  transitions; the warp asks twice, for the view it leaves and the one it reaches. Only where
+  `navigator.vendor` is Apple's: Chromium's snapshots keep depth.
 - A cleanup leaves nothing behind that the next build would read: attributes on other sections
   (`data-jump-offset` on About outlived the hero that set it) and anything painted from a
   callback, which a trigger being reverted may call once more after the cleanup has run.
