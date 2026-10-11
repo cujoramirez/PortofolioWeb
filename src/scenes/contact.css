@@ -206,10 +206,21 @@
     transition: opacity 0.18s var(--ease-hover), transform 0.18s var(--ease-hover);
     pointer-events: none;
   }
+  /* The gap between the icon and its label belongs to the label, and a shown label takes the
+     pointer: moving up to read it (a magnifier does) no longer leaves the link and hides it. */
+  .dock__label::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 16px;
+  }
   .dock__item:hover .dock__label,
   .dock__item:focus-visible .dock__label {
     opacity: 1;
     transform: translate(-50%, 0);
+    pointer-events: auto;
   }
 }
 

@@ -212,8 +212,10 @@ p {
   text-decoration-thickness: 1px;
   transition: text-decoration-color 0.2s var(--ease-hover), color 0.2s var(--ease-hover);
 }
+/* --accent-text, not --accent: these links sit straight on the backdrop, where --accent measured
+   4.32:1 in the light theme */
 .text-link:hover {
-  color: var(--accent);
+  color: var(--accent-text);
   text-decoration-color: currentColor;
 }
 /* a short word ("Email") is narrower than a fingertip: 44px wide as well as tall on touch */
