@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import compression from 'vite-plugin-compression';
 import heroShell from './vite-plugins/heroShell';
 
 /**
@@ -27,8 +26,8 @@ export default defineConfig({
     plugins: [
         react(),
         heroShell(),
-        compression({ algorithm: 'gzip', ext: '.gz', threshold: 1024 }),
-        compression({ algorithm: 'brotliCompress', ext: '.br', threshold: 1024 }),
+        // No precompressed .gz/.br copies: Vercel compresses each response itself (Brotli, seen on
+        // gadingap.com) and never served the 74 files the build used to add.
     ],
     build: {
         target: 'es2020',
@@ -39,14 +38,15 @@ export default defineConfig({
         chunkSizeWarningLimit: 500,
         rollupOptions: {
             output: {
-                // Long-lived vendor chunks: React, and the scroll stack (GSAP + Lenis).
+                // Long-lived vendor chunks: React and GSAP. Lenis is a chunk of its own, fetched
+                // only where it runs (lib/scroll.ts), so it is left out of both.
                 manualChunks(id) {
                     if (!id.includes('node_modules')) return undefined;
                     const n = id.replace(/\\/g, '/');
                     if (n.includes('/node_modules/react/') || n.includes('/node_modules/react-dom/') || n.includes('/node_modules/scheduler/')) {
                         return 'react-core';
                     }
-                    if (n.includes('/node_modules/gsap/') || n.includes('/node_modules/lenis/')) {
+                    if (n.includes('/node_modules/gsap/')) {
                         return 'scroll-vendors';
                     }
                     return undefined;

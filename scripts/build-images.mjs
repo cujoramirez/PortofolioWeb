@@ -25,7 +25,14 @@ import sharp from 'sharp';
 
 const OUT = 'public/img';
 const MANIFEST = 'src/data/images.json';
-const hash = (buf) => createHash('sha1').update(buf).digest('hex').slice(0, 8);
+/**
+ * Browsers keep every file under /img for a year without asking again (vercel.json), so a name
+ * must never get new contents. Names carry the hash of the source file: when the encoding itself
+ * changes (quality, sizes, a different codec), set SALT to something new so every name changes
+ * (vite.config.ts repeats this hash to check the résumé's pages: give it the same salt).
+ */
+const SALT = '';
+const hash = (buf) => createHash('sha1').update(buf).update(SALT).digest('hex').slice(0, 8);
 const written = new Set();
 
 /** Encode unless the content-addressed file already exists; record it as live either way. */

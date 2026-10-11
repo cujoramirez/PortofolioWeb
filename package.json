@@ -39,7 +39,6 @@
         "simple-icons": "^16.32.0",
         "typescript": "^5.9.3",
         "typescript-eslint": "^8.46.1",
-        "vite": "^7.1.10",
-        "vite-plugin-compression": "^0.5.1"
+        "vite": "^7.1.10"
     }
 }

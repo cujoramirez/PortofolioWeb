@@ -28,3 +28,6 @@ dist-ssr
 
 # superpowers brainstorm scratch (visual companion mockups)
 .superpowers/
+
+# audit reports written about the site (local paths, findings): kept out of the public repo
+audits/
