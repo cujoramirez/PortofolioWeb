@@ -766,21 +766,30 @@ Depth grammar: `.persp` (1400/1200/1000 px, origin 50% 40%) around one `.stage` 
   900 px apart in depth and opaque, and the far, dimmed ones were drawn full size over the one
   in front (the owner: "the cards are dark when transitioning"); on a phone the deck showed its
   last card on top. A scene whose picture depends on depth registers a stand-in with
-  `onSnapshot` (`lib/flat.ts`): `flatPoses` follows points of each box (zero-size markers, read
-  once in depth and once flat) and gives it the 2D matrix nearest to where it really appears,
-  and a `--near` z-index restores the order. A flat painter has no perspective at all, not even
-  one written into an element's own `perspective()` or `matrix3d` (tried: both come out as a
-  shear), so one matrix can only make a turned card the closest parallelogram, 4 px out at its
-  corners. The owner saw each approximation settle as the transition ended: plain boxes and a
-  hidden floor line first ("the lines and cards position sort of resetted"), then the
-  parallelogram ("the cards behind were flat instead of tilted"). A turned card is therefore
-  hidden and stood in for by eight copies of itself, each clipped to an upright slice and placed
-  on its own, overlapping 2 px inside the card so no seam shows: every point within 0.5 px. The
-  card in front needs one matrix and is exact, and the floor is followed as a line, from the
-  part in front of the viewer to its far end. `forSnapshot()` wraps both root transitions; the
-  warp asks twice, for the view it leaves and the one it reaches. Only where `navigator.vendor`
-  is Apple's: Chromium's snapshots keep depth. Not yet seen in real Safari by anyone but the
-  owner; `probe`-style checks hold the transition open in Playwright's WebKit and compare points.
+  `onSnapshot` (`lib/flat.ts`, a few lines in the first bundle; the drawing is
+  `lib/flatPoses.ts`, loaded with the scene): `flatPoses` reads where points of each box are on screen
+  (zero-size markers) and draws a copy of the box in a flat layer (`.flat-standin`), placed by
+  the 2D matrix nearest to that, nearer copies on top (`--near`), while the real pieces are
+  hidden with their transforms untouched. That last part is a Safari 27 lesson: the first
+  versions overrode the real cards' transforms for the length of the transition, and after a
+  warp Safari drew the corridor without perspective (full-size cards, no floor line) although
+  every style and every measured box was back in depth, until the next scroll changed a
+  transform. Its layers had first been made while the scene was flat. Playwright's WebKit does
+  not show this; only real Safari did.
+  A flat painter has no perspective at all, not even one written into an element's own
+  `perspective()` or `matrix3d` (tried: both come out as a shear), so one matrix can only make
+  a turned card the closest parallelogram, 4 px out at its corners. The owner saw each
+  approximation settle as the transition ended: plain boxes and a hidden floor line first ("the
+  lines and cards position sort of resetted"), then the parallelogram ("the cards behind were
+  flat instead of tilted"). A turned card is therefore drawn as eight copies, each clipped to an
+  upright slice and placed on its own, 2 px under the next: every point within about 0.5 px.
+  Its shadow is drawn once, by an empty copy beneath: slices that kept their own left dark
+  hairlines at the seams. The card in front needs one matrix and is exact, and the floor is
+  followed as a line, from the part in front of the viewer to its far end. `forSnapshot()`
+  wraps both root transitions; the warp asks twice, for the view it leaves and the one it
+  reaches. Only where `navigator.vendor` is Apple's: Chromium's snapshots keep depth. Seen in
+  real Safari 27.0.1 on 2026-10-11 (corridor right after a warp and after a theme switch); the
+  phone deck's stand-in, which only states an order, has not been seen on a real iPhone.
 - A cleanup leaves nothing behind that the next build would read: attributes on other sections
   (`data-jump-offset` on About outlived the hero that set it) and anything painted from a
   callback, which a trigger being reverted may call once more after the cleanup has run.

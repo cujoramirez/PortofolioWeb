@@ -8,7 +8,8 @@
 import { useRef } from 'react';
 import { experiences, sentences } from '../content/data';
 import { gsap, ScrollTrigger } from '../lib/gsap';
-import { flatPoses, onSnapshot } from '../lib/flat';
+import { onSnapshot } from '../lib/flat';
+import { flatPoses } from '../lib/flatPoses';
 import { useScene } from '../lib/useScene';
 import { snapAllowed } from '../lib/scroll';
 import './experience.css';
@@ -233,8 +234,9 @@ export default function ExperienceScene() {
     tl.to({}, { duration: 0.2 });
     for (let i = 1; i < n; i++) tl.to(world, { z: i * gap, duration: 1, ease: 'power2.inOut' });
     tl.to({}, { duration: 0.15 });
-    // Safari's snapshots lose depth (lib/flat.ts): for those, each card and year is placed flat
-    // where the corridor shows it, the nearer card on top, and the floor line with them.
+    // Safari's snapshots lose depth (lib/flat.ts): for those, a copy of each card and year is
+    // drawn flat where the corridor shows it, the nearer card on top, and the floor line with
+    // them, while the corridor itself is hidden with its depth intact.
     cards.forEach((card, i) => card.style.setProperty('--near', String(n - i)));
     const floor = q('.xp__floor')[0] as HTMLElement;
     return onSnapshot(() => {
@@ -247,7 +249,7 @@ export default function ExperienceScene() {
       const from = Math.min(0.9, Math.max(0, (Number(gsap.getProperty(world, 'z')) - depth * 0.6) / floor.offsetHeight));
       // a card ahead is turned toward the path, and one matrix cannot draw that: eight slices can
       const parts = [...cards.map((el) => ({ el, slices: 8 })), ...markers.map((el) => ({ el }))];
-      return flatPoses([...parts, { el: floor, at: [[0.5, from], [0.5, 1]], cross: 0.75 }], () => {
+      return flatPoses([{ el: floor, at: [[0.5, from], [0.5, 1]], cross: 0.75 }, ...parts], pin, () => {
         section.classList.add('is-flat');
         return () => section.classList.remove('is-flat');
       });

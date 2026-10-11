@@ -174,20 +174,40 @@
   box-shadow: var(--shadow-mid);
 }
 
-/* The stand-in for Safari's view-transition snapshots, which lose depth (lib/flat.ts): nearer
-   cards on top, and in the corridor every card, year and the floor line flat where it is seen
-   (--flat, measured). The phone deck places its cards in 2D already. */
-.is-flat .xp__card {
+/* Copies of a 3D scene's pieces, drawn flat for Safari's view-transition snapshots (lib/flatPoses.ts):
+   each sits at the layer's corner and is placed by its own matrix, nearer ones on top. */
+.flat-standin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  /* a copied list item is outside its list here and would grow a bullet */
+  list-style: none;
+  pointer-events: none;
+}
+.flat-standin > * {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  margin: 0 !important;
+  z-index: var(--near, auto);
+  transform: var(--flat) !important;
+  transform-origin: 0 0 !important;
+}
+
+/* While a stand-in is up for Safari's view-transition snapshots, which lose depth (lib/flat.ts).
+   The corridor is drawn by flat copies (.flat-standin, above) and its own pieces are hidden,
+   their transforms untouched: overriding them left Safari drawing the corridor without
+   perspective after a warp. The phone deck places its cards in 2D already and only needs its
+   order stated. */
+.is-flat:not(.is-xdeck) .xp__world .xp__card,
+.is-flat:not(.is-xdeck) .xp__world .xp__marker,
+.is-flat:not(.is-xdeck) .xp__world .xp__floor {
+  visibility: hidden !important;
+}
+.is-flat.is-xdeck .xp__card {
   z-index: var(--near);
-}
-.is-flat:not(.is-xdeck) .xp__world,
-.is-flat:not(.is-xdeck) .xp__list {
-  transform: none !important;
-}
-.is-flat:not(.is-xdeck) .xp__card,
-.is-flat:not(.is-xdeck) .xp__marker,
-.is-flat:not(.is-xdeck) .xp__floor {
-  transform: var(--flat, none) !important;
 }
 
 /* depth fog: cards ahead dim toward the page colour but stay opaque */
