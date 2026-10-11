@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, type ComponentType } from 'react';
 import { SECTIONS, UNLOADED } from '../content/site';
 import { registerSceneLoader } from '../lib/jump';
 import { revealHeading } from '../lib/micro';
+import { MQ } from '../lib/motion';
 import { refreshSoon } from '../lib/scroll';
 
 export interface SceneDef {
@@ -59,6 +60,15 @@ export default function SceneSlot({ id, load, estimate }: SceneDef) {
     };
   }, [id, load]);
 
+  // The heading reveals follow the reduced-motion setting while the page is open, as the scenes do.
+  const [calm, setCalm] = useState(() => window.matchMedia(MQ.reduce).matches);
+  useEffect(() => {
+    const reduce = window.matchMedia(MQ.reduce);
+    const onChange = () => setCalm(reduce.matches);
+    reduce.addEventListener('change', onChange);
+    return () => reduce.removeEventListener('change', onChange);
+  }, []);
+
   // Runs after the scene's own layout effects (its ScrollTriggers exist by now).
   useEffect(() => {
     if (!Scene) return undefined;
@@ -69,7 +79,7 @@ export default function SceneSlot({ id, load, estimate }: SceneDef) {
     const undo = headings.map(revealHeading);
     refreshSoon();
     return () => undo.forEach((fn) => fn());
-  }, [Scene]);
+  }, [Scene, calm]);
 
   // the placeholder's height goes with a failed download: the pins below measure again
   useEffect(() => {

@@ -6,7 +6,7 @@
  * tier get one static frame. Rendered at half resolution: the field is smooth, so it upscales cleanly.
  */
 import { currentScheme, subscribeScheme } from './theme';
-import { motionAllowed } from './motion';
+import { MQ, motionAllowed } from './motion';
 
 const COLORS = {
   dark: ['#3b82f6', '#22d3ee', '#60a5fa'],
@@ -96,7 +96,9 @@ export function startBends(canvas: HTMLCanvasElement): (() => void) | null {
   const uColors = gl.getUniformLocation(program, 'uColors');
   const uPointer = gl.getUniformLocation(program, 'uPointer');
 
-  const live = motionAllowed();
+  // Whether scroll and pointer move the field. Followed while the page is open: turning reduced
+  // motion on used to leave a field made under the old setting still following both.
+  let live = false;
   const pointer = [0, 0];
   let frame = 0;
 
@@ -143,14 +145,30 @@ export function startBends(canvas: HTMLCanvasElement): (() => void) | null {
     request();
   });
 
+  const reduce = window.matchMedia(MQ.reduce);
+  const follow = (event?: Event) => {
+    const next = motionAllowed();
+    if (next === live) return;
+    live = next;
+    if (live) {
+      window.addEventListener('scroll', request, { passive: true });
+      window.addEventListener('pointermove', onPointer, { passive: true });
+    } else {
+      window.removeEventListener('scroll', request);
+      window.removeEventListener('pointermove', onPointer);
+      // back to the still frame
+      pointer[0] = pointer[1] = 0;
+    }
+    // (the first call is followed by the first draw)
+    if (event) request();
+  };
+
   setColors();
   resize();
+  follow();
   draw();
   window.addEventListener('resize', onResize, { passive: true });
-  if (live) {
-    window.addEventListener('scroll', request, { passive: true });
-    window.addEventListener('pointermove', onPointer, { passive: true });
-  }
+  reduce.addEventListener('change', follow);
 
   const onLost = (e: Event) => {
     e.preventDefault();
@@ -164,6 +182,7 @@ export function startBends(canvas: HTMLCanvasElement): (() => void) | null {
     window.removeEventListener('resize', onResize);
     window.removeEventListener('scroll', request);
     window.removeEventListener('pointermove', onPointer);
+    reduce.removeEventListener('change', follow);
     canvas.removeEventListener('webglcontextlost', onLost);
     offScheme();
   }
