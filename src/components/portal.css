@@ -569,3 +569,18 @@
     background: var(--elevated);
   }
 }
+/* Firefox draws this window slowly, and without a graphics card to lean on (often so on Linux)
+   it stops drawing: opening the résumé there held every frame back for about 3 s on a fast Mac,
+   and froze the owner's tab on Ubuntu. The blur shows through only 5 % of the window; the streaks
+   and the rim light are the two other full-size layers behind masks. Firefox gets the window
+   without the three, which halves that. */
+@supports (-moz-appearance: none) {
+  .portal__window {
+    backdrop-filter: none;
+    background: var(--elevated);
+  }
+  .portal__rays,
+  .portal__rim {
+    display: none;
+  }
+}
