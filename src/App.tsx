@@ -14,6 +14,7 @@ import { OWNER } from './content/site';
 import { fontsReady } from './lib/fonts';
 import { ScrollTrigger } from './lib/gsap';
 import { fragmentId, jumpTo, loadAllScenes } from './lib/jump';
+import { motionAllowed } from './lib/motion';
 import { installOutbound, openOutbound } from './lib/outbound';
 import { initScroll, refreshSoon, scrollToTarget } from './lib/scroll';
 
@@ -97,12 +98,14 @@ export default function App() {
     let undoEggs: (() => void) | undefined;
     let live = true;
     const whenIdle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
+    // the cursor label needs a mouse: a phone fetched it and ran none of it
+    const mouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches && motionAllowed();
     whenIdle(() => {
-      void Promise.all([import('./lib/eggs'), import('./lib/cursor')]).then(
+      void Promise.all([import('./lib/eggs'), mouse ? import('./lib/cursor') : null]).then(
         ([eggs, cursor]) => {
           if (!live) return;
-          const undo = [eggs.installEggs(), cursor.installCursorLabel()];
-          undoEggs = () => undo.forEach((fn) => fn());
+          const undo = [eggs.installEggs(), cursor?.installCursorLabel()];
+          undoEggs = () => undo.forEach((fn) => fn?.());
         },
         // extras: the page is whole without them
         () => {},
