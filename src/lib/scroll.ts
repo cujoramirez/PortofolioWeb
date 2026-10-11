@@ -3,7 +3,7 @@
  * ScrollTrigger. Native scrolling on touch devices, reduced motion and the low tier.
  * Lenis is deliberately NOT added to gsap.ticker: that would keep a frame loop running forever.
  */
-import Lenis from 'lenis';
+import type Lenis from 'lenis';
 import { ScrollTrigger } from './gsap';
 import { createLenisLoop } from './lenisLoop';
 import { motionAllowed } from './motion';
@@ -15,8 +15,24 @@ const SCROLL_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home
 export function initScroll(): () => void {
   const touchOnly = window.matchMedia('(pointer: coarse) and (hover: none)').matches;
   if (!motionAllowed() || touchOnly) return () => {};
+  // Fetched here, not with the first bundle: phones scroll natively, and used to download the
+  // 5 KB of Lenis without ever running it. Until it arrives (and without it) scrolling is native.
+  let live = true;
+  let stop = () => {};
+  void import('lenis').then(
+    (m) => {
+      if (live) stop = smooth(m.default);
+    },
+    () => {},
+  );
+  return () => {
+    live = false;
+    stop();
+  };
+}
 
-  const instance = new Lenis({
+function smooth(LenisClass: typeof Lenis): () => void {
+  const instance = new LenisClass({
     lerp: 0.12,
     smoothWheel: true,
     syncTouch: false,
