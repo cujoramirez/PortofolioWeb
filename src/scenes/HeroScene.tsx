@@ -552,9 +552,45 @@ export default function HeroScene() {
         ];
       };
       const pose = poseAt(TURN, TILT);
+      const rest = poseAt(TURN_END, TILT_END);
+      // The index is the nearest layer and the furthest right. Part of the way into the turn, with
+      // the stage turned but not yet drawn back, a wide window drew it past its right edge: 43 px
+      // at 1512 x 859, 63 at 1920, more beside a scrollbar, with its counts out of sight. So its
+      // slide is not one straight move: the stage is put through the turn in quarters here, before
+      // any tween has read these elements, and at each the index goes back by what was over. This
+      // measures the box on screen on purpose: where the turn puts it is the question.
+      const inside = (part: number, turn: number, tilt: number, x: number) => {
+        const el = front[1];
+        if (!el?.getClientRects().length) return x;
+        const was = { rotateX: gsap.getProperty(stage, 'rotateX'), rotateY: gsap.getProperty(stage, 'rotateY'), scale: gsap.getProperty(stage, 'scale') };
+        const own = { x: Number(gsap.getProperty(el, 'x')), z: Number(gsap.getProperty(el, 'z')) };
+        const limit = document.documentElement.clientWidth - 16;
+        gsap.set(stage, { rotateX: tilt, rotateY: turn, scale: 1 - 0.2 * part });
+        gsap.set(el, { z: own.z + (Z[3] - own.z) * part });
+        // Stepped, not solved in one: this near the viewer a px of slide is up to two on screen,
+        // and fewer the further back it goes (one straight step left 33 px over at 2560 wide).
+        let at = x;
+        for (let step = 0; step < 6; step++) {
+          gsap.set(el, { x: at });
+          const over = el.getBoundingClientRect().right - limit;
+          if (over <= 0.5) break;
+          gsap.set(el, { x: at - 20 });
+          const per = (over + limit - el.getBoundingClientRect().right) / 20;
+          if (per <= 0.1) break;
+          at -= over / per;
+        }
+        gsap.set(stage, was);
+        gsap.set(el, own);
+        return at;
+      };
+      const QUARTERS = [0.25, 0.5, 0.75, 1];
+      const indexPath = QUARTERS.map((part) => inside(part, TURN * part, TILT * part, (pose[3].x ?? 0) * part));
+      const indexRest = inside(1, TURN_END, TILT_END, rest[3].x ?? 0);
       [plate, name, portrait, ui].forEach((layer, i) => tl.to(layer, { ...pose[i], duration: EXPLODE, ease: 'power1.inOut' }, 0));
       // the index has nothing above it to clear, and sliding down would take it off a short window
-      tl.to(front.slice(1), { z: Z[3], x: pose[3].x, duration: EXPLODE, ease: 'power1.inOut' }, 0);
+      tl.to(front.slice(1), { z: Z[3], duration: EXPLODE, ease: 'power1.inOut' }, 0);
+      // the same ease as the stage, so each quarter of its turn meets the place measured for it
+      tl.to(front.slice(1), { keyframes: { x: [0, ...indexPath], easeEach: 'none' }, duration: EXPLODE, ease: 'power1.inOut' }, 0);
       tags.forEach((t, i) => {
         tl.to(t, { ...pose[i], z: Z[i] + 6, duration: EXPLODE, ease: 'power1.inOut' }, 0);
         tl.to(t, { opacity: 1, duration: 0.1 }, 0.22 + i * 0.03);
@@ -563,10 +599,9 @@ export default function HeroScene() {
       // of this stretch had found 0.3 viewport heights where almost nothing changed. The layers
       // keep sliding with the angle, so the name stays clear of the head throughout.
       const hold = { duration: HOLD_END - EXPLODE, ease: 'sine.inOut' };
-      const rest = poseAt(TURN_END, TILT_END);
       tl.to(stage, { rotateX: TILT_END, rotateY: TURN_END, ...hold }, EXPLODE);
       [name, ui].forEach((layer, n) => tl.to(layer, { x: rest[n ? 3 : 1].x, y: rest[n ? 3 : 1].y, ...hold }, EXPLODE));
-      tl.to(front.slice(1), { x: rest[3].x, ...hold }, EXPLODE);
+      tl.to(front.slice(1), { x: indexRest, ...hold }, EXPLODE);
       tl.to(tags[1], { x: rest[1].x, y: rest[1].y, ...hold }, EXPLODE).to(tags[3], { x: rest[3].x, y: rest[3].y, ...hold }, EXPLODE);
       // what the model sees: segmentation, boxes and landmarks on the portrait layer
       addScan(0.2, 0.22);
