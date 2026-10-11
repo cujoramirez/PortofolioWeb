@@ -31,3 +31,5 @@ dist-ssr
 
 # audit reports written about the site (local paths, findings): kept out of the public repo
 audits/
+.vercel
+.env*
