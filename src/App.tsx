@@ -3,14 +3,13 @@
  * (HeroScene only attaches its choreography); every later scene loads on approach.
  */
 import { useEffect } from 'react';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
 
 import Backdrop from './components/Backdrop';
 import Nav from './components/Nav';
 import SceneSlot, { type SceneDef } from './components/SceneSlot';
 import HeroScene from './scenes/HeroScene';
 import { OWNER } from './content/site';
+import { startAnalytics } from './lib/analytics';
 import { fontsReady } from './lib/fonts';
 import { ScrollTrigger } from './lib/gsap';
 import { fragmentId, jumpTo, loadAllScenes } from './lib/jump';
@@ -60,6 +59,7 @@ function useAnchorJumps() {
 export default function App() {
   useAnchorJumps();
   useEffect(() => installOutbound(), []);
+  useEffect(startAnalytics, []);
 
   useEffect(() => {
     const stop = initScroll();
@@ -98,22 +98,34 @@ export default function App() {
     let undoEggs: (() => void) | undefined;
     let live = true;
     const whenIdle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
-    // the cursor label needs a mouse: a phone fetched it and ran none of it
-    const mouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches && motionAllowed();
     whenIdle(() => {
-      void Promise.all([import('./lib/eggs'), mouse ? import('./lib/cursor') : null]).then(
-        ([eggs, cursor]) => {
-          if (!live) return;
-          const undo = [eggs.installEggs(), cursor?.installCursorLabel()];
-          undoEggs = () => undo.forEach((fn) => fn?.());
+      void import('./lib/eggs').then(
+        (eggs) => {
+          if (live) undoEggs = eggs.installEggs();
         },
         // extras: the page is whole without them
         () => {},
       );
     });
+    // The cursor label waits for a mouse to move: nothing needs a label before the pointer is
+    // somewhere, and a phone, which fetched it and ran none of it, never asks.
+    let undoCursor: (() => void) | undefined;
+    const onMouse = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse') return;
+      window.removeEventListener('pointermove', onMouse);
+      void import('./lib/cursor').then(
+        (cursor) => {
+          if (live) undoCursor = cursor.installCursorLabel();
+        },
+        () => {},
+      );
+    };
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && motionAllowed()) window.addEventListener('pointermove', onMouse, { passive: true });
     return () => {
       live = false;
       undoEggs?.();
+      undoCursor?.();
+      window.removeEventListener('pointermove', onMouse);
       stop();
       window.removeEventListener('load', onLoad);
       window.removeEventListener('hashchange', onHash);
@@ -134,8 +146,6 @@ export default function App() {
           © {new Date().getFullYear()} {OWNER}
         </p>
       </footer>
-      <Analytics />
-      <SpeedInsights />
     </>
   );
 }
