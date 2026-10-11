@@ -493,8 +493,9 @@ html.lenis body {
   color: var(--ink-3);
 }
 /* After the pinned contact scene the footer overlays the scene's bottom edge (net height 0), so
-   the page ends where the pin ends and the card never shifts up under the nav. */
-.scene--contact.is-motion + .footer {
+   the page ends where the pin ends and the card never shifts up under the nav. Where the card
+   does not fit a pin (.is-loose) the footer simply follows it. */
+.scene--contact.is-motion:not(.is-loose) + .footer {
   position: relative;
   z-index: 1;
   display: flex;

@@ -1,7 +1,8 @@
 /**
  * Contact: everything reassembles. Plates in the colours of the page's layers fly in from
  * scattered positions and settle into a stack under one card, then the card's content rises.
- * Phones and reduced motion: the assembled card, static.
+ * Pinned only where the finished card fits between the nav and the footer, measured; elsewhere
+ * (.is-loose) and under reduced motion: the assembled card, in the page's flow.
  */
 import { useEffect, useRef, useState } from 'react';
 import Dock from '../components/Dock';
@@ -58,6 +59,16 @@ export default function ContactScene() {
     const q = gsap.utils.selector(section);
     const plates = q('.contact__plate');
     const inner = q('.contact__rise');
+    // The pin is one screen tall and clips. A card taller than the room in it lost its last links
+    // for good: at 320 x 568 the résumé link lay below the screen at the end of the page.
+    const [card] = q('.contact__card') as HTMLElement[];
+    const navSpace = 76; // nav top offset + bar height + a little air
+    const footSpace = 64; // the footer lies over the pin's last 4rem
+    if (card.offsetHeight + navSpace + footSpace > window.innerHeight) {
+      section.classList.add('is-loose');
+      inner.forEach((el) => gsap.from(el, { y: 28, opacity: 0, duration: 0.7, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 92%', once: true } }));
+      return () => section.classList.remove('is-loose');
+    }
     const tl = gsap.timeline({
       defaults: { ease: 'none' },
       scrollTrigger: {
