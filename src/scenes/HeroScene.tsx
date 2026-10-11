@@ -357,6 +357,8 @@ export default function HeroScene() {
     const clearHandoff = () => {
       [about, swapLayer(), portrait].forEach((el) => el?.style.removeProperty('--handoff'));
       about?.style.removeProperty('--hero-overlap');
+      // a rebuild may choose the short pin, which hands nothing over
+      about?.removeAttribute('data-jump-offset');
       root.classList.remove('hero-handed');
     };
     setOverlap();

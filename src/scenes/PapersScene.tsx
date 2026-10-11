@@ -80,7 +80,11 @@ export default function PapersScene() {
         let homing = false;
         // plain CSS here: a native 3D transform-origin (the axis R behind each paper) is exact
         cards.forEach((card) => (card.style.transformOrigin = `50% 50% ${-R.toFixed(1)}px`));
+        // After the cleanup below nothing paints: a trigger being reverted still reports once, and
+        // that left the papers turned on their drum in a layout that has none.
+        let live = true;
         const paint = () => {
+          if (!live) return;
           wheel.p = wheel.aim - wheel.slip;
           cards.forEach((card, i) => {
             const a = (i - wheel.p) * step;
@@ -162,13 +166,19 @@ export default function PapersScene() {
           return i < 0 ? null : i / (n - 1);
         });
         return () => {
+          live = false;
           unfocus();
           gsap.killTweensOf(wheel);
           section.classList.remove('is-drum');
           grid.style.removeProperty('height');
+          // Without their transition: a linked paper eases its transform (its hover), and cleared
+          // with that running, the next build read the drum's angle off the card as its resting pose.
           cards.forEach((card) => {
+            card.style.transition = 'none';
             for (const prop of ['transform', 'transform-origin', 'opacity', 'visibility', 'pointer-events']) card.style.removeProperty(prop);
           });
+          void grid.offsetWidth;
+          cards.forEach((card) => card.style.removeProperty('transition'));
           bars.forEach((bar) => bar.style.removeProperty('--f'));
         };
       }

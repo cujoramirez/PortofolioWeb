@@ -2,11 +2,13 @@
  * One scroll choreography per scene, rebuilt per media variant via gsap.matchMedia.
  * Reduced motion and the low tier get no timeline: the CSS rest state is the finished poster.
  * The build callback runs with the section already carrying `is-motion` and `is-<variant>`,
- * so variant layouts are in place before ScrollTrigger measures.
+ * so variant layouts are in place before ScrollTrigger measures. It runs again after a resize
+ * that can change what fits (lib/refit.ts).
  */
 import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { gsap, ScrollTrigger } from './gsap';
 import { DEPTH, MQ, lowTier, variantFor, type Variant } from './motion';
+import { onRefit } from './refit';
 import { refreshSoon } from './scroll';
 import { skipScene } from './skipScene';
 
@@ -30,8 +32,8 @@ export function useScene(
     const root = rootRef.current;
     if (!root) return undefined;
     const section = sectionOverride?.() ?? (root.closest('section') as HTMLElement | null) ?? root;
-    const mm = gsap.matchMedia();
-    mm.add(
+    let mm = gsap.matchMedia();
+    const mount = () => mm.add(
       { wide: MQ.wide, mid: MQ.mid, reduce: MQ.reduce, any: MQ.any },
       (ctx) => {
         const c = ctx.conditions as Record<string, boolean>;
@@ -55,7 +57,16 @@ export function useScene(
       },
       root,
     );
-    return () => mm.revert();
+    mount();
+    const off = onRefit(section, () => {
+      mm.revert();
+      mm = gsap.matchMedia();
+      mount();
+    });
+    return () => {
+      off();
+      mm.revert();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
