@@ -55,6 +55,14 @@ then run from this folder:
   audit the posters, where every line is at rest; without it, lines are also sampled mid-choreography
   with other layers crossing them. Lines under the nav bar or covered by another layer are skipped.
 - `node shot.mjs ... --gpu`: screenshots on the Mac's GPU instead of SwiftShader.
+- `node shot-firefox.mjs <url> <outPrefix> [--w] [--h] [--scheme dark|light] [--scrolls 0,900,#id+60]
+  [--eval "js"] [--window] [--software]`: screenshots from the real Firefox, driven over WebDriver
+  BiDi (Firefox speaks it itself, so there is no driver). `--software` turns graphics acceleration
+  off, which is how Firefox runs on Linux where it does not trust the driver; `--window` opens a
+  visible window on the GPU. Prints console warnings and errors. Needs `Firefox.app` in
+  `/Applications` or `~/Library/Caches/pf-browsers/` (from mozilla.org). Playwright's Firefox
+  build does not start on this macOS, and a Firefox started as a terminal's child needs
+  `__CFBundleIdentifier` removed from its environment (the tool does that).
 - `node deployed.mjs <origin> [--dist <dir>] [--env .env.local]`: a Vercel deployment as it is served.
   Every file of the local build must be there, hashed files cached for a year, the security headers
   on each response; prints the first load's bytes on the wire (Vercel compresses with Brotli at

@@ -38,7 +38,13 @@ There are no tests configured in this project.
   `shot.mjs` (screenshots at scroll offsets; add `?tier=high`, headless counts as a low-tier device;
   `--gpu` draws on the Mac's GPU), `shot-webkit.mjs` (same, in Playwright's WebKit: layout and text
   only, it flattens preserve-3d, exactly as Safari's view-transition snapshots do, which makes it
-  the way to see those), `shot-safari.mjs` (real Safari via safaridriver: the only true check
+  the way to see those), `shot-firefox.mjs` (the real Firefox over WebDriver BiDi, which it
+  speaks itself: no driver; `--software` turns graphics acceleration off, as Firefox runs on
+  Linux where it does not trust the driver; `--window` uses the GPU. It needs `Firefox.app` in
+  `/Applications` or `~/Library/Caches/pf-browsers/`: Playwright's Firefox build does not start
+  on this macOS, and any Firefox started as a terminal's child stops with "Could not find
+  profile folder" until `__CFBundleIdentifier` is taken out of its environment),
+  `shot-safari.mjs` (real Safari via safaridriver: the only true check
   of Safari's 3D; setup in the README; it corrects the viewport after navigation, when Safari applies
   the saved site zoom, and prints the frames Safari made in half a second: at 0 the display is
   asleep, nothing animates or observes, and the shots are stale), `film.mjs` (captures frames after an action; dev builds expose `window.__gsap`
@@ -203,6 +209,11 @@ frame, and the browser's clamp left Contact 63 px short on a phone.
   turn a wide window drew it past its right edge (43 px at 1512 x 859, the owner's Safari at
   100 % zoom, with the counts out of sight). Its slide therefore follows the turn in quarters,
   each measured at build and stepped back inside the window; checked from 1100 to 2560 px wide.
+  Firefox does not paint a background clipped to text on an element that stands in 3D, and once
+  split every letter does: there the name showed for a second, then was gone for good, also
+  after scrolling (the owner, on Ubuntu). In Firefox each letter takes one colour instead, the
+  gradient's at its middle, written inline by `paintGradient` (not in `hero.css`: that file is
+  inlined into a page with 55 bytes to spare). The letters keep their depth and still scatter.
   The portrait carries the Apple Vision overlay (segmentation, person/face boxes, landmarks; no
   caption, the owner removed it): a scan beam (`.cv-scan`) sweeps the portrait, segmentation first, then
   boxes and landmarks as it passes; also shown under a 1:1 pointer lens on hover (three taps on the
@@ -363,7 +374,11 @@ while the page is open (it used to read the setting once, and went on redrawing 
 motion was switched on; `SceneSlot` reapplies the heading reveals on the same change); a CSS tint in
 `.bends` (index.html) paints first and is the no-WebGL fallback. Canvas opacity 0.23 dark / 0.26 light
 keeps every text line at 4.5:1 or better in `contrast.mjs` (at 0.34 secondary text over the brightest
-band measured 3.66:1 on a real GPU).
+band measured 3.66:1 on a real GPU). The shader's `col * cover` goes above the coverage where
+a channel passes 1: a premultiplied pixel brighter than its own alpha, which is not a colour.
+Chrome and Safari add it as light, and the look was tuned on that; Firefox drew the light
+theme's bands yellow and red. In Firefox the shader caps the colour at 1 (bands a shade dimmer
+at their edges, 16 of 255 at most); elsewhere it is unchanged, pixel for pixel.
 
 **Depth and image effects (`lib/gl.ts`, `scenes/heroRelief.ts`, `scenes/aboutRelief.ts`,
 `lib/displacement.ts`).** `npm run vision` also runs `scripts/vision/depth.swift` with Depth Anything
@@ -604,6 +619,17 @@ after every action. Hero frames up to the hold are pixel-identical to the build 
 landings complete at 1440 x 900, 1190 x 680 and 390 x 844; the split survives a resize and a
 change to the phone layout and back. Not run: real Safari.
 
+2026-10-12, the first pass in Firefox (157.0.1, headless and in a window, on this Mac), after
+the owner tried the live site on Ubuntu. Found and fixed: the hero name vanishing once split,
+the light theme's background drawn in yellow and red, and the cost of the preview window (see
+Scenes, Background and Portal). Every section at its landing and a step further in, a paper's
+preview and the résumé's were looked at in both themes: no console warning or error. One
+difference left alone: as one featured project hands over to the next, Firefox stops drawing
+the outgoing card a little earlier than Chrome does, for about a tenth of a viewport of scroll.
+Not checked in Firefox: the phone layouts, the search warp and theme reveal as transitions, and
+frame pacing. Chrome's background is pixel-identical to the build before, click-through 48 of
+48; first-load JS 111.5 KB as Vercel sends it, the HTML 16329 bytes of 16384.
+
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
 button's bars fold into an X, rows lean toward a pressing finger 1:1; picking a row flies it at the
@@ -700,6 +726,15 @@ guarded. Closed, the portal unmounts after its exit: a video in a closed dialog 
 viewport, and a transform on it would carry them. Its strings are in `COPY` in `Portal.tsx`; the
 owner approved them on 2026-10-11.
 Not in it: live data from other sites (a rendered number needs a source in the constants).
+In Firefox the window comes without its backdrop blur, the streaks behind it and the rim light
+(`@supports (-moz-appearance: none)` in `portal.css`). The owner's tab froze on Ubuntu when the
+résumé opened, so hard that it could not be reloaded. That did not reproduce in Firefox 157 on
+this Mac, where the page went on answering. What did show: with graphics acceleration off, as
+Firefox runs on Linux where it does not trust the driver, opening the résumé held every frame
+back for 3.2 s on a fast Mac (worst frame 0.7 s); without the three layers 1.8 s (0.4 s). With
+acceleration on both read about 0.27 s. Whether that was the freeze is not known: it needs the
+owner's `about:support` (Compositing) and whether a paper's or a certificate's preview freezes
+too.
 
 **Micro-interactions (`lib/micro.ts`, after React Bits).** `magnet` (buttons, 1:1, settles on leave),
 `spotlight` (fill + rim glow on clickable cards only: `.has-spot`), `decrypt`/`decryptOnView` (mono labels
