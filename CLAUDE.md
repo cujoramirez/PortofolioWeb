@@ -97,7 +97,11 @@ for a year, so they must never get new contents: `build-images.mjs` has a `SALT`
 encoding changes. The public GitHub repository (`cujoramirez/PortofolioWeb`) holds the old site's
 history, which shares no commit with this one (it starts at `4d7609a` on 2026-10-08): a first
 push is either a new branch, which Vercel builds as a preview, or a forced replacement of
-`main`. Everything tracked becomes public, this file included; `audits/` is ignored. On
+`main`. Vercel builds production from that branch (the live deployment's alias is
+`portofolio-web-git-main-…`, made the minute of the last push), so a push to `main` is the
+deploy and `vercel --prod` is not needed after it. Everything tracked becomes public, this file
+included, with the owner's words quoted in it, and so do `.claude/` and `.agents/` (two
+third-party skills, no settings); `audits/` is ignored. On
 2026-10-11 the owner wrote that the repository is private, and GitHub's API answered
 `"visibility": "public"` the same day: read it again before a push. Before a
 push: `npm run typecheck`, `npm run lint`, `npm run build`, and `npm run images` if the résumé
@@ -136,7 +140,10 @@ profile and 123.1 to 123.4 on desktop, as summed. The fixes after it (fonts, the
 the index) add 0.7 KB, so desktop has about 1 KB of room. LCP there read 1.75 to 1.77 s through
 the relay and 2.2 to 2.3 s loaded directly, where every request also passes Vercel's sign-in
 layer and the tool's interception: neither is the public site's figure, which has to be read
-from gadingap.com once it is live. To get Speed Insights back, the room has to come from somewhere
+from gadingap.com once it is live. The build meant for production (`ee06b79`, the fifth preview)
+read 121.0 KB on the phone profile and 123.6 on desktop, all 221 files and the headers as
+intended. The owner confirmed that Speed Insights stays out ("if speed insights is not that
+important then leave it removed"). To get it back, the room has to come from somewhere
 else; smooth scrolling fetched on the first input (5.9 KB) is what is left. The HTML has no
 room: 15.9 KB compressed of 16.
 The old site's nine `VITE_FIREBASE_*` and `VITE_ENABLE_*` variables were removed from the Vercel
