@@ -80,8 +80,16 @@ function buildCommands(close: () => void): Command[] {
       label: 'Copy email address',
       hint: LINKS.email,
       run: () => {
-        void navigator.clipboard?.writeText(LINKS.email);
         close();
+        // as the Contact button does: the clipboard, or failing that the mail app
+        Promise.resolve()
+          .then(() => navigator.clipboard.writeText(LINKS.email))
+          .then(
+            () => toast('Copied'),
+            () => {
+              window.location.href = `mailto:${LINKS.email}`;
+            },
+          );
       },
     },
     { id: 'email', group: 'Actions', label: 'Write an email', run: () => (close(), (window.location.href = `mailto:${LINKS.email}`)) },

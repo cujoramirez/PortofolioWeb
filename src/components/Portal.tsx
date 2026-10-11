@@ -27,6 +27,7 @@ const COPY = {
   open: 'Open in a new tab',
   copy: 'Copy link',
   copied: 'Copied',
+  uncopied: 'Could not copy',
   cite: 'Copy citation',
   download: 'Download',
   scan: 'Scan to open on a phone',
@@ -240,12 +241,20 @@ export default function Portal({ link, open, onClose }: { link: Outbound | null;
   const wide = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 768px)').matches;
   const code = useMemo(() => (link && wide ? qrPath(link.href) : null), [link, wide]);
 
-  const copy = (what: string, text: string) => (event: { currentTarget: HTMLElement }) => {
+  // "Copied" only once the clipboard has taken it. Without a clipboard, or with permission
+  // refused, the button says so and the address is selected, ready to copy by hand.
+  const copy = (what: 'link' | 'cite', text: string) => async (event: { currentTarget: HTMLElement }) => {
     const r = event.currentTarget.getBoundingClientRect();
-    void navigator.clipboard?.writeText(text);
-    spark(r.left + r.width / 2, r.top + r.height / 2);
-    setCopied(what);
-    timers.current.push(window.setTimeout(() => setCopied(''), 1600));
+    let done = true;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      done = false;
+    }
+    if (done) spark(r.left + r.width / 2, r.top + r.height / 2);
+    else if (what === 'link' && address.current) window.getSelection()?.selectAllChildren(address.current);
+    setCopied(done ? what : `${what}-failed`);
+    timers.current.push(window.setTimeout(() => setCopied(''), done ? 1600 : 2600));
   };
   // The link still opens by itself: the window only flies out behind it, then closes.
   const launch = () => {
@@ -327,8 +336,14 @@ export default function Portal({ link, open, onClose }: { link: Outbound | null;
                 <span className="portal__address mono" title={link.href} ref={address} data-text={shown}>
                   {shown}
                 </span>
-                <button type="button" className="icon-btn" aria-label={copied === 'link' ? COPY.copied : COPY.copy} title={COPY.copy} onClick={copy('link', link.href)}>
-                  {copied === 'link' ? <CheckIcon /> : <CopyIcon />}
+                <button
+                  type="button"
+                  className="icon-btn"
+                  aria-label={copied === 'link' ? COPY.copied : copied === 'link-failed' ? COPY.uncopied : COPY.copy}
+                  title={copied === 'link-failed' ? COPY.uncopied : COPY.copy}
+                  onClick={copy('link', link.href)}
+                >
+                  {copied === 'link' ? <CheckIcon /> : copied === 'link-failed' ? <CloseIcon /> : <CopyIcon />}
                 </button>
                 <button type="button" className="icon-btn" aria-label="Close" onClick={leave}>
                   <CloseIcon />
@@ -372,7 +387,7 @@ export default function Portal({ link, open, onClose }: { link: Outbound | null;
                   </a>
                   {paper ? (
                     <button type="button" className="btn btn--secondary" onClick={copy('cite', citation)}>
-                      {copied === 'cite' ? COPY.copied : COPY.cite}
+                      {copied === 'cite' ? COPY.copied : copied === 'cite-failed' ? COPY.uncopied : COPY.cite}
                     </button>
                   ) : null}
                   {found.kind === 'resume' ? (
