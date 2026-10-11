@@ -53,6 +53,16 @@ then run from this folder:
   audit the posters, where every line is at rest; without it, lines are also sampled mid-choreography
   with other layers crossing them. Lines under the nav bar or covered by another layer are skipped.
 - `node shot.mjs ... --gpu`: screenshots on the Mac's GPU instead of SwiftShader.
+- `node deployed.mjs <origin> [--dist <dir>] [--env .env.local]`: a Vercel deployment as it is served.
+  Every file of the local build must be there, hashed files cached for a year, the security headers
+  on each response; prints the first load's bytes on the wire (Vercel compresses with Brotli at
+  level 3, larger than the gzip figures of `budget.mjs`). Exits 1 on a problem. A preview is behind
+  Vercel Authentication: the tool sends the short-lived token that `vercel env pull` writes to
+  `.env.local`, to that deployment only. Do not use `vercel curl` for this unasked: it creates a
+  permanent bypass secret on the project. No Chrome.
+- `node deployed.mjs <origin> --relay 4188`: a loopback copy of a protected preview for `perf.mjs`
+  and the other tools (same bytes and headers). It forwards GET and HEAD only, so a test run
+  records no analytics visit. Stop it when done.
 
 The newer tools share `cdp.mjs`. It turns on focus emulation: without it a CDP Escape key press makes
 the headless page `hidden`, no frame is produced afterwards, and every idle check reads a false 0.

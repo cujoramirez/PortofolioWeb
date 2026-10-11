@@ -49,7 +49,10 @@ There are no tests configured in this project.
   chunk and the HTML against limits; `--sum 'effects=^(gl|heroRelief|aboutRelief|displacement|sequence)-:8'`
   budgets a group), `pins.mjs` (pin length per scene; `--dead` scans for stretches where nothing
   changes), `contrast.mjs` (WCAG contrast of every text line over the real pixels behind it;
-  `--reduced` audits the posters; a phone needs `--w 390 --h 844 --mobile`).
+  `--reduced` audits the posters; a phone needs `--w 390 --h 844 --mobile`), `deployed.mjs` (a
+  Vercel deployment as it is served: every built file present, the headers `vercel.json` asks for,
+  the first load's bytes on the wire; `--relay 4188` gives the other tools a loopback copy of a
+  protected preview; no Chrome).
   Run INP, scroll and contrast checks on the Mac's GPU, one at a time: under SwiftShader a dialog's
   backdrop blur alone takes about 500 ms to present. Measure only while the Mac is awake: on battery
   it idle-sleeps after a minute, and a run that spans a dark wake times out or reports nonsense
@@ -92,9 +95,26 @@ history, which shares no commit with this one (it starts at `4d7609a` on 2026-10
 push is either a new branch, which Vercel builds as a preview, or a forced replacement of
 `main`. Everything tracked becomes public, this file included; `audits/` is ignored. Before a
 push: `npm run typecheck`, `npm run lint`, `npm run build`, and `npm run images` if the résumé
-PDF changed. On the first preview check the headers with `curl -sI`, the résumé preview and a
-video demo. A clean `npm ci` and build of the committed tree on a case-sensitive volume gave the
+PDF changed. A clean `npm ci` and build of the committed tree on a case-sensitive volume gave the
 same 221 files as the local build (2026-10-11).
+
+A preview sits behind Vercel Authentication. `vercel curl` gets through by creating a permanent
+"Protection Bypass for Automation" secret on the project when it has none (CLI 63.1.2): do not
+run it unasked. `deployed.mjs` sends the short-lived token that the owner's `vercel` run leaves
+in `.env.local` (ignored by git; never print it), to that deployment only. Checked on the first
+preview, 2026-10-11: all 221 files there and the page byte for byte the local build; the hashed
+files `immutable` for a year; the three headers on every response; the résumé's PDF drawn in its
+frame under `frame-ancestors 'self'`; a YouTube demo loaded in the portal; Vercel's two analytics
+scripts answer 200. Their beacon never reached the relay, so recorded visits are unconfirmed.
+Vercel's CDN compresses with Brotli at level 3 (its sizes match a local level 3 to the byte, on
+files ten days old as well), which comes out 4 to 5 % larger than gzip at level 9, and each
+response carries about 0.7 KB of headers. So the numbers on the wire are larger there than every
+local figure in this file: the three first-load scripts 116.6 KB (109.6 gzip), the page 16.6 KB
+(15.2), all script in a phone load 134.4 KB where the local preview reads 119.2 (7.8 KB of it
+Vercel's own two scripts, which are 404s locally), desktop 137.0 against 121.7. The 125 KB limit
+has only been met locally. The live site before this build named 196.4 KB of script in its HTML.
+The Vercel project still holds the old site's `VITE_FIREBASE_*` and `VITE_ENABLE_*` variables;
+nothing in this build reads them.
 
 **Entry and hero shell.** `index.html` has `<!--hero-shell-->`, `#nav-root` and `#root`. The Vite plugin
 `vite-plugins/heroShell.ts` renders the hero from `src/content/heroMarkup.ts` into `index.html` (dev and
@@ -517,6 +537,9 @@ phone, 64 ms desktop; idle frames, timers and running animations zero after ever
 action. Click-through 48 of 48, Tab walk 95 and 78 stops with none hidden, landings complete,
 search jumps and the resize rebuild as before with Lenis loaded late. Lint 0 errors and
 typecheck clean on the refreshed tools; `npm run images` still a no-op.
+Later that day the cursor label stopped loading on touch screens: 118.2 KB transferred on the
+phone profile, LCP 1.74 to 1.75 s, CLS 0.000, no idle frames; desktop unchanged at 121.7 KB. For
+the same build as Vercel serves it, see Deploying.
 
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
@@ -526,6 +549,8 @@ viewer, jumps behind the veil and collapses the veil into the row. Its four link
 
 **Cursor label (`lib/cursor.ts`, desktop mouse only).** Elements with `data-cursor="Drag|Open|DOI|Copy|View"`
 get a small label that follows the pointer 1:1 and fades out in place.
+`App.tsx` fetches the chunk only where a mouse exists and motion may run: a phone downloaded 2.4 KB
+it never ran.
 
 **Command palette (`components/CommandPalette.tsx`, lazy).** ⌘K / Ctrl+K or the nav's Search: sections,
 projects (opens details via an `open-project` event), papers (DOI), links, copy email, résumé, theme.
