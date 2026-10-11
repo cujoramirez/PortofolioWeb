@@ -93,7 +93,14 @@ Papers → Certificates → Contact (section ids `#hero #about #disciplines #too
 #papers #certificates #contact`). Each below-the-fold scene is a lazy chunk mounted by `components/SceneSlot.tsx` when its
 stable `<section>` comes within one viewport; `lib/jump.ts` mounts all of them before a far jump
 (nav links, `g` + letter shortcuts, deep-link hashes, a hash typed into the address bar), then
-refreshes ScrollTrigger and scrolls. A pinned scene's first pixel is a transitional state (About
+refreshes ScrollTrigger and scrolls. A scene whose download fails settles its loader (every jump
+waits for every scene: left pending, one failed section stopped all navigation), and its section
+shows its title, one line and a reload that returns to it. The way back is a reload because
+Chrome keeps a failed dynamic import for the life of the document: importing the same address
+again makes no request (measured; a different address does). For the same reason Search and the
+menu are fetched with `useOnDemand` in `Nav.tsx`, not `React.lazy`: with no error boundary a
+failed lazy chunk removed the whole app. Their failure opens a small dialog. Fragments go
+through `fragmentId()`: `#%` is not valid percent-encoding and threw at startup. A pinned scene's first pixel is a transitional state (About
 mid hand-off, Contact's empty card, What I do still stacked), so each one names where a jump lands
 with `landAt`: About on its first chapter with every line up, What I do on the assembled grid
 (phones: the squared deck), Papers on the grid (desktop), Contact on the finished card. The owner
@@ -232,7 +239,12 @@ frame, and the browser's clamp left Contact 63 px short on a phone.
   Size phone layouts for real iPhone Safari viewports (~390-402 × 740-760), not only 440 × 956.
 - Certificates: tiles flip in; `#all-certificates` archive. Contact (all variants): plates converge under one card;
   copy-email button (sparks + check); links as a Dock (`components/Dock.tsx`). The footer overlays the
-  pinned contact scene's bottom (net height 0) so the page ends where the pin ends.
+  pinned contact scene's bottom (net height 0) so the page ends where the pin ends. The pin is
+  one screen tall and clips, so it is used only where the finished card fits between the nav and
+  the footer, measured (card + 76 + 64 px against the window). Elsewhere the card stays in the
+  flow (`.is-loose`) with the footer after it: at 320 x 568 the pinned card was 672 px tall and
+  its last three links could not be reached at all. A dock label keeps the pointer (the gap
+  under it belongs to it): moving up to read it used to hide it.
 
 **Motion policy (`lib/motion.ts`, `lib/useScene.ts`).** Every scene calls `useScene(ref, build)`, which uses
 `gsap.matchMedia` for variants `desktop` (≥1024 wide, ≥620 tall), `tablet` (768–1023; pins and z × 0.7 via `k`)
@@ -240,13 +252,25 @@ and `mobile` (z × 0.5; scenes pin only after measuring that their content fits 
 with one-time rises). Reduced motion or a low device tier (`lib/tier.ts`, `?tier=` override; core
 counts alone never mean low, iOS under-reports them) gets no timeline: the CSS rest state is the
 finished "poster". ScrollTrigger restores progress on refresh *without* `onUpdate`, so any state painted
-from a proxy object (drum, reveal growth, `--handoff`) must also repaint in `onRefresh`. The section gets `is-motion is-<variant>`
+from a proxy object (drum, reveal growth, `--handoff`) must also repaint in `onRefresh`. A scene
+decides what fits when it builds (pinned or flowing, grid or row, deck or stack), and a build ran
+again only when the media variant changed: a desktop window made shorter kept a pinned grid
+taller than itself. `lib/refit.ts` now builds every scene again, in one turn, after a resize
+that can change those decisions: any change with a mouse; on a phone a change of width, or of
+more than a fifth of the height (the address bar is not a new window); never under an open
+dialog. It then puts the page back in the same section, as far through it as when it last came
+to rest. That place is recorded after scrolling stops, not when the resize begins: by the first
+resize event everything sized in viewport units has moved, and ScrollTrigger's own refresh then
+keeps the pixel offset, which is somewhere else again. A rebuild is the same path as a change
+of variant, so a scene's cleanup must leave nothing behind (see Key Conventions). The section gets `is-motion is-<variant>`
 classes before `build` runs, and CSS switches to the choreographed layout only under `.is-motion`.
 Resting DOM = readable layout; timelines animate away from and back to it.
 
 **Background (`lib/bends.ts`, `components/Backdrop.tsx`).** The original "ColorBends" shader, ported from
 three.js to ~1.7 KB of raw WebGL and rendered on demand: a frame only on scroll (scroll sets the phase),
-pointer move (1:1), resize or theme change. Static frame for reduced motion / low tier; a CSS tint in
+pointer move (1:1), resize or theme change. Static frame for reduced motion / low tier, followed
+while the page is open (it used to read the setting once, and went on redrawing after reduced
+motion was switched on; `SceneSlot` reapplies the heading reveals on the same change); a CSS tint in
 `.bends` (index.html) paints first and is the no-WebGL fallback. Canvas opacity 0.23 dark / 0.26 light
 keeps every text line at 4.5:1 or better in `contrast.mjs` (at 0.34 secondary text over the brightest
 band measured 3.66:1 on a real GPU).
@@ -289,6 +313,10 @@ synthetic clips only; test clips stay outside the repository and production outp
 **Pinned keyboard access and dialogs.** `lib/focusStep.ts` brings focused controls to their visible
 step (hero, featured projects, papers and contact). `lib/skipScene.ts` inserts a focused-only skip
 before each pinned section, outside the stacking context so About's link clears the overlapping hero.
+"Skip to content" goes to the start of the content (`jumpTo('hero')`, instant): focusing the hero's
+heading where it stood did nothing from deep in the page, where the hero is hidden. The single-key
+shortcuts (`?`, `g` + letter) can be switched off in the shortcuts dialog (WCAG 2.1.4; kept in
+`localStorage` as `single-keys-off`); the nav's ? button and Cmd/Ctrl+K are unaffected.
 `scrollToTarget` briefly suppresses the Experience and Papers snap functions during explicit jumps.
 The phone Experience deck trims measured still holds; its pin is now 2.80 viewport heights instead
 of 3.56. Other pin lengths stay the same. Focused controls reserve space below the fixed nav and above
@@ -433,6 +461,32 @@ heading. With that change: click-through 48 of 48, Tab walk 95 and 78 stops with
 landings complete at 1190 x 680 and 1512 x 862, Papers pin still 0.92 viewport heights with no
 dead run. Not verified: a real finger on iOS, pinch, Firefox, and how smooth the warp looks
 (the driver reads state, not frame pacing).
+
+2026-10-11, the pre-deployment audit. Another agent audited the site (`audits/predeploy-2026-10-11/`,
+untracked, 15 findings); the owner passed it on. Each finding was reproduced before it was
+touched. Fixed: F01 failed downloads, F02 malformed fragments, F03 Contact clipping (also found
+at 375 x 600, which the audit passed), F04 shortcut switch, F05 stale layouts after a resize,
+F06 false "Copied" (the portal says "Could not copy" and selects the address; Search falls back
+to the mail app as Contact does), F07 live reduced motion (backdrop and headings), F08 skip
+link, F09 dock labels, F12 `mainEntity`, F15 link hover colour (`--accent-text`: 5.6:1 where
+`--accent` was 4.32:1). Not done, the owner's call: F10 (`npm audit fix`: 0 production
+advisories; 11 high alerts from three dev-tool advisories in sharp < 0.35.5, source-map-js
+<= 1.2.1 and braces under typescript-eslint, confirmed here), F11 and F13 (cache and security
+headers need a `vercel.json` and a preview deployment to verify), F14 (the compression plugins).
+Checked after the fixes: blocked chunks, three malformed fragments, Contact reachable at
+320 x 568, 375 x 600 and 375 x 667, the switch, three clipboard states, the reduced-motion
+toggle (8 backdrop draws, then 0, then 8), the dock label, both themes' hover colour; resized
+pages against fresh loads at every section (pixel-identical bar the portrait's resampling) for
+1440 x 900 -> 1190 x 680 and back, 390 x 844 -> 390 x 568 and a rotated phone; Playwright's
+WebKit on the fragment, a blocked chunk, a resize and Contact at 320 x 568. Click-through 48 of
+48, Tab walk 95 and 78 with none hidden, landings complete. First-load JS 114.7 KB gzip, 124.3
+transferred (limit 125: 0.7 KB of room left), HTML 15.2 KB. A game was running again, so
+timings are not clean: phone LCP read 2.04 to 2.29 s and scroll blocking 301 ms, as the builds
+before did under that load; idle frames after each action matched the previous build action
+for action. Re-measure on a quiet Mac. New strings await the owner (`UNLOADED` in
+`content/site.ts`; "Single-key shortcuts", "On", "Off" in `Nav.tsx`; "Could not copy" in
+`Portal.tsx`). Seen while testing, not changed: at 375 x 667, where About flows, a jump to About
+lands on its photo with the first chapter still below the fold.
 
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
@@ -592,6 +646,14 @@ Depth grammar: `.persp` (1400/1200/1000 px, origin 50% 40%) around one `.stage` 
   flat (`.hero__ui, .hero__index { transform-style: flat }`).
 - A first-paint CSS intro and a GSAP tween never share an element: GSAP records the mid-intro value
   as its start. Put the intro on a child.
+- The same goes for a CSS transition. GSAP reads an element's pose from its computed style the
+  first time it touches it: a linked paper eases its transform (its hover), so when the drum's
+  cleanup cleared the inline transform, the next build read the angle still easing away as the
+  card's resting pose and the paper stayed edge-on. A cleanup that clears a transitioned
+  property sets `transition: none` first and forces a layout before restoring it.
+- A cleanup leaves nothing behind that the next build would read: attributes on other sections
+  (`data-jump-offset` on About outlived the hero that set it) and anything painted from a
+  callback, which a trigger being reverted may call once more after the cleanup has run.
 - Drive a group from one value: one tween per sentence or card with CSS deriving each child's
   transform, not a tween per child. Scene-written custom properties sit on their consumer.
 - Under reduced motion every element has a 0.01 ms transition (base.css), so a layout read straight
