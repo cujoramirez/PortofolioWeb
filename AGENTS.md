@@ -41,7 +41,8 @@ There are no tests configured in this project.
   of Safari's 3D; setup in the README; it corrects the viewport after navigation, when Safari applies
   the saved site zoom, and prints the frames Safari made in half a second: at 0 the display is
   asleep, nothing animates or observes, and the shots are stale), `film.mjs` (captures frames after an action; dev builds expose `window.__gsap`
-  to slow time), `perf.mjs` (LCP, CLS, bytes, idle rAF on a slow-4G phone or `--desktop`; `--actions`:
+  to slow time), `perf.mjs` (LCP, CLS, bytes, idle rAF on a slow-4G phone or `--desktop`; the phone profile has a
+  touch screen, without which the page fetched what only a mouse needs; `--actions`:
   idle frames, timers, running animations and INP after each input; `--scroll`: frame pacing and long
   animation frames over a full-page scroll), `idle-scroll.mjs` (rAF 1 s after scrolling settles),
   `cls.mjs` (layout-shift sources, `--desktop`), `budget.mjs` (gzip sizes of the first load, each lazy
@@ -77,6 +78,23 @@ There are no tests configured in this project.
 Single-page React 18 + TypeScript (strict) portfolio, built with Vite, deployed on Vercel. A 2.5D
 "built in layers" scroll story: every scene is flat DOM planes in CSS 3D space, choreographed by
 GSAP ScrollTrigger. No UI library, no CSS framework.
+
+**Deploying (Vercel, gadingap.com).** The owner pushes and deploys; an agent never adds a remote,
+pushes or deploys. `vercel.json` sets two things that exist only on a deployment: a year of
+immutable browser caching for the hashed files under `/assets`, `/img` and `/seq` (the site
+answered `max-age=0` for them before, so every revisit asked again), and `nosniff`, a referrer
+policy and `frame-ancestors 'self'` on every response (the résumé's own frame is same-origin; a
+`DENY` would break it). No full CSP: the page has generated inline scripts and styles. The build
+adds no `.gz`/`.br` copies, since Vercel compresses each response itself. Image names are cached
+for a year, so they must never get new contents: `build-images.mjs` has a `SALT` for the day the
+encoding changes. The public GitHub repository (`cujoramirez/PortofolioWeb`) holds the old site's
+history, which shares no commit with this one (it starts at `4d7609a` on 2026-10-08): a first
+push is either a new branch, which Vercel builds as a preview, or a forced replacement of
+`main`. Everything tracked becomes public, this file included; `audits/` is ignored. Before a
+push: `npm run typecheck`, `npm run lint`, `npm run build`, and `npm run images` if the résumé
+PDF changed. On the first preview check the headers with `curl -sI`, the résumé preview and a
+video demo. A clean `npm ci` and build of the committed tree on a case-sensitive volume gave the
+same 221 files as the local build (2026-10-11).
 
 **Entry and hero shell.** `index.html` has `<!--hero-shell-->`, `#nav-root` and `#root`. The Vite plugin
 `vite-plugins/heroShell.ts` renders the hero from `src/content/heroMarkup.ts` into `index.html` (dev and
@@ -469,10 +487,11 @@ at 375 x 600, which the audit passed), F04 shortcut switch, F05 stale layouts af
 F06 false "Copied" (the portal says "Could not copy" and selects the address; Search falls back
 to the mail app as Contact does), F07 live reduced motion (backdrop and headings), F08 skip
 link, F09 dock labels, F12 `mainEntity`, F15 link hover colour (`--accent-text`: 5.6:1 where
-`--accent` was 4.32:1). Not done, the owner's call: F10 (`npm audit fix`: 0 production
-advisories; 11 high alerts from three dev-tool advisories in sharp < 0.35.5, source-map-js
-<= 1.2.1 and braces under typescript-eslint, confirmed here), F11 and F13 (cache and security
-headers need a `vercel.json` and a preview deployment to verify), F14 (the compression plugins).
+`--accent` was 4.32:1). The remaining four followed on the owner's go-ahead ("approved and
+prepare and optimize for push"): F10 (sharp 0.35.5, source-map-js 1.2.2, typescript-eslint 8.71.1;
+`npm audit` reports 0; the refresh was found already applied in the working tree and was
+verified and committed), F11 and F13 (`vercel.json`, unverified until a preview exists), F14 (the
+compression plugins removed after reading Brotli on the live site).
 Checked after the fixes: blocked chunks, three malformed fragments, Contact reachable at
 320 x 568, 375 x 600 and 375 x 667, the switch, three clipboard states, the reduced-motion
 toggle (8 backdrop draws, then 0, then 8), the dock label, both themes' hover colour; resized
@@ -483,10 +502,21 @@ WebKit on the fragment, a blocked chunk, a resize and Contact at 320 x 568. Clic
 transferred (limit 125: 0.7 KB of room left), HTML 15.2 KB. A game was running again, so
 timings are not clean: phone LCP read 2.04 to 2.29 s and scroll blocking 301 ms, as the builds
 before did under that load; idle frames after each action matched the previous build action
-for action. Re-measure on a quiet Mac. New strings await the owner (`UNLOADED` in
+for action. The owner approved the new strings on 2026-10-11 (`UNLOADED` in
 `content/site.ts`; "Single-key shortcuts", "On", "Off" in `Nav.tsx`; "Could not copy" in
 `Portal.tsx`). Seen while testing, not changed: at 375 x 667, where About flows, a jump to About
 lands on its photo with the first chapter still below the fold.
+
+2026-10-11, the build prepared for the push (`876ab7b` and the docs after it), with a game client
+running lightly: first-load JS 109.6 KB gzip; transferred on the phone profile 119.2 KB (limit
+125), on desktop 121.7 KB including Lenis; HTML 15.2 KB; effects 7.0 KB of 8. Slow-4G phone LCP
+1.75 to 1.76 s, CLS 0.000, no idle frames. Phone full-scroll blockingDuration 76 to 90 ms over
+four runs (limit 100), against 72 to 80 ms for the build before the audit fixes in the same
+minutes, from the same frames (lazy scenes refreshing); desktop 0 ms. Worst INP at CPU x4: 72 ms
+phone, 64 ms desktop; idle frames, timers and running animations zero after every scripted
+action. Click-through 48 of 48, Tab walk 95 and 78 stops with none hidden, landings complete,
+search jumps and the resize rebuild as before with Lenis loaded late. Lint 0 errors and
+typecheck clean on the refreshed tools; `npm run images` still a no-op.
 
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
@@ -600,8 +630,9 @@ the menu sheet. Never content cards. Inside a 3D `.stage` buttons drop the blur.
 Transparency; `prefers-contrast: more` strengthens ink and hairlines and dims the background.
 
 **Idle = zero frames (heat requirement).** `lib/gsap.ts` registers plugins while swallowing ScrollTrigger's
-perpetual empty rAF loop, pushes its 250 ms sync poll out, and sets `autoSleep: 10`. `lib/scroll.ts` runs
-Lenis only while it is smoothing (`lib/lenisLoop.ts`, kicked by wheel/touch/keys/`scrollTo`) and bridges
+perpetual empty rAF loop, pushes its 250 ms sync poll out, and sets `autoSleep: 10`. `lib/scroll.ts` fetches
+Lenis only on devices with a mouse (a 5.5 KB chunk; phones scroll natively and used to download
+it for nothing) and runs it only while it is smoothing (`lib/lenisLoop.ts`, kicked by wheel/touch/keys/`scrollTo`) and bridges
 `lenis.on('scroll', ScrollTrigger.update)`. Never add Lenis to `gsap.ticker`, never add looping or
 auto-playing animation, and re-measure with `perf.mjs` + `idle-scroll.mjs` (both must report 0).
 With the poll gone, ScrollTrigger's velocity samples stop at the last scroll event and go on

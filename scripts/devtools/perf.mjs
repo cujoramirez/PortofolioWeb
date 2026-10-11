@@ -59,6 +59,9 @@ async function load() {
   await send('Network.setCacheDisabled', { cacheDisabled: true });
   if (!desktop) {
     await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1.75, mobile: true });
+    // A phone has a touch screen. Without this the page saw a mouse and fetched what only a
+    // mouse needs (Lenis), which the phone profile then counted as transferred JS.
+    await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
     await send('Network.emulateNetworkConditions', { offline: false, latency: 562.5, downloadThroughput: 1474.56 * 1024 / 8, uploadThroughput: 675 * 1024 / 8 });
     await send('Emulation.setCPUThrottlingRate', { rate: 4 });
   } else {
