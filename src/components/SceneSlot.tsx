@@ -4,6 +4,7 @@
  * an estimated height so anchors and progress stay roughly right.
  */
 import { useEffect, useRef, useState, type ComponentType } from 'react';
+import { SECTIONS, UNLOADED } from '../content/site';
 import { registerSceneLoader } from '../lib/jump';
 import { revealHeading } from '../lib/micro';
 import { refreshSoon } from '../lib/scroll';
@@ -18,22 +19,35 @@ export interface SceneDef {
 export default function SceneSlot({ id, load, estimate }: SceneDef) {
   const ref = useRef<HTMLElement>(null);
   const [Scene, setScene] = useState<ComponentType | null>(null);
+  /** The scene's code did not download. */
+  const [failed, setFailed] = useState(false);
   const mounted = useRef<(() => void) | null>(null);
   const unregister = useRef<(() => void) | null>(null);
+  const start = useRef<() => Promise<void>>(() => Promise.resolve());
 
   useEffect(() => {
     let pending: Promise<void> | null = null;
-    const start = () =>
+    start.current = () =>
       (pending ??= new Promise<void>((resolve) => {
         mounted.current = resolve;
-        void load().then((m) => setScene(() => m.default));
+        load().then(
+          (m) => setScene(() => m.default),
+          () => {
+            // Settled, not left waiting: every jump waits for every scene, so one failed download
+            // stopped all navigation. A later jump asks again, for the engines that fetch again.
+            pending = null;
+            mounted.current = null;
+            setFailed(true);
+            resolve();
+          },
+        );
       }));
-    unregister.current = registerSceneLoader(id, start);
+    unregister.current = registerSceneLoader(id, () => start.current());
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
           io.disconnect();
-          void start();
+          void start.current();
         }
       },
       { rootMargin: '100% 0px' },
@@ -57,15 +71,44 @@ export default function SceneSlot({ id, load, estimate }: SceneDef) {
     return () => undo.forEach((fn) => fn());
   }, [Scene]);
 
+  // the placeholder's height goes with a failed download: the pins below measure again
+  useEffect(() => {
+    if (failed) refreshSoon();
+  }, [failed]);
+
   return (
     <section
       id={id}
       ref={ref}
       className={`scene scene--${id}`}
       aria-labelledby={`${id}-title`}
-      style={Scene ? undefined : { minHeight: estimate }}
+      style={Scene || failed ? undefined : { minHeight: estimate }}
     >
-      {Scene ? <Scene /> : null}
+      {Scene ? (
+        <Scene />
+      ) : failed ? (
+        <div className="wrap" style={{ paddingBlock: '16vh' }}>
+          <h2 id={`${id}-title`} className="heading">
+            {SECTIONS.find((section) => section.id === id)?.title}
+          </h2>
+          <p className="lede" role="status">
+            {UNLOADED.section} {UNLOADED.hint}
+          </p>
+          <p style={{ marginTop: '1.25rem' }}>
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={() => {
+                // back to this section once the page has loaded again
+                history.replaceState(null, '', `#${id}`);
+                location.reload();
+              }}
+            >
+              {UNLOADED.reload}
+            </button>
+          </p>
+        </div>
+      ) : null}
     </section>
   );
 }

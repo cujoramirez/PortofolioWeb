@@ -34,6 +34,18 @@ export function landAt(id: string, trigger: () => ScrollTrigger | undefined, pro
   };
 }
 
+/**
+ * The id a URL fragment names, or '' for none and for one that is not valid percent-encoding:
+ * `#%` makes decodeURIComponent throw, and thrown at startup that left the page without its app.
+ */
+export function fragmentId(hash: string): string {
+  try {
+    return decodeURIComponent(hash.replace(/^#/, ''));
+  } catch {
+    return '';
+  }
+}
+
 export async function loadAllScenes() {
   await Promise.all([...loaders.values()].map((load) => load()));
 }

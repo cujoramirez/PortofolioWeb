@@ -13,7 +13,7 @@ import HeroScene from './scenes/HeroScene';
 import { OWNER } from './content/site';
 import { fontsReady } from './lib/fonts';
 import { ScrollTrigger } from './lib/gsap';
-import { focusHeading, jumpTo, loadAllScenes } from './lib/jump';
+import { fragmentId, jumpTo, loadAllScenes } from './lib/jump';
 import { installOutbound, openOutbound } from './lib/outbound';
 import { initScroll, refreshSoon, scrollToTarget } from './lib/scroll';
 
@@ -39,11 +39,12 @@ function useAnchorJumps() {
       const anchor = (event.target as Element | null)?.closest?.('a[href^="#"]');
       const hash = anchor?.getAttribute('href') ?? '';
       if (hash.length < 2) return;
-      const id = decodeURIComponent(hash.slice(1));
+      const id = fragmentId(hash);
+      // "Skip to content": to the start of the content, wherever the page is. Focusing the first
+      // heading where it stood failed deep in the page, where the hero is hidden.
       if (id === 'main') {
         event.preventDefault();
-        const main = document.getElementById('main');
-        if (main) focusHeading(main);
+        void jumpTo('hero', { immediate: true });
         return;
       }
       if (!document.getElementById(id)) return;
@@ -64,7 +65,7 @@ export default function App() {
     void fontsReady().then(() => refreshSoon());
     const onLoad = () => refreshSoon();
     window.addEventListener('load', onLoad);
-    const hash = decodeURIComponent(location.hash.slice(1));
+    const hash = fragmentId(location.hash);
     // An overlay link opens from a lazy scene, which a cold load never mounted: mount the scenes
     // and stand on the overlay's section, leaving the hash for useHashDialog.
     if (OVERLAY_HOME[hash]) void jumpTo(OVERLAY_HOME[hash], { immediate: true, url: false });
@@ -72,7 +73,7 @@ export default function App() {
     // A hash typed into the address bar scrolls natively, to the section's first pixel and past
     // scenes that have not mounted: land it where a jump would.
     const onHash = () => {
-      const id = decodeURIComponent(location.hash.slice(1));
+      const id = fragmentId(location.hash);
       if (!OVERLAY_HOME[id] && document.getElementById(id)?.matches('section')) void jumpTo(id, { immediate: true, url: false });
     };
     window.addEventListener('hashchange', onHash);
@@ -97,11 +98,15 @@ export default function App() {
     let live = true;
     const whenIdle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
     whenIdle(() => {
-      void Promise.all([import('./lib/eggs'), import('./lib/cursor')]).then(([eggs, cursor]) => {
-        if (!live) return;
-        const undo = [eggs.installEggs(), cursor.installCursorLabel()];
-        undoEggs = () => undo.forEach((fn) => fn());
-      });
+      void Promise.all([import('./lib/eggs'), import('./lib/cursor')]).then(
+        ([eggs, cursor]) => {
+          if (!live) return;
+          const undo = [eggs.installEggs(), cursor.installCursorLabel()];
+          undoEggs = () => undo.forEach((fn) => fn());
+        },
+        // extras: the page is whole without them
+        () => {},
+      );
     });
     return () => {
       live = false;

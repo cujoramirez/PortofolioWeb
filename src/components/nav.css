@@ -157,6 +157,16 @@
   white-space: nowrap;
   padding-right: 18px;
 }
+.help-dialog__body {
+  display: grid;
+  gap: 14px;
+  padding: 4px 24px 22px;
+}
+.help-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 .help-dialog__note {
   margin: -8px 24px 20px;
   color: var(--ink-3);

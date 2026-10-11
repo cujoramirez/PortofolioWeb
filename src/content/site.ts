@@ -35,6 +35,19 @@ export const HERO = {
   indexLabel: 'On this page',
 } as const;
 
+/**
+ * Shown where a part of the page fails to download: a dropped connection, or a version published
+ * while the page was open. The way back is a reload: Chrome keeps a failed import for the life of
+ * the document and does not fetch the same address again.
+ */
+export const UNLOADED = {
+  title: 'Not loaded',
+  section: 'This section did not load.',
+  part: 'This part of the page did not load.',
+  hint: 'Check the connection, then reload the page.',
+  reload: 'Reload the page',
+} as const;
+
 export type SectionId = 'hero' | 'about' | 'disciplines' | 'toolbox' | 'projects' | 'experience' | 'papers' | 'certificates' | 'contact';
 
 /** Sections after the hero, in page order, with their headings. */

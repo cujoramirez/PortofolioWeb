@@ -3,22 +3,41 @@
  * theme toggle, résumé, a 2px overall progress line, `g` + letter shortcuts and a `?` help
  * dialog. Below 900 px the links move into a native <dialog> sheet.
  */
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentType } from 'react';
 import { createPortal } from 'react-dom';
 import Dialog from './Dialog';
 import ThemeToggle from './ThemeToggle';
 import { MenuIcon } from './icons';
-import { LINKS, NAV, OWNER, type SectionId } from '../content/site';
+import { LINKS, NAV, OWNER, UNLOADED, type SectionId } from '../content/site';
 import { ScrollTrigger } from '../lib/gsap';
 import { installGlass, trackSpecular } from '../lib/glass';
 import { jumpTo } from '../lib/jump';
 
 // The palette carries every project and paper: load it the first time it opens.
-const CommandPalette = lazy(() => import('./CommandPalette'));
+const loadPalette = () => import('./CommandPalette');
 // The menu sheet exists only below 900 px. As a lazy chunk its code stays out of the desktop first
 // load and its stylesheet out of the HTML (the entry CSS is inlined there).
 const loadMenuSheet = () => import('./MenuSheet');
-const MenuSheet = lazy(loadMenuSheet);
+
+/**
+ * A component fetched the first time it is wanted. Not React.lazy: that throws a failed download
+ * into the tree, and with no boundary above it the whole app was removed. Here a failure calls
+ * `onFail` and the page stays as it was.
+ */
+function useOnDemand<P>(load: () => Promise<{ default: ComponentType<P> }>, onFail: () => void) {
+  const [Loaded, setLoaded] = useState<ComponentType<P> | null>(null);
+  const busy = useRef(false);
+  const want = useCallback(() => {
+    if (busy.current) return;
+    busy.current = true;
+    load()
+      .then((m) => setLoaded(() => m.default), onFail)
+      .finally(() => {
+        busy.current = false;
+      });
+  }, [load, onFail]);
+  return [Loaded, want] as const;
+}
 
 /** Sections that count toward a nav item's progress and active state. */
 const OWNED: Record<string, SectionId[]> = {
@@ -41,22 +60,33 @@ export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [paletteUsed, setPaletteUsed] = useState(false);
+  /** Search or the menu failed to download: a dialog says so. */
+  const [unloaded, setUnloaded] = useState(false);
+  const paletteFailed = useCallback(() => {
+    setPaletteOpen(false);
+    setUnloaded(true);
+  }, []);
+  const menuFailed = useCallback(() => {
+    setMenuOpen(false);
+    setUnloaded(true);
+  }, []);
+  const [CommandPalette, wantPalette] = useOnDemand(loadPalette, paletteFailed);
+  const [MenuSheet, wantMenu] = useOnDemand(loadMenuSheet, menuFailed);
   useEffect(() => {
-    if (paletteOpen) setPaletteUsed(true);
-  }, [paletteOpen]);
-  const [menuUsed, setMenuUsed] = useState(false);
+    if (paletteOpen && !CommandPalette) wantPalette();
+  }, [paletteOpen, CommandPalette, wantPalette]);
   useEffect(() => {
-    if (menuOpen) setMenuUsed(true);
-  }, [menuOpen]);
+    if (menuOpen && !MenuSheet) wantMenu();
+  }, [menuOpen, MenuSheet, wantMenu]);
   // Where the menu button shows, fetch the sheet once the page is idle so the first tap opens it at once.
   useEffect(() => {
     if (!window.matchMedia('(max-width: 899px)').matches) return undefined;
+    const warm = () => void loadMenuSheet().catch(() => {});
     if (window.requestIdleCallback) {
-      const id = window.requestIdleCallback(() => void loadMenuSheet());
+      const id = window.requestIdleCallback(warm);
       return () => window.cancelIdleCallback(id);
     }
-    const id = window.setTimeout(() => void loadMenuSheet(), 1500);
+    const id = window.setTimeout(warm, 1500);
     return () => window.clearTimeout(id);
   }, []);
   const progressRef = useRef<HTMLSpanElement>(null);
@@ -227,11 +257,28 @@ export default function Nav() {
         </div>
       </header>
 
-      {paletteUsed ? (
-        <Suspense fallback={null}>
-          <CommandPalette open={paletteOpen} onClose={closePalette} />
-        </Suspense>
-      ) : null}
+      {CommandPalette ? <CommandPalette open={paletteOpen} onClose={closePalette} /> : null}
+
+      <Dialog open={unloaded} onClose={() => setUnloaded(false)} title={UNLOADED.title} className="help-dialog">
+        <div className="help-dialog__body">
+          <p role="status">
+            {UNLOADED.part} {UNLOADED.hint}
+          </p>
+          <p className="help-dialog__actions">
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={() => {
+                // back to the section in view once the page has loaded again
+                history.replaceState(null, '', active ? `#${active}` : location.pathname + location.search);
+                location.reload();
+              }}
+            >
+              {UNLOADED.reload}
+            </button>
+          </p>
+        </div>
+      </Dialog>
 
       <Dialog open={helpOpen} onClose={() => setHelpOpen(false)} title="Keyboard shortcuts" className="help-dialog">
         <table className="help-dialog__keys">
@@ -261,17 +308,8 @@ export default function Nav() {
         <p className="help-dialog__note">A few things on this page are hidden.</p>
       </Dialog>
 
-      {menuUsed ? (
-        <Suspense fallback={null}>
-          <MenuSheet
-            open={menuOpen}
-            active={active}
-            progress={sectionProgress}
-            button={menuButton}
-            onClosed={closedMenu}
-            onSearch={openPalette}
-          />
-        </Suspense>
+      {MenuSheet ? (
+        <MenuSheet open={menuOpen} active={active} progress={sectionProgress} button={menuButton} onClosed={closedMenu} onSearch={openPalette} />
       ) : null}
     </>
   );
