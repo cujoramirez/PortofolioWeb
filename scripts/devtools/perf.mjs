@@ -1,6 +1,10 @@
 // Page-load, idle, interaction and scroll audits over raw CDP. The phone preset is Lighthouse's
 // devtools "mobileSlow4G"; --desktop is 1350 x 940, unthrottled.
 // usage: node perf.mjs <url> [--desktop] [--runs 3] [--reduced] [--actions] [--scroll] [--speed 1200] [--cpu 4] [--software]
+//        node perf.mjs <preview url> --token-env .env.local   the default run straight from a protected Vercel
+//            preview, over HTTP/2 as a visitor gets it (deployed.mjs --relay speaks HTTP/1.1, whose headers
+//            add about 0.5 KB to each response). The token goes to that origin only, and anything but a
+//            GET to it is refused here, so the run records no analytics visit.
 // default    LCP (element + time), CLS, JS/CSS/image bytes transferred, long tasks, rAF callbacks
 //            and running infinite animations during a 2.5 s idle window after load.
 // --actions  scripted interactions (hover, globe drag, project dialog, theme toggle, search
@@ -11,6 +15,7 @@
 //            animation frames with their top script and forced style/layout time (Chrome only).
 // Add ?tier=high to the URL for --actions and --scroll: headless Chrome counts as a low-tier
 // device and would be measured as the static poster.
+import { readFileSync } from 'node:fs';
 import { WEBGL, flag, launch, opt, sleep } from './cdp.mjs';
 
 const url = process.argv[2];
@@ -18,6 +23,8 @@ const runs = Number(opt('runs', 3));
 const desktop = flag('desktop');
 const [W, H] = desktop ? [1350, 940] : [412, 823];
 const kb = (n) => (n / 1024).toFixed(1);
+const tokenFile = opt('token-env');
+const token = tokenFile ? (readFileSync(tokenFile, 'utf8').split('\n').find((l) => l.startsWith('VERCEL_OIDC_TOKEN=')) ?? '').replace(/^[^=]*=/, '').trim().replace(/^"|"$/g, '') : '';
 
 const COUNTERS = `
     window.__perf = { lcp: null, lcpEl: '', cls: 0, longTasks: 0, longTaskMs: 0, raf: 0 };
@@ -47,6 +54,11 @@ async function load() {
   const { send } = c;
   const bytes = { js: 0, css: 0, img: 0, font: 0, other: 0 }; const types = new Map();
   c.on((m) => {
+    if (m.method === 'Fetch.requestPaused') {
+      const { requestId, request } = m.params;
+      if (request.method !== 'GET' && request.method !== 'HEAD') void send('Fetch.failRequest', { requestId, errorReason: 'BlockedByClient' });
+      else void send('Fetch.continueRequest', { requestId, headers: Object.entries({ ...request.headers, 'x-vercel-trusted-oidc-idp-token': token }).map(([name, value]) => ({ name, value: String(value) })) });
+    }
     if (m.method === 'Network.responseReceived') types.set(m.params.requestId, m.params.type);
     if (m.method === 'Network.loadingFinished') {
       const t = types.get(m.params.requestId); const n = m.params.encodedDataLength;
@@ -57,6 +69,7 @@ async function load() {
   await send('Page.enable');
   await send('Runtime.enable');
   await send('Network.setCacheDisabled', { cacheDisabled: true });
+  if (token) await send('Fetch.enable', { patterns: [{ urlPattern: `${new URL(url).origin}/*`, requestStage: 'Request' }] });
   if (!desktop) {
     await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1.75, mobile: true });
     // A phone has a touch screen. Without this the page saw a mouse and fetched what only a

@@ -52,7 +52,10 @@ There are no tests configured in this project.
   `--reduced` audits the posters; a phone needs `--w 390 --h 844 --mobile`), `deployed.mjs` (a
   Vercel deployment as it is served: every built file present, the headers `vercel.json` asks for,
   the first load's bytes on the wire; `--relay 4188` gives the other tools a loopback copy of a
-  protected preview; no Chrome).
+  protected preview; no Chrome). The relay speaks HTTP/1.1, whose headers add about 0.5 KB to
+  each response: count bytes with `perf.mjs <preview url> --token-env .env.local`, which loads the
+  preview itself over HTTP/2. `budget.mjs` also sizes the first load and the HTML as Vercel sends
+  them (Brotli level 3) and holds both to the limits.
   Run INP, scroll and contrast checks on the Mac's GPU, one at a time: under SwiftShader a dialog's
   backdrop blur alone takes about 500 ms to present. Measure only while the Mac is awake: on battery
   it idle-sleeps after a minute, and a run that spans a dark wake times out or reports nonsense
@@ -93,7 +96,9 @@ for a year, so they must never get new contents: `build-images.mjs` has a `SALT`
 encoding changes. The public GitHub repository (`cujoramirez/PortofolioWeb`) holds the old site's
 history, which shares no commit with this one (it starts at `4d7609a` on 2026-10-08): a first
 push is either a new branch, which Vercel builds as a preview, or a forced replacement of
-`main`. Everything tracked becomes public, this file included; `audits/` is ignored. Before a
+`main`. Everything tracked becomes public, this file included; `audits/` is ignored. On
+2026-10-11 the owner wrote that the repository is private, and GitHub's API answered
+`"visibility": "public"` the same day: read it again before a push. Before a
 push: `npm run typecheck`, `npm run lint`, `npm run build`, and `npm run images` if the résumé
 PDF changed. A clean `npm ci` and build of the committed tree on a case-sensitive volume gave the
 same 221 files as the local build (2026-10-11).
@@ -105,16 +110,33 @@ in `.env.local` (ignored by git; never print it), to that deployment only. Check
 preview, 2026-10-11: all 221 files there and the page byte for byte the local build; the hashed
 files `immutable` for a year; the three headers on every response; the résumé's PDF drawn in its
 frame under `frame-ancestors 'self'`; a YouTube demo loaded in the portal; Vercel's two analytics
-scripts answer 200. Their beacon never reached the relay, so recorded visits are unconfirmed.
+scripts answer 200. The analytics script sends nothing from an automated browser
+(`navigator.webdriver`, or "Headless" in the user agent), so no test run shows a visit: only the
+owner's dashboard can confirm one.
 Vercel's CDN compresses with Brotli at level 3 (its sizes match a local level 3 to the byte, on
-files ten days old as well), which comes out 4 to 5 % larger than gzip at level 9, and each
-response carries about 0.7 KB of headers. So the numbers on the wire are larger there than every
-local figure in this file: the three first-load scripts 116.6 KB (109.6 gzip), the page 16.6 KB
-(15.2), all script in a phone load 134.4 KB where the local preview reads 119.2 (7.8 KB of it
-Vercel's own two scripts, which are 404s locally), desktop 137.0 against 121.7. The 125 KB limit
-has only been met locally. The live site before this build named 196.4 KB of script in its HTML.
-The Vercel project still holds the old site's `VITE_FIREBASE_*` and `VITE_ENABLE_*` variables;
-nothing in this build reads them.
+files ten days old as well), which comes out 4 to 5 % larger than gzip at level 9, so every
+figure on the wire is larger there than the local ones in this file. Read straight from that
+preview over HTTP/2: 129.9 KB of script in a phone load and 132.5 on desktop, against the 125
+that had only been met locally (7.1 KB of it Vercel's own two scripts, which are 404s locally;
+through the HTTP/1.1 relay the same loads read 134.4 and 137.0), and the page 16.4 KB with its
+headers, 15.96 compressed. The live site before this build named 196.4 KB of script in its HTML.
+
+The owner asked for the limit to hold on Vercel ("comply with the limit"). A pre-compressed copy
+cannot do it: Vercel compresses such a file again, and Safari fails on the doubled encoding
+(Vercel community thread 18744). The page lost weight instead. Speed Insights went: its script
+was 4.9 KB there and its wrapper 0.7. Web Analytics stays, started by `lib/analytics.ts` the way
+Vercel documents for a plain page; the package's React wrapper was 3.5 KB of source for those
+lines, and neither package is a dependency now. `lib/split.ts` replaced GSAP's SplitText, 3.0 KB
+on the wire, with the same boxes (the hero name and all seven headings compared byte for byte,
+styles included). The cursor label waits for the first mouse move. Sized as Vercel sends it,
+that build is 110.8 KB for the three first-load scripts, and adds up to about 120 KB of script
+in a phone load and 123 on desktop. Those two are sums of measured parts, not a reading: take
+one from the next preview. To get Speed Insights back, the room has to come from somewhere
+else; smooth scrolling fetched on the first input (5.9 KB) is what is left. The HTML has no
+room: 15.9 KB compressed of 16.
+The old site's nine `VITE_FIREBASE_*` and `VITE_ENABLE_*` variables were removed from the Vercel
+project on 2026-10-11 at the owner's request (a copy, ignored by git, is in
+`.vercel/removed-env-2026-10-11/`). The project has no variables, and the build needs none.
 
 **Entry and hero shell.** `index.html` has `<!--hero-shell-->`, `#nav-root` and `#root`. The Vite plugin
 `vite-plugins/heroShell.ts` renders the hero from `src/content/heroMarkup.ts` into `index.html` (dev and
@@ -541,6 +563,17 @@ Later that day the cursor label stopped loading on touch screens: 118.2 KB trans
 phone profile, LCP 1.74 to 1.75 s, CLS 0.000, no idle frames; desktop unchanged at 121.7 KB. For
 the same build as Vercel serves it, see Deploying.
 
+2026-10-11, the cuts for the limit on Vercel (see Deploying), a game client running: first-load
+JS 106.2 KB gzip, 110.8 as Vercel sends it; transferred locally 114.7 KB on the phone profile and
+117.2 on desktop; HTML 15.1 KB gzip. Slow-4G phone LCP 1.74 to 1.76 s, CLS 0.000, no idle frames
+after load or after scrolling. Phone full-scroll blockingDuration 46 ms against 42 ms for the
+build before in the same minutes; worst INP at CPU x4 72 ms on the phone preset, zero frames
+after every action. Hero frames up to the hold are pixel-identical to the build before at
+1440 x 900; the headings mid-reveal differ by less than the build before differs from itself
+(the globe behind them). Click-through 48 of 48, Tab walk 95 and 78 stops with none hidden,
+landings complete at 1440 x 900, 1190 x 680 and 390 x 844; the split survives a resize and a
+change to the phone layout and back. Not run: real Safari.
+
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
 button's bars fold into an X, rows lean toward a pressing finger 1:1; picking a row flies it at the
@@ -549,8 +582,8 @@ viewer, jumps behind the veil and collapses the veil into the row. Its four link
 
 **Cursor label (`lib/cursor.ts`, desktop mouse only).** Elements with `data-cursor="Drag|Open|DOI|Copy|View"`
 get a small label that follows the pointer 1:1 and fades out in place.
-`App.tsx` fetches the chunk only where a mouse exists and motion may run: a phone downloaded 2.4 KB
-it never ran.
+`App.tsx` fetches the chunk on the first mouse move, where a mouse exists and motion may run: a
+phone downloaded 2.4 KB it never ran, and nothing needs a label before the pointer is somewhere.
 
 **Command palette (`components/CommandPalette.tsx`, lazy).** ⌘K / Ctrl+K or the nav's Search: sections,
 projects (opens details via an `open-project` event), papers (DOI), links, copy email, résumé, theme.
@@ -642,6 +675,9 @@ Not in it: live data from other sites (a rendered number needs a source in the c
 `spotlight` (fill + rim glow on clickable cards only: `.has-spot`), `decrypt`/`decryptOnView` (mono labels
 resolve once), `spark` (one-shot burst), `revealHeading` (section headings rise word by word, scrubbed;
 applied by `SceneSlot`; headings inside pins pass `pinnedContainer`). Buttons get a glare sweep on hover.
+Text is taken apart by `lib/split.ts` (the hero name's letters on desktop and tablet, the headings'
+masked words): inline-block boxes hidden from assistive technology under an `aria-label` that
+reads the whole text, and `revert()` puts the original markup back.
 None loops; pointer effects are skipped on touch, everything under reduced motion.
 
 **Easter eggs (`lib/eggs.ts`, loaded when idle; `lib/toast.ts`).** Console hello; Konami code or

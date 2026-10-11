@@ -1,7 +1,8 @@
 // A deployment as Vercel serves it: is every built file there, with the headers vercel.json asks
 // for, and what does the first load weigh on the wire. Reads only.
 // usage: node deployed.mjs <origin> [--dist <dir>] [--env .env.local]
-//        node deployed.mjs <origin> --relay 4188     a loopback copy for perf.mjs and the other tools
+//        node deployed.mjs <origin> --relay 4188     a loopback copy for tools that need a plain address
+//            (HTTP/1.1: its headers add about 0.5 KB a response, so count bytes with perf.mjs --token-env)
 // A preview sits behind Vercel Authentication. `vercel curl` gets through by creating a permanent
 // bypass secret on the project, which is the owner's to decide. This sends the short-lived token
 // that `vercel env pull` leaves in .env.local instead, to that deployment only, and never prints

@@ -37,6 +37,8 @@ then run from this folder:
 - `node cls.mjs <url> [--desktop]`: layout-shift sources.
 - `node budget.mjs [--out <dir>] [--no-build] [--limit 125] [--sum "label=regex:limitKB"]`: builds, then
   prints gzip sizes of the first-load chunks, every lazy chunk and the HTML. Exits 1 over a limit.
+  The first load and the HTML are also sized as Vercel sends them (Brotli level 3, larger than
+  gzip) and held to the same limits.
 - `node perf.mjs <url> --actions [--desktop]`: scripted interactions (hover, globe drag, project dialog,
   menu sheet on the phone preset, theme toggle, search). After each one: the 2.5 s idle window, starting
   1 s after the last input, and the interaction's INP with its three phases, under 4x CPU throttle.
@@ -60,9 +62,13 @@ then run from this folder:
   Vercel Authentication: the tool sends the short-lived token that `vercel env pull` writes to
   `.env.local`, to that deployment only. Do not use `vercel curl` for this unasked: it creates a
   permanent bypass secret on the project. No Chrome.
-- `node deployed.mjs <origin> --relay 4188`: a loopback copy of a protected preview for `perf.mjs`
-  and the other tools (same bytes and headers). It forwards GET and HEAD only, so a test run
-  records no analytics visit. Stop it when done.
+- `node deployed.mjs <origin> --relay 4188`: a loopback copy of a protected preview for the tools
+  that need a plain address (same bodies and headers). It forwards GET and HEAD only, so a test
+  run records no analytics visit. Stop it when done. It speaks HTTP/1.1, whose uncompressed
+  headers add about 0.5 KB to each response: do not count bytes through it.
+- `node perf.mjs <preview url> --token-env .env.local`: the default load run straight from a
+  protected preview over HTTP/2, as a visitor gets it. This is the reading to hold against the
+  125 KB limit. The token goes to that origin only and anything but a GET to it is refused.
 
 The newer tools share `cdp.mjs`. It turns on focus emulation: without it a CDP Escape key press makes
 the headless page `hidden`, no frame is produced afterwards, and every idle check reads a false 0.
