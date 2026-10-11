@@ -387,12 +387,25 @@ export default function HeroScene() {
       if (!letters) return;
       const w = `${name.offsetWidth}px`;
       const h = `${name.offsetHeight}px`;
+      // Firefox does not paint a background clipped to text on an element that stands in 3D, and
+      // once split every letter does: the name showed for a second, then was gone for good. There
+      // each letter takes one colour, the gradient's at its middle: how far along the 120 degree
+      // line it sits, toward the accent from 45 to 80 % and on toward the secondary to 100 %.
+      // (Written here and not in hero.css, which is inlined into a page with no bytes to spare.)
+      const gecko = CSS.supports('-moz-appearance', 'none');
+      const [dx, dy] = [Math.sin((120 * Math.PI) / 180), -Math.cos((120 * Math.PI) / 180)];
+      const along = name.offsetWidth * dx + name.offsetHeight * dy;
+      const part = (t: number, from: number, to: number) => `${(Math.min(1, Math.max(0, (t - from) / (to - from))) * 100).toFixed(1)}%`;
       letters.parts.forEach((c) => {
         const o = offsetWithin(c, name);
         c.style.setProperty('--gx', `${-o.left}px`);
         c.style.setProperty('--gy', `${-o.top}px`);
         c.style.setProperty('--gw', w);
         c.style.setProperty('--gh', h);
+        if (!gecko) return;
+        const t = 0.5 + ((o.left + o.width / 2 - name.offsetWidth / 2) * dx + (o.top + o.height / 2 - name.offsetHeight / 2) * dy) / along;
+        c.style.background = 'none';
+        c.style.color = c.style.webkitTextFillColor = `color-mix(in srgb, color-mix(in srgb, var(--ink), var(--accent) ${part(t, 0.45, 0.8)}), var(--secondary) ${part(t, 0.8, 1)})`;
       });
     };
     section.addEventListener('hero:fit', paintGradient);
