@@ -766,10 +766,16 @@ Depth grammar: `.persp` (1400/1200/1000 px, origin 50% 40%) around one `.stage` 
   900 px apart in depth and opaque, and the far, dimmed ones were drawn full size over the one
   in front (the owner: "the cards are dark when transitioning"); on a phone the deck showed its
   last card on top. A scene whose picture depends on depth registers a stand-in with
-  `onSnapshot` (`lib/flat.ts`): `flatPoses` places each box in 2D where it really appears,
-  within 0.1 px, and a `--near` z-index restores the order. `forSnapshot()` wraps both root
-  transitions; the warp asks twice, for the view it leaves and the one it reaches. Only where
-  `navigator.vendor` is Apple's: Chromium's snapshots keep depth.
+  `onSnapshot` (`lib/flat.ts`): `flatPoses` follows each box's four corners (zero-size markers,
+  read once in depth and once flat) and gives it the 2D matrix nearest to where it really
+  appears, and a `--near` z-index restores the order. A flat painter has no perspective, so a
+  card turned in depth becomes the closest parallelogram: its corners are within 4 px, the card
+  in front and the years exact. The first version used plain boxes and hid the floor line, and
+  the owner saw both come back as the transition ended ("the lines and cards position sort of
+  resetted"); the floor is now followed as a line, from the part in front of the viewer to its
+  far end. `forSnapshot()` wraps both root transitions; the warp asks twice, for the view it
+  leaves and the one it reaches. Only where `navigator.vendor` is Apple's: Chromium's snapshots
+  keep depth.
 - A cleanup leaves nothing behind that the next build would read: attributes on other sections
   (`data-jump-offset` on About outlived the hero that set it) and anything painted from a
   callback, which a trigger being reverted may call once more after the cleanup has run.

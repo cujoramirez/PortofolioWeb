@@ -175,9 +175,8 @@
 }
 
 /* The stand-in for Safari's view-transition snapshots, which lose depth (lib/flat.ts): nearer
-   cards on top, and in the corridor every card and year flat where it is seen (--flat,
-   measured). The phone deck places its cards in 2D already. The floor is a plane seen edge-on
-   and has no flat picture. */
+   cards on top, and in the corridor every card, year and the floor line flat where it is seen
+   (--flat, measured). The phone deck places its cards in 2D already. */
 .is-flat .xp__card {
   z-index: var(--near);
 }
@@ -186,11 +185,9 @@
   transform: none !important;
 }
 .is-flat:not(.is-xdeck) .xp__card,
-.is-flat:not(.is-xdeck) .xp__marker {
+.is-flat:not(.is-xdeck) .xp__marker,
+.is-flat:not(.is-xdeck) .xp__floor {
   transform: var(--flat, none) !important;
-}
-.is-flat .xp__floor {
-  visibility: hidden;
 }
 
 /* depth fog: cards ahead dim toward the page colour but stay opaque */
