@@ -49,6 +49,16 @@ const OWNED: Record<string, SectionId[]> = {
 };
 const TICKS = 4;
 
+/** Where the choice to turn the single-key shortcuts off is kept. Absent means on. */
+const KEYS_OFF = 'single-keys-off';
+const keysStored = () => {
+  try {
+    return localStorage.getItem(KEYS_OFF) === null;
+  } catch {
+    return true;
+  }
+};
+
 function isEditable(target: EventTarget | null) {
   const el = target as HTMLElement | null;
   if (!el) return false;
@@ -59,6 +69,21 @@ export default function Nav() {
   const [active, setActive] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  // `?` and `g` + letter act on plain key presses, which speech input and stray typing also make:
+  // they can be turned off (the nav's ? button still opens the list, and Cmd/Ctrl+K stays).
+  const [singleKeys, setSingleKeys] = useState(keysStored);
+  const singleKeysOn = useRef(singleKeys);
+  singleKeysOn.current = singleKeys;
+  const toggleSingleKeys = () =>
+    setSingleKeys((on) => {
+      try {
+        if (on) localStorage.setItem(KEYS_OFF, '1');
+        else localStorage.removeItem(KEYS_OFF);
+      } catch {
+        // private mode: the choice lasts for this visit
+      }
+      return !on;
+    });
   const [paletteOpen, setPaletteOpen] = useState(false);
   /** Search or the menu failed to download: a dialog says so. */
   const [unloaded, setUnloaded] = useState(false);
@@ -153,7 +178,7 @@ export default function Nav() {
         return;
       }
       if (event.metaKey || event.ctrlKey || event.altKey || isEditable(event.target)) return;
-      if (document.querySelector('dialog[open]')) return;
+      if (document.querySelector('dialog[open]') || !singleKeysOn.current) return;
       if (event.key === '?') {
         event.preventDefault();
         setHelpOpen(true);
@@ -281,7 +306,7 @@ export default function Nav() {
       </Dialog>
 
       <Dialog open={helpOpen} onClose={() => setHelpOpen(false)} title="Keyboard shortcuts" className="help-dialog">
-        <table className="help-dialog__keys">
+        <table className={`help-dialog__keys${singleKeys ? '' : ' is-off'}`}>
           <tbody>
             <tr>
               <td>
@@ -305,6 +330,12 @@ export default function Nav() {
             </tr>
           </tbody>
         </table>
+        <p className="help-dialog__switch">
+          <button type="button" className="btn btn--secondary" role="switch" aria-checked={singleKeys} onClick={toggleSingleKeys}>
+            <span>Single-key shortcuts</span>
+            <span aria-hidden="true">{singleKeys ? 'On' : 'Off'}</span>
+          </button>
+        </p>
         <p className="help-dialog__note">A few things on this page are hidden.</p>
       </Dialog>
 

@@ -167,6 +167,17 @@
   flex-wrap: wrap;
   gap: 10px;
 }
+/* the single-key rows (all but Cmd+K) while they are switched off */
+.help-dialog__keys.is-off tr:not(:first-child) {
+  opacity: 0.45;
+}
+.help-dialog__switch {
+  margin: -4px 24px 20px;
+}
+.help-dialog__switch .btn {
+  width: 100%;
+  justify-content: space-between;
+}
 .help-dialog__note {
   margin: -8px 24px 20px;
   color: var(--ink-3);
