@@ -143,7 +143,13 @@ layer and the tool's interception: neither is the public site's figure, which ha
 from gadingap.com once it is live. The build meant for production (`ee06b79`, the fifth preview)
 read 121.0 KB on the phone profile and 123.6 on desktop, all 221 files and the headers as
 intended. The owner confirmed that Speed Insights stays out ("if speed insights is not that
-important then leave it removed"). To get it back, the room has to come from somewhere
+important then leave it removed"). They pushed `4e93032` to `main` on 2026-10-11 (21:19 WIB)
+and Vercel put it on gadingap.com within a minute. Read from the public site: slow-4G phone LCP
+1.89 to 1.95 s over four runs (limit 2.0), CLS 0.000, script 121.0 to 121.2 KB; desktop LCP
+0.22 to 0.35 s, CLS 0.000 to 0.003, script 123.5 to 123.9 KB; no idle frames; 221 of 221 files,
+the headers on every one, `www` redirecting to the apex. GitHub's earlier `main` is the tag
+`old-site` (`ea92ec8`); the repository was public at that moment. Not confirmed by anyone yet:
+that Web Analytics records visits. To get Speed Insights back, the room has to come from somewhere
 else; smooth scrolling fetched on the first input (5.9 KB) is what is left. The HTML has no
 room: 15.9 KB compressed of 16.
 The old site's nine `VITE_FIREBASE_*` and `VITE_ENABLE_*` variables were removed from the Vercel
