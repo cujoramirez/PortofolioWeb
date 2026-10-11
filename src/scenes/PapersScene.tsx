@@ -2,6 +2,8 @@
  * Papers: a deck that deals out. The five papers start stacked at the centre, fan out
  * (rotateZ -10..10), then settle into their resting grid, which is the readable layout.
  * Offsets are measured from the resting grid (FLIP), so the end state is exact.
+ * The pin holds only what fits the window, measured: the grid of 3 + 2, else one row of five
+ * (.is-row, 1100 px wide or more), else the scene flows and its cards rise once (.is-loose).
  * Phones: a drum of papers turning around a horizontal axis (see below).
  */
 import { useEffect, useRef } from 'react';
@@ -28,6 +30,19 @@ export default function PapersScene() {
   useScene(root, ({ variant, k, section }) => {
     const q = gsap.utils.selector(section);
     const cards = q('.paper') as HTMLElement[];
+    /** Not pinned: the papers stay where the page puts them, and each rises once as it comes into view. */
+    const rise = () =>
+      cards.forEach((card) =>
+        gsap.from(card, {
+          rotateX: 28,
+          y: 36,
+          opacity: 0,
+          duration: 0.75,
+          ease: 'power3.out',
+          transformOrigin: '50% 0%',
+          scrollTrigger: { trigger: card, start: 'top 90%', once: true },
+        }),
+      );
 
     if (variant === 'mobile') {
       // A picker wheel: the papers sit around a horizontal cylinder under the heading, the one before
@@ -159,21 +174,26 @@ export default function PapersScene() {
       }
       section.classList.remove('is-drum');
       grid.style.removeProperty('height');
-      cards.forEach((card) =>
-        gsap.from(card, {
-          rotateX: 28,
-          y: 36,
-          opacity: 0,
-          duration: 0.75,
-          ease: 'power3.out',
-          transformOrigin: '50% 0%',
-          scrollTrigger: { trigger: card, start: 'top 90%', once: true },
-        }),
-      );
+      rise();
       return undefined;
     }
 
     const grid = q('.papers__grid')[0] as HTMLElement;
+    // Pin only what the window can hold. At 1190 x 680 the grid's second row was cut off by the
+    // bottom edge for the whole pin, and the link under it spilled over the next section's heading.
+    const head = q('.papers__head')[0] as HTMLElement;
+    const foot = q('.papers__foot')[0] as HTMLElement;
+    const navSpace = 76; // nav top offset + bar height + a little air
+    const fits = () => foot.offsetTop + foot.offsetHeight - head.offsetTop + navSpace + 12 <= window.innerHeight;
+    if (!fits()) {
+      if (window.innerWidth >= 1100) section.classList.add('is-row');
+      if (!fits()) {
+        section.classList.remove('is-row');
+        section.classList.add('is-loose');
+        rise();
+        return () => section.classList.remove('is-loose');
+      }
+    }
     const n = cards.length;
     const mid = (n - 1) / 2;
     // Offset from each card's resting spot to the centre of the grid.
@@ -223,7 +243,7 @@ export default function PapersScene() {
     // until the grid has landed the papers are a stacked deck: Tab to one goes to the grid, and so does a jump
     const unfocus = showOnFocus(section, () => tl.scrollTrigger, () => 1);
     const unland = landAt(section.id, () => tl.scrollTrigger, 1);
-    return () => { unfocus(); unland(); };
+    return () => { unfocus(); unland(); section.classList.remove('is-row'); };
   });
 
   return (

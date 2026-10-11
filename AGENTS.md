@@ -58,7 +58,12 @@ There are no tests configured in this project.
   900 px of height. Real Safari needs the display awake as well as the Mac (`caffeinate -d`).
   WebDriver pointer actions take window points: under the 115 % zoom multiply CSS coordinates by
   window width / innerWidth (a click meant for the theme toggle landed on Search). Safari's plain
-  Tab skips links and buttons; Option+Tab visits them. `?tier=low` shows the poster without
+  Tab skips links and buttons; Option+Tab visits them. WebDriver pointer actions only arrive
+  while the automation window has focus: when another app is in front they vanish without an
+  error, while key actions and scripts still work, so a click test "fails" for no reason in the
+  page. Check `document.hasFocus()` around each pointer step, bring Safari forward with
+  `open -a Safari`, and discard a step that lost focus. After the owner has quit Safari,
+  safaridriver starts its own and leaves it running when the session ends. `?tier=low` shows the poster without
   touching the system's reduced-motion setting. Dev builds also take `?out=<address>`, which opens
   the portal on that address (the simulator cannot tap). For real iOS Safari use the Xcode simulator: `xcrun simctl boot <iPhone>`,
   `xcrun simctl openurl <udid> "http://localhost:5173/?tier=high&at=papers_350"` (dev-only
@@ -204,7 +209,12 @@ frame, and the browser's clamp left Contact 63 px short on a phone.
   ("02 / 05" + bars) under the heading. Short phones get `.is-compact` (one sentence, two wins, four
   chips) and a scale down to 0.8; below that a flat sticky stack (never tilt stacked cards: two tilted
   planes cut into each other in 3D). Papers: deck → fan → grid (FLIP from the resting grid); its pin
-  centres with auto margins so a short window never slides the heading under the nav. Phones: a picker
+  centres with auto margins so a short window never slides the heading under the nav. The pin
+  holds only what fits the window, measured as What I do does: the grid of 3 + 2, else one row
+  of five (`.is-row`, 1100 px wide or more), else the scene flows and each card rises once
+  (`.is-loose`). Before 2026-10-11 it always pinned the grid: at the owner's 1190 x 680 Safari
+  window the second row was cut off by the bottom edge for the whole pin, and the Scholar link
+  under it lay over the Certificates heading (found in the real-Safari pass). Phones: a picker
   wheel (`.is-drum`): heading on top, papers on a horizontal cylinder filling the rest (masked edges,
   dimmed neighbours), each with its gist (3 lines) and two keywords. The wheel has a detent on every
   paper: the paper in front stays square and at full strength for its whole stretch of scroll, the
@@ -405,6 +415,24 @@ and 78 stops with none hidden, the link map as in the table. Seen in the iOS Sim
 verified: real Safari, a real finger on iOS, pinch. The owner answered "proceed" to the question
 of keeping the résumé's page pictures. A copy of the site built with a changed PDF warned and
 sent a phone's résumé link to a new tab; the real build previews it.
+
+2026-10-11, real Safari (safaridriver, the owner's 115 % zoom at 1192 x 680 in both themes, and
+1440 x 900), on the production build. The search jump runs as a view transition there too: the
+`warp` state lasted about 0.9 s, the page was at its destination inside it, the heading took
+focus, and the two layers were gone afterwards. With real pointer clicks: a certificate, a
+paper, the résumé (the PDF in its frame, 846 px wide) and a video demo over the project dialog
+each opened their preview with focus on the way out; a click enlarged the certificate 2.2 times;
+the timed exit was caught 110 ms in with the dialog still open and the stage at 0.76 scale;
+Back closed the paper's preview with the page where it was (12358 px) and still on the site;
+Escape closed the nested video preview and then the project dialog; a profile link opened one
+new window and no preview. No page errors. As with the site's other dialogs, Safari gives no
+focus to a clicked link, so focus returns to the page rather than to the link. The pass found
+the Papers overflow described under Scenes, since fixed and seen fixed in Safari at both
+sizes: the five papers and the Scholar link inside the window, nothing over the Certificates
+heading. With that change: click-through 48 of 48, Tab walk 95 and 78 stops with none hidden,
+landings complete at 1190 x 680 and 1512 x 862, Papers pin still 0.92 viewport heights with no
+dead run. Not verified: a real finger on iOS, pinch, Firefox, and how smooth the warp looks
+(the driver reads state, not frame pacing).
 
 **Menu below 900 px (`components/MenuSheet.tsx`).** A full-screen dialog staged in 3D: a veil irises out of
 the menu button over a grid "stage floor", rows swing down out of depth (hinged, staggered) while the
