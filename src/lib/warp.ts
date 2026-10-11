@@ -4,6 +4,7 @@
  * old view is held as a picture. Without View Transitions, or with motion off, it is the
  * ordinary jump.
  */
+import { forSnapshot } from './flat';
 import { jumpTo, landNow, readyToJump } from './jump';
 import { motionAllowed } from './motion';
 import { unlocked } from './scroll';
@@ -31,7 +32,10 @@ export async function warpTo(id: string) {
     return el;
   });
   root.dataset.vt = 'warp';
+  // Safari's pictures lose depth: the view being left stands in flat, then the one arrived at
+  let deep = forSnapshot();
   const done = () => {
+    deep();
     delete root.dataset.vt;
     layers.forEach((el) => el.remove());
   };
@@ -40,7 +44,12 @@ export async function warpTo(id: string) {
       .startViewTransition(() => {
         // new with the destination, so they have no picture of their own to animate from
         document.body.append(...layers);
-        return jumpTo(id, { immediate: true }).then(landNow);
+        return jumpTo(id, { immediate: true })
+          .then(landNow)
+          .then(() => {
+            deep();
+            deep = forSnapshot();
+          });
       })
       .finished.then(done, done);
   } catch {

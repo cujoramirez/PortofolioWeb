@@ -1,6 +1,7 @@
 import { useSyncExternalStore, type MouseEvent } from 'react';
 import { MoonIcon, SunIcon } from './icons';
 import { currentScheme, setScheme, subscribeScheme, type Scheme } from '../lib/theme';
+import { forSnapshot } from '../lib/flat';
 import { motionAllowed } from '../lib/motion';
 
 export function useScheme(): Scheme {
@@ -30,7 +31,10 @@ export function toggleScheme(event: MouseEvent<HTMLElement>) {
   // marks this transition as the theme reveal (base.css scopes the circular animation to it)
   root.dataset.vt = 'theme';
   revealing = true;
+  // the theme changes no geometry, so one stand-in serves both pictures
+  const deep = forSnapshot();
   const done = () => {
+    deep();
     revealing = false;
     delete root.dataset.vt;
     VT_PROPS.forEach((p) => root.style.removeProperty(p));

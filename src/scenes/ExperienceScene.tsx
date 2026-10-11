@@ -8,6 +8,7 @@
 import { useRef } from 'react';
 import { experiences, sentences } from '../content/data';
 import { gsap, ScrollTrigger } from '../lib/gsap';
+import { flatPoses, onSnapshot } from '../lib/flat';
 import { useScene } from '../lib/useScene';
 import { snapAllowed } from '../lib/scroll';
 import './experience.css';
@@ -148,8 +149,16 @@ export default function ExperienceScene() {
         tl.addLabel(`r${i + 1}`, at(i + 1));
       }
       tl.set({}, {}, at(n - 1) + 0.2);
+      // Safari's snapshots lose depth (lib/flat.ts) and painted the last card over the one in
+      // front. The deck's places are 2D already: for a snapshot it only needs its order stated.
+      cards.forEach((card, i) => card.style.setProperty('--near', String(n - i)));
+      const offSnapshot = onSnapshot(() => {
+        section.classList.add('is-flat');
+        return () => section.classList.remove('is-flat');
+      });
 
       return () => {
+        offSnapshot();
         ScrollTrigger.removeEventListener('refreshInit', size);
         section.classList.remove('is-xdeck', 'is-compact');
         list.style.removeProperty('height');
@@ -224,7 +233,15 @@ export default function ExperienceScene() {
     tl.to({}, { duration: 0.2 });
     for (let i = 1; i < n; i++) tl.to(world, { z: i * gap, duration: 1, ease: 'power2.inOut' });
     tl.to({}, { duration: 0.15 });
-    return undefined;
+    // Safari's snapshots lose depth (lib/flat.ts): for those, each card and year is placed flat
+    // where the corridor shows it, the nearer card on top.
+    cards.forEach((card, i) => card.style.setProperty('--near', String(n - i)));
+    return onSnapshot(() =>
+      flatPoses([...cards, ...markers], () => {
+        section.classList.add('is-flat');
+        return () => section.classList.remove('is-flat');
+      }),
+    );
   });
 
   return (
