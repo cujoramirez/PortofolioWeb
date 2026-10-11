@@ -33,14 +33,24 @@ export interface FlatPart {
   at?: Point[];
   /** For points on one line (a strip seen along its length): how much of its width the strip keeps. */
   cross?: number;
+  /** A box that may be turned in depth: how many upright slices to draw it in when it is. */
+  slices?: number;
 }
 
 const CORNERS: Point[] = [[0, 0], [1, 0], [0, 1], [1, 1]];
+/** Top and bottom of every slice edge, left to right. */
+const edges = (slices: number): Point[] => Array.from({ length: slices + 1 }, (_, k): Point[] => [[k / slices, 0], [k / slices, 1]]).flat();
+/** How far from its real place a corner may sit before a box is worth slicing, in px. */
+const CLOSE = 0.5;
 
 /**
- * The 2D matrix that takes `from` nearest to `to`. A flat painter has no perspective, so a card
- * turned in depth, a trapezoid on screen, becomes the parallelogram closest to it: its corners
- * are a few px out, where a plain box had its far edge 12 px out and its lines of text level.
+ * The 2D matrix that takes `from` nearest to `to`. A flat painter has no perspective, not even
+ * one written into an element's own matrix (tried in WebKit: `perspective()` and `matrix3d` both
+ * come out as a shear). So a card turned in depth, a trapezoid on screen, can only become the
+ * parallelogram closest to it, with its corners a few px out and its text half as slanted. The
+ * owner saw that settle as each transition ended ("the cards behind were flat instead of
+ * tilted"). Such a card is drawn in slices instead (see flatPoses): over an eighth of its width
+ * the nearest parallelogram is within half a px.
  */
 function fit(from: Point[], to: Point[], cross: number): number[] | null {
   if (![...from, ...to].every(([x, y]) => Math.abs(x) < 1e5 && Math.abs(y) < 1e5)) return null;
@@ -80,10 +90,13 @@ function fit(from: Point[], to: Point[], cross: number): number[] | null {
  * switches their 3D off (leaving `--flat` to place them) and returns what switches it back on.
  * Each followed point gets a zero-size marker for the length of this call, read once in depth
  * and once flat. On-screen places are the point here, so this reads them and not layout offsets.
+ * A turned box that one matrix cannot place is hidden and stood in for by copies of itself, each
+ * clipped to one slice and placed on its own. They are removed with the stand-in.
  */
 export function flatPoses(parts: FlatPart[], flatten: () => () => void): () => void {
-  const dots = parts.map(({ el, at = CORNERS }) =>
-    at.map(([x, y]) => {
+  const points = parts.map(({ at, slices }) => (slices ? edges(slices) : (at ?? CORNERS)));
+  const dots = parts.map(({ el }, i) =>
+    points[i].map(([x, y]) => {
       const dot = document.createElement('span');
       dot.style.cssText = `position:absolute;left:${x * 100}%;top:${y * 100}%;width:0;height:0`;
       el.append(dot);
@@ -101,17 +114,39 @@ export function flatPoses(parts: FlatPart[], flatten: () => () => void): () => v
     return [box.left + x, box.top + y];
   });
   dots.flat().forEach((dot) => dot.remove());
-  parts.forEach(({ el, cross = 1 }, i) => {
-    const m = fit(laid[i], seen[i], cross);
+  /** As CSS, which applies a matrix about the element's transform origin. */
+  const css = (m: number[], [ox, oy]: number[]) => `matrix(${[m[0], m[1], m[2], m[3], m[0] * ox + m[2] * oy + m[4] - ox, m[1] * ox + m[3] * oy + m[5] - oy].join(', ')})`;
+  const copies: HTMLElement[] = [];
+  parts.forEach(({ el, cross = 1, slices = 0 }, i) => {
+    const [from, to] = [laid[i], seen[i]];
+    const outer = slices ? [0, 1, from.length - 2, from.length - 1] : from.map((_, k) => k);
+    const m = fit(outer.map((k) => from[k]), outer.map((k) => to[k]), cross);
     // a box behind the viewer has no place on screen
     if (!m) return el.style.setProperty('--flat', 'scale(0)');
-    // CSS applies the matrix about the element's transform origin
-    const [ox, oy] = frames[i];
-    const [e, f] = [m[0] * ox + m[2] * oy + m[4] - ox, m[1] * ox + m[3] * oy + m[5] - oy];
-    el.style.setProperty('--flat', `matrix(${[m[0], m[1], m[2], m[3], e, f].join(', ')})`);
+    const off = Math.max(...outer.map((k) => Math.hypot(m[0] * from[k][0] + m[2] * from[k][1] + m[4] - to[k][0], m[1] * from[k][0] + m[3] * from[k][1] + m[5] - to[k][1])));
+    // one matrix is enough for a box that faces the viewer, and for one nobody can see
+    if (!slices || off < CLOSE || getComputedStyle(el).visibility === 'hidden') return el.style.setProperty('--flat', css(m, frames[i]));
+    el.style.setProperty('--flat', 'scale(0)');
+    for (let k = 0; k < slices; k++) {
+      const own = fit(from.slice(2 * k, 2 * k + 4), to.slice(2 * k, 2 * k + 4), cross);
+      if (!own) continue;
+      const copy = el.cloneNode(true) as HTMLElement;
+      copy.setAttribute('aria-hidden', 'true');
+      copy.style.setProperty('--flat', css(own, frames[i]));
+      // Open above and below and on the box's outer sides, where its shadow is. Inside the box a
+      // slice runs 2 px under the next one: two edges that only met let the page show through
+      // as a faint line. Not in the shadow, which would be painted twice there.
+      const left = k ? `${(k / slices) * 100}%` : '-100vmax';
+      const right = k < slices - 1 ? `${((k + 1) / slices) * 100}%` : '200vmax';
+      const under = k < slices - 1 ? `calc(${right} + 2px)` : right;
+      copy.style.clipPath = `polygon(${left} -100vmax, ${right} -100vmax, ${right} 0, ${under} 0, ${under} 100%, ${right} 100%, ${right} 200vmax, ${left} 200vmax)`;
+      el.parentElement?.append(copy);
+      copies.push(copy);
+    }
   });
   return () => {
     restore();
+    copies.forEach((copy) => copy.remove());
     parts.forEach(({ el }) => el.style.removeProperty('--flat'));
   };
 }

@@ -238,11 +238,15 @@ export default function ExperienceScene() {
     cards.forEach((card, i) => card.style.setProperty('--near', String(n - i)));
     const floor = q('.xp__floor')[0] as HTMLElement;
     return onSnapshot(() => {
+      // nothing to stand in for while the corridor is off screen
+      const here = section.getBoundingClientRect();
+      if (here.bottom <= 0 || here.top >= window.innerHeight) return () => {};
       // The floor runs on past the viewer. Only what lies well in front of them has a place on
       // screen: it is followed from there to its far end.
       const depth = parseFloat(getComputedStyle(world.parentElement as HTMLElement).perspective) || 1200;
       const from = Math.min(0.9, Math.max(0, (Number(gsap.getProperty(world, 'z')) - depth * 0.6) / floor.offsetHeight));
-      const parts = [...cards, ...markers].map((el) => ({ el }));
+      // a card ahead is turned toward the path, and one matrix cannot draw that: eight slices can
+      const parts = [...cards.map((el) => ({ el, slices: 8 })), ...markers.map((el) => ({ el }))];
       return flatPoses([...parts, { el: floor, at: [[0.5, from], [0.5, 1]], cross: 0.75 }], () => {
         section.classList.add('is-flat');
         return () => section.classList.remove('is-flat');
